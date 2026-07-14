@@ -12,16 +12,37 @@ if [ ! -f .env ]; then
   exit 1
 fi
 
+# Fix SSL: Hostinger PHP often has no valid CA bundle for Composer
+setup_ca_bundle() {
+  CAFILE="$(pwd)/cacert.pem"
+  if [ ! -f "$CAFILE" ]; then
+    echo "Downloading CA certificate bundle..."
+    curl -sS https://curl.se/ca/cacert.pem -o "$CAFILE" || wget -q -O "$CAFILE" https://curl.se/ca/cacert.pem
+  fi
+  if [ -f "$CAFILE" ]; then
+    export SSL_CERT_FILE="$CAFILE"
+    export CURL_CA_BUNDLE="$CAFILE"
+    php composer.phar config --global cafile "$CAFILE" 2>/dev/null || true
+    php composer.phar config cafile "$CAFILE" 2>/dev/null || true
+    echo "Using CA bundle: $CAFILE"
+  else
+    echo "WARNING: Could not download CA bundle — Composer may fail on SSL."
+  fi
+}
+
 # Install Composer if needed
 if [ ! -f composer.phar ]; then
   echo "Installing Composer..."
   curl -sS https://getcomposer.org/installer | php
 fi
 
+setup_ca_bundle
+
 # Install Laravel dependencies
-if [ ! -d vendor ]; then
+if [ ! -d vendor ] || [ ! -f vendor/autoload.php ]; then
   echo "Installing PHP packages (2-3 min)..."
-  php composer.phar install --no-dev --optimize-autoloader --no-interaction
+  php -d openssl.cafile="$(pwd)/cacert.pem" -d curl.cainfo="$(pwd)/cacert.pem" \
+    composer.phar install --no-dev --optimize-autoloader --no-interaction
 fi
 
 # Generate app key if missing
