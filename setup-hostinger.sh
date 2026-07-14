@@ -58,8 +58,11 @@ echo "Running migrations..."
 php artisan migrate --force
 php artisan db:seed --force
 
-# Storage link
-php artisan storage:link 2>/dev/null || ln -sf "$(pwd)/storage/app/public" "$(pwd)/public/storage"
+# Storage link (skip artisan — Hostinger disables exec(); use ln directly)
+echo "Linking storage..."
+mkdir -p storage/app/public
+rm -f public/storage
+ln -sf "$(pwd)/storage/app/public" "$(pwd)/public/storage"
 
 # Permissions
 chmod -R 775 storage bootstrap/cache 2>/dev/null || true
