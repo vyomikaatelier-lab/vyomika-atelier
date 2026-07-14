@@ -1,0 +1,132 @@
+/* VYOMIKA ATELIER — Brand styles */
+
+:root {
+    --va-ivory: #faf8f5;
+    --va-cream: #f3efe8;
+    --va-sand: #e5ddd0;
+    --va-gold: #8b7355;
+    --va-brown: #5c4a38;
+    --va-ink: #2d2419;
+    --va-muted: #9a8b7a;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+    background: var(--va-ivory);
+    color: var(--va-ink);
+}
+
+/* Hero */
+.va-hero {
+    min-height: 92vh;
+    background:
+        linear-gradient(to bottom, rgba(45,36,25,0.35), rgba(45,36,25,0.55)),
+        url('https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=1920&q=80') center/cover no-repeat;
+}
+
+.va-hero-inner {
+    min-height: 92vh;
+    display: flex;
+    align-items: flex-end;
+    padding-bottom: 6rem;
+}
+
+/* Editorial divider */
+.va-rule {
+    width: 48px;
+    height: 1px;
+    background: var(--va-gold);
+}
+
+/* Product card */
+.va-card img {
+    transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.va-card:hover img {
+    transform: scale(1.04);
+}
+
+/* Mobile menu */
+.va-menu-open { overflow: hidden; }
+#va-mobile-nav {
+    transform: translateX(100%);
+    transition: transform 0.35s ease;
+}
+#va-mobile-nav.open { transform: translateX(0); }
+
+/* Fade-in animation */
+@keyframes vaFadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.va-animate {
+    animation: vaFadeUp 0.8s ease forwards;
+}
+
+/* Form inputs */
+.va-input {
+    width: 100%;
+    border: 1px solid var(--va-sand);
+    background: #fff;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    transition: border-color 0.2s;
+}
+.va-input:focus {
+    outline: none;
+    border-color: var(--va-gold);
+}
+
+/* Button */
+.va-btn-primary {
+    display: inline-block;
+    background: var(--va-ink);
+    color: #fff;
+    padding: 0.85rem 2rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    transition: background 0.25s;
+}
+.va-btn-primary:hover { background: var(--va-brown); }
+
+.va-btn-outline {
+    display: inline-block;
+    border: 1px solid var(--va-ink);
+    color: var(--va-ink);
+    padding: 0.85rem 2rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    transition: all 0.25s;
+}
+.va-btn-outline:hover {
+    background: var(--va-ink);
+    color: #fff;
+}
+
+/* Section label */
+.va-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--va-gold);
+}
+
+/* Lookbook strip */
+.va-lookbook {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+}
+@media (max-width: 768px) {
+    .va-lookbook { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Page header */
+.va-page-hero {
+    padding: 5rem 0 3rem;
+    text-align: center;
+    border-bottom: 1px solid var(--va-sand);
+}
