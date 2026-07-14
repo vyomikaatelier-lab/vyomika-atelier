@@ -1,155 +1,138 @@
-/* VYOMIKA ATELIER — Brand styles */
+/* VYOMIKA ATELIER — Luxury design system */
 
 :root {
-    --va-ivory: #faf8f5;
-    --va-cream: #f3efe8;
-    --va-sand: #e5ddd0;
-    --va-gold: #8b7355;
-    --va-accent: #c4693a;
-    --va-brown: #5c4a38;
-    --va-ink: #2d2419;
-    --va-muted: #9a8b7a;
+    --va-white: #fafaf8;
+    --va-paper: #f4f2ee;
+    --va-line: #e8e4dc;
+    --va-gold: #b8956b;
+    --va-gold-light: #d4bc96;
+    --va-charcoal: #1a1a1a;
+    --va-ink: #0c0c0c;
+    --va-muted: #7a756d;
+    --va-soft: #9c968c;
+    --va-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --va-serif: 'Cormorant Garamond', Georgia, serif;
+    --va-sans: 'Outfit', system-ui, sans-serif;
 }
+
+*, *::before, *::after { box-sizing: border-box; }
 
 html { scroll-behavior: smooth; }
 
 body {
-    background: var(--va-ivory);
+    background: var(--va-white);
     color: var(--va-ink);
+    font-family: var(--va-sans);
+    font-weight: 300;
+    -webkit-font-smoothing: antialiased;
 }
 
-/* Hero */
-.va-hero {
-    min-height: 92vh;
-    background:
-        linear-gradient(to bottom, rgba(45,36,25,0.4), rgba(45,36,25,0.6)),
-        url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1920&q=80') center/cover no-repeat;
+::selection {
+    background: var(--va-gold);
+    color: #fff;
 }
 
-.va-hero-inner {
-    min-height: 92vh;
-    display: flex;
-    align-items: flex-end;
-    padding-bottom: 6rem;
+/* ─── Typography ─── */
+.va-eyebrow {
+    font-size: 0.62rem;
+    letter-spacing: 0.42em;
+    text-transform: uppercase;
+    color: var(--va-gold);
+    font-weight: 400;
 }
 
-/* Editorial divider */
+.va-display {
+    font-family: var(--va-serif);
+    font-weight: 300;
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+}
+
+.va-display em {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--va-gold);
+}
+
+.va-label {
+    font-size: 0.62rem;
+    letter-spacing: 0.38em;
+    text-transform: uppercase;
+    color: var(--va-gold);
+    font-weight: 400;
+}
+
 .va-rule {
-    width: 48px;
+    width: 64px;
     height: 1px;
     background: var(--va-gold);
 }
 
-/* Product card */
-.va-card img {
-    transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-.va-card:hover img {
-    transform: scale(1.04);
-}
+.prose-brand p { margin-bottom: 1.25rem; line-height: 1.8; color: var(--va-muted); }
 
-/* Mobile menu */
-.va-menu-open { overflow: hidden; }
-#va-mobile-nav {
-    transform: translateX(100%);
-    transition: transform 0.35s ease;
+/* ─── Header ─── */
+.va-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    transition: background 0.5s var(--va-ease), border-color 0.5s, padding 0.4s;
+    padding: 1.5rem 0;
 }
-#va-mobile-nav.open { transform: translateX(0); }
+.va-header.va-header--solid {
+    background: rgba(250, 250, 248, 0.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--va-line);
+    padding: 1rem 0;
+}
+.va-header.va-header--hero .va-nav-link,
+.va-header.va-header--hero .va-logo { color: #fff; }
+.va-header.va-header--hero .va-logo span { color: rgba(255,255,255,0.6); }
+.va-header.va-header--hero.va-header--solid .va-nav-link,
+.va-header.va-header--hero.va-header--solid .va-logo { color: var(--va-ink); }
+.va-header.va-header--hero.va-header--solid .va-logo span { color: var(--va-gold); }
 
-/* Fade-in animation */
-@keyframes vaFadeUp {
-    from { opacity: 0; transform: translateY(24px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-.va-animate {
-    animation: vaFadeUp 0.8s ease forwards;
-}
-
-/* Form inputs */
-.va-input {
-    width: 100%;
-    border: 1px solid var(--va-sand);
-    background: #fff;
-    padding: 0.75rem 1rem;
-    font-size: 0.9rem;
-    transition: border-color 0.2s;
-}
-.va-input:focus {
-    outline: none;
-    border-color: var(--va-gold);
-}
-
-/* Button */
-.va-btn-primary {
-    display: inline-block;
-    background: var(--va-ink);
-    color: #fff;
-    padding: 0.85rem 2rem;
-    font-size: 0.7rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    transition: background 0.25s;
-}
-.va-btn-primary:hover { background: var(--va-brown); }
-
-.va-btn-outline {
-    display: inline-block;
-    border: 1px solid var(--va-ink);
+.va-logo {
+    font-family: var(--va-serif);
+    font-size: 1.65rem;
+    letter-spacing: 0.22em;
     color: var(--va-ink);
-    padding: 0.85rem 2rem;
-    font-size: 0.7rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    transition: all 0.25s;
+    transition: color 0.4s;
 }
-.va-btn-outline:hover {
-    background: var(--va-ink);
-    color: #fff;
-}
-
-/* Section label */
-.va-label {
-    font-size: 0.65rem;
-    letter-spacing: 0.35em;
-    text-transform: uppercase;
+.va-logo span {
+    display: block;
+    font-family: var(--va-sans);
+    font-size: 0.5rem;
+    letter-spacing: 0.55em;
     color: var(--va-gold);
+    margin-top: 2px;
 }
 
-/* Lookbook strip */
-.va-lookbook {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 4px;
+.va-nav-link {
+    font-size: 0.62rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--va-ink);
+    transition: color 0.3s;
+    font-weight: 400;
 }
-@media (max-width: 768px) {
-    .va-lookbook { grid-template-columns: repeat(2, 1fr); }
-}
+.va-nav-link:hover { color: var(--va-gold); }
 
-/* Page header */
-.va-page-hero {
-    padding: 5rem 0 3rem;
-    text-align: center;
-    border-bottom: 1px solid var(--va-sand);
-}
-
-/* Prose */
-.prose-brand p { margin-bottom: 1rem; }
-
-/* Nav dropdown */
+/* Dropdown */
 .va-nav-dropdown .va-dropdown-panel {
     position: absolute;
-    top: 100%;
+    top: calc(100% + 8px);
     left: 0;
-    min-width: 220px;
-    background: #fff;
-    border: 1px solid var(--va-sand);
-    padding: 0.75rem 0;
+    min-width: 240px;
+    background: var(--va-white);
+    border: 1px solid var(--va-line);
+    padding: 0.5rem 0;
     opacity: 0;
     visibility: hidden;
-    transform: translateY(8px);
-    transition: all 0.2s ease;
-    z-index: 100;
-    box-shadow: 0 8px 24px rgba(45,36,25,0.08);
+    transform: translateY(6px);
+    transition: all 0.35s var(--va-ease);
+    box-shadow: 0 24px 64px rgba(0,0,0,0.08);
 }
 .va-nav-dropdown:hover .va-dropdown-panel,
 .va-nav-dropdown:focus-within .va-dropdown-panel {
@@ -159,47 +142,527 @@ body {
 }
 .va-dropdown-panel a {
     display: block;
-    padding: 0.5rem 1.25rem;
-    font-size: 0.7rem;
-    letter-spacing: 0.12em;
+    padding: 0.55rem 1.5rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--va-brown);
-    transition: color 0.2s, background 0.2s;
+    color: var(--va-muted);
+    transition: color 0.2s, padding-left 0.2s;
 }
 .va-dropdown-panel a:hover {
     color: var(--va-ink);
-    background: var(--va-cream);
-}
-.va-dropdown-title {
-    display: block;
-    padding: 0.5rem 1.25rem;
-    font-size: 0.65rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--va-gold);
-    border-top: 1px solid var(--va-sand);
-    margin-top: 0.25rem;
-    padding-top: 0.75rem;
+    padding-left: 1.75rem;
 }
 .va-dropdown-label {
     display: block;
-    padding: 0.35rem 1.25rem;
+    padding: 0.5rem 1.5rem 0.25rem;
+    font-size: 0.55rem;
+    letter-spacing: 0.3em;
+    color: var(--va-soft);
+}
+.va-dropdown-title {
+    display: block;
+    padding: 0.75rem 1.5rem 0.5rem;
     font-size: 0.6rem;
     letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: var(--va-muted);
+    color: var(--va-gold);
+    border-top: 1px solid var(--va-line);
+    margin-top: 0.25rem;
 }
 
-/* Calculator unit buttons */
+/* Mobile nav */
+.va-menu-open { overflow: hidden; }
+#va-mobile-nav {
+    transform: translateX(100%);
+    transition: transform 0.5s var(--va-ease);
+    background: var(--va-ink);
+}
+#va-mobile-nav.open { transform: translateX(0); }
+
+/* ─── Buttons ─── */
+.va-btn-luxe {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    font-weight: 400;
+    padding: 1.1rem 2.25rem;
+    border: 1px solid currentColor;
+    transition: all 0.45s var(--va-ease);
+    position: relative;
+    overflow: hidden;
+}
+.va-btn-luxe::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--va-gold);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.45s var(--va-ease);
+    z-index: 0;
+}
+.va-btn-luxe span, .va-btn-luxe { position: relative; z-index: 1; }
+.va-btn-luxe:hover { color: #fff; border-color: var(--va-gold); }
+.va-btn-luxe:hover::after { transform: scaleX(1); }
+
+.va-btn-luxe--fill {
+    background: var(--va-ink);
+    color: #fff;
+    border-color: var(--va-ink);
+}
+.va-btn-luxe--fill::after { background: var(--va-gold); }
+.va-btn-luxe--fill:hover { border-color: var(--va-gold); }
+
+.va-btn-luxe--light {
+    color: #fff;
+    border-color: rgba(255,255,255,0.45);
+}
+.va-btn-luxe--light:hover { border-color: #fff; }
+
+/* Legacy button aliases */
+.va-btn-primary {
+    display: inline-block;
+    background: var(--va-ink);
+    color: #fff;
+    padding: 1rem 2.25rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    font-weight: 400;
+    transition: background 0.4s;
+}
+.va-btn-primary:hover { background: var(--va-gold); }
+
+.va-btn-outline {
+    display: inline-block;
+    border: 1px solid var(--va-ink);
+    color: var(--va-ink);
+    padding: 1rem 2.25rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    font-weight: 400;
+    transition: all 0.4s;
+}
+.va-btn-outline:hover {
+    background: var(--va-ink);
+    color: #fff;
+}
+
+/* ─── Cinematic hero ─── */
+.va-luxe-hero {
+    position: relative;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+    background: var(--va-ink);
+}
+.va-luxe-hero-media {
+    position: absolute;
+    inset: 0;
+}
+.va-luxe-hero-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1.06);
+    animation: vaHeroZoom 18s var(--va-ease) forwards;
+}
+@keyframes vaHeroZoom {
+    to { transform: scale(1); }
+}
+.va-luxe-hero-media::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to top,
+        rgba(0,0,0,0.75) 0%,
+        rgba(0,0,0,0.25) 45%,
+        rgba(0,0,0,0.35) 100%
+    );
+}
+.va-luxe-hero-content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 90rem;
+    margin: 0 auto;
+    padding: 0 1.5rem 6rem;
+}
+@media (min-width: 768px) {
+    .va-luxe-hero-content { padding-bottom: 8rem; padding-left: 2.5rem; padding-right: 2.5rem; }
+}
+.va-luxe-hero h1 {
+    font-family: var(--va-serif);
+    font-size: clamp(3rem, 9vw, 7.5rem);
+    font-weight: 300;
+    line-height: 0.95;
+    color: #fff;
+    margin: 1.5rem 0 2rem;
+    max-width: 14ch;
+    opacity: 0;
+    animation: vaFadeUp 1.2s var(--va-ease) 0.2s forwards;
+}
+.va-luxe-hero .va-hero-lead {
+    color: rgba(255,255,255,0.7);
+    font-size: 1rem;
+    font-weight: 300;
+    max-width: 28rem;
+    line-height: 1.75;
+    margin-bottom: 2.5rem;
+    opacity: 0;
+    animation: vaFadeUp 1.2s var(--va-ease) 0.45s forwards;
+}
+.va-luxe-hero-cta {
+    opacity: 0;
+    animation: vaFadeUp 1.2s var(--va-ease) 0.6s forwards;
+}
+.va-luxe-hero-scroll {
+    position: absolute;
+    bottom: 2rem;
+    right: 2.5rem;
+    z-index: 2;
+    font-size: 0.55rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    writing-mode: vertical-rl;
+    display: none;
+}
+@media (min-width: 768px) { .va-luxe-hero-scroll { display: block; } }
+
+/* Trust strip */
+.va-trust-strip {
+    border-bottom: 1px solid var(--va-line);
+    background: var(--va-white);
+}
+.va-trust-strip-inner {
+    max-width: 90rem;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+}
+@media (min-width: 768px) {
+    .va-trust-strip-inner { grid-template-columns: repeat(4, 1fr); }
+}
+.va-trust-item {
+    text-align: center;
+    padding: 0 1rem;
+    border-right: 1px solid var(--va-line);
+}
+.va-trust-item:last-child { border-right: none; }
+.va-trust-num {
+    font-family: var(--va-serif);
+    font-size: 2.5rem;
+    font-weight: 300;
+    color: var(--va-ink);
+    line-height: 1;
+}
+.va-trust-label {
+    font-size: 0.58rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--va-soft);
+    margin-top: 0.5rem;
+}
+
+/* Manifesto */
+.va-manifesto {
+    padding: 8rem 0;
+    background: var(--va-paper);
+}
+.va-manifesto-inner {
+    max-width: 90rem;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    display: grid;
+    gap: 4rem;
+    align-items: center;
+}
+@media (min-width: 1024px) {
+    .va-manifesto-inner { grid-template-columns: 1fr 1.2fr; gap: 6rem; }
+}
+.va-manifesto-quote {
+    font-family: var(--va-serif);
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    font-weight: 300;
+    line-height: 1.2;
+    color: var(--va-ink);
+}
+.va-manifesto-quote em { font-style: italic; color: var(--va-gold); }
+
+/* Service editorial grid */
+.va-services-luxe { padding: 8rem 0; }
+.va-section-head {
+    max-width: 90rem;
+    margin: 0 auto 4rem;
+    padding: 0 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+}
+.va-section-head h2 {
+    font-family: var(--va-serif);
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 300;
+    line-height: 1;
+}
+
+.va-service-feature {
+    display: grid;
+    border-top: 1px solid var(--va-line);
+}
+@media (min-width: 768px) {
+    .va-service-feature { grid-template-columns: 1fr 1fr; }
+}
+.va-service-feature a {
+    display: block;
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 4/3;
+}
+@media (min-width: 768px) {
+    .va-service-feature a { aspect-ratio: auto; min-height: 480px; }
+}
+.va-service-feature img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 1.2s var(--va-ease);
+}
+.va-service-feature a:hover img { transform: scale(1.05); }
+.va-service-feature-info {
+    padding: 3rem 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: var(--va-white);
+}
+@media (min-width: 768px) {
+    .va-service-feature-info { padding: 4rem; }
+}
+.va-service-feature-info h3 {
+    font-family: var(--va-serif);
+    font-size: 2.25rem;
+    font-weight: 300;
+    margin-bottom: 1rem;
+    transition: color 0.3s;
+}
+.va-service-feature:hover h3 { color: var(--va-gold); }
+.va-service-link {
+    margin-top: 2rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--va-gold);
+}
+
+/* Project gallery — editorial */
+.va-projects-luxe {
+    padding: 8rem 0;
+    background: var(--va-ink);
+    color: #fff;
+}
+.va-projects-luxe .va-eyebrow { color: var(--va-gold-light); }
+.va-projects-luxe .va-section-head h2 { color: #fff; }
+
+.va-project-mosaic {
+    max-width: 90rem;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    display: grid;
+    gap: 4px;
+}
+@media (min-width: 768px) {
+    .va-project-mosaic {
+        grid-template-columns: 1.4fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        min-height: 640px;
+    }
+    .va-project-mosaic .va-project-hero { grid-row: span 2; }
+}
+.va-project-tile {
+    position: relative;
+    overflow: hidden;
+    min-height: 280px;
+    display: block;
+}
+.va-project-tile img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 1.4s var(--va-ease), opacity 0.4s;
+    opacity: 0.88;
+}
+.va-project-tile:hover img {
+    transform: scale(1.04);
+    opacity: 1;
+}
+.va-project-tile-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.7), transparent 50%);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 2rem;
+}
+.va-project-tile h3 {
+    font-family: var(--va-serif);
+    font-size: 1.75rem;
+    font-weight: 300;
+    color: #fff;
+}
+
+/* Product cards */
+.va-card img {
+    transition: transform 1s var(--va-ease);
+}
+.va-card:hover img { transform: scale(1.03); }
+
+.va-product-grid {
+    max-width: 90rem;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem 1.5rem;
+}
+@media (min-width: 768px) {
+    .va-product-grid { grid-template-columns: repeat(3, 1fr); gap: 3rem 2rem; }
+}
+.va-product-card .va-product-img {
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    background: var(--va-paper);
+    margin-bottom: 1.25rem;
+}
+.va-product-card h3 {
+    font-family: var(--va-serif);
+    font-size: 1.35rem;
+    font-weight: 400;
+    transition: color 0.3s;
+}
+.va-product-card:hover h3 { color: var(--va-gold); }
+.va-product-price {
+    font-size: 0.85rem;
+    color: var(--va-muted);
+    margin-top: 0.35rem;
+    letter-spacing: 0.05em;
+}
+
+/* CTA band */
+.va-cta-luxe {
+    position: relative;
+    padding: 10rem 1.5rem;
+    text-align: center;
+    overflow: hidden;
+}
+.va-cta-luxe-bg {
+    position: absolute;
+    inset: 0;
+}
+.va-cta-luxe-bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.va-cta-luxe-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+}
+.va-cta-luxe-content {
+    position: relative;
+    z-index: 1;
+    max-width: 40rem;
+    margin: 0 auto;
+}
+.va-cta-luxe h2 {
+    font-family: var(--va-serif);
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 300;
+    color: #fff;
+    margin: 1rem 0 1.5rem;
+    line-height: 1.05;
+}
+
+/* Footer */
+.va-footer-luxe {
+    background: var(--va-ink);
+    color: rgba(255,255,255,0.55);
+    padding: 5rem 0 0;
+}
+.va-footer-luxe .va-logo { color: #fff; }
+.va-footer-luxe a:hover { color: #fff; }
+
+/* Page hero (inner pages) */
+.va-page-hero {
+    padding: 10rem 1.5rem 4rem;
+    text-align: center;
+    border-bottom: 1px solid var(--va-line);
+    background: var(--va-paper);
+}
+.va-page-hero h1 {
+    font-family: var(--va-serif);
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 300;
+}
+
+/* Legacy hero (other pages) */
+.va-hero {
+    min-height: 70vh;
+    background: var(--va-ink);
+}
+.va-hero-inner {
+    min-height: 70vh;
+    display: flex;
+    align-items: flex-end;
+    padding-bottom: 5rem;
+}
+
+/* Forms */
+.va-input {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid var(--va-line);
+    background: transparent;
+    padding: 0.85rem 0;
+    font-size: 0.95rem;
+    font-weight: 300;
+    transition: border-color 0.3s;
+}
+.va-input:focus {
+    outline: none;
+    border-color: var(--va-gold);
+}
+
+/* Calculator */
+.va-calculator {
+    background: var(--va-white);
+    border: 1px solid var(--va-line);
+    padding: 2rem;
+}
 .va-unit-btn {
     padding: 0.5rem 1rem;
-    font-size: 0.65rem;
-    letter-spacing: 0.15em;
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    border: 1px solid var(--va-sand);
-    background: #fff;
-    color: var(--va-brown);
-    transition: all 0.2s;
+    border: 1px solid var(--va-line);
+    background: transparent;
+    color: var(--va-muted);
+    transition: all 0.3s;
 }
 .va-unit-btn:hover,
 .va-unit-btn.active {
@@ -208,7 +671,7 @@ body {
     border-color: var(--va-ink);
 }
 
-/* Order modal */
+/* Modal */
 .va-modal {
     position: fixed;
     inset: 0;
@@ -219,248 +682,139 @@ body {
     padding: 1rem;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.25s, visibility 0.25s;
+    transition: opacity 0.4s, visibility 0.4s;
 }
-.va-modal.open {
-    opacity: 1;
-    visibility: visible;
-}
+.va-modal.open { opacity: 1; visibility: visible; }
 .va-modal-backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(45,36,25,0.6);
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(4px);
 }
 .va-modal-panel {
     position: relative;
-    background: #fff;
+    background: var(--va-white);
     max-width: 480px;
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
-    padding: 2rem;
-    border: 1px solid var(--va-sand);
+    padding: 2.5rem;
+    border: 1px solid var(--va-line);
 }
 .va-modal-close {
     position: absolute;
-    top: 1rem;
-    right: 1rem;
+    top: 1.25rem;
+    right: 1.25rem;
     font-size: 1.5rem;
-    line-height: 1;
-    color: var(--va-muted);
+    color: var(--va-soft);
+    background: none;
+    border: none;
+    cursor: pointer;
 }
 .va-modal-close:hover { color: var(--va-ink); }
 
-/* ─── CreativeCo-inspired motion (adapted for VYOMIKA) ─── */
-
-/* Dark rounded hero stage */
-.va-hero-showcase {
-    padding: 3rem 0 4rem;
-    background: var(--va-cream);
-}
-.va-hero-stage {
-    background: var(--va-ink);
-    border-radius: 2rem;
-    padding: 3rem 2rem 2rem;
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.1s linear;
-}
-@media (min-width: 768px) {
-    .va-hero-stage {
-        padding: 4rem 3.5rem 3rem;
-        border-radius: 2.5rem;
-    }
-}
-.va-hero-stage::before {
-    content: '';
-    position: absolute;
-    top: -40%;
-    right: -20%;
-    width: 60%;
-    height: 80%;
-    background: radial-gradient(ellipse, rgba(196,105,58,0.15) 0%, transparent 70%);
-    pointer-events: none;
-}
-
-.va-hero-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(2.25rem, 6vw, 4.5rem);
-    line-height: 1.08;
-    color: #fff;
-    opacity: 0;
-    transform: translateY(20px);
-    animation: vaHeroIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.15s forwards;
-}
-.va-hero-title.va-hero-ready { /* after JS */ }
-.va-text-accent {
-    color: var(--va-accent);
-    font-style: italic;
-}
-@keyframes vaHeroIn {
+/* Motion */
+@keyframes vaFadeUp {
+    from { opacity: 0; transform: translateY(28px); }
     to { opacity: 1; transform: translateY(0); }
 }
+.va-animate { animation: vaFadeUp 1s var(--va-ease) forwards; }
 
-.va-hero-sub {
-    color: rgba(255,255,255,0.65);
-    opacity: 0;
-    animation: vaHeroIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.35s forwards;
-}
-.va-hero-cta {
-    opacity: 0;
-    animation: vaHeroIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.5s forwards;
-}
-
-/* Fanned portfolio cards */
-.va-card-fan {
-    position: relative;
-    height: 280px;
-    margin-top: 2.5rem;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    perspective: 1200px;
-}
-@media (min-width: 1024px) {
-    .va-card-fan {
-        height: 340px;
-        margin-top: 0;
-        position: absolute;
-        right: 2rem;
-        bottom: 2rem;
-        width: 55%;
-        max-width: 520px;
-    }
-}
-.va-fan-card {
-    position: absolute;
-    width: 140px;
-    height: 200px;
-    border-radius: 1rem;
-    overflow: hidden;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.35);
-    transition: transform 0.55s cubic-bezier(0.34, 1.2, 0.64, 1), box-shadow 0.4s ease;
-    transform-origin: bottom center;
-    --rotate: calc((var(--fan-i) - (var(--fan-n) - 1) / 2) * 8deg);
-    --tx: calc((var(--fan-i) - (var(--fan-n) - 1) / 2) * 28px);
-    transform: translateX(var(--tx)) rotate(var(--rotate)) translateY(10px);
-    z-index: calc(var(--fan-i) + 1);
-}
-@media (min-width: 768px) {
-    .va-fan-card {
-        width: 160px;
-        height: 230px;
-    }
-}
-.va-fan-card img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-.va-fan-card span {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 0.6rem 0.75rem;
-    background: linear-gradient(transparent, rgba(0,0,0,0.75));
-    color: #fff;
-    font-size: 0.6rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-}
-.va-card-fan.va-fan-open .va-fan-card,
-.va-card-fan:hover .va-fan-card {
-    --spread: calc((var(--fan-i) - (var(--fan-n) - 1) / 2) * 72px);
-    transform: translateX(var(--spread)) rotate(0deg) translateY(-12px);
-    box-shadow: 0 28px 60px rgba(0,0,0,0.45);
-}
-
-/* Scroll reveal */
 .va-reveal {
     opacity: 0;
-    transform: translateY(32px);
-    transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-                transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    transform: translateY(24px);
+    transition: opacity 0.9s var(--va-ease), transform 0.9s var(--va-ease);
 }
-.va-reveal.va-revealed {
-    opacity: 1;
-    transform: translateY(0);
-}
+.va-reveal.va-revealed { opacity: 1; transform: translateY(0); }
+
 .va-reveal-stagger > * {
     opacity: 0;
-    transform: translateY(24px);
-    transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-                transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-    transition-delay: calc(var(--stagger, 0) * 80ms);
+    transform: translateY(20px);
+    transition: opacity 0.8s var(--va-ease), transform 0.8s var(--va-ease);
+    transition-delay: calc(var(--stagger, 0) * 100ms);
 }
-.va-reveal-stagger > *.va-revealed {
-    opacity: 1;
-    transform: translateY(0);
+.va-reveal-stagger > *.va-revealed { opacity: 1; transform: translateY(0); }
+
+/* Blog cards on homepage */
+.va-blog-luxe {
+    padding: 8rem 0;
+    background: var(--va-white);
 }
 
-/* Process steps — numbered like CreativeCo */
-.va-process-grid {
+/* How it works */
+.va-how-grid {
+    max-width: 90rem;
+    margin: 0 auto;
+    padding: 0 1.5rem;
     display: grid;
-    gap: 2rem;
+    gap: 3rem;
 }
 @media (min-width: 768px) {
-    .va-process-grid { grid-template-columns: repeat(2, 1fr); }
+    .va-how-grid { grid-template-columns: repeat(4, 1fr); gap: 2rem; }
+}
+.va-how-step {
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--va-line);
+}
+.va-how-num {
+    font-family: var(--va-serif);
+    font-size: 2rem;
+    font-weight: 300;
+    color: var(--va-gold);
+    line-height: 1;
+    margin-bottom: 1rem;
+}
+
+/* Information block */
+.va-info-grid {
+    max-width: 90rem;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    display: grid;
+    gap: 3rem;
 }
 @media (min-width: 1024px) {
-    .va-process-grid { grid-template-columns: repeat(4, 1fr); }
+    .va-info-grid { grid-template-columns: 1fr 1fr; gap: 5rem; align-items: start; }
 }
-.va-process-step {
-    border-top: 2px solid var(--va-accent);
-    padding-top: 1.25rem;
+.va-info-list { display: grid; gap: 1.25rem; }
+.va-info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--va-line);
+    font-size: 0.9rem;
 }
-.va-process-num {
-    font-size: 0.65rem;
-    letter-spacing: 0.25em;
-    color: var(--va-accent);
-    margin-bottom: 0.75rem;
-}
+.va-info-item span:first-child { color: var(--va-soft); font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; }
 
-/* Button hover lift */
-.va-btn-primary,
-.va-btn-outline {
-    transition: background 0.25s, color 0.25s, transform 0.25s cubic-bezier(0.34, 1.2, 0.64, 1), box-shadow 0.25s;
-}
-.va-btn-primary:hover,
-.va-btn-outline:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(45,36,25,0.15);
-}
-
-/* Marquee ticker */
-.va-marquee {
-    overflow: hidden;
-    white-space: nowrap;
-    border-block: 1px solid var(--va-sand);
-    padding: 1rem 0;
-    background: var(--va-ink);
-    color: rgba(255,255,255,0.5);
-}
-.va-marquee-track {
+/* Header icons */
+.va-header-icon {
     display: inline-flex;
-    animation: vaMarquee 28s linear infinite;
+    align-items: center;
+    gap: 0.35rem;
 }
-.va-marquee-track span {
-    padding: 0 2.5rem;
-    font-size: 0.65rem;
-    letter-spacing: 0.35em;
-    text-transform: uppercase;
+.va-cart-badge {
+    font-size: 0.55rem;
+    min-width: 1.1rem;
+    height: 1.1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--va-gold);
+    color: #fff;
+    border-radius: 50%;
+    font-weight: 500;
 }
-@keyframes vaMarquee {
-    from { transform: translateX(0); }
-    to { transform: translateX(-50%); }
-}
+.va-header.va-header--hero .va-cart-badge { background: #fff; color: var(--va-ink); }
+.va-header.va-header--hero.va-header--solid .va-cart-badge { background: var(--va-gold); color: #fff; }
+
 @media (prefers-reduced-motion: reduce) {
-    .va-reveal, .va-reveal-stagger > *, .va-hero-title, .va-hero-sub, .va-hero-cta {
-        opacity: 1;
-        transform: none;
+    .va-luxe-hero-media img,
+    .va-luxe-hero h1, .va-luxe-hero .va-hero-lead, .va-luxe-hero-cta,
+    .va-reveal, .va-reveal-stagger > * {
         animation: none;
         transition: none;
+        opacity: 1;
+        transform: none;
     }
-    .va-marquee-track { animation: none; }
-    .va-card-fan .va-fan-card { transition: none; }
 }

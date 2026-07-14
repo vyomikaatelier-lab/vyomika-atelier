@@ -52,6 +52,7 @@ Route::get('/contact', [ContactController::class, 'index'])->name('contact.index
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 
 Route::view('/about', 'pages.about')->name('about');
+Route::view('/account', 'pages.account')->name('account');
 
 // Admin
 Route::prefix('admin')->name('admin.')->group(function () {

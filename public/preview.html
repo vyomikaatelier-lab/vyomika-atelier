@@ -3,63 +3,245 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VYOMIKA ATELIER — Site Preview</title>
+    <title>VYOMIKA ATELIER — Local Preview</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Outfit:wght@200;300;400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/atelier.css">
-    <script>tailwind.config={theme:{extend:{fontFamily:{serif:['Cormorant Garamond','serif'],sans:['Jost','sans-serif']},colors:{brand:{50:'#faf8f5',100:'#f3efe8',200:'#e5ddd0',400:'#9a8b7a',500:'#8b7355',700:'#5c4a38',900:'#2d2419'}}}}}</script>
-    <style>.preview-banner{background:#8b7355;color:#fff;text-align:center;padding:8px;font-size:11px;letter-spacing:.15em;text-transform:uppercase}</style>
+    <script>tailwind.config={theme:{extend:{fontFamily:{serif:['Cormorant Garamond','serif'],sans:['Outfit','sans-serif']},colors:{brand:{50:'#fafaf8',100:'#f4f2ee',200:'#e8e4dc',400:'#9c968c',500:'#b8956b',900:'#0c0c0c'}}}}}</script>
+    <style>.preview-bar{background:#0c0c0c;color:#b8956b;text-align:center;padding:10px 16px;font-size:10px;letter-spacing:.18em;text-transform:uppercase}.preview-bar a{color:#fff;text-decoration:underline}</style>
 </head>
 <body class="font-sans text-brand-900 bg-brand-50 antialiased">
-<div class="preview-banner">Static preview — open / on Laravel for full site with calculator &amp; forms</div>
-<div class="bg-brand-900 text-white text-center text-[10px] tracking-[0.25em] uppercase py-2">Bespoke metal fabrication &amp; architectural solutions</div>
-<header class="sticky top-0 z-50 bg-brand-50/95 backdrop-blur border-b border-brand-200 py-5 text-center">
-    <div class="font-serif text-3xl tracking-[0.15em]">VYOMIKA<span class="block text-[9px] font-sans tracking-[0.5em] text-brand-500 -mt-1">ATELIER</span></div>
+
+<div class="preview-bar">Local preview — static only &nbsp;·&nbsp; <a href="https://vyomikaatelier.com" target="_blank">Live site →</a></div>
+
+<header class="va-header va-header--hero" id="va-header">
+    <div class="max-w-[90rem] mx-auto px-5 lg:px-10 flex items-center justify-between gap-4">
+        <nav class="hidden lg:flex items-center gap-8 flex-1">
+            <span class="va-nav-link cursor-default">Services</span>
+            <a href="#shop" class="va-nav-link">Shop</a>
+            <a href="#blog" class="va-nav-link">Blog</a>
+            <a href="#how-it-works" class="va-nav-link">How It Works</a>
+        </nav>
+        <div class="va-logo text-center shrink-0 lg:absolute lg:left-1/2 lg:-translate-x-1/2">VYOMIKA<span>ATELIER</span></div>
+        <div class="flex items-center gap-6 flex-1 justify-end">
+            <a href="#information" class="va-nav-link hidden md:block">Information</a>
+            <span class="va-nav-link hidden sm:flex va-header-icon cursor-default">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Account
+            </span>
+            <span class="va-nav-link va-header-icon cursor-default">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 01-8 0"/></svg>
+                <span class="hidden sm:inline">Cart</span>
+                <span class="va-cart-badge">0</span>
+            </span>
+        </div>
+    </div>
 </header>
 
-<section class="va-hero text-white" style="background:linear-gradient(rgba(45,36,25,.45),rgba(45,36,25,.65)),url('https://images.unsplash.com/photo-1497366216548-37526070297c?w=1920&q=80') center/cover">
-    <div class="va-hero-inner max-w-7xl mx-auto px-5 w-full">
-        <div class="max-w-2xl va-animate">
-            <p class="va-label text-brand-200 mb-5">Architectural Metal &amp; Home Decor</p>
-            <h1 class="font-serif text-5xl md:text-7xl leading-[1.05] mb-6">Crafted for<br><em class="font-light italic">lasting spaces.</em></h1>
-            <p class="text-brand-100 text-lg font-light mb-10">Partitions, Corten façades, slim profile doors, bespoke metal furniture, and curated home decor.</p>
+<section class="va-luxe-hero">
+    <div class="va-luxe-hero-media">
+        <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1920&q=85" alt="">
+    </div>
+    <div class="va-luxe-hero-content">
+        <p class="va-eyebrow text-white/60">Architectural Metal Atelier</p>
+        <h1>Where metal<br>becomes <em>architecture.</em></h1>
+        <p class="va-hero-lead">Partitions, façades, entrance systems, and bespoke fabrication — crafted with the precision of fine furniture and the permanence of steel.</p>
+        <div class="va-luxe-hero-cta flex flex-wrap gap-4">
+            <span class="va-btn-luxe va-btn-luxe--light">Explore Services</span>
+            <span class="va-btn-luxe va-btn-luxe--light">View Projects</span>
+        </div>
+    </div>
+    <div class="va-luxe-hero-scroll">Scroll</div>
+</section>
+
+<div class="va-trust-strip va-reveal va-revealed">
+    <div class="va-trust-strip-inner">
+        <div class="va-trust-item"><p class="va-trust-num">15+</p><p class="va-trust-label">Years Craft</p></div>
+        <div class="va-trust-item"><p class="va-trust-num">200+</p><p class="va-trust-label">Installations</p></div>
+        <div class="va-trust-item"><p class="va-trust-num">6</p><p class="va-trust-label">Core Disciplines</p></div>
+        <div class="va-trust-item"><p class="va-trust-num">Pan</p><p class="va-trust-label">India Delivery</p></div>
+    </div>
+</div>
+
+<section class="va-manifesto va-reveal va-revealed">
+    <div class="va-manifesto-inner">
+        <div><div class="va-rule mb-8"></div><p class="va-eyebrow mb-4">Our Philosophy</p></div>
+        <blockquote class="va-manifesto-quote">We believe exceptional spaces are built on <em>precision, material honesty,</em> and an unwavering commitment to craft — from the first line drawn to the final installation.</blockquote>
+    </div>
+</section>
+
+<section id="how-it-works" class="py-24 bg-brand-100 va-reveal va-revealed scroll-mt-24">
+    <div class="va-section-head">
+        <div><p class="va-eyebrow mb-3">Process</p><h2 class="va-display text-4xl md:text-5xl">How It Works</h2></div>
+        <span class="va-btn-luxe">Get Started</span>
+    </div>
+    <div class="va-how-grid va-reveal-stagger">
+        <div class="va-how-step va-revealed" style="--stagger:0"><p class="va-how-num">01</p><h3 class="font-serif text-xl mb-2">Consult</h3><p class="text-sm text-brand-400 font-light leading-relaxed">Tell us your space, dimensions, materials, and timeline.</p></div>
+        <div class="va-how-step va-revealed" style="--stagger:1"><p class="va-how-num">02</p><h3 class="font-serif text-xl mb-2">Calculate</h3><p class="text-sm text-brand-400 font-light leading-relaxed">Use our sq ft calculator for an instant estimate.</p></div>
+        <div class="va-how-step va-revealed" style="--stagger:2"><p class="va-how-num">03</p><h3 class="font-serif text-xl mb-2">Fabricate</h3><p class="text-sm text-brand-400 font-light leading-relaxed">Precision metal fabrication in our atelier.</p></div>
+        <div class="va-how-step va-revealed" style="--stagger:3"><p class="va-how-num">04</p><h3 class="font-serif text-xl mb-2">Deliver</h3><p class="text-sm text-brand-400 font-light leading-relaxed">Professional delivery and installation.</p></div>
+    </div>
+</section>
+
+<section id="information" class="py-24 va-reveal va-revealed scroll-mt-24">
+    <div class="va-info-grid">
+        <div>
+            <div class="va-rule mb-8"></div>
+            <p class="va-eyebrow mb-4">Information</p>
+            <h2 class="va-display text-3xl md:text-4xl mb-6">The atelier at a glance.</h2>
+            <p class="text-brand-400 font-light leading-relaxed mb-6">VYOMIKA ATELIER specialises in architectural metalwork — glass partitions, Corten façades, slim profile doors, PVD entrance doors, bespoke furniture, and curated home decor.</p>
+            <span class="va-service-link">Read our full story →</span>
+        </div>
+        <div class="va-info-list">
+            <div class="va-info-item"><span>Services</span><span>Partitions · Façades · Doors · PVD</span></div>
+            <div class="va-info-item"><span>Shop</span><span>Coffee · Corner · Glass tables · Handles</span></div>
+            <div class="va-info-item"><span>Calculator</span><span>Length × Height × ₹1,800 / sq ft</span></div>
+            <div class="va-info-item"><span>Enquiries</span><span>hello@vyomikaatelier.com</span></div>
+            <div class="va-info-item"><span>Website</span><span>vyomikaatelier.com</span></div>
+            <div class="va-info-item"><span>Delivery</span><span>Pan-India</span></div>
         </div>
     </div>
 </section>
 
-<section class="max-w-7xl mx-auto px-5 py-20">
-    <div class="text-center mb-12"><p class="va-label mb-3">Services</p><h2 class="font-serif text-4xl">What We Do</h2></div>
-    <div class="grid sm:grid-cols-3 gap-6 text-center">
-        <div class="border border-brand-200 p-6"><h3 class="font-serif text-xl mb-2">Partitions</h3><p class="text-sm text-brand-500">Glass &amp; aluminium partition systems with price calculator</p></div>
-        <div class="border border-brand-200 p-6"><h3 class="font-serif text-xl mb-2">Corten Façade</h3><p class="text-sm text-brand-500">Weathering steel façades with inline enquiry form</p></div>
-        <div class="border border-brand-200 p-6"><h3 class="font-serif text-xl mb-2">Slim Profile Doors</h3><p class="text-sm text-brand-500">Ultra-slim door systems with design sub-pages</p></div>
+<section class="va-services-luxe va-reveal va-revealed">
+    <div class="va-section-head">
+        <div><p class="va-eyebrow mb-3">Capabilities</p><h2 class="va-display text-4xl">Services</h2></div>
     </div>
+    <article class="va-service-feature">
+        <div><img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=900&q=80" alt="Partitions"></div>
+        <div class="va-service-feature-info">
+            <p class="va-eyebrow mb-4">01</p>
+            <h3 class="font-serif text-2xl font-light">Partitions</h3>
+            <p class="text-brand-400 font-light mt-3">Custom glass and aluminium partition systems.</p>
+        </div>
+    </article>
 </section>
 
-<section class="bg-white py-20">
-    <div class="max-w-xl mx-auto px-5">
-        <p class="va-label mb-3 text-center">Price Calculator Demo</p>
-        <div class="va-calculator bg-white border border-brand-200 p-8" data-rate="1800">
-            <div class="flex flex-wrap gap-2 mb-6">
-                <button type="button" class="va-unit-btn active" data-unit="ft-in">Feet-Inches</button>
-                <button type="button" class="va-unit-btn" data-unit="mm">MM</button>
-                <button type="button" class="va-unit-btn" data-unit="cm">CM</button>
-            </div>
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <div class="va-dim-ft-in va-dim-group"><label class="text-xs text-brand-400 uppercase">Length</label><div class="flex gap-2 mt-1"><input class="va-input va-len-ft" value="10"><input class="va-input va-len-in" value="0"></div></div>
-                <div class="va-dim-ft-in va-dim-group"><label class="text-xs text-brand-400 uppercase">Height</label><div class="flex gap-2 mt-1"><input class="va-input va-hgt-ft" value="8"><input class="va-input va-hgt-in" value="0"></div></div>
-                <div class="va-dim-mm va-dim-group hidden"><input class="va-input va-len-mm" value="3048"></div>
-                <div class="va-dim-mm va-dim-group hidden"><input class="va-input va-hgt-mm" value="2438"></div>
-                <div class="va-dim-cm va-dim-group hidden"><input class="va-input va-len-cm" value="304.8"></div>
-                <div class="va-dim-cm va-dim-group hidden"><input class="va-input va-hgt-cm" value="243.8"></div>
-            </div>
-            <div class="bg-brand-50 border border-brand-200 p-4 mb-4 flex justify-between"><span>Estimated</span><span class="font-serif text-xl va-price-display">₹1,44,000</span></div>
-            <button type="button" class="va-btn-primary w-full va-order-btn" data-service-slug="partitions" data-service-name="Partitions">Order Now</button>
+<section class="va-projects-luxe va-reveal va-revealed">
+    <div class="va-section-head">
+        <div><p class="va-eyebrow mb-3">Portfolio</p><h2 class="va-display text-4xl text-white">Selected Work</h2></div>
+    </div>
+    <div class="va-project-mosaic">
+        <div class="va-project-tile va-project-hero">
+            <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=900&q=80" alt="">
+            <div class="va-project-tile-overlay"><p class="va-eyebrow text-white/50 mb-2">Mumbai</p><h3>Corporate Partitions</h3></div>
+        </div>
+        <div class="va-project-tile">
+            <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&q=80" alt="">
+            <div class="va-project-tile-overlay"><h3>Corten Façade</h3></div>
+        </div>
+        <div class="va-project-tile">
+            <img src="https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=600&q=80" alt="">
+            <div class="va-project-tile-overlay"><h3>Slim Profile Doors</h3></div>
         </div>
     </div>
 </section>
 
-<footer class="bg-brand-900 text-brand-200 py-12 text-center"><p class="font-serif text-2xl text-white">VYOMIKA ATELIER</p><p class="text-xs mt-2 text-brand-500 uppercase tracking-widest">Metal Fabrication · Home Decor</p></footer>
-<script src="js/calculator.js"></script>
+<section id="shop" class="py-24 bg-brand-50 scroll-mt-24 va-reveal va-revealed">
+    <div class="va-section-head">
+        <div><p class="va-eyebrow mb-3">The Collection</p><h2 class="va-display text-4xl md:text-5xl">Shop</h2></div>
+        <span class="va-btn-luxe">Shop All</span>
+    </div>
+    <div class="va-product-grid">
+        <div class="va-product-card va-card">
+            <div class="va-product-img"><img src="https://images.unsplash.com/photo-1615529182904-896166571fac?w=600&q=80" class="w-full h-full object-cover" alt=""></div>
+            <p class="va-eyebrow text-brand-400 mb-1">Glass Tables</p>
+            <h3 class="font-serif text-xl">Aurora Glass Table</h3>
+            <p class="va-product-price">₹18,900</p>
+        </div>
+        <div class="va-product-card va-card">
+            <div class="va-product-img"><img src="https://images.unsplash.com/photo-1532372320572-127d86b32558?w=600&q=80" class="w-full h-full object-cover" alt=""></div>
+            <p class="va-eyebrow text-brand-400 mb-1">Coffee Tables</p>
+            <h3 class="font-serif text-xl">Crystal Top Coffee</h3>
+            <p class="va-product-price">₹22,400</p>
+        </div>
+        <div class="va-product-card va-card">
+            <div class="va-product-img"><img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=600&q=80" class="w-full h-full object-cover" alt=""></div>
+            <p class="va-eyebrow text-brand-400 mb-1">Corner Tables</p>
+            <h3 class="font-serif text-xl">Nordic Corner Table</h3>
+            <p class="va-product-price">₹12,500</p>
+        </div>
+    </div>
+</section>
+
+<section id="blog" class="va-blog-luxe scroll-mt-24 va-reveal va-revealed">
+    <div class="va-section-head">
+        <div><p class="va-eyebrow mb-3">Journal</p><h2 class="va-display text-4xl md:text-5xl">Blog</h2></div>
+        <span class="va-btn-luxe">Read All</span>
+    </div>
+    <div class="max-w-[90rem] mx-auto px-5 lg:px-10 grid md:grid-cols-3 gap-10">
+        <div>
+            <div class="aspect-[16/10] overflow-hidden mb-5 bg-brand-100"><img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&q=80" class="w-full h-full object-cover" alt=""></div>
+            <time class="va-eyebrow text-brand-400">March 2026</time>
+            <h3 class="font-serif text-2xl font-light mt-2">Why Corten Steel Is Perfect for Modern Façades</h3>
+        </div>
+        <div>
+            <div class="aspect-[16/10] overflow-hidden mb-5 bg-brand-100"><img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80" class="w-full h-full object-cover" alt=""></div>
+            <time class="va-eyebrow text-brand-400">February 2026</time>
+            <h3 class="font-serif text-2xl font-light mt-2">Glass Partitions: Open Plan Without Compromise</h3>
+        </div>
+        <div>
+            <div class="aspect-[16/10] overflow-hidden mb-5 bg-brand-100"><img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80" class="w-full h-full object-cover" alt=""></div>
+            <time class="va-eyebrow text-brand-400">January 2026</time>
+            <h3 class="font-serif text-2xl font-light mt-2">PVD Coating Explained</h3>
+        </div>
+    </div>
+</section>
+
+<section class="va-cta-luxe va-reveal va-revealed">
+    <div class="va-cta-luxe-bg"><img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1600&q=85" alt=""></div>
+    <div class="va-cta-luxe-content">
+        <p class="va-eyebrow text-white/50">Begin</p>
+        <h2>Commission your next space.</h2>
+        <p class="text-white/65 font-light leading-relaxed mb-10 max-w-md mx-auto">From concept to installation — our team guides every detail.</p>
+        <span class="va-btn-luxe va-btn-luxe--light">Enquire</span>
+    </div>
+</section>
+
+<footer class="va-footer-luxe" id="site-footer">
+    <div class="max-w-[90rem] mx-auto px-5 lg:px-10 py-16 grid sm:grid-cols-2 lg:grid-cols-4 gap-10">
+        <div>
+            <p class="va-logo mb-5">VYOMIKA<span>ATELIER</span></p>
+            <p class="text-sm font-light text-white/50">Precision architectural metalwork and curated interiors.</p>
+        </div>
+        <div>
+            <p class="va-eyebrow mb-5 text-brand-500">Navigate</p>
+            <div class="space-y-2.5 text-sm font-light">
+                <a href="#shop" class="block hover:text-white transition">Shop</a>
+                <span class="block text-white/50">Services</span>
+                <a href="#blog" class="block hover:text-white transition">Blog</a>
+                <a href="#how-it-works" class="block hover:text-white transition">How It Works</a>
+                <a href="#information" class="block hover:text-white transition">Information</a>
+            </div>
+        </div>
+        <div>
+            <p class="va-eyebrow mb-5 text-brand-500">Studio</p>
+            <div class="space-y-2.5 text-sm font-light">
+                <span class="block text-white/50">Projects</span>
+                <span class="block text-white/50">About</span>
+                <span class="block text-white/50">Contact</span>
+            </div>
+        </div>
+        <div>
+            <p class="va-eyebrow mb-5 text-brand-500">Account</p>
+            <div class="space-y-2.5 text-sm font-light">
+                <span class="block text-white/50">My Account</span>
+                <span class="block text-white/50">Cart</span>
+                <span class="block text-white/50">Checkout</span>
+            </div>
+            <p class="text-sm mt-6 font-light text-white/40">hello@vyomikaatelier.com</p>
+        </div>
+    </div>
+    <div class="border-t border-white/10 py-6 text-center text-[0.55rem] tracking-[0.28em] uppercase text-white/30">
+        &copy; 2026 VYOMIKA ATELIER · Architectural Metal · India
+    </div>
+</footer>
+
+<script src="js/motion.js"></script>
+<script>
+    document.querySelectorAll('.va-reveal, .va-reveal-stagger > *').forEach(function(el) {
+        el.classList.add('va-revealed');
+    });
+</script>
 </body>
 </html>
