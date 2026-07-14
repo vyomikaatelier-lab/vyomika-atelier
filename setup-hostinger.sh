@@ -22,8 +22,8 @@ setup_ca_bundle() {
   if [ -f "$CAFILE" ]; then
     export SSL_CERT_FILE="$CAFILE"
     export CURL_CA_BUNDLE="$CAFILE"
-    php composer.phar config --global cafile "$CAFILE" 2>/dev/null || true
-    php composer.phar config cafile "$CAFILE" 2>/dev/null || true
+    php composer.phar config --global --unset cafile 2>/dev/null || true
+    php composer.phar config cafile "$CAFILE"
     echo "Using CA bundle: $CAFILE"
   else
     echo "WARNING: Could not download CA bundle — Composer may fail on SSL."
@@ -37,6 +37,9 @@ if [ ! -f composer.phar ]; then
 fi
 
 setup_ca_bundle
+
+# Composer 2.10 blocks packages with open security advisories on fresh installs without composer.lock
+php composer.phar config audit.block-insecure false 2>/dev/null || true
 
 # Install Laravel dependencies
 if [ ! -d vendor ] || [ ! -f vendor/autoload.php ]; then

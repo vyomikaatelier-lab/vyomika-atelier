@@ -47,7 +47,9 @@
         "optimize-autoloader": true,
         "preferred-install": "dist",
         "sort-packages": true,
-        "cafile": "C:\\Users\\Realme\\AppData\\Local\\Microsoft\\WinGet\\Packages\\PHP.PHP.8.3_Microsoft.Winget.Source_8wekyb3d8bbwe\\cacert.pem"
+        "audit": {
+            "block-insecure": false
+        }
     },
     "minimum-stability": "stable",
     "prefer-stable": true
