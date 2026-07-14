@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VYOMIKA ATELIER — Site Preview</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/atelier.css">
+    <script>tailwind.config={theme:{extend:{fontFamily:{serif:['Cormorant Garamond','serif'],sans:['Jost','sans-serif']},colors:{brand:{50:'#faf8f5',100:'#f3efe8',200:'#e5ddd0',400:'#9a8b7a',500:'#8b7355',700:'#5c4a38',900:'#2d2419'}}}}}</script>
+    <style>.preview-banner{background:#8b7355;color:#fff;text-align:center;padding:8px;font-size:11px;letter-spacing:.15em;text-transform:uppercase}</style>
+</head>
+<body class="font-sans text-brand-900 bg-brand-50 antialiased">
+<div class="preview-banner">Static preview — open / on Laravel for full site with calculator &amp; forms</div>
+<div class="bg-brand-900 text-white text-center text-[10px] tracking-[0.25em] uppercase py-2">Bespoke metal fabrication &amp; architectural solutions</div>
+<header class="sticky top-0 z-50 bg-brand-50/95 backdrop-blur border-b border-brand-200 py-5 text-center">
+    <div class="font-serif text-3xl tracking-[0.15em]">VYOMIKA<span class="block text-[9px] font-sans tracking-[0.5em] text-brand-500 -mt-1">ATELIER</span></div>
+</header>
+
+<section class="va-hero text-white" style="background:linear-gradient(rgba(45,36,25,.45),rgba(45,36,25,.65)),url('https://images.unsplash.com/photo-1497366216548-37526070297c?w=1920&q=80') center/cover">
+    <div class="va-hero-inner max-w-7xl mx-auto px-5 w-full">
+        <div class="max-w-2xl va-animate">
+            <p class="va-label text-brand-200 mb-5">Architectural Metal &amp; Home Decor</p>
+            <h1 class="font-serif text-5xl md:text-7xl leading-[1.05] mb-6">Crafted for<br><em class="font-light italic">lasting spaces.</em></h1>
+            <p class="text-brand-100 text-lg font-light mb-10">Partitions, Corten façades, slim profile doors, bespoke metal furniture, and curated home decor.</p>
+        </div>
+    </div>
+</section>
+
+<section class="max-w-7xl mx-auto px-5 py-20">
+    <div class="text-center mb-12"><p class="va-label mb-3">Services</p><h2 class="font-serif text-4xl">What We Do</h2></div>
+    <div class="grid sm:grid-cols-3 gap-6 text-center">
+        <div class="border border-brand-200 p-6"><h3 class="font-serif text-xl mb-2">Partitions</h3><p class="text-sm text-brand-500">Glass &amp; aluminium partition systems with price calculator</p></div>
+        <div class="border border-brand-200 p-6"><h3 class="font-serif text-xl mb-2">Corten Façade</h3><p class="text-sm text-brand-500">Weathering steel façades with inline enquiry form</p></div>
+        <div class="border border-brand-200 p-6"><h3 class="font-serif text-xl mb-2">Slim Profile Doors</h3><p class="text-sm text-brand-500">Ultra-slim door systems with design sub-pages</p></div>
+    </div>
+</section>
+
+<section class="bg-white py-20">
+    <div class="max-w-xl mx-auto px-5">
+        <p class="va-label mb-3 text-center">Price Calculator Demo</p>
+        <div class="va-calculator bg-white border border-brand-200 p-8" data-rate="1800">
+            <div class="flex flex-wrap gap-2 mb-6">
+                <button type="button" class="va-unit-btn active" data-unit="ft-in">Feet-Inches</button>
+                <button type="button" class="va-unit-btn" data-unit="mm">MM</button>
+                <button type="button" class="va-unit-btn" data-unit="cm">CM</button>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="va-dim-ft-in va-dim-group"><label class="text-xs text-brand-400 uppercase">Length</label><div class="flex gap-2 mt-1"><input class="va-input va-len-ft" value="10"><input class="va-input va-len-in" value="0"></div></div>
+                <div class="va-dim-ft-in va-dim-group"><label class="text-xs text-brand-400 uppercase">Height</label><div class="flex gap-2 mt-1"><input class="va-input va-hgt-ft" value="8"><input class="va-input va-hgt-in" value="0"></div></div>
+                <div class="va-dim-mm va-dim-group hidden"><input class="va-input va-len-mm" value="3048"></div>
+                <div class="va-dim-mm va-dim-group hidden"><input class="va-input va-hgt-mm" value="2438"></div>
+                <div class="va-dim-cm va-dim-group hidden"><input class="va-input va-len-cm" value="304.8"></div>
+                <div class="va-dim-cm va-dim-group hidden"><input class="va-input va-hgt-cm" value="243.8"></div>
+            </div>
+            <div class="bg-brand-50 border border-brand-200 p-4 mb-4 flex justify-between"><span>Estimated</span><span class="font-serif text-xl va-price-display">₹1,44,000</span></div>
+            <button type="button" class="va-btn-primary w-full va-order-btn" data-service-slug="partitions" data-service-name="Partitions">Order Now</button>
+        </div>
+    </div>
+</section>
+
+<footer class="bg-brand-900 text-brand-200 py-12 text-center"><p class="font-serif text-2xl text-white">VYOMIKA ATELIER</p><p class="text-xs mt-2 text-brand-500 uppercase tracking-widest">Metal Fabrication · Home Decor</p></footer>
+<script src="js/calculator.js"></script>
+</body>
+</html>

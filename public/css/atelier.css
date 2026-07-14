@@ -21,8 +21,8 @@ body {
 .va-hero {
     min-height: 92vh;
     background:
-        linear-gradient(to bottom, rgba(45,36,25,0.35), rgba(45,36,25,0.55)),
-        url('https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=1920&q=80') center/cover no-repeat;
+        linear-gradient(to bottom, rgba(45,36,25,0.4), rgba(45,36,25,0.6)),
+        url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1920&q=80') center/cover no-repeat;
 }
 
 .va-hero-inner {
@@ -130,3 +130,121 @@ body {
     text-align: center;
     border-bottom: 1px solid var(--va-sand);
 }
+
+/* Prose */
+.prose-brand p { margin-bottom: 1rem; }
+
+/* Nav dropdown */
+.va-nav-dropdown .va-dropdown-panel {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 220px;
+    background: #fff;
+    border: 1px solid var(--va-sand);
+    padding: 0.75rem 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(8px);
+    transition: all 0.2s ease;
+    z-index: 100;
+    box-shadow: 0 8px 24px rgba(45,36,25,0.08);
+}
+.va-nav-dropdown:hover .va-dropdown-panel,
+.va-nav-dropdown:focus-within .va-dropdown-panel {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+.va-dropdown-panel a {
+    display: block;
+    padding: 0.5rem 1.25rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--va-brown);
+    transition: color 0.2s, background 0.2s;
+}
+.va-dropdown-panel a:hover {
+    color: var(--va-ink);
+    background: var(--va-cream);
+}
+.va-dropdown-title {
+    display: block;
+    padding: 0.5rem 1.25rem;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--va-gold);
+    border-top: 1px solid var(--va-sand);
+    margin-top: 0.25rem;
+    padding-top: 0.75rem;
+}
+.va-dropdown-label {
+    display: block;
+    padding: 0.35rem 1.25rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--va-muted);
+}
+
+/* Calculator unit buttons */
+.va-unit-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    border: 1px solid var(--va-sand);
+    background: #fff;
+    color: var(--va-brown);
+    transition: all 0.2s;
+}
+.va-unit-btn:hover,
+.va-unit-btn.active {
+    background: var(--va-ink);
+    color: #fff;
+    border-color: var(--va-ink);
+}
+
+/* Order modal */
+.va-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s, visibility 0.25s;
+}
+.va-modal.open {
+    opacity: 1;
+    visibility: visible;
+}
+.va-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(45,36,25,0.6);
+}
+.va-modal-panel {
+    position: relative;
+    background: #fff;
+    max-width: 480px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 2rem;
+    border: 1px solid var(--va-sand);
+}
+.va-modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: var(--va-muted);
+}
+.va-modal-close:hover { color: var(--va-ink); }

@@ -10,6 +10,9 @@
         <p class="text-sm text-gray-500 mb-1">{{ $lead->typeLabel() }} · {{ $lead->created_at->format('M d, Y H:i') }}</p>
         <p class="mb-2">{{ $lead->email }} @if($lead->phone)· {{ $lead->phone }}@endif</p>
         @if($lead->subject)<p class="font-medium mb-2">{{ $lead->subject }}</p>@endif
+        @if($lead->service_slug)<p class="text-sm text-gray-600 mb-2">Service: {{ $lead->service_slug }}@if($lead->design_slug) / {{ $lead->design_slug }}@endif</p>@endif
+        @if($lead->dimensions)<p class="text-sm text-gray-600 mb-2">Dimensions: {{ $lead->dimensions }} ({{ $lead->unit_type }})</p>@endif
+        @if($lead->calculated_price)<p class="text-sm font-medium text-gray-800 mb-2">Calculated price: ₹{{ number_format($lead->calculated_price, 0) }}</p>@endif
         @if($lead->budget)<p class="text-sm text-gray-600 mb-2">Budget: {{ $lead->budget }}</p>@endif
         <p class="text-gray-700 whitespace-pre-wrap">{{ $lead->message }}</p>
     </div>

@@ -9,6 +9,11 @@
 </div>
 
 <div class="max-w-7xl mx-auto px-5 py-16">
+    @php
+        $furnitureSlugs = ['coffee-tables', 'corner-tables', 'glass-tables'];
+        $isFurniture = in_array(request('category'), $furnitureSlugs, true);
+        $categoryName = $categories->firstWhere('slug', request('category'))?->name;
+    @endphp
     <div class="flex flex-col lg:flex-row gap-12">
         <aside class="lg:w-52 shrink-0">
             <p class="va-label mb-5">Category</p>
@@ -50,6 +55,18 @@
                     @endforeach
                 </div>
                 <div class="mt-14">{{ $products->links() }}</div>
+            @endif
+
+            @if($isFurniture)
+                <div class="mt-20 bg-white border border-brand-200 p-8 md:p-10">
+                    <p class="va-label mb-3">Custom Furniture</p>
+                    <h2 class="font-serif text-3xl text-brand-900 mb-2">Request {{ $categoryName ?? 'Furniture' }}</h2>
+                    <p class="text-sm text-brand-500 mb-8">Need a custom size, material, or finish? Send us your requirements and we'll prepare a quote.</p>
+                    <x-lead-form-inline
+                        :service-slug="request('category')"
+                        :subject="($categoryName ?? 'Furniture') . ' enquiry'"
+                        type="service_inquiry" />
+                </div>
             @endif
         </div>
     </div>
