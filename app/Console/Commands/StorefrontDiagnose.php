@@ -72,9 +72,11 @@ class StorefrontDiagnose extends Command
                 return 1;
             }
             if (! str_contains($gallerySource, 'click any to order')) {
-                $this->warn('Studio gallery blade missing single-CTA copy — expected cc4ea2e+ on main');
+                $this->warn('Studio gallery blade missing single-CTA copy — run git pull origin main');
+            } elseif (! str_contains($gallerySource, 'am-btn--full')) {
+                $this->warn('Studio gallery blade missing full-width Order Now button');
             } else {
-                $this->line('[OK] studio gallery single Order Now CTA');
+                $this->line('[OK] studio gallery single Order Now button');
             }
         }
 

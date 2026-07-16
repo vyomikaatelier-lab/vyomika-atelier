@@ -19,11 +19,11 @@ if ! grep -q 'usesCheckoutFlow' app/Models/Product.php 2>/dev/null; then
 fi
 GALLERY_BLADE="resources/views/partials/am-service-product-gallery.blade.php"
 if grep -q 'am-design-gallery__actions' "$GALLERY_BLADE" 2>/dev/null; then
-  echo "ERROR: $GALLERY_BLADE still has View+button pair — git pull did not get cc4ea2e+ (single Order Now CTA)."
+  echo "ERROR: $GALLERY_BLADE still has am-design-gallery__actions (View + button pair)."
   exit 1
 fi
 if ! grep -q 'click any to order' "$GALLERY_BLADE" 2>/dev/null; then
-  echo "ERROR: $GALLERY_BLADE missing single-CTA gallery copy — need cc4ea2e+ on main."
+  echo "ERROR: $GALLERY_BLADE missing single-CTA gallery copy — need latest main."
   exit 1
 fi
 
@@ -106,9 +106,9 @@ else
   echo "WARNING: mirror-frames blade missing Buy Now — wrong branch or stale files"
 fi
 
-if grep -q 'am-design-gallery__cta--action' "$GALLERY_BLADE" 2>/dev/null \
+if grep -q 'am-btn--full' "$GALLERY_BLADE" 2>/dev/null \
   && ! grep -q 'am-design-gallery__actions' "$GALLERY_BLADE" 2>/dev/null; then
-  echo "    OK: studio gallery blade has single gold Order Now CTA (cc4ea2e+)"
+  echo "    OK: studio gallery blade has single Order Now button"
 else
   echo "WARNING: studio gallery blade may still show View + Order Now pair"
 fi

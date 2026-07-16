@@ -6,6 +6,7 @@
 ])
 
 @if($products->isNotEmpty())
+{{-- studio-gallery: single Order Now button (no View pair) --}}
 <section class="am-design-gallery am-design-gallery--service">
     <p class="am-card__label">Design Gallery</p>
     <h2 class="am-design-gallery__title">{{ $heading }}</h2>
@@ -33,13 +34,13 @@
                     @csrf
                     <input type="hidden" name="quantity" value="1">
                     <input type="hidden" name="buy_now" value="1">
-                    <button type="submit" class="am-design-gallery__cta am-design-gallery__cta--action">Buy Now</button>
+                    <button type="submit" class="am-btn am-btn--primary am-btn--sm am-btn--full">Buy Now</button>
                 </form>
                 @elseif($ctaLabel === 'Request Quote')
-                <a href="{{ route('leads.create') }}" class="am-design-gallery__cta">Request Quote</a>
+                <a href="{{ route('leads.create') }}" class="am-btn am-btn--primary am-btn--sm am-btn--full">Request Quote</a>
                 @else
                 <button type="button"
-                    class="am-design-gallery__cta am-design-gallery__cta--action"
+                    class="am-btn am-btn--primary am-btn--sm am-btn--full"
                     data-open-order-popup
                     data-product-name="{{ $product->name }}"
                     data-product-slug="{{ $product->slug }}"

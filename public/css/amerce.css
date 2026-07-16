@@ -2077,8 +2077,12 @@ ul { list-style: none; }
   text-decoration: underline;
 }
 .am-design-gallery__buy-cta {
-  margin: 0;
+  margin: 0.85rem 0 0;
   padding: 0;
+}
+.am-design-gallery__body > .am-btn,
+.am-design-gallery__buy-cta .am-btn {
+  margin-top: 0.85rem;
 }
 .am-design-gallery__actions {
   display: flex;

@@ -397,10 +397,10 @@ ${pageHero('Legal', page.title, lastUpdated ? 'Last updated: ' + lastUpdated : '
 
   function serviceProductCardHtml(product, ctaLabel) {
     const actionHtml = usesCheckoutFlow(product)
-      ? `<form action="/cart/add/${product.slug}" method="POST" class="am-design-gallery__buy-cta"><input type="hidden" name="_token" value="preview"><input type="hidden" name="quantity" value="1"><input type="hidden" name="buy_now" value="1"><button type="submit" class="am-design-gallery__cta am-design-gallery__cta--action">Buy Now</button></form>`
+      ? `<form action="/cart/add/${product.slug}" method="POST" class="am-design-gallery__buy-cta"><input type="hidden" name="_token" value="preview"><input type="hidden" name="quantity" value="1"><input type="hidden" name="buy_now" value="1"><button type="submit" class="am-btn am-btn--primary am-btn--sm am-btn--full">Buy Now</button></form>`
       : ctaLabel === 'Request Quote'
-        ? `<a href="/custom-order" class="am-design-gallery__cta">Request Quote</a>`
-        : `<button type="button" class="am-design-gallery__cta am-design-gallery__cta--action" data-open-order-popup data-product-name="${product.name}" data-product-slug="${product.slug}" data-service-slug="${serviceSlugForProduct(product)}">Order Now</button>`;
+        ? `<a href="/custom-order" class="am-btn am-btn--primary am-btn--sm am-btn--full">Request Quote</a>`
+        : `<button type="button" class="am-btn am-btn--primary am-btn--sm am-btn--full" data-open-order-popup data-product-name="${product.name}" data-product-slug="${product.slug}" data-service-slug="${serviceSlugForProduct(product)}">Order Now</button>`;
     return `<article class="am-design-gallery__card">
       <a href="/shop/${product.slug}" class="am-design-gallery__media">
         ${product.image ? `<img src="${product.image}" alt="${product.name}" loading="lazy">` : ''}
