@@ -24,33 +24,18 @@
 @endif
 
 @if(!empty($page['categories']['items']))
-<section class="am-section am-section--cream" id="railing-categories">
+<section class="am-section am-section--cream" id="studio-gallery">
     <div class="am-container">
-        <div class="am-railings-section-head">
-            <h2 class="am-corten-section__title">{{ $page['categories']['title'] }}</h2>
-            @if(!empty($page['categories']['subtitle']))
-            <p class="am-corten-section__lead">{{ $page['categories']['subtitle'] }}</p>
-            @endif
-        </div>
-        <div class="am-railings-grid">
-            @foreach($page['categories']['items'] as $item)
-            <article class="am-railings-card">
-                @if(!empty($item['image']))
-                <div class="am-railings-card__media">
-                    <img src="{{ $item['image'] }}" alt="{{ $item['title'] }}" loading="lazy">
-                </div>
-                @endif
-                <div class="am-railings-card__body">
-                    <h3>{{ $item['title'] }}</h3>
-                    <p>{{ $item['text'] }}</p>
-                </div>
-            </article>
-            @endforeach
-        </div>
+        @include('partials.am-config-design-gallery', [
+            'items' => $page['categories']['items'],
+            'heading' => $page['categories']['title'] ?? 'Railing Designs',
+            'sectionLabel' => 'Design Gallery',
+            'serviceSlug' => 'railings',
+            'categoryLabel' => 'Railings',
+        ])
     </div>
 </section>
 @endif
-
 @if(!empty($page['layouts']['items']))
 <section class="am-section am-section--white" id="railing-layouts">
     <div class="am-container">

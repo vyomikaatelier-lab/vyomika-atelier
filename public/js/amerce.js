@@ -391,34 +391,91 @@
       modal.querySelector('#va-modal-name, input[name="name"]')?.focus();
     }
 
+    function formatInr(value) {
+      const n = Number(String(value).replace(/[^\d.]/g, ''));
+      if (!Number.isFinite(n) || n <= 0) return '';
+      return '₹' + n.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+    }
+
+    function readGalleryOrderDataset(btn) {
+      return {
+        name: btn.getAttribute('data-product-name') || '',
+        slug: btn.getAttribute('data-product-slug') || '',
+        serviceSlug: btn.getAttribute('data-service-slug') || '',
+        finish: btn.getAttribute('data-finish') || '',
+        price: btn.getAttribute('data-price') || '',
+        category: btn.getAttribute('data-category') || '',
+        popupType: btn.getAttribute('data-popup-type') || 'order_now',
+      };
+    }
+
+    function openGalleryOrder(btn) {
+      const data = readGalleryOrderDataset(btn);
+      const parts = [data.name];
+      if (data.category) parts.push(data.category);
+      const context = parts.filter(Boolean).join(' — ') || 'Product enquiry';
+      const priceLabel = formatInr(data.price);
+      openModal({
+        title: 'Complete your order',
+        subtitle: priceLabel ? `Listed from ${priceLabel}` : (data.category || ''),
+        type: data.popupType === 'order_now' ? 'order_now' : data.popupType,
+        subject: data.name ? `${data.name} — Order Request` : 'Order Request',
+        context,
+        showOrderSummary: false,
+      });
+      setField('va-modal-service-slug', data.serviceSlug);
+      setField('va-modal-design-slug', data.slug);
+      if (data.price) setField('va-modal-price', data.price);
+      if (data.finish) setField('va-modal-finish', data.finish);
+    }
+
     function close() {
       modal.classList.remove('open');
       modal.setAttribute('aria-hidden', 'true');
       document.body.style.overflow = '';
+      const form = document.getElementById('va-order-form');
+      if (form) {
+        form.reset();
+        delete form.dataset.submitting;
+        const submitBtn = form.querySelector('[type="submit"]');
+        if (submitBtn) submitBtn.disabled = false;
+      }
+      clearOrderFields();
+      if (typeInput) typeInput.value = 'order_now';
+      if (contextField) contextField.value = '';
+      if (productLabel) productLabel.value = '';
+      if (subtitleEl) {
+        subtitleEl.textContent = '';
+        subtitleEl.hidden = true;
+      }
+      if (orderSummary) orderSummary.hidden = true;
+    }
+
+    const form = document.getElementById('va-order-form');
+    if (form && form.dataset.submitBound !== '1') {
+      form.dataset.submitBound = '1';
+      form.addEventListener('submit', (ev) => {
+        if (form.dataset.submitting === '1') {
+          ev.preventDefault();
+          return;
+        }
+        form.dataset.submitting = '1';
+        const submitBtn = form.querySelector('[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
+      });
     }
 
     document.addEventListener('click', (e) => {
-      const orderPopupBtn = e.target.closest('[data-open-order-popup]');
+      const orderPopupBtn = e.target.closest('[data-open-order-popup], [data-open-contact-studio][data-popup-type="order_now"]');
       if (orderPopupBtn) {
         e.preventDefault();
         e.stopPropagation();
-        const name = orderPopupBtn.getAttribute('data-product-name') || '';
-        const serviceSlug = orderPopupBtn.getAttribute('data-service-slug') || '';
-        const designSlug = orderPopupBtn.getAttribute('data-design-slug') || orderPopupBtn.getAttribute('data-product-slug') || '';
-        openModal({
-          title: 'Complete your order',
-          type: 'order_now',
-          subject: name ? `${name} — Order Request` : 'Order Request',
-          context: name || 'Product enquiry',
-          showOrderSummary: false,
-        });
-        setField('va-modal-service-slug', serviceSlug);
-        setField('va-modal-design-slug', designSlug);
+        openGalleryOrder(orderPopupBtn);
         return;
       }
 
       const contactBtn = e.target.closest('[data-open-contact-studio]');
-      if (contactBtn) {
+      if (contactBtn && contactBtn.getAttribute('data-popup-type') !== 'order_now') {
         e.preventDefault();
         e.stopPropagation();
         const context = contactBtn.getAttribute('data-contact-context') || '';

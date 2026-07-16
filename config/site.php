@@ -37,7 +37,7 @@ return [
             'label' => 'Collections',
             'children' => [
                 ['label' => 'Mirror Frames', 'route' => 'collections.mirror-frames.index'],
-                ['label' => 'Bespoke Metal Furniture', 'route' => 'collections.gallery.index', 'params' => ['slug' => 'bespoke-metal-furniture']],
+                ['label' => 'Bespoke Furniture', 'route' => 'collections.gallery.index', 'params' => ['slug' => 'bespoke-metal-furniture']],
                 ['label' => 'Corner Tables', 'route' => 'collections.gallery.index', 'params' => ['slug' => 'corner-tables']],
                 ['label' => 'Coffee Tables', 'route' => 'collections.gallery.index', 'params' => ['slug' => 'coffee-tables']],
                 ['label' => 'Glass Tables', 'route' => 'collections.gallery.index', 'params' => ['slug' => 'glass-tables']],
@@ -329,7 +329,7 @@ return [
         'shop_links' => [
             ['label' => 'All Products', 'route' => 'shop.index'],
             ['label' => 'Mirror Frames', 'route' => 'collections.mirror-frames.index'],
-            ['label' => 'Bespoke Metal Furniture', 'route' => 'collections.gallery.index', 'params' => ['slug' => 'bespoke-metal-furniture']],
+            ['label' => 'Bespoke Furniture', 'route' => 'collections.gallery.index', 'params' => ['slug' => 'bespoke-metal-furniture']],
             ['label' => 'Corner Tables', 'route' => 'collections.gallery.index', 'params' => ['slug' => 'corner-tables']],
             ['label' => 'Coffee Tables', 'route' => 'collections.gallery.index', 'params' => ['slug' => 'coffee-tables']],
             ['label' => 'Glass Tables', 'route' => 'collections.gallery.index', 'params' => ['slug' => 'glass-tables']],

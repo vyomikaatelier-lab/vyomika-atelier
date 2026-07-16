@@ -33,6 +33,18 @@
             return request()->route('slug') === ($params['slug'] ?? null);
         }
 
+        if ($route === 'collections.gallery.index' && request()->routeIs('collections.gallery.index')) {
+            return request()->route('slug') === ($params['slug'] ?? null);
+        }
+
+        if ($route === 'collections.mirror-frames.index') {
+            return request()->routeIs('collections.mirror-frames.*');
+        }
+
+        if ($route === 'studio.railings') {
+            return request()->routeIs('studio.railings');
+        }
+
         if ($route === 'shop.index' && request()->routeIs('shop.index') && isset($params['category'])) {
             return request('category') === $params['category'];
         }
