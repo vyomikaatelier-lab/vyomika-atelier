@@ -56,23 +56,31 @@
         </div>
         <div class="am-design-gallery__grid am-design-gallery__grid--dense am-mirror-frames-grid">
             @foreach($designs as $design)
-            <a href="{{ route('collections.mirror-frames.show', $design['slug']) }}" class="am-design-gallery__card am-mirror-frames-card">
-                @if(!empty($design['image']))
-                <div class="am-design-gallery__media">
+            @php
+                $showUrl = route('collections.mirror-frames.show', $design['slug']);
+            @endphp
+            <article class="am-design-gallery__card am-mirror-frames-card am-design-gallery__card--split">
+                <a href="{{ $showUrl }}" class="am-design-gallery__media">
+                    @if(!empty($design['image']))
                     <img src="{{ $design['image'] }}" alt="{{ $design['name'] }}" loading="lazy">
                     @if(!empty($design['badge']))
                     <span class="am-mirror-frames-card__badge">{{ $design['badge'] }}</span>
                     @endif
-                </div>
-                @endif
+                    @endif
+                </a>
                 <div class="am-design-gallery__body">
-                    <h3 class="am-design-gallery__name">{{ $design['name'] }}</h3>
+                    <h3 class="am-design-gallery__name">
+                        <a href="{{ $showUrl }}">{{ $design['name'] }}</a>
+                    </h3>
                     @if(!empty($design['description']))
                     <p class="am-design-gallery__desc">{{ \Illuminate\Support\Str::limit($design['description'], 90) }}</p>
                     @endif
-                    <span class="am-design-gallery__cta">View &amp; Buy →</span>
+                    <div class="am-design-gallery__actions">
+                        <a href="{{ $showUrl }}" class="am-btn am-btn--outline am-btn--sm">View</a>
+                        <a href="{{ $showUrl }}#buy" class="am-btn am-btn--primary am-btn--sm">Buy Now</a>
+                    </div>
                 </div>
-            </a>
+            </article>
             @endforeach
         </div>
     </div>

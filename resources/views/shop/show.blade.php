@@ -104,7 +104,7 @@
                 </div>
                 @else
                 <div class="am-pdp__quote-cta">
-                    <button type="button" class="am-btn am-btn--primary am-btn--lg am-btn--full" data-open-contact-studio data-contact-context="Quote — {{ $product->name }}" @if(count($images)) data-contact-image="{{ $images[0] }}" @endif>Request Quote</button>
+                    <button type="button" class="am-btn am-btn--primary am-btn--lg am-btn--full" data-open-order-popup data-product-name="{{ $product->name }}" data-product-slug="{{ $product->slug }}" data-service-slug="{{ $calcServiceSlug }}">Order Now</button>
                 </div>
                 @include('partials.am-pdp-checkout-trust')
                 @endif

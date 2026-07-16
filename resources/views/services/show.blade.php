@@ -23,6 +23,7 @@
             'products' => $galleryProducts,
             'heading' => \App\Support\ServiceGallery::galleryHeading($service),
             'ctaLabel' => \App\Support\ServiceGallery::galleryCtaLabel($service),
+            'serviceSlug' => $service->slug,
         ])
     </div>
 </section>

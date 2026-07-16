@@ -30,7 +30,7 @@
   --am-announce-bg: #1a1410;
   --am-announce-fg: #fdfbf7;
   --am-accent-rust: #d4623a;
-  --am-btn-on-gold-fg: #1a1410;
+  --am-btn-on-gold-fg: #ffffff;
   --am-image-overlay: linear-gradient(to top, rgba(var(--am-ink-rgb), 0.55) 0%, rgba(var(--am-ink-rgb), 0.08) 60%);
 }
 
@@ -262,12 +262,12 @@ ul { list-style: none; }
   transition: all 0.2s;
   border: 2px solid transparent;
 }
-.am-btn--primary { background: var(--am-gold); color: var(--am-btn-on-gold-fg); }
-.am-btn--primary:hover { background: var(--am-gold-dark); color: var(--am-btn-on-gold-fg); }
+.am-btn--primary { background: var(--am-gold); color: #fff; }
+.am-btn--primary:hover { background: var(--am-gold-dark); color: #fff; }
 .am-btn--outline { border-color: var(--am-gold); color: var(--am-gold-dark); background: transparent; }
-.am-btn--outline:hover { background: var(--am-gold); color: var(--am-btn-on-gold-fg); border-color: var(--am-gold); }
-.am-btn--dark { background: var(--am-ink); color: var(--am-cream); }
-.am-btn--dark:hover { background: var(--am-charcoal-soft); color: var(--am-cream); }
+.am-btn--outline:hover { background: var(--am-gold); color: #fff; border-color: var(--am-gold); }
+.am-btn--dark { background: var(--am-ink); color: #fff; }
+.am-btn--dark:hover { background: var(--am-charcoal-soft); color: #fff; }
 .am-btn--white { background: var(--am-white); color: var(--am-charcoal); }
 .am-btn--white:hover { background: var(--am-cream); }
 .am-btn--lg { padding: 1rem 2rem; font-size: 0.95rem; }
@@ -807,7 +807,7 @@ ul { list-style: none; }
 .am-order-modal {
   position: fixed;
   inset: 0;
-  z-index: 550;
+  z-index: 700;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -965,7 +965,7 @@ ul { list-style: none; }
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--am-btn-on-gold-fg);
+  color: #fff;
   background: var(--am-gold);
   border: none;
   border-radius: var(--am-radius);
@@ -2063,6 +2063,16 @@ ul { list-style: none; }
   font-weight: 600;
   color: var(--am-gold-dark);
 }
+.am-design-gallery__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+.am-design-gallery__actions .am-btn { flex: 1 1 auto; min-width: 5.5rem; }
+.am-design-gallery__card--split { display: flex; flex-direction: column; height: 100%; }
+.am-design-gallery__card--split .am-design-gallery__body { display: flex; flex-direction: column; flex: 1; }
+.am-design-gallery__card--split .am-design-gallery__actions { margin-top: auto; padding-top: 0.85rem; }
 
 .am-pdp__sqft-price {
   display: flex;

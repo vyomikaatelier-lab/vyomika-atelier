@@ -346,7 +346,6 @@
   function initPopupFormModal() {
     const modal = document.getElementById('va-order-modal');
     if (!modal || modal.dataset.bound === '1') return;
-    modal.dataset.bound = '1';
 
     const titleEl = document.getElementById('am-popup-form-title');
     const subtitleEl = modal.querySelector('[data-popup-subtitle]');
@@ -355,6 +354,11 @@
     const contextField = modal.querySelector('[data-popup-context-field]');
     const orderSummary = modal.querySelector('[data-popup-order-summary]');
     const productLabel = document.getElementById('va-modal-product');
+
+    function setField(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.value = value ?? '';
+    }
 
     function clearOrderFields() {
       ['va-modal-service-slug', 'va-modal-design-slug', 'va-modal-price', 'va-modal-dimensions', 'va-modal-unit', 'va-modal-finish'].forEach((id) => {
@@ -384,7 +388,7 @@
       modal.classList.add('open');
       modal.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
-      modal.querySelector('input[name="name"]')?.focus();
+      modal.querySelector('#va-modal-name, input[name="name"]')?.focus();
     }
 
     function close() {
@@ -394,9 +398,29 @@
     }
 
     document.addEventListener('click', (e) => {
+      const orderPopupBtn = e.target.closest('[data-open-order-popup]');
+      if (orderPopupBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const name = orderPopupBtn.getAttribute('data-product-name') || '';
+        const serviceSlug = orderPopupBtn.getAttribute('data-service-slug') || '';
+        const designSlug = orderPopupBtn.getAttribute('data-design-slug') || orderPopupBtn.getAttribute('data-product-slug') || '';
+        openModal({
+          title: 'Complete your order',
+          type: 'order_now',
+          subject: name ? `${name} — Order Request` : 'Order Request',
+          context: name || 'Product enquiry',
+          showOrderSummary: false,
+        });
+        setField('va-modal-service-slug', serviceSlug);
+        setField('va-modal-design-slug', designSlug);
+        return;
+      }
+
       const contactBtn = e.target.closest('[data-open-contact-studio]');
       if (contactBtn) {
         e.preventDefault();
+        e.stopPropagation();
         const context = contactBtn.getAttribute('data-contact-context') || '';
         openModal({
           title: 'Enquire about this piece',
@@ -412,6 +436,7 @@
       const projectBtn = e.target.closest('[data-open-project-enquiry]');
       if (projectBtn) {
         e.preventDefault();
+        e.stopPropagation();
         const title = projectBtn.getAttribute('data-project-title') || '';
         openModal({
           title: 'Inquire about a similar project',
@@ -435,6 +460,7 @@
     });
 
     window.AmPopupForm = { openModal, close };
+    modal.dataset.bound = '1';
   }
 
   function initCheckoutPayMethods() {

@@ -131,17 +131,19 @@
             if (orderSummary) orderSummary.hidden = false;
             if (messageField) messageField.placeholder = 'Installation address, timeline, finish preference…';
 
-            document.getElementById('va-modal-service-slug').value = serviceSlug;
-            document.getElementById('va-modal-design-slug').value = designSlug;
-            document.getElementById('va-modal-price').value = Math.round(state.price);
-            document.getElementById('va-modal-dimensions').value = state.dimLabel;
-            document.getElementById('va-modal-unit').value = state.unit;
-            const finishField = document.getElementById('va-modal-finish');
-            if (finishField) finishField.value = finishName;
-            document.getElementById('va-modal-dim-display').textContent = state.dimLabel + ' (' + state.sqft.toFixed(2) + ' sq ft)';
-            document.getElementById('va-modal-price-display').textContent = formatINR(state.price);
-            document.getElementById('va-modal-subject').value = serviceName + ' — Order Request';
-            document.querySelector('.va-modal-service-label').textContent = serviceName;
+            setField('va-modal-service-slug', serviceSlug);
+            setField('va-modal-design-slug', designSlug);
+            setField('va-modal-price', Math.round(state.price));
+            setField('va-modal-dimensions', state.dimLabel);
+            setField('va-modal-unit', state.unit);
+            setField('va-modal-finish', finishName);
+            const dimDisplay = document.getElementById('va-modal-dim-display');
+            const priceDisplay = document.getElementById('va-modal-price-display');
+            if (dimDisplay) dimDisplay.textContent = state.dimLabel + ' (' + state.sqft.toFixed(2) + ' sq ft)';
+            if (priceDisplay) priceDisplay.textContent = formatINR(state.price);
+            setField('va-modal-subject', serviceName + ' — Order Request');
+            const svcLabel = modal.querySelector('.va-modal-service-label');
+            if (svcLabel) svcLabel.textContent = serviceName;
             const productField = document.getElementById('va-modal-product');
             if (productField) {
                 productField.value = serviceName + (finishName ? ' · ' + finishName : '');
@@ -149,6 +151,11 @@
 
             openOrderModal(modal);
         });
+    }
+
+    function setField(id, value) {
+        const el = document.getElementById(id);
+        if (el) el.value = value ?? '';
     }
 
     function initCalculators() {

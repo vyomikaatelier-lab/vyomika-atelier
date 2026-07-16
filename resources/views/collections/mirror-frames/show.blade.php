@@ -87,7 +87,7 @@
                 <div class="am-prose am-pdp__desc">{{ $design['description'] ?? $product->description }}</div>
                 @endif
 
-                <div class="am-pdp__buy-inline">
+                <div class="am-pdp__buy-inline" id="buy">
                     @include('partials.am-pdp-buy-actions', ['product' => $product])
                     @include('partials.am-pdp-checkout-trust')
                 </div>

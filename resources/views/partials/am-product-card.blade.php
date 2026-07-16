@@ -25,7 +25,18 @@
         <img src="{{ $image }}" alt="{{ $name }}" loading="lazy">
         @endif
         <div class="am-product-card__actions">
-            <button type="button" class="am-btn am-btn--primary am-btn--sm am-btn--full" data-order-now data-product-url="{{ $url }}">Order Now</button>
+            @if($isModel && $product->showsSqFtCalculator())
+            <button type="button"
+                class="am-btn am-btn--primary am-btn--sm am-btn--full"
+                data-open-order-popup
+                data-product-name="{{ $name }}"
+                data-product-slug="{{ $slug }}"
+                data-service-slug="{{ \App\Models\Service::serviceSlugForProduct($slug, $product->category?->slug) }}">
+                Order Now
+            </button>
+            @else
+            <button type="button" class="am-btn am-btn--primary am-btn--sm am-btn--full" data-order-now data-product-url="{{ $url }}">Buy Now</button>
+            @endif
         </div>
     </a>
     <div class="am-product-card__body">
