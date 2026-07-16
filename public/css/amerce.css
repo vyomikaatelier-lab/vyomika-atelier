@@ -2062,6 +2062,23 @@ ul { list-style: none; }
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--am-gold-dark);
+  text-decoration: none;
+}
+.am-design-gallery__cta--action {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  line-height: inherit;
+}
+.am-design-gallery__cta--action:hover {
+  text-decoration: underline;
+}
+.am-design-gallery__buy-cta {
+  margin: 0;
+  padding: 0;
 }
 .am-design-gallery__actions {
   display: flex;
