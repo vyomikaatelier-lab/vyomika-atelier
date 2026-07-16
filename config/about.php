@@ -50,7 +50,7 @@ return [
             [
                 'name' => 'Furniture',
                 'text' => 'Bespoke coffee tables, consoles, racks and display systems in PVD and brushed metal.',
-                'route' => 'services.show',
+                'route' => 'collections.gallery.index',
                 'params' => ['slug' => 'bespoke-metal-furniture'],
                 'image' => 'https://images.unsplash.com/photo-1532372320572-127d86b32558?w=800&q=80',
             ],

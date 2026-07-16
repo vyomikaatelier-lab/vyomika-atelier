@@ -13,33 +13,11 @@
 
 @section('content')
 
-<section class="am-railings-hero" style="--railings-hero-img: url('{{ $hero['image'] ?? '' }}')">
-    <div class="am-container am-railings-hero__inner">
-        <p class="am-page-hero__label">{{ $hero['label'] ?? 'Studio' }}</p>
-        <h1 class="am-railings-hero__title">{{ $hero['title'] ?? 'Railings' }}</h1>
-        <p class="am-railings-hero__subtitle">{{ $hero['subtitle'] ?? '' }}</p>
-        @if(!empty($hero['highlights']))
-        <ul class="am-pro-hero__highlights">
-            @foreach($hero['highlights'] as $item)
-            <li>{{ $item }}</li>
-            @endforeach
-        </ul>
-        @endif
-        <div class="am-pro-hero__actions">
-            @if(!empty($hero['cta_primary']['href']))
-            <a href="{{ $hero['cta_primary']['href'] }}" class="am-btn am-btn--primary">{{ $hero['cta_primary']['label'] }}</a>
-            @endif
-            @if(!empty($hero['cta_secondary']['href']))
-            <a href="{{ $hero['cta_secondary']['href'] }}" class="am-btn am-btn--outline am-btn--light">{{ $hero['cta_secondary']['label'] }}</a>
-            @endif
-        </div>
-    </div>
-</section>
-
 @if(!empty($page['intro']['body']))
-<section class="am-section am-section--white">
+<section class="am-section am-section--white am-section--page-head">
     <div class="am-container am-railings-intro">
-        <h2 class="am-corten-section__title am-corten-section__title--center">{{ $page['intro']['title'] ?? '' }}</h2>
+        <p class="am-page-hero__label">{{ $page['hero']['label'] ?? 'Studio' }}</p>
+        <h1 class="am-corten-section__title">{{ $page['hero']['title'] ?? 'Railings' }}</h1>
         <p class="am-corten-section__lead am-corten-section__lead--center">{{ $page['intro']['body'] }}</p>
     </div>
 </section>

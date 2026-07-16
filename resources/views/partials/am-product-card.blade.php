@@ -25,7 +25,7 @@
         <img src="{{ $image }}" alt="{{ $name }}" loading="lazy">
         @endif
         <div class="am-product-card__actions">
-            @if($isModel && $product->showsSqFtCalculator())
+            @if($isModel)
             <button type="button"
                 class="am-btn am-btn--primary am-btn--sm am-btn--full"
                 data-open-order-popup
@@ -34,15 +34,8 @@
                 data-service-slug="{{ \App\Models\Service::serviceSlugForProduct($slug, $product->category?->slug) }}">
                 Order Now
             </button>
-            @elseif($isModel && $product->usesCheckoutFlow())
-            <form action="{{ route('cart.add', $product) }}" method="POST" class="am-product-card__buy-form" onclick="event.stopPropagation()">
-                @csrf
-                <input type="hidden" name="quantity" value="1">
-                <input type="hidden" name="buy_now" value="1">
-                <button type="submit" class="am-btn am-btn--primary am-btn--sm am-btn--full">Buy Now</button>
-            </form>
             @else
-            <button type="button" class="am-btn am-btn--primary am-btn--sm am-btn--full" data-order-now data-product-url="{{ $url }}">Buy Now</button>
+            <button type="button" class="am-btn am-btn--primary am-btn--sm am-btn--full" data-order-now data-product-url="{{ $url }}">Order Now</button>
             @endif
         </div>
     </a>

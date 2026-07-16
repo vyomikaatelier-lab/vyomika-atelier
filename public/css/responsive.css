@@ -438,3 +438,87 @@ main,
     --am-gutter: clamp(12px, 2vw, 32px);
   }
 }
+
+/* Gallery card CTAs — backup rules (responsive.css loads after amerce.css) */
+.am-design-gallery__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.am-design-gallery__actions {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: stretch;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.85rem;
+  width: 100%;
+}
+
+.am-design-gallery__buy-form {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  margin: 0;
+  padding: 0;
+}
+
+.am-design-gallery__actions .am-btn--card-view,
+.am-design-gallery__actions a.am-btn--card-view {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 44px;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border-radius: var(--am-radius);
+  border: 1px solid var(--am-border);
+  color: var(--am-gold-dark);
+  background: transparent;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.am-design-gallery__actions .am-btn--card-primary,
+.am-design-gallery__buy-form .am-btn--card-primary,
+.am-design-gallery__actions a.am-btn--card-primary {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 44px;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border-radius: var(--am-radius);
+  border: 1px solid transparent;
+  background: var(--am-gold);
+  color: #fff;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.am-design-gallery__buy-form .am-btn--card-primary {
+  width: 100%;
+}
+
+.am-design-gallery__actions .am-btn--card-view:hover,
+.am-design-gallery__actions a.am-btn--card-view:hover {
+  border-color: var(--am-gold);
+  color: var(--am-charcoal);
+  background: var(--am-cream);
+}
+
+.am-design-gallery__actions .am-btn--card-primary:hover,
+.am-design-gallery__buy-form .am-btn--card-primary:hover,
+.am-design-gallery__actions a.am-btn--card-primary:hover {
+  background: var(--am-gold-dark);
+  color: #fff;
+}

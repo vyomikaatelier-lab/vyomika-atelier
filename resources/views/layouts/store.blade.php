@@ -10,9 +10,14 @@
     <script>try{var t=localStorage.getItem('ssmetal-theme');document.documentElement.dataset.theme=t||'atelier';var h=localStorage.getItem('ssmetal-hero');document.documentElement.dataset.hero=h||'fullscreen'}catch(e){document.documentElement.dataset.theme='atelier';document.documentElement.dataset.hero='fullscreen'}</script>
     @endif
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
-    <link rel="stylesheet" href="{{ asset('css/amerce.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/amerce-themes.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/responsive.css') }}">
+    @php
+        $assetCssVer = @filemtime(public_path('css/amerce.css')) ?: time();
+        $assetThemeVer = @filemtime(public_path('css/amerce-themes.css')) ?: $assetCssVer;
+        $assetResponsiveVer = @filemtime(public_path('css/responsive.css')) ?: $assetCssVer;
+    @endphp
+    <link rel="stylesheet" href="{{ asset('css/amerce.css') }}?v={{ $assetCssVer }}">
+    <link rel="stylesheet" href="{{ asset('css/amerce-themes.css') }}?v={{ $assetThemeVer }}">
+    <link rel="stylesheet" href="{{ asset('css/responsive.css') }}?v={{ $assetResponsiveVer }}">
     @stack('styles')
 </head>
 <body @if(filter_var(env('APP_PREVIEW_BAR', false), FILTER_VALIDATE_BOOLEAN)) class="has-preview-bar" @endif>
@@ -213,8 +218,8 @@
 
 @include('partials.am-popup-form-modal')
 
-<script src="{{ asset('js/responsive.js') }}" defer></script>
-<script src="{{ asset('js/amerce.js') }}"></script>
+<script src="{{ asset('js/responsive.js') }}?v={{ @filemtime(public_path('js/responsive.js')) ?: $assetCssVer }}" defer></script>
+<script src="{{ asset('js/amerce.js') }}?v={{ @filemtime(public_path('js/amerce.js')) ?: $assetCssVer }}"></script>
 <script src="{{ asset('js/calculator.js') }}"></script>
 @if($previewBar ?? false)
 <script src="{{ asset('js/preview-options.js') }}"></script>

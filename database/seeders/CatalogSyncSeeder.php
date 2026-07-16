@@ -140,6 +140,7 @@ class CatalogSyncSeeder extends Seeder
                 'has_calculator' => false,
                 'has_designs' => false,
                 'lead_form' => 'inline',
+                'is_active' => false,
             ],
             [
                 'name' => 'Main Entrance PVD Doors',
@@ -170,13 +171,14 @@ class CatalogSyncSeeder extends Seeder
 
         foreach ($services as $data) {
             $designs = $data['designs'] ?? [];
-            unset($data['designs']);
+            $isActive = $data['is_active'] ?? true;
+            unset($data['designs'], $data['is_active']);
 
             $service = Service::query()->updateOrCreate(
                 ['slug' => $data['slug']],
                 [
                     ...$data,
-                    'is_active' => true,
+                    'is_active' => $isActive,
                     'rate_per_sqft' => 1800,
                 ]
             );

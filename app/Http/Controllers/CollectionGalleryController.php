@@ -26,15 +26,19 @@ class CollectionGalleryController extends Controller
         $page = config("collections.{$slug}");
         abort_unless(is_array($page), 404);
 
-        $category = Category::query()
-            ->where('slug', $slug)
-            ->where('is_active', true)
-            ->first();
+        $categorySlugs = $page['category_slugs'] ?? [$slug];
 
-        abort_unless($category, 404);
+        $categories = Category::query()
+            ->whereIn('slug', $categorySlugs)
+            ->where('is_active', true)
+            ->get();
+
+        abort_unless($categories->isNotEmpty(), 404);
+
+        $category = $categories->firstWhere('slug', $slug) ?? $categories->first();
 
         $products = Product::query()
-            ->where('category_id', $category->id)
+            ->whereIn('category_id', $categories->pluck('id'))
             ->where('is_active', true)
             ->with('category')
             ->orderByDesc('is_featured')

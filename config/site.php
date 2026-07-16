@@ -28,7 +28,6 @@ return [
             'children' => [
                 ['label' => 'PVD Partitions', 'route' => 'services.show', 'params' => ['slug' => 'partitions']],
                 ['label' => 'Slim Profile Door System', 'route' => 'services.show', 'params' => ['slug' => 'slim-profile-door-system']],
-                ['label' => 'Bespoke Metal Furniture', 'route' => 'services.show', 'params' => ['slug' => 'bespoke-metal-furniture']],
                 ['label' => 'Main Entrance PVD Doors', 'route' => 'services.show', 'params' => ['slug' => 'main-entrance-pvd-doors']],
                 ['label' => 'Rack Systems, Metal PVD', 'route' => 'services.show', 'params' => ['slug' => 'rack-systems-metal-pvd']],
                 ['label' => 'Railings', 'route' => 'studio.railings'],
@@ -38,6 +37,7 @@ return [
             'label' => 'Collections',
             'children' => [
                 ['label' => 'Mirror Frames', 'route' => 'collections.mirror-frames.index'],
+                ['label' => 'Bespoke Metal Furniture', 'route' => 'collections.gallery.index', 'params' => ['slug' => 'bespoke-metal-furniture']],
                 ['label' => 'Corner Tables', 'route' => 'collections.gallery.index', 'params' => ['slug' => 'corner-tables']],
                 ['label' => 'Coffee Tables', 'route' => 'collections.gallery.index', 'params' => ['slug' => 'coffee-tables']],
                 ['label' => 'Glass Tables', 'route' => 'collections.gallery.index', 'params' => ['slug' => 'glass-tables']],
@@ -329,10 +329,11 @@ return [
         'shop_links' => [
             ['label' => 'All Products', 'route' => 'shop.index'],
             ['label' => 'Mirror Frames', 'route' => 'collections.mirror-frames.index'],
-            ['label' => 'Corner Tables', 'route' => 'shop.index', 'params' => ['category' => 'corner-tables']],
-            ['label' => 'Coffee Tables', 'route' => 'shop.index', 'params' => ['category' => 'coffee-tables']],
-            ['label' => 'Glass Tables', 'route' => 'shop.index', 'params' => ['category' => 'glass-tables']],
-            ['label' => 'Door Handles', 'route' => 'shop.index', 'params' => ['category' => 'door-handles']],
+            ['label' => 'Bespoke Metal Furniture', 'route' => 'collections.gallery.index', 'params' => ['slug' => 'bespoke-metal-furniture']],
+            ['label' => 'Corner Tables', 'route' => 'collections.gallery.index', 'params' => ['slug' => 'corner-tables']],
+            ['label' => 'Coffee Tables', 'route' => 'collections.gallery.index', 'params' => ['slug' => 'coffee-tables']],
+            ['label' => 'Glass Tables', 'route' => 'collections.gallery.index', 'params' => ['slug' => 'glass-tables']],
+            ['label' => 'Door Handles', 'route' => 'collections.gallery.index', 'params' => ['slug' => 'door-handles']],
         ],
         'info_links' => [
             ['label' => 'About', 'route' => 'about'],
@@ -343,7 +344,6 @@ return [
         'service_links' => [
             ['label' => 'PVD Partitions', 'route' => 'services.show', 'params' => ['slug' => 'partitions']],
             ['label' => 'Slim Profile Door System', 'route' => 'services.show', 'params' => ['slug' => 'slim-profile-door-system']],
-            ['label' => 'Bespoke Metal Furniture', 'route' => 'services.show', 'params' => ['slug' => 'bespoke-metal-furniture']],
             ['label' => 'Main Entrance PVD Doors', 'route' => 'services.show', 'params' => ['slug' => 'main-entrance-pvd-doors']],
             ['label' => 'Rack Systems, Metal PVD', 'route' => 'services.show', 'params' => ['slug' => 'rack-systems-metal-pvd']],
             ['label' => 'Railings', 'route' => 'studio.railings'],

@@ -10,14 +10,32 @@
 
 @section('content')
 
+@php
+    $page = config("services.{$service->slug}", []);
+    $hero = $page['hero'] ?? null;
+@endphp
+
 @if($service->usesGalleryOnlyLayout())
+@if(is_array($hero) && !empty($hero['title']))
+@include('partials.am-service-hero', ['hero' => $hero])
+@else
 @include('partials.am-page-hero', [
-    'label' => 'Service',
+    'label' => 'Studio',
     'title' => $service->name,
     'subtitle' => \App\Support\ServiceGallery::galleryHeroSubtitle($service, $galleryProducts->count()),
 ])
+@endif
 
-<section class="am-page-body am-page-body--gallery-only">
+@if(!empty($page['intro']['body']))
+<section class="am-section am-section--white">
+    <div class="am-container am-mirror-frames-intro">
+        <h2 class="am-corten-section__title am-corten-section__title--center">{{ $page['intro']['title'] ?? '' }}</h2>
+        <p class="am-corten-section__lead am-corten-section__lead--center">{{ $page['intro']['body'] }}</p>
+    </div>
+</section>
+@endif
+
+<section class="am-page-body am-page-body--gallery-only" id="service-gallery">
     <div class="am-container">
         @include('partials.am-service-product-gallery', [
             'products' => $galleryProducts,

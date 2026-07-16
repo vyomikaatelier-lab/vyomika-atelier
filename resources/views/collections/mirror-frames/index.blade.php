@@ -58,37 +58,14 @@
             @php
                 $showUrl = route('collections.mirror-frames.show', $design['slug']);
             @endphp
-            <article class="am-design-gallery__card am-mirror-frames-card">
-                <a href="{{ $showUrl }}" class="am-design-gallery__media">
-                    @if(!empty($design['image']))
-                    <img src="{{ $design['image'] }}" alt="{{ $design['name'] }}" loading="lazy">
-                    @if(!empty($design['badge']))
-                    <span class="am-mirror-frames-card__badge">{{ $design['badge'] }}</span>
-                    @endif
-                    @endif
-                </a>
-                <div class="am-design-gallery__body">
-                    <h3 class="am-design-gallery__name">
-                        <a href="{{ $showUrl }}">{{ $design['name'] }}</a>
-                    </h3>
-                    @if(!empty($design['description']))
-                    <p class="am-design-gallery__desc">{{ $design['description'] }}</p>
-                    @endif
-                    <div class="am-design-gallery__actions">
-                        <a href="{{ $showUrl }}" class="am-btn am-btn--card-view">View</a>
-                        @if(!empty($design['product']))
-                        <form action="{{ route('cart.add', $design['product']) }}" method="POST" class="am-design-gallery__buy-form">
-                            @csrf
-                            <input type="hidden" name="quantity" value="1">
-                            <input type="hidden" name="buy_now" value="1">
-                            <button type="submit" class="am-btn am-btn--card-primary">Buy Now</button>
-                        </form>
-                        @else
-                        <a href="{{ $showUrl }}#buy" class="am-btn am-btn--card-primary">Buy Now</a>
-                        @endif
-                    </div>
-                </div>
-            </article>
+            @include('partials.am-design-gallery-card', [
+                'showUrl' => $showUrl,
+                'title' => $design['name'],
+                'description' => $design['description'] ?? null,
+                'image' => $design['image'] ?? null,
+                'badge' => $design['badge'] ?? null,
+                'product' => $design['product'] ?? null,
+            ])
             @endforeach
         </div>
     </div>

@@ -56,6 +56,7 @@ Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])-
 
 Route::get('/services', [ServiceController::class, 'index'])->name('services.index');
 Route::redirect('/corten-steel', '/services/corten-steel-facade');
+Route::redirect('/services/bespoke-metal-furniture', '/collections/bespoke-metal-furniture');
 Route::get('/services/{slug}', [ServiceController::class, 'show'])->name('services.show');
 Route::get('/services/{serviceSlug}/{designSlug}', [ServiceController::class, 'design'])->name('services.design');
 

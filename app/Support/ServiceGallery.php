@@ -17,7 +17,6 @@ class ServiceGallery
             'slim-profile-door-system',
             'main-entrance-pvd-doors',
             'rack-systems-metal-pvd',
-            'bespoke-metal-furniture',
         ];
     }
 
@@ -78,13 +77,6 @@ class ServiceGallery
                 ->orWhere('slug', 'like', '%handle%')
                 ->orWhere('slug', 'like', '%pull%')),
             'rack-systems-metal-pvd' => $query->where('slug', 'like', '%rack%'),
-            'bespoke-metal-furniture' => $query->where(fn ($q) => $q
-                ->where('slug', 'not like', '%door%')
-                ->where('slug', 'not like', '%rack%')
-                ->where('slug', 'not like', '%handle%')
-                ->where('slug', 'not like', '%partition%')
-                ->where('slug', 'not like', '%panel%')
-                ->where('slug', 'not like', '%divider%')),
             default => $query,
         };
     }
@@ -96,16 +88,13 @@ class ServiceGallery
             'slim-profile-door-system' => 'Explore Door Designs',
             'main-entrance-pvd-doors' => 'Explore Entrance Doors',
             'rack-systems-metal-pvd' => 'Explore Rack Designs',
-            'bespoke-metal-furniture' => 'Explore Furniture Designs',
             default => 'Design Gallery',
         };
     }
 
     public static function galleryHeroSubtitle(Service $service, int $count = 0): string
     {
-        return $service->slug === 'bespoke-metal-furniture'
-            ? 'Select a piece to request a quote'
-            : 'Select a style to configure & order';
+        return 'Select a style to configure & order';
     }
 
     public static function galleryCtaLabel(Service $service): string

@@ -26,6 +26,19 @@ if ! grep -q 'am-btn--card-view' "$GALLERY_BLADE" 2>/dev/null; then
   echo "ERROR: $GALLERY_BLADE missing gallery card action row — need latest main."
   exit 1
 fi
+CARD_PARTIAL="resources/views/partials/am-design-gallery-card.blade.php"
+if [ ! -f "$CARD_PARTIAL" ] || ! grep -q 'am-btn--card-view' "$CARD_PARTIAL" 2>/dev/null; then
+  echo "ERROR: $CARD_PARTIAL missing — need latest main (shared gallery card partial)."
+  exit 1
+fi
+if ! grep -q 'am-btn--card-view' public/css/amerce.css 2>/dev/null; then
+  echo "ERROR: public/css/amerce.css missing gallery card button styles."
+  exit 1
+fi
+if ! grep -q 'filemtime.*amerce.css' resources/views/layouts/store.blade.php 2>/dev/null; then
+  echo "ERROR: store layout missing CSS cache-busting — browsers may serve stale amerce.css."
+  exit 1
+fi
 
 echo "2) Verify storefront files exist..."
 git checkout -- public/css/amerce.css public/css/amerce-themes.css public/css/responsive.css public/js/amerce.js public/js/responsive.js 2>/dev/null || true
@@ -101,10 +114,11 @@ echo "9) Smoke check..."
 php artisan route:list --name=home --columns=method,uri,name 2>/dev/null | head -5 || true
 php artisan route:list --name=legal.privacy --columns=method,uri,name 2>/dev/null | head -5 || true
 
-if grep -q 'Buy Now' resources/views/collections/mirror-frames/index.blade.php 2>/dev/null; then
-  echo "    OK: mirror-frames blade has Buy Now buttons"
+if grep -q 'am-design-gallery-card' resources/views/collections/mirror-frames/index.blade.php 2>/dev/null \
+  && grep -q 'am-btn--card-view' "$CARD_PARTIAL" 2>/dev/null; then
+  echo "    OK: mirror-frames uses shared gallery card partial (View + Buy Now)"
 else
-  echo "WARNING: mirror-frames blade missing Buy Now — wrong branch or stale files"
+  echo "WARNING: mirror-frames gallery may be outdated"
 fi
 
 if grep -q 'am-btn--card-view' "$GALLERY_BLADE" 2>/dev/null \

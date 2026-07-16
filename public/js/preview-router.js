@@ -416,6 +416,17 @@ ${pageHero('Legal', page.title, lastUpdated ? 'Last updated: ' + lastUpdated : '
     </article>`;
   }
 
+  const SERVICE_HEROES = {
+    partitions: { label: 'Studio', title: 'PVD Partitions', subtitle: 'Wave, fluted, and laser-cut stainless partitions in champagne gold, rose gold, and matte black.', image: 'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg', intro: 'Each partition is fabricated from grade 304/316 stainless with PVD coating in our Mumbai studio.' },
+    'slim-profile-door-system': { label: 'Studio', title: 'Slim Profile Door System', subtitle: 'Minimal PVD door frames and pivot systems with concealed hardware.', image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1400&q=80', intro: 'PVD-coated stainless door systems with tempered glass panels.' },
+    'main-entrance-pvd-doors': { label: 'Studio', title: 'Main Entrance PVD Doors', subtitle: 'Statement entrance doors and PVD pull systems for lobbies and villas.', image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400&q=80', intro: 'Main entrance systems combining PVD frames, glass panels, and architectural pulls.' },
+    'rack-systems-metal-pvd': { label: 'Studio', title: 'Rack Systems, Metal PVD', subtitle: 'Wall-mounted and freestanding PVD rack systems for retail and wardrobes.', image: 'https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg', intro: 'PVD-coated metal rack systems engineered for retail inventory and wardrobe storage.' },
+  };
+
+  function serviceHeroHtml(hero) {
+    return `<section class="am-mirror-frames-hero am-service-hero" style="--mirror-frames-hero-img: url('${hero.image}')"><div class="am-container am-mirror-frames-hero__inner"><p class="am-page-hero__label">${hero.label}</p><h1 class="am-mirror-frames-hero__title">${hero.title}</h1><p class="am-mirror-frames-hero__subtitle">${hero.subtitle}</p><div class="am-pro-hero__actions"><a href="#service-gallery" class="am-btn am-btn--primary">Browse Designs</a><a href="/custom-order" class="am-btn am-btn--outline am-btn--light">Request Quote</a></div></div></section>${hero.intro ? `<section class="am-section am-section--white"><div class="am-container am-mirror-frames-intro"><h2 class="am-corten-section__title am-corten-section__title--center">${hero.title}</h2><p class="am-corten-section__lead am-corten-section__lead--center">${hero.intro}</p></div></section>` : ''}`;
+  }
+
   function renderServiceGallery(slug) {
     const service = getService(slug);
     if (!service) {
@@ -424,10 +435,11 @@ ${pageHero('Legal', page.title, lastUpdated ? 'Last updated: ' + lastUpdated : '
     }
     const products = catalogProductsForService(slug);
     const meta = serviceGalleryMeta(slug);
+    const hero = SERVICE_HEROES[slug];
     setTitle(service.name);
     document.getElementById('am-main').innerHTML = `
-${pageHero('Service', service.name, meta.action)}
-<section class="am-page-body am-page-body--gallery-only">
+${hero ? serviceHeroHtml(hero) : pageHero('Studio', service.name, meta.action)}
+<section class="am-page-body am-page-body--gallery-only" id="service-gallery">
   <div class="am-container">
     <section class="am-design-gallery am-design-gallery--service">
       <p class="am-card__label">Design Gallery</p>
@@ -614,7 +626,7 @@ ${pageHero('Service', service.name, meta.action)}
   }
 
   function usesCheckoutFlow(product) {
-    return CHECKOUT_CATEGORIES.includes(categorySlug(product));
+    return false;
   }
 
   function showsSqFtCalculator(product) {
@@ -896,7 +908,7 @@ ${pageHero('Service', service.name, meta.action)}
       return;
     }
 
-    const collectionSlugs = ['coffee-tables', 'corner-tables', 'glass-tables', 'door-handles'];
+    const collectionSlugs = ['coffee-tables', 'corner-tables', 'glass-tables', 'door-handles', 'bespoke-metal-furniture'];
     if (parts[0] === 'collections' && collectionSlugs.includes(parts[1]) && parts.length === 2) {
       renderCollectionGallery(parts[1]);
       return;
@@ -1395,6 +1407,10 @@ ${pageHero('Secure Checkout', 'Checkout', 'Preview mode — form submission is s
   }
 
   function renderService(slug) {
+    if (slug === 'bespoke-metal-furniture') {
+      navigate('/collections/bespoke-metal-furniture', '', true);
+      return;
+    }
     const service = getService(slug);
     if (!service) {
       renderNotFound('/services/' + slug);
@@ -1909,18 +1925,20 @@ ${whyHtml ? `<section class="am-section am-section--dark"><div class="am-contain
       'corner-tables': { title: 'Corner Tables', subtitle: 'Compact PVD corner and accent tables for bedrooms and entryways.', image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1400&q=80', gallery: 'Corner Table Designs', intro: 'Designed for tight footprints without compromising presence.' },
       'glass-tables': { title: 'Glass Tables', subtitle: 'Tempered glass tables with slim PVD frames.', image: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?w=1400&q=80', gallery: 'Glass Table Designs', intro: 'Floating glass surfaces on precision-welded PVD frames.' },
       'door-handles': { title: 'Door Handles', subtitle: 'Architectural door pulls in PVD stainless.', image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1400&q=80', gallery: 'Door Handle Designs', intro: 'Pull handles fabricated to match your door systems.' },
+      'bespoke-metal-furniture': { title: 'Bespoke Metal Furniture', subtitle: 'PVD coffee tables, corner tables, glass accent pieces and console tables.', image: 'https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg', gallery: 'Furniture Designs', intro: 'Each piece is fabricated in our Mumbai studio from grade 304/316 stainless with PVD coating.', categories: ['coffee-tables', 'corner-tables', 'glass-tables', 'metal-furniture'] },
     };
     const page = pages[slug];
     if (!page) {
       renderNotFound('/collections/' + slug);
       return;
     }
-    const cat = CATEGORIES.find((c) => c.slug === slug);
-    const products = filterProducts(collectProducts(siteData), new URLSearchParams('category=' + slug));
+    const catSlugs = page.categories || [slug];
+    const products = filterProducts(collectProducts(siteData), new URLSearchParams()).filter((p) => catSlugs.includes(categorySlug(p)));
     setTitle(page.title + ' Collection | Vyomika Atelier LLP');
+    const orderBtn = (product) => `<button type="button" class="am-btn am-btn--card-primary" data-open-order-popup data-product-name="${product.name}" data-product-slug="${product.slug}" data-service-slug="${serviceSlugForProduct(product)}">Order Now</button>`;
     const cards = products.map((product) => {
-      const primary = `<form action="/cart/add/${product.slug}" method="POST" class="am-design-gallery__buy-form"><input type="hidden" name="_token" value="preview"><input type="hidden" name="quantity" value="1"><input type="hidden" name="buy_now" value="1"><button type="submit" class="am-btn am-btn--card-primary">Buy Now</button></form>`;
-      return `<article class="am-design-gallery__card am-collection-card"><a href="/shop/${product.slug}" class="am-design-gallery__media">${product.image ? `<img src="${product.image}" alt="${product.name}" loading="lazy">` : ''}</a><div class="am-design-gallery__body"><h3 class="am-design-gallery__name"><a href="/shop/${product.slug}">${product.name}</a></h3><p class="am-design-gallery__cat">${cat ? cat.name : ''}</p>${product.description ? `<p class="am-design-gallery__desc">${product.description}</p>` : ''}<div class="am-design-gallery__actions"><a href="/shop/${product.slug}" class="am-btn am-btn--card-view">View</a>${primary}</div></div></article>`;
+      const cat = CATEGORIES.find((c) => c.slug === categorySlug(product));
+      return `<article class="am-design-gallery__card am-collection-card"><a href="/shop/${product.slug}" class="am-design-gallery__media">${product.image ? `<img src="${product.image}" alt="${product.name}" loading="lazy">` : ''}</a><div class="am-design-gallery__body"><h3 class="am-design-gallery__name"><a href="/shop/${product.slug}">${product.name}</a></h3><p class="am-design-gallery__cat">${cat ? cat.name : ''}</p>${product.description ? `<p class="am-design-gallery__desc">${product.description}</p>` : ''}<div class="am-design-gallery__actions"><a href="/shop/${product.slug}" class="am-btn am-btn--card-view">View</a>${orderBtn(product)}</div></div></article>`;
     }).join('');
     document.getElementById('am-main').innerHTML = `
 <section class="am-mirror-frames-hero" style="--mirror-frames-hero-img: url('${page.image}')"><div class="am-container am-mirror-frames-hero__inner"><p class="am-page-hero__label">Collections</p><h1 class="am-mirror-frames-hero__title">${page.title}</h1><p class="am-mirror-frames-hero__subtitle">${page.subtitle}</p><div class="am-pro-hero__actions"><a href="#collection-gallery" class="am-btn am-btn--primary">Browse Designs</a><a href="/shop" class="am-btn am-btn--outline am-btn--light">Shop All Collections</a></div></div></section>
@@ -1948,7 +1966,7 @@ ${whyHtml ? `<section class="am-section am-section--dark"><div class="am-contain
           ${design.description ? `<p class="am-design-gallery__desc">${design.description}</p>` : ''}
           <div class="am-design-gallery__actions">
             <a href="/collections/mirror-frames/${design.slug}" class="am-btn am-btn--card-view">View</a>
-            <a href="/collections/mirror-frames/${design.slug}#buy" class="am-btn am-btn--card-primary">Buy Now</a>
+            <a href="/collections/mirror-frames/${design.slug}" class="am-btn am-btn--card-primary">Order Now</a>
           </div>
         </div>
       </article>`).join('');

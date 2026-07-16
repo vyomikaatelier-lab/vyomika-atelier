@@ -106,9 +106,7 @@ class Product extends Model
 
     public function usesCheckoutFlow(): bool
     {
-        $categorySlug = $this->category?->slug;
-
-        return $categorySlug && in_array($categorySlug, self::checkoutCategorySlugs(), true);
+        return false;
     }
 
     public function isFurnitureProduct(): bool

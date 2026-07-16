@@ -63,7 +63,7 @@ class Service extends Model
 
     public function usesCalculatorPageLayout(): bool
     {
-        if (in_array($this->slug, ['corten-steel-facade', 'bespoke-metal-furniture'], true)) {
+        if (in_array($this->slug, ['corten-steel-facade'], true)) {
             return false;
         }
 
@@ -87,7 +87,6 @@ class Service extends Model
             'partitions' => ['partitions', 'fluted-panels', 'room-dividers'],
             'slim-profile-door-system', 'main-entrance-pvd-doors' => ['metal-furniture', 'door-handles'],
             'rack-systems-metal-pvd' => ['metal-furniture'],
-            'bespoke-metal-furniture' => ['coffee-tables', 'corner-tables', 'glass-tables', 'metal-furniture'],
             default => [],
         };
     }

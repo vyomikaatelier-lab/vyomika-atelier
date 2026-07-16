@@ -27,10 +27,6 @@
                     "href": "/services/slim-profile-door-system"
                 },
                 {
-                    "label": "Bespoke Metal Furniture",
-                    "href": "/services/bespoke-metal-furniture"
-                },
-                {
                     "label": "Main Entrance PVD Doors",
                     "href": "/services/main-entrance-pvd-doors"
                 },
@@ -50,6 +46,10 @@
                 {
                     "label": "Mirror Frames",
                     "href": "/collections/mirror-frames"
+                },
+                {
+                    "label": "Bespoke Metal Furniture",
+                    "href": "/collections/bespoke-metal-furniture"
                 },
                 {
                     "label": "Corner Tables",
@@ -402,6 +402,10 @@
                 "href": "/collections/mirror-frames"
             },
             {
+                "label": "Bespoke Metal Furniture",
+                "href": "/collections/bespoke-metal-furniture"
+            },
+            {
                 "label": "Corner Tables",
                 "href": "/collections/corner-tables"
             },
@@ -444,10 +448,6 @@
             {
                 "label": "Slim Profile Door System",
                 "href": "/services/slim-profile-door-system"
-            },
-            {
-                "label": "Bespoke Metal Furniture",
-                "href": "/services/bespoke-metal-furniture"
             },
             {
                 "label": "Main Entrance PVD Doors",

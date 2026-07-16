@@ -20,6 +20,7 @@ $nav = array_map(function ($item) {
                         'shop.index' => '/shop' . (isset($params['category']) ? '?category=' . $params['category'] : ''),
                         'services.show' => '/services/' . ($params['slug'] ?? ''),
                         'collections.mirror-frames.index' => '/collections/mirror-frames',
+                        'collections.gallery.index' => '/collections/' . ($params['slug'] ?? ''),
                         default => '/' . str_replace('.index', '', str_replace('.', '/', $child['route'])),
                     };
 

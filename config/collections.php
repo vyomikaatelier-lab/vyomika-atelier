@@ -13,7 +13,7 @@ return [
             'subtitle' => 'Bespoke PVD coffee tables in champagne, rose gold and matte black — tempered glass, marble and metal bases engineered for living rooms and hospitality lounges.',
             'highlights' => [
                 'PVD stainless frames',
-                'Fixed-price checkout',
+                'Studio fabrication',
                 'Pan-India delivery',
             ],
             'cta_primary' => ['label' => 'Browse Designs', 'href' => '#collection-gallery'],
@@ -35,7 +35,7 @@ return [
             'subtitle' => 'Compact PVD corner and accent tables for bedrooms, entryways and lounge seating — marble, glass and metal combinations in champagne and rose gold finishes.',
             'highlights' => [
                 'Space-saving profiles',
-                'Fixed-price checkout',
+                'Studio fabrication',
                 'Pan-India delivery',
             ],
             'cta_primary' => ['label' => 'Browse Designs', 'href' => '#collection-gallery'],
@@ -57,7 +57,7 @@ return [
             'subtitle' => 'Tempered glass tables with slim PVD frames — side tables, nesting sets and statement accent pieces for modern interiors.',
             'highlights' => [
                 'Toughened glass tops',
-                'Fixed-price checkout',
+                'Studio fabrication',
                 'Pan-India delivery',
             ],
             'cta_primary' => ['label' => 'Browse Designs', 'href' => '#collection-gallery'],
@@ -72,14 +72,14 @@ return [
     ],
     'door-handles' => [
         'meta_title' => 'Door Handles Collection | Vyomika Atelier LLP',
-        'meta_description' => 'PVD door pulls and entrance handles in champagne, rose gold and matte black — fixed prices with Pan-India delivery from Vyomika Atelier LLP.',
+        'meta_description' => 'PVD door pulls and entrance handles in champagne, rose gold and matte black — Pan-India delivery from Vyomika Atelier LLP.',
         'hero' => [
             'label' => 'Collections',
             'title' => 'Door Handles',
             'subtitle' => 'Architectural door pulls and entrance handles in PVD stainless — slim profiles, brushed and mirror finishes for residential and commercial doors.',
             'highlights' => [
                 'Grade 304/316 stainless',
-                'Fixed-price checkout',
+                'Studio fabrication',
                 'Pan-India delivery',
             ],
             'cta_primary' => ['label' => 'Browse Designs', 'href' => '#collection-gallery'],
@@ -91,5 +91,28 @@ return [
             'body' => 'Pull handles and entrance hardware fabricated to match your door systems — PVD coated for scratch resistance and lasting colour depth.',
         ],
         'gallery_title' => 'Door Handle Designs',
+    ],
+    'bespoke-metal-furniture' => [
+        'meta_title' => 'Bespoke Metal Furniture | Vyomika Atelier LLP',
+        'meta_description' => 'Bespoke PVD metal furniture — coffee tables, corner tables, glass tables and consoles — fabricated to order from Vyomika Atelier LLP.',
+        'category_slugs' => ['coffee-tables', 'corner-tables', 'glass-tables', 'metal-furniture'],
+        'hero' => [
+            'label' => 'Collections',
+            'title' => 'Bespoke Metal Furniture',
+            'subtitle' => 'PVD coffee tables, corner tables, glass accent pieces and console tables — bespoke dimensions and finishes for residential and hospitality interiors.',
+            'highlights' => [
+                'PVD stainless frames',
+                'Bespoke dimensions',
+                'Pan-India delivery',
+            ],
+            'cta_primary' => ['label' => 'Browse Designs', 'href' => '#collection-gallery'],
+            'cta_secondary' => ['label' => 'Request Quote', 'href' => '/custom-order'],
+            'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg',
+        ],
+        'intro' => [
+            'title' => 'Metal Furniture, Built to Your Specification',
+            'body' => 'Each piece is fabricated in our Mumbai studio from grade 304/316 stainless with PVD coating — paired with toughened glass, marble, or natural stone tops.',
+        ],
+        'gallery_title' => 'Furniture Designs',
     ],
 ];
