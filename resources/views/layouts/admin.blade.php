@@ -2,14 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>@yield('title', 'Admin') — VYOMIKA ATELIER</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ asset('css/responsive.css') }}">
 </head>
 <body class="bg-gray-50 text-gray-900">
-    <div class="flex min-h-screen">
+    <div class="admin-shell flex min-h-screen">
         @auth
-        <aside class="w-60 bg-gray-900 text-white p-4 shrink-0 overflow-y-auto">
+        <div class="admin-sidebar-backdrop" id="admin-sidebar-backdrop" aria-hidden="true"></div>
+        <aside class="admin-sidebar w-60 bg-gray-900 text-white p-4 shrink-0 overflow-y-auto" id="admin-sidebar" aria-label="Admin navigation">
             <p class="font-semibold mb-6 text-sm tracking-wider">VYOMIKA ADMIN</p>
             <nav class="space-y-4 text-sm">
                 <div>
@@ -41,12 +43,15 @@
                 <a href="{{ route('home') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800 text-gray-400" target="_blank">View Site</a>
                 <form action="{{ route('admin.logout') }}" method="POST" class="pt-2">
                     @csrf
-                    <button type="submit" class="text-gray-400 hover:text-white text-sm">Logout</button>
+                    <button type="submit" class="text-gray-400 hover:text-white text-sm min-h-[44px]">Logout</button>
                 </form>
             </nav>
         </aside>
         @endauth
-        <main class="flex-1 p-8">
+        <main class="admin-main flex-1 p-8">
+            @auth
+            <button type="button" class="admin-menu-btn mb-4" id="admin-menu-toggle" aria-expanded="false" aria-controls="admin-sidebar">Menu</button>
+            @endauth
             @if(session('success'))
                 <div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-4 text-sm">{{ session('success') }}</div>
             @endif
@@ -58,5 +63,6 @@
             @yield('content')
         </main>
     </div>
+    <script src="{{ asset('js/responsive.js') }}" defer></script>
 </body>
 </html>

@@ -18,6 +18,7 @@ use App\Http\Controllers\LegalController;
 use App\Http\Controllers\AboutController;
 use App\Http\Controllers\RailingsController;
 use App\Http\Controllers\MirrorFramesController;
+use App\Http\Controllers\CollectionGalleryController;
 use App\Http\Controllers\AccountAuthController;
 use App\Http\Controllers\AccountDashboardController;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
@@ -76,6 +77,10 @@ Route::get('/studio/railings', [RailingsController::class, 'index'])->name('stud
 
 Route::get('/collections/mirror-frames', [MirrorFramesController::class, 'index'])->name('collections.mirror-frames.index');
 Route::get('/collections/mirror-frames/{design}', [MirrorFramesController::class, 'show'])->name('collections.mirror-frames.show');
+
+Route::get('/collections/{slug}', [CollectionGalleryController::class, 'index'])
+    ->whereIn('slug', CollectionGalleryController::slugs())
+    ->name('collections.gallery.index');
 
 Route::get('/about', [AboutController::class, 'index'])->name('about');
 Route::get('/professionals', [ProfessionalsController::class, 'index'])->name('professionals.index');

@@ -392,15 +392,15 @@ ${pageHero('Legal', page.title, lastUpdated ? 'Last updated: ' + lastUpdated : '
       'rack-systems-metal-pvd': { heading: 'Explore Rack Designs', label: 'rack designs', cta: 'Order Now', action: 'select a style to configure & order' },
       'bespoke-metal-furniture': { heading: 'Explore Furniture Designs', label: 'furniture designs', cta: 'Order Now', action: 'select a piece to configure & order' },
     };
-    return map[serviceSlug] || { heading: 'Design Gallery', label: 'designs', cta: 'Order Now', action: 'click any to order' };
+    return map[serviceSlug] || { heading: 'Design Gallery', label: 'designs', cta: 'Order Now', action: 'select a style to configure & order' };
   }
 
   function serviceProductCardHtml(product, ctaLabel) {
-    const actionHtml = usesCheckoutFlow(product)
-      ? `<form action="/cart/add/${product.slug}" method="POST" class="am-design-gallery__buy-cta"><input type="hidden" name="_token" value="preview"><input type="hidden" name="quantity" value="1"><input type="hidden" name="buy_now" value="1"><button type="submit" class="am-btn am-btn--primary am-btn--sm am-btn--full">Buy Now</button></form>`
+    const primaryHtml = usesCheckoutFlow(product)
+      ? `<form action="/cart/add/${product.slug}" method="POST" class="am-design-gallery__buy-form"><input type="hidden" name="_token" value="preview"><input type="hidden" name="quantity" value="1"><input type="hidden" name="buy_now" value="1"><button type="submit" class="am-btn am-btn--card-primary">Buy Now</button></form>`
       : ctaLabel === 'Request Quote'
-        ? `<a href="/custom-order" class="am-btn am-btn--primary am-btn--sm am-btn--full">Request Quote</a>`
-        : `<button type="button" class="am-btn am-btn--primary am-btn--sm am-btn--full" data-open-order-popup data-product-name="${product.name}" data-product-slug="${product.slug}" data-service-slug="${serviceSlugForProduct(product)}">Order Now</button>`;
+        ? `<a href="/custom-order" class="am-btn am-btn--card-primary">Request Quote</a>`
+        : `<button type="button" class="am-btn am-btn--card-primary" data-open-order-popup data-product-name="${product.name}" data-product-slug="${product.slug}" data-service-slug="${serviceSlugForProduct(product)}">Order Now</button>`;
     return `<article class="am-design-gallery__card">
       <a href="/shop/${product.slug}" class="am-design-gallery__media">
         ${product.image ? `<img src="${product.image}" alt="${product.name}" loading="lazy">` : ''}
@@ -408,7 +408,10 @@ ${pageHero('Legal', page.title, lastUpdated ? 'Last updated: ' + lastUpdated : '
       <div class="am-design-gallery__body">
         <h3 class="am-design-gallery__name"><a href="/shop/${product.slug}">${product.name}</a></h3>
         <p class="am-design-gallery__cat">${product.category || ''}</p>
-        ${actionHtml}
+        <div class="am-design-gallery__actions">
+          <a href="/shop/${product.slug}" class="am-btn am-btn--card-view">View</a>
+          ${primaryHtml}
+        </div>
       </div>
     </article>`;
   }
@@ -423,13 +426,12 @@ ${pageHero('Legal', page.title, lastUpdated ? 'Last updated: ' + lastUpdated : '
     const meta = serviceGalleryMeta(slug);
     setTitle(service.name);
     document.getElementById('am-main').innerHTML = `
-${pageHero('Service', service.name, products.length + ' ' + meta.label + ' — ' + meta.action)}
+${pageHero('Service', service.name, meta.action)}
 <section class="am-page-body am-page-body--gallery-only">
   <div class="am-container">
     <section class="am-design-gallery am-design-gallery--service">
       <p class="am-card__label">Design Gallery</p>
       <h2 class="am-design-gallery__title">${meta.heading}</h2>
-      <p class="am-design-gallery__count">${products.length} designs · click any to order</p>
       <div class="am-design-gallery__grid am-design-gallery__grid--dense">
         ${products.map((p) => serviceProductCardHtml(p, meta.cta)).join('')}
       </div>
@@ -891,6 +893,12 @@ ${pageHero('Service', service.name, products.length + ' ' + meta.label + ' — '
 
     if (parts[0] === 'collections' && parts[1] === 'mirror-frames' && parts.length === 3) {
       renderMirrorFramesDesign(parts[2]);
+      return;
+    }
+
+    const collectionSlugs = ['coffee-tables', 'corner-tables', 'glass-tables', 'door-handles'];
+    if (parts[0] === 'collections' && collectionSlugs.includes(parts[1]) && parts.length === 2) {
+      renderCollectionGallery(parts[1]);
       return;
     }
 
@@ -1895,6 +1903,32 @@ ${whyHtml ? `<section class="am-section am-section--dark"><div class="am-contain
     document.dispatchEvent(new CustomEvent('am-content-ready'));
   }
 
+  function renderCollectionGallery(slug) {
+    const pages = {
+      'coffee-tables': { title: 'Coffee Tables', subtitle: 'Bespoke PVD coffee tables in champagne, rose gold and matte black.', image: 'https://images.unsplash.com/photo-1532372320572-127d86b32558?w=1400&q=80', gallery: 'Coffee Table Designs', intro: 'Each coffee table is fabricated in our Mumbai studio from grade 304/316 stainless with PVD coating.' },
+      'corner-tables': { title: 'Corner Tables', subtitle: 'Compact PVD corner and accent tables for bedrooms and entryways.', image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1400&q=80', gallery: 'Corner Table Designs', intro: 'Designed for tight footprints without compromising presence.' },
+      'glass-tables': { title: 'Glass Tables', subtitle: 'Tempered glass tables with slim PVD frames.', image: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?w=1400&q=80', gallery: 'Glass Table Designs', intro: 'Floating glass surfaces on precision-welded PVD frames.' },
+      'door-handles': { title: 'Door Handles', subtitle: 'Architectural door pulls in PVD stainless.', image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1400&q=80', gallery: 'Door Handle Designs', intro: 'Pull handles fabricated to match your door systems.' },
+    };
+    const page = pages[slug];
+    if (!page) {
+      renderNotFound('/collections/' + slug);
+      return;
+    }
+    const cat = CATEGORIES.find((c) => c.slug === slug);
+    const products = filterProducts(collectProducts(siteData), new URLSearchParams('category=' + slug));
+    setTitle(page.title + ' Collection | Vyomika Atelier LLP');
+    const cards = products.map((product) => {
+      const primary = `<form action="/cart/add/${product.slug}" method="POST" class="am-design-gallery__buy-form"><input type="hidden" name="_token" value="preview"><input type="hidden" name="quantity" value="1"><input type="hidden" name="buy_now" value="1"><button type="submit" class="am-btn am-btn--card-primary">Buy Now</button></form>`;
+      return `<article class="am-design-gallery__card am-collection-card"><a href="/shop/${product.slug}" class="am-design-gallery__media">${product.image ? `<img src="${product.image}" alt="${product.name}" loading="lazy">` : ''}</a><div class="am-design-gallery__body"><h3 class="am-design-gallery__name"><a href="/shop/${product.slug}">${product.name}</a></h3><p class="am-design-gallery__cat">${cat ? cat.name : ''}</p>${product.description ? `<p class="am-design-gallery__desc">${product.description}</p>` : ''}<div class="am-design-gallery__actions"><a href="/shop/${product.slug}" class="am-btn am-btn--card-view">View</a>${primary}</div></div></article>`;
+    }).join('');
+    document.getElementById('am-main').innerHTML = `
+<section class="am-mirror-frames-hero" style="--mirror-frames-hero-img: url('${page.image}')"><div class="am-container am-mirror-frames-hero__inner"><p class="am-page-hero__label">Collections</p><h1 class="am-mirror-frames-hero__title">${page.title}</h1><p class="am-mirror-frames-hero__subtitle">${page.subtitle}</p><div class="am-pro-hero__actions"><a href="#collection-gallery" class="am-btn am-btn--primary">Browse Designs</a><a href="/shop" class="am-btn am-btn--outline am-btn--light">Shop All Collections</a></div></div></section>
+<section class="am-section am-section--white"><div class="am-container am-mirror-frames-intro"><h2 class="am-corten-section__title am-corten-section__title--center">${page.title}</h2><p class="am-corten-section__lead am-corten-section__lead--center">${page.intro}</p></div></section>
+<section class="am-section am-section--cream am-collection-designs" id="collection-gallery"><div class="am-container"><div class="am-mirror-frames-section-head"><p class="am-card__label">Design Gallery</p><h2 class="am-corten-section__title">${page.gallery}</h2></div><div class="am-design-gallery__grid am-design-gallery__grid--dense">${cards}</div></div></section>`;
+    document.dispatchEvent(new CustomEvent('am-content-ready'));
+  }
+
   function renderMirrorFramesIndex() {
     const page = mirrorFramesData || {};
     const hero = page.hero || {};
@@ -1905,14 +1939,19 @@ ${whyHtml ? `<section class="am-section am-section--dark"><div class="am-contain
 
     const highlightsHtml = (hero.highlights || []).map((h) => `<li>${h}</li>`).join('');
     const designsHtml = designs.map((design) => `
-      <a href="/collections/mirror-frames/${design.slug}" class="am-design-gallery__card am-mirror-frames-card">
-        ${design.image ? `<div class="am-design-gallery__media"><img src="${design.image}" alt="${design.name}" loading="lazy">${design.badge ? `<span class="am-mirror-frames-card__badge">${design.badge}</span>` : ''}</div>` : ''}
+      <article class="am-design-gallery__card am-mirror-frames-card">
+        <a href="/collections/mirror-frames/${design.slug}" class="am-design-gallery__media">
+          ${design.image ? `<img src="${design.image}" alt="${design.name}" loading="lazy">${design.badge ? `<span class="am-mirror-frames-card__badge">${design.badge}</span>` : ''}` : ''}
+        </a>
         <div class="am-design-gallery__body">
-          <h3 class="am-design-gallery__name">${design.name}</h3>
-          ${design.description ? `<p class="am-design-gallery__desc">${design.description.slice(0, 90)}${design.description.length > 90 ? '…' : ''}</p>` : ''}
-          <span class="am-design-gallery__cta">View &amp; Buy →</span>
+          <h3 class="am-design-gallery__name"><a href="/collections/mirror-frames/${design.slug}">${design.name}</a></h3>
+          ${design.description ? `<p class="am-design-gallery__desc">${design.description}</p>` : ''}
+          <div class="am-design-gallery__actions">
+            <a href="/collections/mirror-frames/${design.slug}" class="am-btn am-btn--card-view">View</a>
+            <a href="/collections/mirror-frames/${design.slug}#buy" class="am-btn am-btn--card-primary">Buy Now</a>
+          </div>
         </div>
-      </a>`).join('');
+      </article>`).join('');
     const finishesHtml = (page.finishes?.items || []).map((finish) => `
       <article class="am-mirror-frames-finish">
         ${finish.image ? `<img src="${finish.image}" alt="${finish.name}" loading="lazy">` : ''}
@@ -1933,7 +1972,7 @@ ${whyHtml ? `<section class="am-section am-section--dark"><div class="am-contain
   </div>
 </section>
 ${page.intro?.body ? `<section class="am-section am-section--white"><div class="am-container am-mirror-frames-intro"><h2 class="am-corten-section__title am-corten-section__title--center">${page.intro.title || ''}</h2><p class="am-corten-section__lead am-corten-section__lead--center">${page.intro.body}</p></div></section>` : ''}
-${designsHtml ? `<section class="am-section am-section--cream am-mirror-frames-designs" id="mirror-designs"><div class="am-container"><div class="am-mirror-frames-section-head"><p class="am-card__label">Design Gallery</p><h2 class="am-corten-section__title">Mirror Frame Designs</h2><p class="am-corten-section__lead">${designs.length} designs · fixed prices · add to bag or buy now</p></div><div class="am-design-gallery__grid am-design-gallery__grid--dense am-mirror-frames-grid">${designsHtml}</div></div></section>` : ''}
+${designsHtml ? `<section class="am-section am-section--cream am-mirror-frames-designs" id="mirror-designs"><div class="am-container"><div class="am-mirror-frames-section-head"><p class="am-card__label">Design Gallery</p><h2 class="am-corten-section__title">Mirror Frame Designs</h2></div><div class="am-design-gallery__grid am-design-gallery__grid--dense am-mirror-frames-grid">${designsHtml}</div></div></section>` : ''}
 ${finishesHtml ? `<section class="am-section am-section--white"><div class="am-container"><div class="am-mirror-frames-section-head am-mirror-frames-section-head--center"><h2 class="am-corten-section__title">${page.finishes?.title || 'PVD Frame Finishes'}</h2>${page.finishes?.subtitle ? `<p class="am-corten-section__lead">${page.finishes.subtitle}</p>` : ''}</div><div class="am-mirror-frames-finishes">${finishesHtml}</div></div></section>` : ''}`;
     document.dispatchEvent(new CustomEvent('am-content-ready'));
   }

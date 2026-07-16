@@ -18,17 +18,17 @@ if ! grep -q 'usesCheckoutFlow' app/Models/Product.php 2>/dev/null; then
   exit 1
 fi
 GALLERY_BLADE="resources/views/partials/am-service-product-gallery.blade.php"
-if grep -q 'am-design-gallery__actions' "$GALLERY_BLADE" 2>/dev/null; then
-  echo "ERROR: $GALLERY_BLADE still has am-design-gallery__actions (View + button pair)."
+if grep -q 'am-design-gallery__count' "$GALLERY_BLADE" 2>/dev/null; then
+  echo "ERROR: $GALLERY_BLADE still shows design count text — need latest main."
   exit 1
 fi
-if ! grep -q 'click any to order' "$GALLERY_BLADE" 2>/dev/null; then
-  echo "ERROR: $GALLERY_BLADE missing single-CTA gallery copy — need latest main."
+if ! grep -q 'am-btn--card-view' "$GALLERY_BLADE" 2>/dev/null; then
+  echo "ERROR: $GALLERY_BLADE missing gallery card action row — need latest main."
   exit 1
 fi
 
 echo "2) Verify storefront files exist..."
-git checkout -- public/css/amerce.css public/css/amerce-themes.css public/js/amerce.js 2>/dev/null || true
+git checkout -- public/css/amerce.css public/css/amerce-themes.css public/css/responsive.css public/js/amerce.js public/js/responsive.js 2>/dev/null || true
 
 for f in \
   config/site.php \
@@ -37,6 +37,7 @@ for f in \
   resources/views/layouts/store.blade.php \
   resources/views/home.blade.php \
   public/css/amerce.css \
+  public/css/responsive.css \
   public/js/amerce.js; do
   if [ ! -f "$f" ]; then
     echo "ERROR: Missing $f — git pull may have failed or wrong branch."
@@ -106,11 +107,11 @@ else
   echo "WARNING: mirror-frames blade missing Buy Now — wrong branch or stale files"
 fi
 
-if grep -q 'am-btn--full' "$GALLERY_BLADE" 2>/dev/null \
-  && ! grep -q 'am-design-gallery__actions' "$GALLERY_BLADE" 2>/dev/null; then
-  echo "    OK: studio gallery blade has single Order Now button"
+if grep -q 'am-btn--card-view' "$GALLERY_BLADE" 2>/dev/null \
+  && ! grep -q 'am-design-gallery__count' "$GALLERY_BLADE" 2>/dev/null; then
+  echo "    OK: studio gallery card action row (View Details + CTA)"
 else
-  echo "WARNING: studio gallery blade may still show View + Order Now pair"
+  echo "WARNING: studio gallery blade may be outdated"
 fi
 
 echo ""

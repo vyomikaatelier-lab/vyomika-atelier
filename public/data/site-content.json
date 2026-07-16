@@ -53,19 +53,19 @@
                 },
                 {
                     "label": "Corner Tables",
-                    "href": "/shop?category=corner-tables"
+                    "href": "/collections/corner-tables"
                 },
                 {
                     "label": "Coffee Tables",
-                    "href": "/shop?category=coffee-tables"
+                    "href": "/collections/coffee-tables"
                 },
                 {
                     "label": "Glass Tables",
-                    "href": "/shop?category=glass-tables"
+                    "href": "/collections/glass-tables"
                 },
                 {
                     "label": "Door Handles",
-                    "href": "/shop?category=door-handles"
+                    "href": "/collections/door-handles"
                 }
             ]
         },
@@ -114,7 +114,7 @@
                 "description": "Coffee tables, console tables, and PVD rack systems — custom sizes with Pan-India delivery from our Mumbai studio.",
                 "image": "https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg",
                 "cta_label": "Shop Furniture",
-                "cta_href": "/shop?category=coffee-tables"
+                "cta_href": "/collections/coffee-tables"
             }
         ]
     },
@@ -221,7 +221,7 @@
             "title": "Metal Furniture",
             "subtitle": "Tables, consoles & racks",
             "cta": "Shop Now",
-            "href": "/shop?category=coffee-tables",
+            "href": "/collections/coffee-tables",
             "image": "https://images.unsplash.com/photo-1532372320572-127d86b32558?w=800&q=80"
         },
         {
@@ -403,19 +403,19 @@
             },
             {
                 "label": "Corner Tables",
-                "href": "/shop?category=corner-tables"
+                "href": "/collections/corner-tables"
             },
             {
                 "label": "Coffee Tables",
-                "href": "/shop?category=coffee-tables"
+                "href": "/collections/coffee-tables"
             },
             {
                 "label": "Glass Tables",
-                "href": "/shop?category=glass-tables"
+                "href": "/collections/glass-tables"
             },
             {
                 "label": "Door Handles",
-                "href": "/shop?category=door-handles"
+                "href": "/collections/door-handles"
             }
         ],
         "info_links": [

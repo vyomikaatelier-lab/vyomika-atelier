@@ -71,6 +71,14 @@ class SitemapController extends Controller
 
         }
 
+        foreach (\App\Http\Controllers\CollectionGalleryController::slugs() as $collectionSlug) {
+            $urls[] = [
+                'loc' => route('collections.gallery.index', $collectionSlug),
+                'changefreq' => 'weekly',
+                'priority' => '0.85',
+            ];
+        }
+
         foreach (MirrorFramesContent::all()['designs'] ?? [] as $design) {
             $urls[] = [
                 'loc' => route('collections.mirror-frames.show', $design['slug']),

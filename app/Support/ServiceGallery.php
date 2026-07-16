@@ -101,21 +101,11 @@ class ServiceGallery
         };
     }
 
-    public static function galleryHeroSubtitle(Service $service, int $count): string
+    public static function galleryHeroSubtitle(Service $service, int $count = 0): string
     {
-        $label = match ($service->slug) {
-            'partitions' => 'partition designs',
-            'slim-profile-door-system', 'main-entrance-pvd-doors' => 'door designs',
-            'rack-systems-metal-pvd' => 'rack designs',
-            'bespoke-metal-furniture' => 'furniture designs',
-            default => 'designs',
-        };
-
-        $action = $service->slug === 'bespoke-metal-furniture'
-            ? 'select a piece to request a quote'
-            : 'select a style to configure & order';
-
-        return $count.' '.$label.' — '.$action;
+        return $service->slug === 'bespoke-metal-furniture'
+            ? 'Select a piece to request a quote'
+            : 'Select a style to configure & order';
     }
 
     public static function galleryCtaLabel(Service $service): string

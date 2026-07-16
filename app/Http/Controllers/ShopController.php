@@ -15,6 +15,12 @@ class ShopController extends Controller
         $activeCategory = null;
         if ($request->filled('category')) {
             $activeCategory = Category::where('slug', $request->category)->where('is_active', true)->first();
+            if ($activeCategory && in_array($activeCategory->slug, \App\Http\Controllers\CollectionGalleryController::slugs(), true)) {
+                return redirect()->route('collections.gallery.index', $activeCategory->slug);
+            }
+            if ($activeCategory && $activeCategory->slug === 'mirror-frames') {
+                return redirect()->route('collections.mirror-frames.index');
+            }
             if ($activeCategory) {
                 $query->where('category_id', $activeCategory->id);
             } else {

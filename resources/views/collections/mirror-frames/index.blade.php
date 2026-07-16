@@ -52,14 +52,13 @@
         <div class="am-mirror-frames-section-head">
             <p class="am-card__label">Design Gallery</p>
             <h2 class="am-corten-section__title">Mirror Frame Designs</h2>
-            <p class="am-corten-section__lead">{{ count($designs) }} designs · fixed prices · add to bag or buy now</p>
         </div>
         <div class="am-design-gallery__grid am-design-gallery__grid--dense am-mirror-frames-grid">
             @foreach($designs as $design)
             @php
                 $showUrl = route('collections.mirror-frames.show', $design['slug']);
             @endphp
-            <article class="am-design-gallery__card am-mirror-frames-card am-design-gallery__card--split">
+            <article class="am-design-gallery__card am-mirror-frames-card">
                 <a href="{{ $showUrl }}" class="am-design-gallery__media">
                     @if(!empty($design['image']))
                     <img src="{{ $design['image'] }}" alt="{{ $design['name'] }}" loading="lazy">
@@ -73,19 +72,19 @@
                         <a href="{{ $showUrl }}">{{ $design['name'] }}</a>
                     </h3>
                     @if(!empty($design['description']))
-                    <p class="am-design-gallery__desc">{{ \Illuminate\Support\Str::limit($design['description'], 90) }}</p>
+                    <p class="am-design-gallery__desc">{{ $design['description'] }}</p>
                     @endif
                     <div class="am-design-gallery__actions">
-                        <a href="{{ $showUrl }}" class="am-btn am-btn--outline am-btn--sm">View</a>
+                        <a href="{{ $showUrl }}" class="am-btn am-btn--card-view">View</a>
                         @if(!empty($design['product']))
                         <form action="{{ route('cart.add', $design['product']) }}" method="POST" class="am-design-gallery__buy-form">
                             @csrf
                             <input type="hidden" name="quantity" value="1">
                             <input type="hidden" name="buy_now" value="1">
-                            <button type="submit" class="am-btn am-btn--primary am-btn--sm">Buy Now</button>
+                            <button type="submit" class="am-btn am-btn--card-primary">Buy Now</button>
                         </form>
                         @else
-                        <a href="{{ $showUrl }}#buy" class="am-btn am-btn--primary am-btn--sm">Buy Now</a>
+                        <a href="{{ $showUrl }}#buy" class="am-btn am-btn--card-primary">Buy Now</a>
                         @endif
                     </div>
                 </div>

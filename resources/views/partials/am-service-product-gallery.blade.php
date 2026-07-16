@@ -6,11 +6,9 @@
 ])
 
 @if($products->isNotEmpty())
-{{-- studio-gallery: single Order Now button (no View pair) --}}
 <section class="am-design-gallery am-design-gallery--service">
     <p class="am-card__label">Design Gallery</p>
     <h2 class="am-design-gallery__title">{{ $heading }}</h2>
-    <p class="am-design-gallery__count">{{ $products->count() }} designs · click any to order</p>
     <div class="am-design-gallery__grid am-design-gallery__grid--dense">
         @foreach($products as $product)
         @php
@@ -29,25 +27,28 @@
                 @if($product->category)
                 <p class="am-design-gallery__cat">{{ $product->category->name }}</p>
                 @endif
-                @if($product->usesCheckoutFlow())
-                <form action="{{ route('cart.add', $product) }}" method="POST" class="am-design-gallery__buy-cta">
-                    @csrf
-                    <input type="hidden" name="quantity" value="1">
-                    <input type="hidden" name="buy_now" value="1">
-                    <button type="submit" class="am-btn am-btn--primary am-btn--sm am-btn--full">Buy Now</button>
-                </form>
-                @elseif($ctaLabel === 'Request Quote')
-                <a href="{{ route('leads.create') }}" class="am-btn am-btn--primary am-btn--sm am-btn--full">Request Quote</a>
-                @else
-                <button type="button"
-                    class="am-btn am-btn--primary am-btn--sm am-btn--full"
-                    data-open-order-popup
-                    data-product-name="{{ $product->name }}"
-                    data-product-slug="{{ $product->slug }}"
-                    data-service-slug="{{ $serviceSlug ?: \App\Models\Service::serviceSlugForProduct($product->slug, $product->category?->slug) }}">
-                    Order Now
-                </button>
-                @endif
+                <div class="am-design-gallery__actions">
+                    <a href="{{ $productUrl }}" class="am-btn am-btn--card-view">View</a>
+                    @if($product->usesCheckoutFlow())
+                    <form action="{{ route('cart.add', $product) }}" method="POST" class="am-design-gallery__buy-form">
+                        @csrf
+                        <input type="hidden" name="quantity" value="1">
+                        <input type="hidden" name="buy_now" value="1">
+                        <button type="submit" class="am-btn am-btn--card-primary">Buy Now</button>
+                    </form>
+                    @elseif($ctaLabel === 'Request Quote')
+                    <a href="{{ route('leads.create') }}" class="am-btn am-btn--card-primary">Request Quote</a>
+                    @else
+                    <button type="button"
+                        class="am-btn am-btn--card-primary"
+                        data-open-order-popup
+                        data-product-name="{{ $product->name }}"
+                        data-product-slug="{{ $product->slug }}"
+                        data-service-slug="{{ $serviceSlug ?: \App\Models\Service::serviceSlugForProduct($product->slug, $product->category?->slug) }}">
+                        Order Now
+                    </button>
+                    @endif
+                </div>
             </div>
         </article>
         @endforeach

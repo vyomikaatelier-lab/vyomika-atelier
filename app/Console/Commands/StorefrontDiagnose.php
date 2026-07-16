@@ -66,17 +66,15 @@ class StorefrontDiagnose extends Command
         $galleryBlade = base_path('resources/views/partials/am-service-product-gallery.blade.php');
         if (is_readable($galleryBlade)) {
             $gallerySource = file_get_contents($galleryBlade) ?: '';
-            if (str_contains($gallerySource, 'am-design-gallery__actions')) {
-                $this->error('Studio gallery blade still has View+button pair — run git pull origin main (need cc4ea2e+)');
+            if (str_contains($gallerySource, 'am-design-gallery__count')) {
+                $this->error('Studio gallery blade still shows design count — run git pull origin main');
 
                 return 1;
             }
-            if (! str_contains($gallerySource, 'click any to order')) {
-                $this->warn('Studio gallery blade missing single-CTA copy — run git pull origin main');
-            } elseif (! str_contains($gallerySource, 'am-btn--full')) {
-                $this->warn('Studio gallery blade missing full-width Order Now button');
+            if (! str_contains($gallerySource, 'am-btn--card-view')) {
+                $this->warn('Studio gallery blade missing card action row — run git pull origin main');
             } else {
-                $this->line('[OK] studio gallery single Order Now button');
+                $this->line('[OK] studio gallery card action row');
             }
         }
 

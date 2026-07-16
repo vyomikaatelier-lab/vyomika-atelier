@@ -2,7 +2,7 @@
 <html lang="en" data-hero="fullscreen" data-theme="atelier">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Vyomika Atelier LLP — PVD partitions, metal furniture, and bespoke fabrication. Pan-India delivery from Mumbai.">
     <title>@yield('title', 'Vyomika Atelier LLP — PVD Partitions & Metal Furniture')</title>
     @stack('meta')
@@ -12,6 +12,7 @@
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
     <link rel="stylesheet" href="{{ asset('css/amerce.css') }}">
     <link rel="stylesheet" href="{{ asset('css/amerce-themes.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/responsive.css') }}">
     @stack('styles')
 </head>
 <body @if(filter_var(env('APP_PREVIEW_BAR', false), FILTER_VALIDATE_BOOLEAN)) class="has-preview-bar" @endif>
@@ -199,7 +200,7 @@
 
 <div class="am-modal" id="am-quickview" role="dialog" aria-label="Quick view">
     <button type="button" class="am-modal__close" id="am-quickview-close" aria-label="Close">✕</button>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;padding:2rem">
+    <div class="am-quickview__layout">
         <div><img data-qv-img src="" alt="" style="width:100%;border-radius:var(--am-radius)"></div>
         <div>
             <p class="am-featured__cat">PVD Partitions</p>
@@ -212,6 +213,7 @@
 
 @include('partials.am-popup-form-modal')
 
+<script src="{{ asset('js/responsive.js') }}" defer></script>
 <script src="{{ asset('js/amerce.js') }}"></script>
 <script src="{{ asset('js/calculator.js') }}"></script>
 @if($previewBar ?? false)
