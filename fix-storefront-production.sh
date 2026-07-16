@@ -14,6 +14,8 @@ git checkout main
 git pull origin main
 
 echo "2) Verify storefront files exist..."
+git checkout -- public/css/amerce.css public/css/amerce-themes.css public/js/amerce.js 2>/dev/null || true
+
 for f in \
   config/site.php \
   app/Support/SiteContent.php \

@@ -29,5 +29,7 @@
             <a href="{{ $resolveNavHref($item) }}">{{ $item['label'] }}</a>
         @endif
     @endforeach
-    <a href="{{ StorefrontUrl::to('cart.index', [], '/cart') }}">Cart@if($cartCount) ({{ $cartCount }})@endif</a>
+    <a href="{{ StorefrontUrl::to('cart.index', [], '/cart') }}">
+        Cart{{ $cartCount ? ' ('.$cartCount.')' : '' }}
+    </a>
 </nav>
