@@ -12,6 +12,11 @@ echo "1) Pull latest code..."
 git fetch origin
 git checkout main
 git pull origin main
+echo "    HEAD: $(git log -1 --oneline)"
+if ! grep -q 'usesCheckoutFlow' app/Models/Product.php 2>/dev/null; then
+  echo "ERROR: Product.php missing usesCheckoutFlow — git pull did not get latest main (need d9b8655+)."
+  exit 1
+fi
 
 echo "2) Verify storefront files exist..."
 git checkout -- public/css/amerce.css public/css/amerce-themes.css public/js/amerce.js 2>/dev/null || true
@@ -84,6 +89,12 @@ fi
 echo "9) Smoke check..."
 php artisan route:list --name=home --columns=method,uri,name 2>/dev/null | head -5 || true
 php artisan route:list --name=legal.privacy --columns=method,uri,name 2>/dev/null | head -5 || true
+
+if grep -q 'Buy Now' resources/views/collections/mirror-frames/index.blade.php 2>/dev/null; then
+  echo "    OK: mirror-frames blade has Buy Now buttons"
+else
+  echo "WARNING: mirror-frames blade missing Buy Now — wrong branch or stale files"
+fi
 
 echo ""
 echo "=== Done ==="
