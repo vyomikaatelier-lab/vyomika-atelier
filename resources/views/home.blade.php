@@ -6,6 +6,7 @@
 
 @php
     use App\Support\SiteContent;
+    use App\Support\StorefrontUrl;
     $heroSlides = SiteContent::heroSlides();
     $bestSellers = SiteContent::bestSellers();
     $categoryBanners = SiteContent::categoryBanners();
@@ -55,7 +56,7 @@
                 <h2>{{ $bestSellers['title'] ?? 'Best-Selling Products' }}</h2>
                 <p>{{ $bestSellers['subtitle'] ?? '' }}</p>
             </div>
-            <a href="{{ route('shop.index') }}" class="am-section-head__link">{{ $bestSellers['cta_label'] ?? 'View All Products' }}</a>
+            <a href="{{ StorefrontUrl::to('shop.index', [], '/shop') }}" class="am-section-head__link">{{ $bestSellers['cta_label'] ?? 'View All Products' }}</a>
         </div>
     </div>
     @php $banner = $bestSellers['banner'] ?? []; @endphp
@@ -173,7 +174,7 @@
         <div class="am-section-head">
             <h2>{{ $blogSection['title'] ?? 'Guides, Tips & Inspiration' }}</h2>
             <p>{{ $blogSection['subtitle'] ?? '' }}</p>
-            <a href="{{ route('blog.index') }}" class="am-section-head__link">View all articles →</a>
+            <a href="{{ StorefrontUrl::to('blog.index', [], '/blog') }}" class="am-section-head__link">View all articles →</a>
         </div>
     </div>
     <div class="am-section__body">
@@ -187,7 +188,9 @@
                 $excerpt = $isModel ? ($post->excerpt ?? '') : ($post['excerpt'] ?? '');
                 $image = $isModel ? $post->image : ($post['image'] ?? '');
                 $slug = data_get($post, 'slug');
-                $url = $slug ? route('blog.show', $slug) : route('blog.index');
+                $url = $slug
+                    ? StorefrontUrl::to('blog.show', ['slug' => $slug], '/blog/'.$slug)
+                    : StorefrontUrl::to('blog.index', [], '/blog');
             @endphp
             <article class="am-blog-card">
                 <a href="{{ $url }}">

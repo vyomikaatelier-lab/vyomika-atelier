@@ -1,4 +1,6 @@
 @php
+    use App\Support\StorefrontUrl;
+
     $isModel = $product instanceof \App\Models\Product;
     $name = $isModel ? $product->name : ($product['name'] ?? '');
     $category = $isModel ? ($product->category?->name ?? 'Product') : ($product['category'] ?? 'Product');
@@ -10,7 +12,9 @@
     }
     $image = $isModel ? ($product->imageUrl() ?: $product->image) : ($product['image'] ?? '');
     $slug = $isModel ? $product->slug : ($product['slug'] ?? '');
-    $url = $slug ? route('shop.show', $slug) : route('shop.index');
+    $url = $slug
+        ? StorefrontUrl::to('shop.show', ['slug' => $slug], '/shop/'.$slug)
+        : StorefrontUrl::to('shop.index', [], '/shop');
 @endphp
 <article class="am-product-card" data-product-url="{{ $url }}">
     <a href="{{ $url }}" class="am-product-card__thumb">

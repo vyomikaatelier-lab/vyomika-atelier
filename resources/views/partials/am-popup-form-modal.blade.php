@@ -26,7 +26,7 @@
                 </div>
             </div>
 
-            <form action="{{ route('leads.store') }}" method="POST" enctype="multipart/form-data" class="am-popup-form" id="va-order-form">
+            <form action="{{ \App\Support\StorefrontUrl::to('leads.store', [], '/leads') }}" method="POST" enctype="multipart/form-data" class="am-popup-form" id="va-order-form">
                 @csrf
                 <input type="hidden" name="type" id="am-popup-type" value="order_now">
                 <input type="hidden" name="subject" id="va-modal-subject">

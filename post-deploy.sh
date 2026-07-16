@@ -33,10 +33,14 @@ php artisan migrate --force 2>/dev/null || true
 php artisan optimize:clear
 
 php artisan config:cache
-php artisan route:cache
-php artisan view:clear
-if ! php artisan view:cache; then
-  echo "WARNING: view:cache failed — check storage/logs/laravel.log and missing Blade partials."
+
+if php artisan storefront:diagnose 2>/dev/null; then
+  php artisan route:cache
+  php artisan view:clear
+  php artisan view:cache || echo "WARNING: view:cache failed — check storage/logs/laravel.log"
+else
+  echo "WARNING: storefront:diagnose failed — run: bash fix-storefront-production.sh"
+  php artisan view:clear
 fi
 
 echo "=== Done — site should load without 403 ==="

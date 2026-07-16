@@ -64,10 +64,19 @@ chmod -R 775 storage bootstrap/cache 2>/dev/null || true
 
 echo "7) Rebuild production caches..."
 php artisan config:cache
-php artisan route:cache
-php artisan view:cache
 
-echo "8) Smoke check..."
+echo "8) Diagnose storefront (must pass before caching routes/views)..."
+if php artisan storefront:diagnose; then
+  php artisan route:cache
+  php artisan view:cache
+else
+  echo ""
+  echo "WARNING: Diagnose failed — skipping route:cache and view:cache so errors surface in logs."
+  echo "Fix the error above, then re-run: bash fix-storefront-production.sh"
+  exit 1
+fi
+
+echo "9) Smoke check..."
 php artisan route:list --name=home --columns=method,uri,name 2>/dev/null | head -5 || true
 php artisan route:list --name=legal.privacy --columns=method,uri,name 2>/dev/null | head -5 || true
 
