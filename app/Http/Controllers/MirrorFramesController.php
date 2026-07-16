@@ -21,11 +21,10 @@ class MirrorFramesController extends Controller
 
         abort_unless($design, 404);
 
-        $product = Product::query()
-            ->where('slug', $design['product_slug'])
-            ->where('is_active', true)
-            ->with('category')
-            ->firstOrFail();
+        $productSlug = $design['product_slug'] ?? $designSlug;
+        $product = MirrorFramesContent::resolveProduct($productSlug);
+
+        abort_unless($product, 404);
 
         $related = Product::query()
             ->where('is_active', true)
