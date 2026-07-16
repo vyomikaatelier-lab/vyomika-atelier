@@ -41,6 +41,9 @@ php artisan optimize:clear
 echo "5) Migrations..."
 php artisan migrate --force
 
+echo "5b) Sync studio catalog (partitions, doors, furniture gallery products)..."
+php artisan db:seed --class=CatalogSyncSeeder --force
+
 echo "6) Restore symlinks (never rm -rf public_html when it points at public/)..."
 mkdir -p storage/app/public
 rm -f public/storage
