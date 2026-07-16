@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Service;
 use App\Models\ServiceDesign;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 class CatalogSyncSeeder extends Seeder
 {
@@ -181,6 +182,10 @@ class CatalogSyncSeeder extends Seeder
             );
 
             foreach ($designs as $design) {
+                if (! Schema::hasColumn('service_designs', 'product_slug')) {
+                    unset($design['product_slug']);
+                }
+
                 ServiceDesign::query()->updateOrCreate(
                     [
                         'service_id' => $service->id,
