@@ -3,14 +3,28 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use Illuminate\Http\Request;
 
 class ProjectController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $projects = Project::where('is_active', true)->latest('completed_at')->paginate(12);
+        $activeCategory = $request->query('category', '');
+        $categories = config('projects.categories', []);
 
-        return view('projects.index', compact('projects'));
+        $query = Project::query()
+            ->where('is_active', true)
+            ->orderBy('display_order')
+            ->latest('completed_at');
+
+        if ($activeCategory !== '' && array_key_exists($activeCategory, Project::categoryLabels())) {
+            $query->where('category', $activeCategory);
+        }
+
+        $projects = $query->paginate(12)->withQueryString();
+        $page = config('projects', []);
+
+        return view('projects.index', compact('projects', 'activeCategory', 'categories', 'page'));
     }
 
     public function show(string $slug)

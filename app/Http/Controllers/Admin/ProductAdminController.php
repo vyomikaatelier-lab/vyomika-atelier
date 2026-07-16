@@ -32,6 +32,7 @@ class ProductAdminController extends Controller
         $validated['is_featured'] = $request->boolean('is_featured');
         $validated['is_active'] = $request->boolean('is_active', true);
         $validated['image'] = $this->resolveImage($request, $validated['image'] ?? null);
+        $validated['gallery'] = $this->parseGallery($request);
 
         Product::create($validated);
 
@@ -58,7 +59,7 @@ class ProductAdminController extends Controller
             $validated['image'] = $newImage;
         }
 
-        $product->update($validated);
+        $product->update([...$validated, 'gallery' => $this->parseGallery($request)]);
 
         return redirect()->route('admin.products.index')->with('success', 'Product updated.');
     }
@@ -102,5 +103,18 @@ class ProductAdminController extends Controller
         if ($image && ! str_starts_with($image, 'http')) {
             Storage::disk('public')->delete($image);
         }
+    }
+
+    /** @return array<int, string>|null */
+    private function parseGallery(Request $request): ?array
+    {
+        $raw = $request->input('gallery_urls');
+        if (! filled($raw)) {
+            return null;
+        }
+
+        $urls = array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $raw))));
+
+        return $urls ?: null;
     }
 }

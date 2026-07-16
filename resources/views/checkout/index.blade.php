@@ -1,56 +1,85 @@
-@extends('layouts.app')
+@extends('layouts.store')
 
-@section('title', 'Checkout — VYOMIKA ATELIER')
+@section('title', 'Checkout — Vyomika Atelier LLP')
 
 @section('content')
-<div class="va-page-hero">
-    <p class="va-label mb-3">Secure Checkout</p>
-    <h1 class="font-serif text-5xl text-brand-900">Checkout</h1>
-</div>
+@include('partials.am-page-hero', ['label' => 'Secure Checkout', 'title' => 'Checkout'])
 
-<div class="max-w-5xl mx-auto px-5 py-16">
-    <form action="{{ route('checkout.store') }}" method="POST" class="grid lg:grid-cols-2 gap-16">
-        @csrf
-        <div class="space-y-4">
-            <h2 class="font-serif text-2xl mb-4">Shipping Details</h2>
-            <input type="text" name="customer_name" value="{{ old('customer_name') }}" placeholder="Full Name" required class="va-input">
-            <input type="email" name="customer_email" value="{{ old('customer_email') }}" placeholder="Email" required class="va-input">
-            <input type="tel" name="customer_phone" value="{{ old('customer_phone') }}" placeholder="Phone" required class="va-input">
-            <textarea name="shipping_address" placeholder="Shipping Address" required rows="3" class="va-input">{{ old('shipping_address') }}</textarea>
-            <div class="grid grid-cols-2 gap-4">
-                <input type="text" name="city" value="{{ old('city') }}" placeholder="City" required class="va-input">
-                <input type="text" name="pincode" value="{{ old('pincode') }}" placeholder="Pincode" required class="va-input">
-            </div>
-            <input type="text" name="state" value="{{ old('state') }}" placeholder="State (optional)" class="va-input">
-            <textarea name="notes" placeholder="Order notes (optional)" rows="2" class="va-input">{{ old('notes') }}</textarea>
+<section class="am-page-body">
+    <div class="am-container am-checkout-flow am-checkout-flow--centered">
+        @include('partials.am-breadcrumbs', ['items' => [
+            ['label' => 'Home', 'url' => route('home')],
+            ['label' => 'Cart', 'url' => route('cart.index')],
+            ['label' => 'Checkout'],
+        ]])
 
-            <h2 class="font-serif text-xl mt-8 mb-3">Payment</h2>
-            <label class="flex items-center gap-3 py-2 text-sm cursor-pointer">
-                <input type="radio" name="payment_method" value="cod" checked> Cash on Delivery
-            </label>
-            <label class="flex items-center gap-3 py-2 text-sm cursor-pointer">
-                <input type="radio" name="payment_method" value="bank_transfer"> Bank Transfer
-            </label>
-            @if($razorpayEnabled)
-            <label class="flex items-center gap-3 py-2 text-sm cursor-pointer">
-                <input type="radio" name="payment_method" value="razorpay"> Online Payment
-            </label>
-            @endif
-        </div>
+        @include('partials.am-checkout-steps', ['current' => 2])
 
-        <div class="bg-white border border-brand-200 p-8 h-fit">
-            <h2 class="font-serif text-2xl mb-6">Order Summary</h2>
-            @foreach($items as $item)
-                <div class="flex justify-between text-sm py-3 border-b border-brand-100">
-                    <span>{{ $item['product']->name }} × {{ $item['quantity'] }}</span>
-                    <span>₹{{ number_format($item['line_total'], 0) }}</span>
+        @unless($razorpayEnabled)
+        <p class="am-checkout-notice" role="alert">Online payment is not configured yet. Please contact the studio to complete your order.</p>
+        @endunless
+
+        <form action="{{ route('checkout.store') }}" method="POST" class="am-checkout-stack am-checkout-form am-address-form">
+            @csrf
+            <input type="hidden" name="payment_method" value="razorpay">
+
+            <div class="am-card am-checkout-panel">
+                <div class="am-card__body">
+                    <h2 class="am-checkout-panel__title">Shipping details</h2>
+                    <p class="am-checkout-panel__hint">Worldwide delivery · estimated 3–4 weeks after order confirmation</p>
+
+                    @php
+                        $checkoutName = old('customer_name', '');
+                        $checkoutParts = $checkoutName ? explode(' ', $checkoutName, 2) : ['', ''];
+                    @endphp
+                    <div class="am-checkout-form__address">
+                        @include('partials.am-address-form-grid', [
+                            'mode' => 'checkout',
+                            'userEmail' => old('customer_email'),
+                            'firstName' => old('first_name', $checkoutParts[0] ?? ''),
+                            'lastName' => old('last_name', $checkoutParts[1] ?? ''),
+                            'company' => old('company'),
+                            'street' => old('shipping_address'),
+                            'city' => old('city'),
+                            'state' => old('state'),
+                            'pincode' => old('pincode'),
+                            'phone' => old('customer_phone'),
+                            'country' => old('country', 'India'),
+                        ])
+                        <div class="am-checkout-field am-address-form__field--full">
+                            <label for="notes">Order notes <span class="am-checkout-field__optional">(optional)</span></label>
+                            <textarea id="notes" name="notes" rows="2" class="am-input am-textarea" placeholder="Delivery instructions, GST details…">{{ old('notes') }}</textarea>
+                        </div>
+                    </div>
                 </div>
-            @endforeach
-            <div class="flex justify-between py-3 text-sm text-brand-500"><span>Subtotal</span><span>₹{{ number_format($subtotal, 0) }}</span></div>
-            <div class="flex justify-between py-3 text-sm text-brand-500"><span>Shipping</span><span>{{ $shipping > 0 ? '₹'.number_format($shipping, 0) : 'Free' }}</span></div>
-            <div class="flex justify-between py-4 font-serif text-2xl border-t border-brand-200 mt-2"><span>Total</span><span>₹{{ number_format($total, 0) }}</span></div>
-            <button type="submit" class="va-btn-primary w-full text-center mt-4">Place Order</button>
-        </div>
-    </form>
-</div>
+            </div>
+
+            <div class="am-card am-checkout-panel am-checkout-panel--payment">
+                <div class="am-card__body">
+                    <h2 class="am-checkout-panel__title">Payment</h2>
+                    <p class="am-checkout-panel__hint">Pay securely online with UPI or card after you place the order.</p>
+                    <div class="am-checkout-pay-badges" aria-label="Accepted payment methods">
+                        <span class="am-checkout-pay-badge">UPI</span>
+                        <span class="am-checkout-pay-badge">Debit / Credit Card</span>
+                        <span class="am-checkout-pay-badge">Net Banking</span>
+                    </div>
+                    @include('partials.am-pdp-checkout-trust')
+                </div>
+            </div>
+
+            @include('partials.am-order-summary', [
+                'items' => $items,
+                'subtotal' => $subtotal,
+                'shipping' => $shipping,
+                'total' => $total,
+                'compact' => true,
+            ])
+
+            <div class="am-checkout-stack__actions">
+                <button type="submit" class="am-btn am-btn--primary am-btn--full am-btn--lg" @disabled(!$razorpayEnabled)>Continue to Payment</button>
+                <a href="{{ route('cart.index') }}" class="am-btn am-btn--outline am-btn--full">Back to Cart</a>
+            </div>
+        </form>
+    </div>
+</section>
 @endsection

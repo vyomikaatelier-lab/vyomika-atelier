@@ -39,6 +39,11 @@
         <img src="{{ $product->imageUrl() }}" alt="" class="w-32 h-40 object-cover rounded border">
     @endif
 
+    <div>
+        <label class="text-sm text-gray-600 block mb-1">Gallery image URLs (one per line, optional)</label>
+        <textarea name="gallery_urls" rows="3" placeholder="https://example.com/image-2.jpg" class="w-full border px-3 py-2 rounded">{{ old('gallery_urls', isset($product) ? implode("\n", $product->gallery ?? []) : '') }}</textarea>
+    </div>
+
     <label class="flex items-center gap-2"><input type="checkbox" name="is_featured" value="1" @checked(old('is_featured', $product->is_featured ?? false))> Featured</label>
     <label class="flex items-center gap-2"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', $product->is_active ?? true))> Active</label>
     <button type="submit" class="bg-gray-900 text-white px-6 py-2 rounded">Save</button>

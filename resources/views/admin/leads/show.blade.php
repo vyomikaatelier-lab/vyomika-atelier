@@ -14,6 +14,9 @@
         @if($lead->dimensions)<p class="text-sm text-gray-600 mb-2">Dimensions: {{ $lead->dimensions }} ({{ $lead->unit_type }})</p>@endif
         @if($lead->calculated_price)<p class="text-sm font-medium text-gray-800 mb-2">Calculated price: ₹{{ number_format($lead->calculated_price, 0) }}</p>@endif
         @if($lead->budget)<p class="text-sm text-gray-600 mb-2">Budget: {{ $lead->budget }}</p>@endif
+        @if($lead->hasAttachment())
+        <p><a href="{{ route('admin.leads.attachment', $lead) }}" class="text-blue-600">Download uploaded file</a></p>
+        @endif
         <p class="text-gray-700 whitespace-pre-wrap">{{ $lead->message }}</p>
     </div>
     <div class="bg-white p-6 rounded-lg shadow">
@@ -22,8 +25,8 @@
             <div>
                 <label class="text-sm text-gray-500">Status</label>
                 <select name="status" class="border px-3 py-2 rounded w-full">
-                    @foreach(['new','contacted','quoted','converted','closed'] as $status)
-                        <option value="{{ $status }}" @selected($lead->status === $status)>{{ ucfirst($status) }}</option>
+                    @foreach($lead->allowedStatuses() as $status)
+                        <option value="{{ $status }}" @selected($lead->status === $status)>{{ ucwords(str_replace('_', ' ', $status)) }}</option>
                     @endforeach
                 </select>
             </div>

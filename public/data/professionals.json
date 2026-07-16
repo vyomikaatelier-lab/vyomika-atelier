@@ -1,0 +1,250 @@
+{
+    "meta_title": "Professional B2B Partnership Registration | Vyomika Atelier LLP",
+    "meta_description": "Partner with Vyomika Atelier LLP for exclusive B2B pricing, priority production and dedicated support — architects, interior designers, contractors, developers and showroom partners across India.",
+    "hero": {
+        "label": "Professionals",
+        "title": "Partner with Vyomika Atelier LLP",
+        "subtitle": "Bring your creative vision to life with bespoke PVD metal partitions, Corten façades, door systems and architectural metalwork — tailored for professional practice.",
+        "highlights": [
+            "Tailored for professionals",
+            "Exclusive B2B pricing",
+            "Priority studio support"
+        ],
+        "cta_primary": {
+            "label": "Apply for Partnership",
+            "href": "#professional-apply"
+        },
+        "cta_secondary": {
+            "label": "View Benefits",
+            "href": "#partnership-benefits"
+        },
+        "image": "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1400&q=80"
+    },
+    "who_can_apply": {
+        "title": "Who Can Apply",
+        "items": [
+            {
+                "title": "Architects",
+                "text": "Large-scale architectural metalwork, façades, screens and bespoke structural features for commercial and institutional projects."
+            },
+            {
+                "title": "Interior Designers",
+                "text": "High-end residential and commercial metal accents — partitions, furniture, trims and feature walls in premium PVD finishes."
+            },
+            {
+                "title": "Furniture Manufacturers & OEM",
+                "text": "Components and metal sub-assemblies for luxury furniture brands and OEM production runs."
+            },
+            {
+                "title": "Real Estate Developers",
+                "text": "Lobby features, common-area metalwork, entrance systems and repeat specifications across developments."
+            },
+            {
+                "title": "Contractors & Fit-out Agencies",
+                "text": "Reliable supply, documented QC and on-site coordination for execution teams."
+            },
+            {
+                "title": "Retailers & Showroom Partners",
+                "text": "Display partnerships, sample programmes and trade access to our PVD and metal collections."
+            }
+        ]
+    },
+    "benefits": {
+        "title": "Partnership Benefits",
+        "items": [
+            "Exclusive B2B tier-based pricing",
+            "Customization & bespoke design support",
+            "Priority production & logistics",
+            "Dedicated relationship manager",
+            "Early access to new collections",
+            "Marketing & sampling support — catalogs and physical samples"
+        ]
+    },
+    "categories": {
+        "title": "Product & Service Categories",
+        "items": [
+            "PVD coated sheets & panels",
+            "CNC laser-cut patterns & screens",
+            "Designer metal furniture",
+            "Decorative trims & profiles",
+            "Partitions & room dividers",
+            "Railings & balustrades",
+            "Architectural hardware",
+            "Façade & cladding solutions",
+            "Corten steel features",
+            "Custom metal fabrication"
+        ]
+    },
+    "process": {
+        "title": "How the Partnership Works",
+        "steps": [
+            {
+                "title": "Professional Registration",
+                "text": "Submit the application form with your practice details and areas of interest."
+            },
+            {
+                "title": "Verification",
+                "text": "Our team reviews credentials, portfolio and business registration within 2–3 business days."
+            },
+            {
+                "title": "Access & Onboarding",
+                "text": "Approved partners receive B2B pricing tiers, sampling options and a dedicated contact."
+            },
+            {
+                "title": "Collaboration & Ordering",
+                "text": "Request quotes, approve drawings and place orders with priority production scheduling."
+            }
+        ]
+    },
+    "pricing": {
+        "title": "B2B Pricing Information",
+        "items": [
+            "Tier-based pricing for volume and repeat projects",
+            "Specialised rates for recurring specifications",
+            "Transparent quotations with line-item breakdowns",
+            "Fast quote turnaround — typically within 24–48 hours"
+        ]
+    },
+    "partnership_types": {
+        "title": "Partnership Types",
+        "items": [
+            {
+                "title": "Project-based Partner",
+                "text": "For specific high-end one-off projects requiring custom fabrication and site coordination."
+            },
+            {
+                "title": "Strategic Partner",
+                "text": "For architects, designers and developers with ongoing metalwork requirements across multiple sites."
+            },
+            {
+                "title": "OEM / Manufacturer Partner",
+                "text": "Supply of metal components and finishes for furniture brands and manufacturing partners."
+            }
+        ]
+    },
+    "dealer_support": {
+        "title": "Dealer & Display Support",
+        "items": [
+            "Display boards and physical PVD sample kits",
+            "Technical catalogs and finish specification sheets",
+            "Co-branded marketing assets where applicable",
+            "Showroom display guidance and staff training"
+        ]
+    },
+    "why_partner": {
+        "title": "Why Partner With Us?",
+        "items": [
+            {
+                "title": "Quality & Craftsmanship",
+                "text": "Mumbai studio fabrication with documented QC, secure packaging and Pan-India delivery."
+            },
+            {
+                "title": "Innovation",
+                "text": "CNC cutting, PVD finishes, Corten systems and bespoke engineering for complex briefs."
+            },
+            {
+                "title": "Reliable Timelines",
+                "text": "Clear production schedules — typically 3–4 weeks for made-to-order metalwork after approval."
+            },
+            {
+                "title": "End-to-end Support",
+                "text": "From drawing review and sampling through delivery and installation coordination."
+            }
+        ]
+    },
+    "featured_projects": {
+        "title": "Professional Projects",
+        "subtitle": "A selection of collaborations with architects, designers and developers.",
+        "slugs": [
+            "champagne-wave-office-lobby",
+            "boutique-hotel-lobby-screen",
+            "corten-entrance-screen"
+        ]
+    },
+    "faq": {
+        "title": "Frequently Asked Questions",
+        "items": [
+            {
+                "q": "Is there a fee to join the professional program?",
+                "a": "No — registration is free. Approved partners access B2B pricing and support benefits at no membership cost."
+            },
+            {
+                "q": "What documents are required?",
+                "a": "Business registration (GSTIN or equivalent), company details, and portfolio or website reference. Trade licenses may be requested for verification."
+            },
+            {
+                "q": "How long does approval take?",
+                "a": "We aim to review applications within 2–3 business days and will contact you if additional information is needed."
+            },
+            {
+                "q": "Can international practices apply?",
+                "a": "We primarily serve projects in India. International firms specifying work in India are welcome to apply with project details."
+            },
+            {
+                "q": "Why might an application be declined?",
+                "a": "Incomplete credentials, inability to verify business details, or misalignment with our product categories may result in deferral — we will explain where possible."
+            },
+            {
+                "q": "Is there a minimum order value?",
+                "a": "Tier pricing applies to repeat and volume work. Single custom projects are quoted individually — there is no fixed minimum for professional accounts."
+            },
+            {
+                "q": "Do you offer physical samples?",
+                "a": "Yes — approved partners can request PVD finish sample kits and material swatches for client presentations."
+            },
+            {
+                "q": "How is B2B pricing structured?",
+                "a": "Pricing tiers reflect project volume, repeat business and product category. Your relationship manager shares tier details upon approval."
+            },
+            {
+                "q": "Can contractors apply without a design practice?",
+                "a": "Yes — contractors and fit-out agencies with documented project history are eligible."
+            },
+            {
+                "q": "Do you support CAD/BIM coordination?",
+                "a": "We work from PDF, DWG and dimensioned drawings and can align with your project documentation workflow."
+            },
+            {
+                "q": "What are typical lead times?",
+                "a": "Made-to-order fabrication is typically 3–4 weeks from drawing approval, subject to complexity and studio load."
+            },
+            {
+                "q": "Who is my point of contact?",
+                "a": "Each approved partner is assigned a dedicated relationship manager for quotes, production updates and sampling."
+            }
+        ]
+    },
+    "final_cta": {
+        "title": "Professional Account Registration",
+        "body": "Join architects, designers and contractors who specify Vyomika Atelier LLP for premium metalwork — fast quotes, dedicated support and professional discounts.",
+        "highlights": [
+            "Fast delivery",
+            "Dedicated sales support",
+            "Professional discounts"
+        ]
+    },
+    "form": {
+        "interest_options": {
+            "residential": "Residential projects",
+            "commercial": "Commercial projects",
+            "hospitality": "Hospitality",
+            "partitions": "PVD partitions",
+            "corten": "Corten steel",
+            "doors": "Door systems",
+            "furniture": "Metal furniture",
+            "oem": "OEM / components"
+        },
+        "years_options": [
+            "Less than 2 years",
+            "2–5 years",
+            "5–10 years",
+            "10+ years"
+        ],
+        "volume_options": [
+            "Under ₹5 lakh / month",
+            "₹5–20 lakh / month",
+            "₹20 lakh+ / month",
+            "Project-based only"
+        ]
+    }
+}

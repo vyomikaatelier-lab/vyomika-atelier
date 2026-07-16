@@ -50,6 +50,7 @@ DB_DATABASE=u550969814_vyomika
 DB_USERNAME=u550969814_vyomika
 DB_PASSWORD=YOUR_DB_PASSWORD_HERE
 ADMIN_EMAIL=admin@vyomikaatelier.com
+ADMIN_PASSWORD=YOUR_STRONG_PASSWORD_HERE
 ```
 
 Save: `Ctrl+O` → Enter → `Ctrl+X`
@@ -71,7 +72,7 @@ Wait 2-5 minutes. You should see `=== Done ===`
 https://vyomikaatelier.com (no www)
 
 Admin: https://vyomikaatelier.com/admin
-Login: admin@vyomikaatelier.com / changeme123
+Login: admin@vyomikaatelier.com (password = ADMIN_PASSWORD from .env)
 
 ---
 

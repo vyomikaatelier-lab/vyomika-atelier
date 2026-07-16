@@ -1,0 +1,935 @@
+{
+    "brand": {
+        "name": "Vyomika Atelier LLP",
+        "suffix": "",
+        "tagline": "PVD Partitions & Metal Furniture",
+        "email": "namaste@vyomikaatelier.com",
+        "phone": "+91 9205850254",
+        "since": "2009",
+        "address_shop": "Pan-India fabrication & delivery",
+        "address_office": "Andheri East, Mumbai, Maharashtra 400069"
+    },
+    "announcement": {
+        "text": "Festive Offer: 15% Off PVD Partitions — Auto Applied at Checkout",
+        "link_label": "Shop Now",
+        "link_href": "/shop"
+    },
+    "nav": [
+        {
+            "label": "Studio",
+            "children": [
+                {
+                    "label": "PVD Partitions",
+                    "href": "/services/partitions"
+                },
+                {
+                    "label": "Slim Profile Door System",
+                    "href": "/services/slim-profile-door-system"
+                },
+                {
+                    "label": "Bespoke Metal Furniture",
+                    "href": "/services/bespoke-metal-furniture"
+                },
+                {
+                    "label": "Main Entrance PVD Doors",
+                    "href": "/services/main-entrance-pvd-doors"
+                },
+                {
+                    "label": "Rack Systems, Metal PVD",
+                    "href": "/services/rack-systems-metal-pvd"
+                },
+                {
+                    "label": "Railings",
+                    "href": "/studio/railings"
+                }
+            ]
+        },
+        {
+            "label": "Collections",
+            "children": [
+                {
+                    "label": "Mirror Frames",
+                    "href": "/collections/mirror-frames"
+                },
+                {
+                    "label": "Corner Tables",
+                    "href": "/shop?category=corner-tables"
+                },
+                {
+                    "label": "Coffee Tables",
+                    "href": "/shop?category=coffee-tables"
+                },
+                {
+                    "label": "Glass Tables",
+                    "href": "/shop?category=glass-tables"
+                },
+                {
+                    "label": "Door Handles",
+                    "href": "/shop?category=door-handles"
+                }
+            ]
+        },
+        {
+            "label": "Corten steel",
+            "href": "/services/corten-steel-facade"
+        },
+        {
+            "label": "Projects",
+            "href": "/projects"
+        },
+        {
+            "label": "About",
+            "href": "/about"
+        },
+        {
+            "label": "Blog",
+            "href": "/blog"
+        },
+        {
+            "label": "Professionals",
+            "href": "/professionals"
+        }
+    ],
+    "hero": {
+        "slides": [
+            {
+                "kicker": "LIMITED TIME OFFER",
+                "title": "Define Spaces With PVD Partitions",
+                "description": "Champagne gold, rose gold, and matte black finishes — precision stainless partitions crafted for modern Indian interiors.",
+                "image": "https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg",
+                "cta_label": "View All Products",
+                "cta_href": "/shop"
+            },
+            {
+                "kicker": "BESPOKE FABRICATION",
+                "title": "Wave & Fluted Metal Dividers",
+                "description": "Statement room dividers in wave, fluted, and laser-cut patterns — engineered for offices, showrooms, and luxury homes.",
+                "image": "https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg",
+                "cta_label": "Explore Collection",
+                "cta_href": "/shop?category=partitions"
+            },
+            {
+                "kicker": "METAL FURNITURE",
+                "title": "Bespoke Tables & Rack Systems",
+                "description": "Coffee tables, console tables, and PVD rack systems — custom sizes with Pan-India delivery from our Mumbai studio.",
+                "image": "https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg",
+                "cta_label": "Shop Furniture",
+                "cta_href": "/shop?category=coffee-tables"
+            }
+        ]
+    },
+    "best_sellers": {
+        "title": "Best-Selling Products",
+        "subtitle": "Our most-loved PVD partitions, panels, and metal furniture.",
+        "cta_label": "View All Products",
+        "banner": {
+            "title": "Discover Your Signature Finish",
+            "subtitle": "Handpicked PVD partitions for modern spaces",
+            "cta": "Shop now",
+            "image": "https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg",
+            "href": "/shop"
+        },
+        "products": [
+            {
+                "name": "Champagne Wave Partition",
+                "category": "PVD Partitions",
+                "price": 28999,
+                "compare_price": 38999,
+                "badge": "-25%",
+                "image": "https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg",
+                "slug": "champagne-wave-partition"
+            },
+            {
+                "name": "Veil Fluted Panel",
+                "category": "Fluted Panels",
+                "price": 24999,
+                "compare_price": null,
+                "badge": "NEW",
+                "image": "https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg",
+                "slug": "veil-fluted-panel"
+            },
+            {
+                "name": "Rose Gold Room Divider",
+                "category": "Room Dividers",
+                "price": 32999,
+                "compare_price": 42999,
+                "badge": "-25%",
+                "image": "https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg",
+                "slug": "rose-gold-room-divider"
+            },
+            {
+                "name": "Matte Black PVD Partition",
+                "category": "PVD Partitions",
+                "price": 26999,
+                "compare_price": 35999,
+                "badge": "-25%",
+                "image": "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80",
+                "slug": "matte-black-pvd-partition"
+            },
+            {
+                "name": "Brushed Brass Coffee Table",
+                "category": "Coffee Tables",
+                "price": 18900,
+                "compare_price": null,
+                "image": "https://images.unsplash.com/photo-1532372320572-127d86b32558?w=800&q=80",
+                "slug": "brushed-brass-coffee-table"
+            },
+            {
+                "name": "Marble Top Corner Table",
+                "category": "Corner Tables",
+                "price": 16500,
+                "compare_price": null,
+                "image": "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&q=80",
+                "slug": "marble-top-corner-table"
+            },
+            {
+                "name": "Rose Gold Glass Side Table",
+                "category": "Glass Tables",
+                "price": 14200,
+                "compare_price": 18900,
+                "badge": "-25%",
+                "image": "https://images.unsplash.com/photo-1617806118233-18e1de247200?w=800&q=80",
+                "slug": "rose-gold-glass-side-table"
+            },
+            {
+                "name": "PVD Door Pull Handle",
+                "category": "Door Handles",
+                "price": 2400,
+                "compare_price": 3200,
+                "badge": "-25%",
+                "image": "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80",
+                "slug": "pvd-door-pull-handle"
+            }
+        ]
+    },
+    "category_banners": [
+        {
+            "title": "PVD Partitions",
+            "subtitle": "Wave, fluted & laser-cut dividers",
+            "cta": "Shop Now",
+            "href": "/shop?category=partitions",
+            "image": "https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg"
+        },
+        {
+            "title": "Fluted Panels",
+            "subtitle": "Up to 20% off bestsellers",
+            "cta": "Shop Now",
+            "href": "/shop?category=partitions",
+            "image": "https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg"
+        },
+        {
+            "title": "Metal Furniture",
+            "subtitle": "Tables, consoles & racks",
+            "cta": "Shop Now",
+            "href": "/shop?category=coffee-tables",
+            "image": "https://images.unsplash.com/photo-1532372320572-127d86b32558?w=800&q=80"
+        },
+        {
+            "title": "Custom Fabrication",
+            "subtitle": "Sq ft calculator & quotes",
+            "cta": "Get Quote",
+            "href": "/custom-order",
+            "image": "https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80"
+        }
+    ],
+    "trending": {
+        "title": "Trending Metal Finds",
+        "subtitle": "Popular PVD finishes and furniture pieces for offices and homes.",
+        "products": [
+            {
+                "name": "Laser-Cut Partition",
+                "price": 31999,
+                "compare_price": 41999,
+                "badge": "-25%",
+                "image": "https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg",
+                "slug": "laser-cut-partition"
+            },
+            {
+                "name": "Gold Fluted Console",
+                "price": 22400,
+                "compare_price": 29999,
+                "badge": "-25%",
+                "image": "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&q=80",
+                "slug": "gold-fluted-console"
+            },
+            {
+                "name": "Wall Rack System",
+                "price": 12500,
+                "compare_price": 16500,
+                "badge": "-25%",
+                "image": "https://images.unsplash.com/photo-1615529182904-896166571fac?w=800&q=80",
+                "slug": "wall-rack-system"
+            },
+            {
+                "name": "Slim Profile Door",
+                "price": 45999,
+                "compare_price": 59999,
+                "badge": "-25%",
+                "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80",
+                "slug": "slim-profile-door"
+            }
+        ]
+    },
+    "spotlights": {
+        "title": "PVD Craft, Elevated for Interiors",
+        "subtitle": "Thoughtfully engineered metalwork that transforms commercial and residential spaces.",
+        "items": [
+            {
+                "title": "Custom Sq Ft Partition Calculator",
+                "description": "Calculate PVD partition costs by area, finish, and pattern. Get an instant estimate for your project dimensions.",
+                "price": 1800,
+                "price_unit": "per sq ft",
+                "image": "https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg",
+                "cta": "Calculate Now",
+                "href": "/services"
+            },
+            {
+                "title": "Bespoke Metal Furniture",
+                "description": "Coffee tables, console tables, and display racks — fabricated to your exact size, finish, and installation requirements.",
+                "price": 18900,
+                "price_unit": "from",
+                "image": "https://images.unsplash.com/photo-1532372320572-127d86b32558?w=800&q=80",
+                "cta": "Request Quote",
+                "href": "/custom-order"
+            }
+        ]
+    },
+    "cta_band": {
+        "title": "Shape A Space Filled With Precision Metal Beauty",
+        "description": "Experience thoughtfully crafted PVD partitions and furniture that elevate your interiors across India.",
+        "cta_label": "View All Products",
+        "cta_href": "/shop"
+    },
+    "testimonials": [
+        {
+            "quote": "The champagne PVD partition arrived perfectly finished — even more stunning than the renders. Our Mumbai office lobby looks world-class.",
+            "client": "Rahul Mehta",
+            "role": "Verified Buyer — Architect"
+        },
+        {
+            "quote": "Vyomika Atelier understood our showroom brief immediately. Packaging was secure, installation was smooth, and the wave divider is a showstopper.",
+            "client": "Priya Nair",
+            "role": "Verified Buyer — Interior Designer"
+        },
+        {
+            "quote": "We ordered a custom coffee table and PVD handles for our Pune residence. Quality is exceptional — already planning the next partition.",
+            "client": "Vikram Singh",
+            "role": "Verified Buyer — Homeowner"
+        }
+    ],
+    "featured_product": {
+        "category": "PVD Partitions",
+        "name": "Champagne Wave Room Divider",
+        "reviews": 87,
+        "sold_recent": "24 sold in last 48 hours",
+        "sku": "SSM-WAVE-001",
+        "price": 28999,
+        "compare_price": 38999,
+        "badge": "-25%",
+        "description": "Precision stainless wave partition with champagne PVD finish. Ideal for offices, retail showrooms, and luxury residential spaces. Low maintenance with lasting lustre.",
+        "viewers": 32,
+        "sizes": [
+            "Standard (6×8 ft)",
+            "Large (8×10 ft)",
+            "Custom Size"
+        ],
+        "default_size": "Standard (6×8 ft)",
+        "image": "https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg",
+        "slug": "champagne-wave-partition",
+        "rate_per_sqft": 1800
+    },
+    "blog": {
+        "title": "Ideas, Materials & Projects",
+        "subtitle": "PVD finishes, partition design, Corten steel, and fabrication insights from our Mumbai studio.",
+        "posts": [
+            {
+                "category": "Partitions",
+                "date": "28 June 2026",
+                "title": "PVD Partition Design Ideas for Modern Offices and Showrooms",
+                "excerpt": "Wave, fluted, and laser-cut PVD partitions that define zones without blocking light.",
+                "image": "https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg",
+                "slug": "pvd-partition-design-ideas"
+            },
+            {
+                "category": "Doors",
+                "date": "20 June 2026",
+                "title": "Luxury Stainless-Steel Entrance Doors: Slim Profiles and PVD Finishes",
+                "excerpt": "How architects specify slim-profile stainless entrance doors with PVD coating.",
+                "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=80",
+                "slug": "luxury-stainless-steel-entrance-doors"
+            },
+            {
+                "category": "Corten Steel",
+                "date": "18 May 2026",
+                "title": "Corten Steel Façades: Patina, Performance and Project Lessons",
+                "excerpt": "Weathering steel for entrance screens, cladding, and landscape walls.",
+                "image": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80",
+                "slug": "corten-steel-facades-guide"
+            }
+        ]
+    },
+    "trust_badges": [
+        {
+            "icon": "shipping",
+            "title": "Pan-India Shipping",
+            "text": "Fabrication & delivery across major cities."
+        },
+        {
+            "icon": "delivery",
+            "title": "3–4 Week Delivery",
+            "text": "Made-to-order fabrication from Mumbai studio."
+        },
+        {
+            "icon": "support",
+            "title": "Expert Support",
+            "text": "Mumbai studio team — Mon–Sat, 10am–7pm IST."
+        },
+        {
+            "icon": "discount",
+            "title": "Trade Discounts",
+            "text": "Special pricing for architects & designers."
+        }
+    ],
+    "footer": {
+        "newsletter": "Get 10% off your first order and exclusive trade offers.",
+        "shop_links": [
+            {
+                "label": "All Products",
+                "href": "/shop"
+            },
+            {
+                "label": "Mirror Frames",
+                "href": "/collections/mirror-frames"
+            },
+            {
+                "label": "Corner Tables",
+                "href": "/shop?category=corner-tables"
+            },
+            {
+                "label": "Coffee Tables",
+                "href": "/shop?category=coffee-tables"
+            },
+            {
+                "label": "Glass Tables",
+                "href": "/shop?category=glass-tables"
+            },
+            {
+                "label": "Door Handles",
+                "href": "/shop?category=door-handles"
+            }
+        ],
+        "info_links": [
+            {
+                "label": "About",
+                "href": "/about"
+            },
+            {
+                "label": "Professionals",
+                "href": "/professionals"
+            },
+            {
+                "label": "Blog",
+                "href": "/blog"
+            },
+            {
+                "label": "Contact",
+                "href": "/contact"
+            }
+        ],
+        "service_links": [
+            {
+                "label": "PVD Partitions",
+                "href": "/services/partitions"
+            },
+            {
+                "label": "Slim Profile Door System",
+                "href": "/services/slim-profile-door-system"
+            },
+            {
+                "label": "Bespoke Metal Furniture",
+                "href": "/services/bespoke-metal-furniture"
+            },
+            {
+                "label": "Main Entrance PVD Doors",
+                "href": "/services/main-entrance-pvd-doors"
+            },
+            {
+                "label": "Rack Systems, Metal PVD",
+                "href": "/services/rack-systems-metal-pvd"
+            },
+            {
+                "label": "Railings",
+                "href": "/studio/railings"
+            }
+        ],
+        "legal_links": [
+            {
+                "label": "Privacy Policy",
+                "href": "/privacy-policy"
+            },
+            {
+                "label": "Terms & Conditions",
+                "href": "/terms-and-conditions"
+            },
+            {
+                "label": "Shipping & Delivery",
+                "href": "/shipping-delivery-policy"
+            },
+            {
+                "label": "Cancellation & Refund",
+                "href": "/cancellation-refund-policy"
+            },
+            {
+                "label": "Warranty & Returns",
+                "href": "/warranty-returns-policy"
+            },
+            {
+                "label": "Contact & Grievance",
+                "href": "/contact-grievance-policy"
+            }
+        ]
+    },
+    "shop": [],
+    "services": [
+        {
+            "slug": "partitions",
+            "name": "PVD Partitions",
+            "summary": "Custom wave, fluted, and laser-cut PVD partition systems with online sq ft calculator.",
+            "content": "<p>Engineered stainless partitions in champagne gold, rose gold, matte black, and bespoke finishes. Each system is fabricated to your dimensions with Pan-India delivery and installation support.</p>",
+            "image": "https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg",
+            "has_calculator": true,
+            "lead_form": "popup",
+            "rate_per_sqft": 1800,
+            "calc_label": "partition",
+            "care": [
+                "Material: Grade 304/316 stainless with PVD coating",
+                "Designed in: Mumbai, India",
+                "Fabrication: Vyomika Atelier LLP studio — custom dimensions",
+                "Care: Wipe with soft microfibre; avoid abrasives",
+                "Installation: Pan-India delivery available"
+            ],
+            "designs": [
+                {
+                    "slug": "wave-partition",
+                    "name": "Wave Partition",
+                    "product_slug": "champagne-wave-partition",
+                    "description": "Sculptural wave profile with champagne or rose gold PVD finish.",
+                    "image": "https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg"
+                },
+                {
+                    "slug": "fluted-panel",
+                    "name": "Fluted Panel",
+                    "product_slug": "veil-fluted-panel",
+                    "description": "Vertical fluting for light diffusion and acoustic softening.",
+                    "image": "https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg"
+                },
+                {
+                    "slug": "laser-cut-screen",
+                    "name": "Laser-Cut Screen",
+                    "product_slug": "laser-cut-partition",
+                    "description": "Custom patterns cut in stainless with precision CNC finishing.",
+                    "image": "https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg"
+                },
+                {
+                    "slug": "frameless-glass-metal",
+                    "name": "Frameless Glass + Metal",
+                    "product_slug": "rose-gold-room-divider",
+                    "description": "Hybrid partition combining PVD metal frames with glass infill.",
+                    "image": "https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg"
+                }
+            ]
+        },
+        {
+            "slug": "corten-steel-facade",
+            "name": "Corten steel",
+            "summary": "Weathering steel facades, screens, planters and custom metalwork with a natural rust finish.",
+            "content": "<p>Corten cladding, screens, and entrance features that develop a protective patina. Ideal for commercial entrances, landscape walls, and architectural statements.</p>",
+            "image": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80",
+            "has_calculator": false,
+            "lead_form": "inline",
+            "care": [
+                "Material: Weathering steel (Corten) with natural patina development",
+                "Designed in: Mumbai, India",
+                "Application: Façade cladding, screens, landscape walls",
+                "Care: Patina stabilises naturally; rinse periodically in coastal areas",
+                "Installation: Structural fixings per engineering specification"
+            ],
+            "designs": []
+        },
+        {
+            "slug": "slim-profile-door-system",
+            "name": "Slim Profile Door System",
+            "summary": "Ultra-slim PVD door frames with premium glass and concealed hardware.",
+            "content": "<p>Pivot, sliding, and hinged door systems with minimal sightlines. PVD-coated frames in brass, black, and rose gold tones.</p>",
+            "image": "https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=1200&q=80",
+            "has_calculator": true,
+            "lead_form": "popup",
+            "rate_per_sqft": 1800,
+            "calc_label": "door",
+            "care": [
+                "Material: Slim-profile stainless frame with PVD finish and premium glass",
+                "Designed in: Mumbai, India",
+                "Hardware: Concealed hinges, pivots, or slim-track sliding systems",
+                "Care: Clean glass with standard cleaner; wipe frames with soft cloth",
+                "Sealing: Weather and acoustic sealing per specification"
+            ],
+            "designs": [
+                {
+                    "slug": "pivot-entrance",
+                    "name": "Pivot Entrance",
+                    "description": "Statement pivot doors with concealed hardware.",
+                    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80"
+                },
+                {
+                    "slug": "sliding-patio",
+                    "name": "Sliding Patio Door",
+                    "description": "Slim-track sliding systems for indoor-outdoor flow.",
+                    "image": "https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=800&q=80"
+                },
+                {
+                    "slug": "hinged-suite",
+                    "name": "Hinged Suite Door",
+                    "description": "Premium hinged doors for hotel suites and residences.",
+                    "image": "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80"
+                }
+            ]
+        },
+        {
+            "slug": "bespoke-metal-furniture",
+            "name": "Bespoke Metal Furniture",
+            "summary": "Custom coffee tables, consoles, and display furniture in PVD finishes.",
+            "content": "<p>From coffee tables to consoles and shelving — fabricated to your exact dimensions with welding, powder coating, and PVD finishing.</p>",
+            "image": "https://images.unsplash.com/photo-1532372320572-127d86b32558?w=1200&q=80",
+            "has_calculator": false,
+            "lead_form": "inline",
+            "care": [
+                "Material: Grade 304 stainless with PVD or powder-coated finishes",
+                "Designed in: Mumbai, India",
+                "Fabrication: Custom dimensions and finishes per specification",
+                "Care: Wipe with soft cloth; avoid abrasives on PVD surfaces",
+                "Delivery: Pan-India from Mumbai studio"
+            ],
+            "designs": []
+        },
+        {
+            "slug": "main-entrance-pvd-doors",
+            "name": "Main Entrance PVD Doors",
+            "summary": "Grand entrance doors with scratch-resistant PVD metal finishes.",
+            "content": "<p>Custom main entrance doors in brass, matte black, bronze, and rose gold PVD. Engineered for security, weather sealing, and lasting lustre.</p>",
+            "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=80",
+            "has_calculator": true,
+            "lead_form": "popup",
+            "rate_per_sqft": 1800,
+            "calc_label": "door",
+            "care": [
+                "Material: PVD-coated stainless entrance systems",
+                "Designed in: Mumbai, India",
+                "Security: Multi-point locking available",
+                "Care: Wipe frames with soft cloth; service hinges annually",
+                "Finish: Brass, black, bronze, rose gold options"
+            ],
+            "designs": []
+        },
+        {
+            "slug": "rack-systems-metal-pvd",
+            "name": "Rack Systems, Metal PVD",
+            "summary": "Display and storage rack systems in premium PVD metal finishes.",
+            "content": "<p>Wall-mounted and freestanding rack systems for retail, wine storage, and residential display. Modular configurations available.</p>",
+            "image": "https://images.unsplash.com/photo-1615529182904-896166571fac?w=1200&q=80",
+            "has_calculator": true,
+            "lead_form": "popup",
+            "rate_per_sqft": 1800,
+            "calc_label": "display rack",
+            "care": [
+                "Material: Stainless steel with PVD finish",
+                "Designed in: Mumbai, India",
+                "Load rating: Specified per module during quotation",
+                "Care: Dust regularly; non-abrasive cleaner on PVD surfaces",
+                "Mounting: Wall fixings or freestanding bases"
+            ],
+            "designs": [
+                {
+                    "slug": "wall-display",
+                    "name": "Wall Display Rack",
+                    "description": "Floating wall racks for art, wine, or retail display.",
+                    "image": "https://images.unsplash.com/photo-1615529182904-896166571fac?w=800&q=80"
+                },
+                {
+                    "slug": "freestanding-shelf",
+                    "name": "Freestanding Shelf",
+                    "description": "Modular freestanding shelving in PVD metal.",
+                    "image": "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=800&q=80"
+                },
+                {
+                    "slug": "wine-rack",
+                    "name": "Wine Storage Rack",
+                    "description": "Horizontal bottle storage with custom capacity.",
+                    "image": "https://images.unsplash.com/photo-1510812431401-41d2bd272272?w=800&q=80"
+                }
+            ]
+        }
+    ],
+    "portfolio": [
+        {
+            "title": "Champagne Wave Office Lobby",
+            "slug": "champagne-wave-office-lobby",
+            "summary": "A sculptural PVD partition system defining reception and meeting zones without blocking natural light.",
+            "category": "commercial",
+            "client": "Confidential — Tech Campus",
+            "location": "Mumbai, India",
+            "content": "<p>The brief called for a statement divider that felt premium yet open. We fabricated wave-profile panels in champagne PVD stainless, integrating concealed fixings and acoustic backing where required.</p><p>Installation was completed over a single weekend to minimise disruption to the occupied floor plate.</p>",
+            "design_details": "Wave-profile PVD partitions spanning 14 metres\nConcealed ceiling and floor channels\nAcoustic felt backing on selected panels\nIntegrated LED grazing for evening ambience",
+            "materials": [
+                "Grade 304 stainless steel with champagne PVD coating",
+                "Wave profile — custom press-formed sections",
+                "Matte micro-texture finish on reverse face"
+            ],
+            "testimonial_quote": "The partition transformed our lobby — clients notice it immediately. Fabrication quality and on-site coordination were excellent.",
+            "testimonial_author": "Facilities Director",
+            "testimonial_role": "Commercial Office — Mumbai",
+            "image": "https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg",
+            "gallery": [
+                "https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg",
+                "https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg",
+                "https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg",
+                "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80"
+            ],
+            "meta_title": "Champagne Wave Office Lobby — PVD Partitions in Mumbai | Vyomika Atelier LLP",
+            "meta_description": "Custom champagne PVD wave partitions for a Mumbai tech campus lobby — precision fabrication and installation by Vyomika Atelier LLP.",
+            "is_featured": true,
+            "year": "2024"
+        },
+        {
+            "title": "Rose Gold Retail Showroom",
+            "slug": "rose-gold-retail-showroom",
+            "summary": "Room dividers and display partitions in rose gold PVD for a luxury retail environment.",
+            "category": "commercial",
+            "client": "Boutique Retail Group",
+            "location": "Bangalore, India",
+            "content": "<p>Rose gold PVD dividers create intimate vignettes within an open-plan showroom while maintaining sightlines to key merchandise walls.</p>",
+            "design_details": "Fluted and flat panel combination\nRose gold PVD mirror finish\nFreestanding and wall-anchored modules",
+            "materials": [
+                "Rose gold PVD mirror stainless",
+                "Fluted profile panels — 40 mm depth",
+                "Powder-coated steel base plates"
+            ],
+            "testimonial_quote": "The rose gold finish photographs beautifully and has held up perfectly under daily foot traffic.",
+            "testimonial_author": "Store Design Lead",
+            "testimonial_role": "Luxury Retail — Bangalore",
+            "image": "https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg",
+            "gallery": [
+                "https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg",
+                "https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg",
+                "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1200&q=80"
+            ],
+            "meta_title": "Rose Gold Retail Showroom — Room Dividers in Bangalore | Vyomika Atelier LLP",
+            "meta_description": "Rose gold PVD retail partitions and room dividers — bespoke metalwork for luxury showrooms by Vyomika Atelier LLP.",
+            "is_featured": true,
+            "year": "2025"
+        },
+        {
+            "title": "Matte Black Co-working Suite",
+            "slug": "matte-black-coworking",
+            "summary": "Matte black PVD partitions structuring agile workspaces in a premium co-working fit-out.",
+            "category": "commercial",
+            "client": "Co-working Operator",
+            "location": "Pune, India",
+            "content": "<p>Modular matte black partitions allow the operator to reconfigure team suites while maintaining a cohesive design language across the floor.</p>",
+            "design_details": "Modular partition bays — 2.4 m standard height\nMatte black PVD (+30% premium finish)\nIntegrated cable management channels",
+            "materials": [
+                "Matte black PVD stainless (+30% sq ft rate)",
+                "Laser-cut ventilation slots",
+                "Black anodised aluminium top caps"
+            ],
+            "image": "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80",
+            "gallery": [
+                "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80",
+                "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&q=80",
+                "https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg"
+            ],
+            "meta_title": "Matte Black Co-working Partitions — Pune | Vyomika Atelier LLP",
+            "meta_description": "Matte black PVD office partitions for a Pune co-working suite — custom modular metalwork by Vyomika Atelier LLP.",
+            "is_featured": true,
+            "year": "2026"
+        },
+        {
+            "title": "Corten Entrance Screen",
+            "slug": "corten-entrance-screen",
+            "summary": "Weathering steel entrance screen developing a rich patina at a commercial arrival court.",
+            "category": "commercial",
+            "client": "Commercial Developer",
+            "location": "Delhi, India",
+            "content": "<p>A laser-cut Corten screen marks the main arrival sequence while providing shade and visual privacy. Panels were pre-weathered to accelerate initial patina development.</p>",
+            "design_details": "Laser-cut geometric pattern — custom artwork\n3 mm Corten panels on steel sub-frame\nPre-weathered finish with drainage detailing",
+            "materials": [
+                "Weathering steel (Corten A) — 3 mm",
+                "Mild steel structural frame — hot-dip galvanised",
+                "Stainless fixings — isolation pads at interfaces"
+            ],
+            "testimonial_quote": "The entrance screen has become the signature element of the development — the patina is exactly what we envisioned.",
+            "testimonial_author": "Project Architect",
+            "testimonial_role": "Commercial — Delhi NCR",
+            "image": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80",
+            "gallery": [
+                "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80",
+                "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=1200&q=80",
+                "https://images.unsplash.com/photo-1514565131-fce0801e5785?w=1200&q=80",
+                "https://images.unsplash.com/photo-1477959858987-67ae85e4c1c7?w=1200&q=80"
+            ],
+            "meta_title": "Corten Entrance Screen — Delhi Commercial | Vyomika Atelier LLP",
+            "meta_description": "Custom Corten steel entrance screen with laser-cut pattern — architectural metalwork in Delhi by Vyomika Atelier LLP.",
+            "is_featured": true,
+            "year": "2023"
+        },
+        {
+            "title": "Penthouse Living Divider",
+            "slug": "penthouse-living-divider",
+            "summary": "Champagne brush PVD divider separating living and dining in a high-rise residence.",
+            "category": "residential",
+            "client": "Private Residence",
+            "location": "Mumbai, India",
+            "content": "<p>A full-height divider with integrated display niches — fabricated to millimetre tolerances within a finished interior.</p>",
+            "design_details": "Full-height partition — 3.2 m\nChampagne brush PVD finish\nIntegrated display niches with LED strips",
+            "materials": [
+                "Champagne brush PVD stainless",
+                "Tempered glass infill panels",
+                "Concealed aluminium channel system"
+            ],
+            "image": "https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=1200&q=80",
+            "gallery": [
+                "https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=1200&q=80",
+                "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=80"
+            ],
+            "meta_title": "Penthouse Living Divider — Residential Mumbai | Vyomika Atelier LLP",
+            "meta_description": "Bespoke champagne PVD living room divider for a Mumbai penthouse — residential metalwork by Vyomika Atelier LLP.",
+            "is_featured": false,
+            "year": "2025"
+        },
+        {
+            "title": "Villa Entrance PVD Doors",
+            "slug": "villa-entrance-pvd-doors",
+            "summary": "Grand double-leaf entrance doors in gold brush PVD with concealed hinges.",
+            "category": "residential",
+            "client": "Private Villa",
+            "location": "Goa, India",
+            "content": "<p>Engineered for coastal exposure with upgraded sealing and PVD finish selected for salt-air resistance in sheltered porch conditions.</p>",
+            "design_details": "Double-leaf pivot entrance — 2.8 m height\nGold brush PVD on stainless frame\nConcealed pivot hardware — premium suite",
+            "materials": [
+                "Gold brush PVD stainless door frame",
+                "Laminated safety glass infill",
+                "Marine-grade weather seals"
+            ],
+            "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=80",
+            "gallery": [
+                "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=80",
+                "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&q=80"
+            ],
+            "meta_title": "Villa Entrance PVD Doors — Goa Residence | Vyomika Atelier LLP",
+            "meta_description": "Custom gold brush PVD entrance doors for a Goa villa — residential door systems by Vyomika Atelier LLP.",
+            "is_featured": false,
+            "year": "2024"
+        },
+        {
+            "title": "Boutique Hotel Lobby Screen",
+            "slug": "boutique-hotel-lobby-screen",
+            "summary": "Laser-cut brass-tone screen welcoming guests at a boutique hotel arrival lounge.",
+            "category": "hospitality",
+            "client": "Boutique Hotel Group",
+            "location": "Jaipur, India",
+            "content": "<p>An intricate laser-cut screen in champagne gold PVD sets the tone for the hotel's craft-meets-contemporary identity.</p>",
+            "design_details": "Laser-cut jaali-inspired pattern\nBacklit feature wall integration\nChampagne gold PVD mirror finish",
+            "materials": [
+                "Champagne gold mirror PVD stainless",
+                "CNC laser-cut panels — 2 mm",
+                "Warm-white LED backlighting system"
+            ],
+            "testimonial_quote": "Guests photograph the screen constantly — it perfectly captures our brand story.",
+            "testimonial_author": "General Manager",
+            "testimonial_role": "Boutique Hotel — Jaipur",
+            "image": "https://images.unsplash.com/photo-1566073771009-77548b8c1d8a?w=1200&q=80",
+            "gallery": [
+                "https://images.unsplash.com/photo-1566073771009-77548b8c1d8a?w=1200&q=80",
+                "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=1200&q=80",
+                "https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg"
+            ],
+            "meta_title": "Boutique Hotel Lobby Screen — Jaipur | Vyomika Atelier LLP",
+            "meta_description": "Laser-cut PVD lobby screen for a Jaipur boutique hotel — hospitality metalwork by Vyomika Atelier LLP.",
+            "is_featured": true,
+            "year": "2026"
+        },
+        {
+            "title": "Restaurant Private Dining Partition",
+            "slug": "restaurant-private-dining-partition",
+            "summary": "Fluted black PVD screens creating intimate dining alcoves in a fine-dining restaurant.",
+            "category": "hospitality",
+            "client": "Restaurant Group",
+            "location": "Hyderabad, India",
+            "content": "<p>Black brush PVD fluted panels absorb sound and define semi-private dining zones without full enclosure.</p>",
+            "design_details": "Fluted panels — 50 mm pitch\nBlack brush PVD finish\nCurved corner modules for flow",
+            "materials": [
+                "Black brush PVD stainless (+30% premium)",
+                "Acoustic backing on restaurant-facing side",
+                "Black powder-coated steel bases"
+            ],
+            "image": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80",
+            "gallery": [
+                "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80",
+                "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=1200&q=80"
+            ],
+            "meta_title": "Restaurant Private Dining Partition — Hyderabad | Vyomika Atelier LLP",
+            "meta_description": "Black PVD fluted dining screens for a Hyderabad restaurant — hospitality partitions by Vyomika Atelier LLP.",
+            "is_featured": false,
+            "year": "2025"
+        }
+    ],
+    "team": [
+        {
+            "name": "Arjun Mehta",
+            "role": "Studio Director",
+            "image": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&q=80"
+        },
+        {
+            "name": "Priya Nair",
+            "role": "Lead Designer",
+            "image": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80"
+        },
+        {
+            "name": "Vikram Singh",
+            "role": "Fabrication Head",
+            "image": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&q=80"
+        }
+    ],
+    "projects_page": {
+        "meta_title": "Projects — Vyomika Atelier LLP",
+        "meta_description": "Explore residential, commercial and hospitality metalwork — PVD partitions, Corten façades, doors and bespoke furniture by Vyomika Atelier LLP.",
+        "hero": {
+            "label": "Our Work",
+            "title": "Projects",
+            "subtitle": "A curated portfolio of PVD partitions, Corten steel, door systems and bespoke metal furniture — crafted for architects, designers and discerning clients across India."
+        },
+        "categories": [
+            {
+                "slug": "",
+                "label": "All"
+            },
+            {
+                "slug": "residential",
+                "label": "Residential"
+            },
+            {
+                "slug": "commercial",
+                "label": "Commercial"
+            },
+            {
+                "slug": "hospitality",
+                "label": "Hospitality"
+            }
+        ],
+        "footer_cta": {
+            "title": "Start Your Project",
+            "body": "Have a space in mind? Share your drawings, inspiration images or brief — our studio team will respond with timelines and a tailored quotation.",
+            "primary_label": "Request a Quote",
+            "secondary_label": "Contact Us"
+        }
+    }
+}

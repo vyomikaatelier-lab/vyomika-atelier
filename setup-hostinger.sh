@@ -53,10 +53,18 @@ if ! grep -q "APP_KEY=base64:" .env; then
   php artisan key:generate --force
 fi
 
+php artisan optimize:clear
+
 # Database
 echo "Running migrations..."
 php artisan migrate --force
 php artisan db:seed --force
+
+# Clear ADMIN_PASSWORD so future db:seed runs cannot reset the admin password
+if grep -q '^ADMIN_PASSWORD=.' .env 2>/dev/null; then
+  sed -i 's/^ADMIN_PASSWORD=.*/ADMIN_PASSWORD=/' .env
+  echo "Cleared ADMIN_PASSWORD in .env (set again only when intentionally rotating credentials)."
+fi
 
 # Storage link (skip artisan — Hostinger disables exec(); use ln directly)
 echo "Linking storage..."
@@ -86,4 +94,4 @@ echo ""
 echo "=== DONE ==="
 echo "Site:  https://vyomikaatelier.com"
 echo "Admin: https://vyomikaatelier.com/admin"
-echo "Login: admin@vyomikaatelier.com / changeme123"
+echo "Login: admin@vyomikaatelier.com (password from ADMIN_PASSWORD in .env)"

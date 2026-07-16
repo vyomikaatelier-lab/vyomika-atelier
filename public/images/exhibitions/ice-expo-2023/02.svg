@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">
+  <rect width="1200" height="900" fill="#ebe8e3"/>
+  <rect x="80" y="80" width="1040" height="740" fill="none" stroke="#b8a88a" stroke-width="2"/>
+  <text x="600" y="420" text-anchor="middle" font-family="Georgia, serif" font-size="36" fill="#3d3530">ICE Expo  Mumbai</text>
+  <text x="600" y="480" text-anchor="middle" font-family="sans-serif" font-size="20" fill="#8a7f72">Photo 02  placeholder</text>
+</svg>

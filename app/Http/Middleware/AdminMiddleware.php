@@ -10,7 +10,7 @@ class AdminMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (! auth()->check() || ! auth()->user()->isAdmin()) {
+        if (! auth()->check() || ! auth()->user()->isAdmin() || ! auth()->user()->is_active) {
             return redirect()->route('admin.login');
         }
 

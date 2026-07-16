@@ -55,10 +55,12 @@ DB_PASSWORD=your_password
 
 MAIL_USERNAME=hello@yourdomain.com
 MAIL_PASSWORD=your_email_password
-ADMIN_EMAIL=hello@yourdomain.com
+ADMIN_EMAIL=admin@vyomikaatelier.com
+ADMIN_PASSWORD=<set securely during deployment>
 
-RAZORPAY_KEY=rzp_test_xxxxx
-RAZORPAY_SECRET=xxxxx
+# Razorpay — leave empty until ready (checkout works without online payment)
+RAZORPAY_KEY=
+RAZORPAY_SECRET=
 ```
 
 Run deploy:
@@ -76,20 +78,17 @@ php artisan db:seed --force
 2. Install free SSL for your domain
 3. Force HTTPS in hPanel if available
 
-## Step 6 — Razorpay setup
+## Step 6 — Razorpay setup (deferred)
 
-1. Create account at [razorpay.com](https://razorpay.com)
-2. Dashboard → **Settings** → **API Keys**
-3. Copy Key ID and Secret into `.env`
-4. Use test keys first, switch to live keys when ready
+Add keys later when your Razorpay account is ready. Leave `RAZORPAY_KEY` and `RAZORPAY_SECRET` empty until then — the site and admin run without them; checkout blocks online payment until keys are configured.
 
 ## Step 7 — First login
 
 - URL: `https://yourdomain.com/admin`
 - Email: `admin@vyomikaatelier.com`
-- Password: `changeme123`
+- Password: your `ADMIN_PASSWORD` from `.env` (set before `db:seed`)
 
-**Change the password immediately.**
+**Change admin credentials after deploy:** update `ADMIN_PASSWORD` in `.env` and run `php artisan db:seed --force`, or use `php artisan tinker` to change email/password on the admin user directly. See [HOSTINGER.md](HOSTINGER.md) for full steps.
 
 ## Troubleshooting
 

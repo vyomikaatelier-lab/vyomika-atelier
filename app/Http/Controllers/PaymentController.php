@@ -18,8 +18,8 @@ class PaymentController extends Controller
         }
 
         if (! $this->razorpay->isConfigured()) {
-            return redirect()->route('checkout.success', $order)
-                ->with('error', 'Online payment is not configured yet. We will contact you to complete payment.');
+            return redirect()->route('checkout.index')
+                ->with('error', 'Online payment is not configured yet. Please contact us to complete your order.');
         }
 
         return view('checkout.pay', [

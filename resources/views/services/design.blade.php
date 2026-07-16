@@ -1,37 +1,54 @@
-@extends('layouts.app')
-
-@section('title', $design->name . ' — ' . $service->name . ' — VYOMIKA ATELIER')
-
-@section('content')
-<div class="va-page-hero">
-    <p class="va-label mb-3"><a href="{{ route('services.show', $service->slug) }}" class="hover:text-brand-700">{{ $service->name }}</a></p>
-    <h1 class="font-serif text-5xl text-brand-900">{{ $design->name }}</h1>
-    @if($design->description)
-        <p class="text-brand-500 mt-4 max-w-lg mx-auto">{{ $design->description }}</p>
-    @endif
-</div>
-
-<div class="max-w-7xl mx-auto px-5 py-16">
-    <div class="grid lg:grid-cols-3 gap-12">
-        <div class="lg:col-span-2">
-            @if($design->image)
-                <img src="{{ $design->image }}" alt="{{ $design->name }}" class="w-full aspect-[16/10] object-cover mb-8">
-            @endif
-            @if($design->content)
-                <div class="prose-brand text-brand-700 leading-relaxed">{!! $design->content !!}</div>
-            @else
-                <p class="text-brand-600 leading-relaxed">{{ $design->description }}</p>
-            @endif
-        </div>
-        <aside>
-            @if($service->has_calculator)
-                <x-price-calculator
-                    :service-slug="$service->slug"
-                    :design-slug="$design->slug"
-                    :service-name="$service->name . ' — ' . $design->name"
-                    :rate="$service->rate_per_sqft" />
-            @endif
-        </aside>
-    </div>
-</div>
-@endsection
+@extends('layouts.store')
+
+@section('title', $design->name . ' — ' . $service->name . ' — Vyomika Atelier LLP')
+
+@section('content')
+@include('partials.am-page-hero', [
+    'label' => $service->name,
+    'title' => $design->name,
+    'subtitle' => $design->description,
+])
+
+@if($service->usesCalculatorPageLayout())
+    @include('partials.am-service-featured-calc', ['service' => $service, 'design' => $design])
+
+    <section class="am-page-body">
+        <div class="am-container">
+            @include('partials.am-product-tabs', [
+                'title' => $design->name,
+                'descriptionHtml' => $design->content ?: '<p>' . e($design->description) . '</p>',
+                'careItems' => $service->careGuidelines(),
+                'related' => $related,
+            ])
+        </div>
+    </section>
+@else
+<section class="am-page-body">
+    <div class="am-container">
+        <div class="am-split">
+            <div>
+                @if($design->image)
+                    <img src="{{ $design->image }}" alt="{{ $design->name }}" style="width:100%;aspect-ratio:16/10;object-fit:cover;margin-bottom:2rem;border-radius:var(--am-radius-lg)">
+                @endif
+                @if($design->content)
+                    <div class="am-prose">{!! $design->content !!}</div>
+                @else
+                    <p class="am-prose">{{ $design->description }}</p>
+                @endif
+            </div>
+            <aside>
+                @if($service->has_calculator)
+                    @include('partials.am-calculator', [
+                        'rate' => $service->rate_per_sqft,
+                        'serviceSlug' => $service->slug,
+                        'designSlug' => $design->slug,
+                        'serviceName' => $service->name . ' — ' . $design->name,
+                        'calcTitle' => 'Estimate your ' . $service->calculatorEstimateLabel(),
+                    ])
+                @endif
+            </aside>
+        </div>
+    </div>
+</section>
+@endif
+@endsection

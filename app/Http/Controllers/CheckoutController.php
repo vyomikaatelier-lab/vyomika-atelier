@@ -43,17 +43,44 @@ class CheckoutController extends Controller
             return redirect()->route('shop.index')->with('error', 'Your cart is empty.');
         }
 
+        if (! $this->razorpay->isConfigured()) {
+            return redirect()->route('checkout.index')
+                ->with('error', 'Online payment is not available right now. Please contact us to complete your order.');
+        }
+
         $validated = $request->validate([
             'customer_name' => 'required|string|max:255',
+            'first_name' => 'nullable|string|max:60',
+            'last_name' => 'nullable|string|max:60',
             'customer_email' => 'required|email|max:255',
             'customer_phone' => 'required|string|max:20',
             'shipping_address' => 'required|string|max:500',
             'city' => 'required|string|max:100',
             'state' => 'nullable|string|max:100',
-            'pincode' => 'required|string|max:10',
-            'payment_method' => 'required|in:cod,bank_transfer'.($this->razorpay->isConfigured() ? ',razorpay' : ''),
+            'pincode' => 'required|string|max:20',
+            'country' => 'required|string|max:100',
+            'country_other' => 'nullable|required_if:country,Other|string|max:100',
+            'payment_method' => 'required|in:razorpay',
             'notes' => 'nullable|string|max:1000',
+            'company' => 'nullable|string|max:255',
         ]);
+
+        if ($request->filled('first_name')) {
+            $validated['customer_name'] = trim($request->input('first_name') . ' ' . $request->input('last_name'));
+        }
+
+        $country = $validated['country'] === 'Other'
+            ? trim((string) ($validated['country_other'] ?? ''))
+            : $validated['country'];
+
+        $noteLines = array_filter([
+            $validated['notes'] ?? null,
+            $request->filled('company') ? 'Company: ' . $request->input('company') : null,
+            $country ? 'Country/Region: ' . $country : null,
+        ]);
+        $validated['notes'] = $noteLines ? implode("\n", $noteLines) : null;
+
+        unset($validated['first_name'], $validated['last_name'], $validated['company'], $validated['country'], $validated['country_other']);
 
         $items = $this->cart->all();
         $subtotal = $this->cart->subtotal();
@@ -86,25 +113,23 @@ class CheckoutController extends Controller
             return $order;
         });
 
-        $this->cart->clear();
+        $razorpayOrder = $this->razorpay->createOrder($order);
 
-        if ($validated['payment_method'] === 'razorpay') {
-            $razorpayOrder = $this->razorpay->createOrder($order);
-
-            if ($razorpayOrder) {
-                $order->update(['razorpay_order_id' => $razorpayOrder['id']]);
-
-                return redirect()->route('checkout.pay', $order);
-            }
+        if (! $razorpayOrder) {
+            return redirect()->route('checkout.index')
+                ->with('error', 'Could not start payment. Please try again.');
         }
 
-        $this->notifyAdmin($order);
+        $order->update(['razorpay_order_id' => $razorpayOrder['id']]);
+        $this->cart->clear();
 
-        return redirect()->route('checkout.success', $order);
+        return redirect()->route('checkout.pay', $order);
     }
 
     public function success(Order $order)
     {
+        $order->load('items');
+
         return view('checkout.success', compact('order'));
     }
 

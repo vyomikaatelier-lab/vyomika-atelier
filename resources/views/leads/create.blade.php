@@ -1,30 +1,32 @@
-@extends('layouts.app')
+@extends('layouts.store')
 
-@section('title', 'Custom Order — VYOMIKA ATELIER')
+@section('title', 'Custom Order — Vyomika Atelier LLP')
 
 @section('content')
-<div class="va-page-hero">
-    <p class="va-label mb-3">Made to Order</p>
-    <h1 class="font-serif text-5xl text-brand-900">Custom Furniture</h1>
-    <p class="text-brand-500 mt-4 max-w-lg mx-auto">Need a specific size, material, or design? Tell us what you need and we'll get back to you with a quote.</p>
-</div>
+@include('partials.am-page-hero', [
+    'label' => 'Made to Order',
+    'title' => 'Custom Order',
+    'subtitle' => 'Need a specific size, material, or design? Tell us what you need and we will get back to you with a quote.',
+])
 
-<div class="max-w-xl mx-auto px-5 py-16">
-    <form action="{{ route('leads.store') }}" method="POST" class="space-y-5">
-        @csrf
-        <input type="text" name="name" value="{{ old('name') }}" placeholder="Your Name" required class="va-input">
-        <input type="email" name="email" value="{{ old('email') }}" placeholder="Email" required class="va-input">
-        <input type="tel" name="phone" value="{{ old('phone') }}" placeholder="Phone / WhatsApp" required class="va-input">
-        <input type="text" name="subject" value="{{ old('subject') }}" placeholder="Product type (e.g. Glass coffee table, Corner table)" class="va-input">
-        <input type="text" name="budget" value="{{ old('budget') }}" placeholder="Budget range (optional)" class="va-input">
-        <select name="preferred_contact" class="va-input">
-            <option value="">Preferred contact method</option>
-            <option value="email" @selected(old('preferred_contact') === 'email')>Email</option>
-            <option value="phone" @selected(old('preferred_contact') === 'phone')>Phone</option>
-            <option value="whatsapp" @selected(old('preferred_contact') === 'whatsapp')>WhatsApp</option>
-        </select>
-        <textarea name="message" placeholder="Describe your requirements — dimensions, material, colour, room type…" required rows="6" class="va-input">{{ old('message') }}</textarea>
-        <button type="submit" class="va-btn-primary w-full text-center">Submit Request</button>
-    </form>
-</div>
+<section class="am-page-body">
+    <div class="am-container am-page-body--narrow">
+        <form action="{{ route('leads.store') }}" method="POST" class="am-form-stack">
+            @csrf
+            <input type="text" name="name" value="{{ old('name') }}" placeholder="Your Name" required class="am-input">
+            <input type="email" name="email" value="{{ old('email') }}" placeholder="Email" required class="am-input">
+            <input type="tel" name="phone" value="{{ old('phone') }}" placeholder="Phone / WhatsApp" required class="am-input">
+            <input type="text" name="subject" value="{{ old('subject') }}" placeholder="Product type (e.g. Glass coffee table)" class="am-input">
+            <input type="text" name="budget" value="{{ old('budget') }}" placeholder="Budget range (optional)" class="am-input">
+            <select name="preferred_contact" class="am-input">
+                <option value="">Preferred contact method</option>
+                <option value="email" @selected(old('preferred_contact') === 'email')>Email</option>
+                <option value="phone" @selected(old('preferred_contact') === 'phone')>Phone</option>
+                <option value="whatsapp" @selected(old('preferred_contact') === 'whatsapp')>WhatsApp</option>
+            </select>
+            <textarea name="message" placeholder="Describe your requirements — dimensions, material, colour, room type…" required rows="6" class="am-input am-textarea">{{ old('message') }}</textarea>
+            <button type="submit" class="am-btn am-btn--primary am-btn--full">Submit Request</button>
+        </form>
+    </div>
+</section>
 @endsection

@@ -3,9 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\BlogPost;
+use App\Models\Category;
+use App\Models\Exhibition;
 use App\Models\Lead;
+use App\Models\MediaFile;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Project;
+use App\Models\User;
+use Illuminate\Support\Facades\Schema;
 
 class DashboardController extends Controller
 {
@@ -13,8 +20,16 @@ class DashboardController extends Controller
     {
         $stats = [
             'products' => Product::count(),
+            'categories' => Category::count(),
             'orders' => Order::count(),
+            'projects' => Project::count(),
+            'blog_posts' => BlogPost::count(),
+            'exhibitions' => Schema::hasTable('exhibitions') ? Exhibition::count() : 0,
             'new_leads' => Lead::where('status', 'new')->count(),
+            'professional_applications' => Lead::where('type', 'professional_application')->where('status', 'new')->count(),
+            'railing_quotes' => Lead::where('type', 'railing_quotation')->where('status', 'new')->count(),
+            'customers' => User::where('is_admin', false)->count(),
+            'media_files' => Schema::hasTable('media_files') ? MediaFile::count() : 0,
             'revenue' => Order::whereIn('status', ['paid', 'processing', 'shipped', 'delivered'])->sum('total'),
         ];
 

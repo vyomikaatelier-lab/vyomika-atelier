@@ -1,74 +1,132 @@
-@extends('layouts.app')
+@extends('layouts.store')
 
-@section('title', 'Shop — VYOMIKA ATELIER')
+@section('title', ($pageTitle ?? 'Shop') . ' — Vyomika Atelier LLP')
 
 @section('content')
-<div class="va-page-hero">
-    <p class="va-label mb-3">The Collection</p>
-    <h1 class="font-serif text-5xl text-brand-900">Shop</h1>
-</div>
+@include('partials.am-page-hero', [
+    'label' => 'Products',
+    'title' => $pageTitle ?? 'Shop',
+    'subtitle' => $pageSubtitle ?? null,
+])
 
-<div class="max-w-7xl mx-auto px-5 py-16">
-    @php
-        $furnitureSlugs = ['coffee-tables', 'corner-tables', 'glass-tables'];
-        $isFurniture = in_array(request('category'), $furnitureSlugs, true);
-        $categoryName = $categories->firstWhere('slug', request('category'))?->name;
-    @endphp
-    <div class="flex flex-col lg:flex-row gap-12">
-        <aside class="lg:w-52 shrink-0">
-            <p class="va-label mb-5">Category</p>
-            <div class="space-y-3 text-sm">
-                <a href="{{ route('shop.index') }}" class="block {{ !request('category') ? 'text-brand-900 font-medium' : 'text-brand-400 hover:text-brand-900' }} transition">All Pieces</a>
+@php
+    use App\Models\Service;
+    $calcCategories = Service::calculatorCategorySlugs();
+    $showCategoryCalc = $activeCategory && in_array($activeCategory->slug, $calcCategories, true);
+    $calcRate = 1800;
+    $calcServiceSlug = $activeCategory ? Service::serviceSlugForCategory($activeCategory->slug) : 'partitions';
+    $calcLabel = $activeCategory
+        ? (new Service(['slug' => $calcServiceSlug]))->calculatorEstimateLabel()
+        : 'partition';
+    $categoryHeroImage = match ($activeCategory?->slug) {
+        'metal-furniture' => 'https://images.unsplash.com/photo-1615529182904-896166571fac?w=800&q=80',
+        'door-handles' => 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80',
+        default => 'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg',
+    };
+@endphp
+
+@if($showCategoryCalc)
+    @include('partials.am-category-featured-calc', [
+        'title' => $activeCategory->name,
+        'summary' => $pageSubtitle,
+        'image' => $categoryHeroImage,
+        'serviceSlug' => $calcServiceSlug,
+        'calcTitle' => 'Estimate your ' . $calcLabel,
+        'rate' => $calcRate,
+    ])
+@endif
+
+<section class="am-page-body">
+    <div class="am-container">
+        @php
+            $quoteSlugs = ['partitions', 'fluted-panels', 'room-dividers', 'coffee-tables', 'metal-furniture'];
+            $showQuote = in_array(request('category'), $quoteSlugs, true);
+            $categoryName = $activeCategory?->name;
+        @endphp
+
+        @include('partials.am-breadcrumbs', ['items' => [
+            ['label' => 'Home', 'url' => route('home')],
+            ['label' => 'Shop', 'url' => route('shop.index')],
+            ...($activeCategory ? [['label' => $activeCategory->name]] : []),
+        ]])
+
+        <div class="am-layout-shop">
+            <aside class="am-shop-sidebar">
+                <p class="am-sidebar-title">Category</p>
+                <a href="{{ route('shop.index', request()->only('search', 'sort')) }}" class="am-sidebar-link {{ !request('category') ? 'is-active' : '' }}">All Products</a>
                 @foreach($categories as $category)
-                    <a href="{{ route('shop.index', ['category' => $category->slug]) }}"
-                       class="block {{ request('category') === $category->slug ? 'text-brand-900 font-medium' : 'text-brand-400 hover:text-brand-900' }} transition">
+                    <a href="{{ route('shop.index', array_merge(request()->only('search', 'sort'), ['category' => $category->slug])) }}"
+                       class="am-sidebar-link {{ request('category') === $category->slug ? 'is-active' : '' }}">
                         {{ $category->name }}
+                        <span class="am-sidebar-count">{{ $category->products_count }}</span>
                     </a>
                 @endforeach
+            </aside>
+
+            <div class="am-shop-main">
+                <div class="am-shop-toolbar">
+                    <form method="GET" class="am-shop-search">
+                        @foreach(request()->except('search', 'page') as $key => $value)
+                            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                        @endforeach
+                        <input type="search" name="search" value="{{ request('search') }}" placeholder="Search products…" class="am-input">
+                        <button type="submit" class="am-btn am-btn--primary am-btn--sm">Search</button>
+                    </form>
+                    <form method="GET" class="am-shop-sort">
+                        @foreach(request()->except('sort', 'page') as $key => $value)
+                            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                        @endforeach
+                        <label for="shop-sort">Sort</label>
+                        <select name="sort" id="shop-sort" class="am-input am-input--select" onchange="this.form.submit()">
+                            <option value="newest" @selected(request('sort', 'newest') === 'newest')>Newest</option>
+                            <option value="price_asc" @selected(request('sort') === 'price_asc')>Price: Low to High</option>
+                            <option value="price_desc" @selected(request('sort') === 'price_desc')>Price: High to Low</option>
+                            <option value="name" @selected(request('sort') === 'name')>Name A–Z</option>
+                        </select>
+                    </form>
+                </div>
+
+                <p class="am-shop-results">{{ $products->total() }} product{{ $products->total() === 1 ? '' : 's' }}</p>
+
+                @if($products->isEmpty())
+                    <div class="am-empty">
+                        <h3>No products found</h3>
+                        <p>Try another category or search term.</p>
+                        <a href="{{ route('shop.index') }}" class="am-btn am-btn--outline">View All Products</a>
+                    </div>
+                @else
+                    <div class="am-product-grid am-product-grid--shop">
+                        @foreach($products as $product)
+                            @include('partials.am-product-card', ['product' => $product])
+                        @endforeach
+                    </div>
+                    <div class="am-pagination">{{ $products->links('vendor.pagination.amerce') }}</div>
+                @endif
+
+                @if($showQuote && $categoryName)
+                <div class="am-card am-shop-quote">
+                    <div class="am-card__body">
+                        <p class="am-card__label">Custom {{ $categoryName }}</p>
+                        <h2 class="am-card__title">Need a custom size or finish?</h2>
+                        <p class="am-card__text">Send dimensions and finish preference — we'll quote fabrication and Pan-India delivery.</p>
+                        <x-lead-form-inline
+                            :service-slug="request('category')"
+                            :subject="$categoryName . ' — custom quote'"
+                            type="service_inquiry" />
+                    </div>
+                </div>
+                @endif
+
+                @if($showCategoryCalc && $activeCategory)
+                @include('partials.am-product-tabs', [
+                    'title' => $activeCategory->name,
+                    'descriptionHtml' => '<p>' . e($pageSubtitle) . '</p><p>Browse standard sizes below or use the sq ft calculator above for custom dimensions and instant estimates.</p>',
+                    'careItems' => Service::careGuidelinesForCategory($activeCategory->slug),
+                    'related' => null,
+                ])
+                @endif
             </div>
-        </aside>
-
-        <div class="flex-1">
-            <form method="GET" class="mb-10">
-                @if(request('category'))<input type="hidden" name="category" value="{{ request('category') }}">@endif
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search the collection…"
-                    class="va-input max-w-sm">
-            </form>
-
-            @if($products->isEmpty())
-                <p class="text-brand-400 text-center py-20 font-serif text-xl">No pieces found.</p>
-            @else
-                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12">
-                    @foreach($products as $product)
-                    <a href="{{ route('shop.show', $product->slug) }}" class="va-card group">
-                        <div class="aspect-[3/4] bg-brand-100 overflow-hidden mb-4">
-                            @if($product->imageUrl())
-                                <img src="{{ $product->imageUrl() }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
-                            @else
-                                <div class="w-full h-full flex items-center justify-center font-serif text-5xl text-brand-200">V</div>
-                            @endif
-                        </div>
-                        <p class="text-[10px] uppercase tracking-[0.2em] text-brand-400 mb-1">{{ $product->category?->name ?? 'Piece' }}</p>
-                        <h3 class="font-serif text-lg group-hover:text-brand-500 transition">{{ $product->name }}</h3>
-                        <p class="text-brand-500 text-sm mt-1">{{ $product->formattedPrice() }}</p>
-                    </a>
-                    @endforeach
-                </div>
-                <div class="mt-14">{{ $products->links() }}</div>
-            @endif
-
-            @if($isFurniture)
-                <div class="mt-20 bg-white border border-brand-200 p-8 md:p-10">
-                    <p class="va-label mb-3">Custom Furniture</p>
-                    <h2 class="font-serif text-3xl text-brand-900 mb-2">Request {{ $categoryName ?? 'Furniture' }}</h2>
-                    <p class="text-sm text-brand-500 mb-8">Need a custom size, material, or finish? Send us your requirements and we'll prepare a quote.</p>
-                    <x-lead-form-inline
-                        :service-slug="request('category')"
-                        :subject="($categoryName ?? 'Furniture') . ' enquiry'"
-                        type="service_inquiry" />
-                </div>
-            @endif
         </div>
     </div>
-</div>
+</section>
 @endsection

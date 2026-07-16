@@ -3,245 +3,257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VYOMIKA ATELIER — Local Preview</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Outfit:wght@200;300;400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/atelier.css">
-    <script>tailwind.config={theme:{extend:{fontFamily:{serif:['Cormorant Garamond','serif'],sans:['Outfit','sans-serif']},colors:{brand:{50:'#fafaf8',100:'#f4f2ee',200:'#e8e4dc',400:'#9c968c',500:'#b8956b',900:'#0c0c0c'}}}}}</script>
-    <style>.preview-bar{background:#0c0c0c;color:#b8956b;text-align:center;padding:10px 16px;font-size:10px;letter-spacing:.18em;text-transform:uppercase}.preview-bar a{color:#fff;text-decoration:underline}</style>
+    <meta name="description" content="Vyomika Atelier LLP — PVD partitions, metal furniture, and bespoke fabrication. Pan-India delivery from Mumbai.">
+    <title>Vyomika Atelier LLP — PVD Partitions & Metal Furniture</title>
+    <script>try{var t=localStorage.getItem('ssmetal-theme');document.documentElement.dataset.theme=t||'atelier';var h=localStorage.getItem('ssmetal-hero');document.documentElement.dataset.hero=h||'fullscreen'}catch(e){document.documentElement.dataset.theme='atelier';document.documentElement.dataset.hero='fullscreen'}</script>
+    <link rel="stylesheet" href="css/amerce.css">
+    <link rel="stylesheet" href="css/amerce-themes.css">
 </head>
-<body class="font-sans text-brand-900 bg-brand-50 antialiased">
+<body class="has-preview-bar">
 
-<div class="preview-bar">Local preview — static only &nbsp;·&nbsp; <a href="https://vyomikaatelier.com" target="_blank">Live site →</a></div>
+<div class="am-preview-bar" role="toolbar" aria-label="Preview options">
+    <span class="am-preview-bar__label">Live preview</span>
+    <div class="am-preview-bar__group am-preview-bar__group--scroll" role="group" aria-label="Color theme">
+        <span class="am-preview-bar__label">Bright</span>
+        <button type="button" data-theme-set="bright-warm">Bright Warm</button>
+        <button type="button" data-theme-set="bright-fresh">Bright Fresh</button>
+        <button type="button" data-theme-set="bright-sunny">Bright Sunny</button>
+        <span class="am-preview-bar__sep" aria-hidden="true"></span>
+        <span class="am-preview-bar__label">Theme</span>
+        <button type="button" data-theme-set="champagne">Champagne</button>
+        <button type="button" data-theme-set="steel">Steel</button>
+        <button type="button" data-theme-set="graphite">Graphite</button>
+        <button type="button" data-theme-set="rosegold">Rose Gold</button>
+        <button type="button" data-theme-set="matte">Matte</button>
+        <button type="button" data-theme-set="brass">Brass</button>
+        <button type="button" data-theme-set="midnight">Midnight</button>
+        <button type="button" data-theme-set="bronze">Bronze</button>
+        <button type="button" data-theme-set="pearl">Pearl</button>
+        <button type="button" data-theme-set="corten">Corten</button>
+        <button type="button" data-theme-set="corten-light">Corten Light</button>
+        <button type="button" data-theme-set="corten-patina">Corten Patina</button>
+        <button type="button" data-theme-set="atelier" class="is-active">Atelier</button>
+        <button type="button" data-theme-set="corten-final">Corten Final</button>
+        <button type="button" data-theme-set="corten-dawn">Corten Dawn</button>
+        <button type="button" data-theme-set="corten-wash">Corten Wash</button>
+        <button type="button" data-theme-set="corten-ember">Corten Ember</button>
+        <button type="button" data-theme-set="linen">Linen</button>
+        <button type="button" data-theme-set="sand">Sand</button>
+        <button type="button" data-theme-set="mist">Mist</button>
+        <button type="button" data-theme-set="ivory">Ivory</button>
+        <button type="button" data-theme-set="oat">Oat</button>
+        <button type="button" data-theme-set="sage">Sage</button>
+        <button type="button" data-theme-set="blush">Blush</button>
+        <button type="button" data-theme-set="cloud">Cloud</button>
+        <button type="button" data-theme-set="wheat">Wheat</button>
+    </div>
+    <span class="am-preview-bar__sep" aria-hidden="true"></span>
+    <div class="am-preview-bar__group" role="group" aria-label="Hero layout">
+        <span class="am-preview-bar__label">Hero</span>
+        <button type="button" data-hero-set="split">Split</button>
+        <button type="button" data-hero-set="fullscreen" class="is-active">Fullscreen</button>
+        <button type="button" data-hero-set="centered">Centered</button>
+    </div>
+    <span class="am-preview-bar__hint">Choices save to this browser · static preview</span>
+</div>
 
-<header class="va-header va-header--hero" id="va-header">
-    <div class="max-w-[90rem] mx-auto px-5 lg:px-10 flex items-center justify-between gap-4">
-        <nav class="hidden lg:flex items-center gap-8 flex-1">
-            <span class="va-nav-link cursor-default">Services</span>
-            <a href="#shop" class="va-nav-link">Shop</a>
-            <a href="#blog" class="va-nav-link">Blog</a>
-            <a href="#how-it-works" class="va-nav-link">How It Works</a>
+<div class="am-announce">
+    <div class="am-announce__track">
+        <span>Festive Offer: 15% Off PVD Partitions — Auto Applied at Checkout</span>
+        <a href="/shop">Shop Now</a>
+        <span aria-hidden="true">Festive Offer: 15% Off PVD Partitions — Auto Applied at Checkout</span>
+        <a href="/shop" aria-hidden="true">Shop Now</a>
+    </div>
+</div>
+
+<header class="am-header">
+    <div class="am-container am-header__inner">
+        <a href="/" class="am-logo">
+            <span class="am-logo__name">Vyomika Atelier LLP</span>
+            <span class="am-logo__tag">PVD Partitions & Metal Furniture</span>
+        </a>
+        <nav class="am-nav" aria-label="Main">
+            <div class="am-nav__item am-nav__item--dropdown">
+                <button type="button" class="am-nav__trigger" aria-expanded="false" aria-haspopup="true">Studio<svg class="am-nav__chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 4.5l3 3 3-3"/></svg></button>
+                <div class="am-nav__dropdown" role="menu">
+                    <a href="/services/partitions" role="menuitem">PVD Partitions</a>
+                    <a href="/services/slim-profile-door-system" role="menuitem">Slim Profile Door System</a>
+                    <a href="/services/bespoke-metal-furniture" role="menuitem">Bespoke Metal Furniture</a>
+                    <a href="/services/main-entrance-pvd-doors" role="menuitem">Main Entrance PVD Doors</a>
+                    <a href="/services/rack-systems-metal-pvd" role="menuitem">Rack Systems, Metal PVD</a>
+                    <a href="/studio/railings" role="menuitem">Railings</a>
+                </div>
+            </div>
+            <div class="am-nav__item am-nav__item--dropdown">
+                <button type="button" class="am-nav__trigger" aria-expanded="false" aria-haspopup="true">Collections<svg class="am-nav__chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 4.5l3 3 3-3"/></svg></button>
+                <div class="am-nav__dropdown" role="menu">
+                    <a href="/collections/mirror-frames" role="menuitem">Mirror Frames</a>
+                    <a href="/shop?category=corner-tables" role="menuitem">Corner Tables</a>
+                    <a href="/shop?category=coffee-tables" role="menuitem">Coffee Tables</a>
+                    <a href="/shop?category=glass-tables" role="menuitem">Glass Tables</a>
+                    <a href="/shop?category=door-handles" role="menuitem">Door Handles</a>
+                </div>
+            </div>
+            <a href="/services/corten-steel-facade">Corten steel</a>
+            <a href="/projects">Projects</a>
+            <a href="/about">About</a>
+            <a href="/blog">Blog</a>
+            <a href="/professionals">Professionals</a>
         </nav>
-        <div class="va-logo text-center shrink-0 lg:absolute lg:left-1/2 lg:-translate-x-1/2">VYOMIKA<span>ATELIER</span></div>
-        <div class="flex items-center gap-6 flex-1 justify-end">
-            <a href="#information" class="va-nav-link hidden md:block">Information</a>
-            <span class="va-nav-link hidden sm:flex va-header-icon cursor-default">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                Account
-            </span>
-            <span class="va-nav-link va-header-icon cursor-default">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 01-8 0"/></svg>
-                <span class="hidden sm:inline">Cart</span>
-                <span class="va-cart-badge">0</span>
-            </span>
+        <div class="am-header__actions">
+            <button type="button" class="am-icon-btn" id="am-search-toggle" aria-label="Search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
+            </button>
+            <a href="/account" class="am-icon-btn" aria-label="Account">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            </a>
+            <a href="#" class="am-icon-btn" id="am-cart-toggle" aria-label="Cart">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 6h15l-1.5 9h-12z"/><circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/><path d="M6 6L5 3H2"/></svg>
+                <span class="am-cart-count" data-cart-count>0</span>
+            </a>
+            <button type="button" class="am-icon-btn am-menu-toggle" id="am-menu-toggle" aria-label="Menu">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+            </button>
         </div>
     </div>
 </header>
 
-<section class="va-luxe-hero">
-    <div class="va-luxe-hero-media">
-        <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1920&q=85" alt="">
-    </div>
-    <div class="va-luxe-hero-content">
-        <p class="va-eyebrow text-white/60">Architectural Metal Atelier</p>
-        <h1>Where metal<br>becomes <em>architecture.</em></h1>
-        <p class="va-hero-lead">Partitions, façades, entrance systems, and bespoke fabrication — crafted with the precision of fine furniture and the permanence of steel.</p>
-        <div class="va-luxe-hero-cta flex flex-wrap gap-4">
-            <span class="va-btn-luxe va-btn-luxe--light">Explore Services</span>
-            <span class="va-btn-luxe va-btn-luxe--light">View Projects</span>
-        </div>
-    </div>
-    <div class="va-luxe-hero-scroll">Scroll</div>
-</section>
-
-<div class="va-trust-strip va-reveal va-revealed">
-    <div class="va-trust-strip-inner">
-        <div class="va-trust-item"><p class="va-trust-num">15+</p><p class="va-trust-label">Years Craft</p></div>
-        <div class="va-trust-item"><p class="va-trust-num">200+</p><p class="va-trust-label">Installations</p></div>
-        <div class="va-trust-item"><p class="va-trust-num">6</p><p class="va-trust-label">Core Disciplines</p></div>
-        <div class="va-trust-item"><p class="va-trust-num">Pan</p><p class="va-trust-label">India Delivery</p></div>
-    </div>
+<div class="am-search-bar" id="am-search-bar">
+    <form action="/shop" method="GET" class="am-container">
+        <input type="search" name="search" placeholder="Search partitions, furniture, handles…" aria-label="Search">
+        <button type="submit" class="am-btn am-btn--primary">Search</button>
+        <button type="button" class="am-btn am-btn--outline" id="am-search-close">Close</button>
+    </form>
 </div>
 
-<section class="va-manifesto va-reveal va-revealed">
-    <div class="va-manifesto-inner">
-        <div><div class="va-rule mb-8"></div><p class="va-eyebrow mb-4">Our Philosophy</p></div>
-        <blockquote class="va-manifesto-quote">We believe exceptional spaces are built on <em>precision, material honesty,</em> and an unwavering commitment to craft — from the first line drawn to the final installation.</blockquote>
+<nav class="am-mobile-nav" id="am-mobile-nav">
+    <button type="button" class="am-mobile-nav__close" id="am-menu-close">✕</button>
+    <div class="am-mobile-nav__group">
+        <button type="button" class="am-mobile-nav__toggle" data-am-nav-toggle aria-expanded="false">Studio<svg class="am-nav__chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 4.5l3 3 3-3"/></svg></button>
+        <div class="am-mobile-nav__sub">
+            <a href="/services/partitions">PVD Partitions</a>
+            <a href="/services/slim-profile-door-system">Slim Profile Door System</a>
+            <a href="/services/bespoke-metal-furniture">Bespoke Metal Furniture</a>
+            <a href="/services/main-entrance-pvd-doors">Main Entrance PVD Doors</a>
+            <a href="/services/rack-systems-metal-pvd">Rack Systems, Metal PVD</a>
+            <a href="/studio/railings">Railings</a>
+        </div>
     </div>
-</section>
+    <div class="am-mobile-nav__group">
+        <button type="button" class="am-mobile-nav__toggle" data-am-nav-toggle aria-expanded="false">Collections<svg class="am-nav__chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 4.5l3 3 3-3"/></svg></button>
+        <div class="am-mobile-nav__sub">
+            <a href="/collections/mirror-frames">Mirror Frames</a>
+            <a href="/shop?category=corner-tables">Corner Tables</a>
+            <a href="/shop?category=coffee-tables">Coffee Tables</a>
+            <a href="/shop?category=glass-tables">Glass Tables</a>
+            <a href="/shop?category=door-handles">Door Handles</a>
+        </div>
+    </div>
+            <a href="/services/corten-steel-facade">Corten steel</a>
+    <a href="/projects">Projects</a>
+    <a href="/about">About</a>
+    <a href="/blog">Blog</a>
+    <a href="/professionals">Professionals</a>
+    <a href="/cart">Cart</a>
+</nav>
 
-<section id="how-it-works" class="py-24 bg-brand-100 va-reveal va-revealed scroll-mt-24">
-    <div class="va-section-head">
-        <div><p class="va-eyebrow mb-3">Process</p><h2 class="va-display text-4xl md:text-5xl">How It Works</h2></div>
-        <span class="va-btn-luxe">Get Started</span>
-    </div>
-    <div class="va-how-grid va-reveal-stagger">
-        <div class="va-how-step va-revealed" style="--stagger:0"><p class="va-how-num">01</p><h3 class="font-serif text-xl mb-2">Consult</h3><p class="text-sm text-brand-400 font-light leading-relaxed">Tell us your space, dimensions, materials, and timeline.</p></div>
-        <div class="va-how-step va-revealed" style="--stagger:1"><p class="va-how-num">02</p><h3 class="font-serif text-xl mb-2">Calculate</h3><p class="text-sm text-brand-400 font-light leading-relaxed">Use our sq ft calculator for an instant estimate.</p></div>
-        <div class="va-how-step va-revealed" style="--stagger:2"><p class="va-how-num">03</p><h3 class="font-serif text-xl mb-2">Fabricate</h3><p class="text-sm text-brand-400 font-light leading-relaxed">Precision metal fabrication in our atelier.</p></div>
-        <div class="va-how-step va-revealed" style="--stagger:3"><p class="va-how-num">04</p><h3 class="font-serif text-xl mb-2">Deliver</h3><p class="text-sm text-brand-400 font-light leading-relaxed">Professional delivery and installation.</p></div>
-    </div>
-</section>
+<main id="am-main"><!-- populated by preview-render.js --></main>
 
-<section id="information" class="py-24 va-reveal va-revealed scroll-mt-24">
-    <div class="va-info-grid">
-        <div>
-            <div class="va-rule mb-8"></div>
-            <p class="va-eyebrow mb-4">Information</p>
-            <h2 class="va-display text-3xl md:text-4xl mb-6">The atelier at a glance.</h2>
-            <p class="text-brand-400 font-light leading-relaxed mb-6">VYOMIKA ATELIER specialises in architectural metalwork — glass partitions, Corten façades, slim profile doors, PVD entrance doors, bespoke furniture, and curated home decor.</p>
-            <span class="va-service-link">Read our full story →</span>
+<footer class="am-footer">
+    <div class="am-container">
+        <div class="am-footer__top">
+            <div class="am-footer__brand">
+                <span class="am-logo__name">Vyomika Atelier LLP</span>
+                <p>Get 10% off your first order and exclusive trade offers.</p>
+                <form class="am-footer__newsletter" onsubmit="return false">
+                    <input type="email" placeholder="Your email address">
+                    <button type="submit" class="am-btn am-btn--primary am-btn--sm">Subscribe</button>
+                </form>
+                <p style="margin-top:1.25rem;font-size:0.8rem">Pan-India fabrication & delivery<br>Andheri East, Mumbai, Maharashtra 400069</p>
+            </div>
+            <div><h5>Shop</h5><ul><li><a href="/shop">All Products</a></li><li><a href="/collections/mirror-frames">Mirror Frames</a></li><li><a href="/shop?category=corner-tables">Corner Tables</a></li><li><a href="/shop?category=coffee-tables">Coffee Tables</a></li><li><a href="/shop?category=glass-tables">Glass Tables</a></li><li><a href="/shop?category=door-handles">Door Handles</a></li></ul></div>
+            <div><h5>Information</h5><ul><li><a href="/about">About</a></li><li><a href="/team">Team</a></li><li><a href="/professionals">Professionals</a></li><li><a href="/blog">Blog</a></li><li><a href="/contact">Contact</a></li></ul></div>
+            <div><h5>Studio</h5><ul><li><a href="/services/partitions">PVD Partitions</a></li><li><a href="/services/slim-profile-door-system">Slim Profile Door System</a></li><li><a href="/services/bespoke-metal-furniture">Bespoke Metal Furniture</a></li><li><a href="/services/main-entrance-pvd-doors">Main Entrance PVD Doors</a></li><li><a href="/services/rack-systems-metal-pvd">Rack Systems, Metal PVD</a></li><li><a href="/studio/railings">Railings</a></li></ul></div>
+            <div><h5>Legal</h5><ul><li><a href="/privacy-policy">Privacy Policy</a></li><li><a href="/terms-and-conditions">Terms &amp; Conditions</a></li><li><a href="/shipping-delivery-policy">Shipping &amp; Delivery</a></li><li><a href="/cancellation-refund-policy">Cancellation &amp; Refund</a></li><li><a href="/warranty-returns-policy">Warranty &amp; Returns</a></li><li><a href="/contact-grievance-policy">Contact &amp; Grievance</a></li></ul></div>
         </div>
-        <div class="va-info-list">
-            <div class="va-info-item"><span>Services</span><span>Partitions · Façades · Doors · PVD</span></div>
-            <div class="va-info-item"><span>Shop</span><span>Coffee · Corner · Glass tables · Handles</span></div>
-            <div class="va-info-item"><span>Calculator</span><span>Length × Height × ₹1,800 / sq ft</span></div>
-            <div class="va-info-item"><span>Enquiries</span><span>hello@vyomikaatelier.com</span></div>
-            <div class="va-info-item"><span>Website</span><span>vyomikaatelier.com</span></div>
-            <div class="va-info-item"><span>Delivery</span><span>Pan-India</span></div>
-        </div>
-    </div>
-</section>
-
-<section class="va-services-luxe va-reveal va-revealed">
-    <div class="va-section-head">
-        <div><p class="va-eyebrow mb-3">Capabilities</p><h2 class="va-display text-4xl">Services</h2></div>
-    </div>
-    <article class="va-service-feature">
-        <div><img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=900&q=80" alt="Partitions"></div>
-        <div class="va-service-feature-info">
-            <p class="va-eyebrow mb-4">01</p>
-            <h3 class="font-serif text-2xl font-light">Partitions</h3>
-            <p class="text-brand-400 font-light mt-3">Custom glass and aluminium partition systems.</p>
-        </div>
-    </article>
-</section>
-
-<section class="va-projects-luxe va-reveal va-revealed">
-    <div class="va-section-head">
-        <div><p class="va-eyebrow mb-3">Portfolio</p><h2 class="va-display text-4xl text-white">Selected Work</h2></div>
-    </div>
-    <div class="va-project-mosaic">
-        <div class="va-project-tile va-project-hero">
-            <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=900&q=80" alt="">
-            <div class="va-project-tile-overlay"><p class="va-eyebrow text-white/50 mb-2">Mumbai</p><h3>Corporate Partitions</h3></div>
-        </div>
-        <div class="va-project-tile">
-            <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&q=80" alt="">
-            <div class="va-project-tile-overlay"><h3>Corten Façade</h3></div>
-        </div>
-        <div class="va-project-tile">
-            <img src="https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=600&q=80" alt="">
-            <div class="va-project-tile-overlay"><h3>Slim Profile Doors</h3></div>
-        </div>
-    </div>
-</section>
-
-<section id="shop" class="py-24 bg-brand-50 scroll-mt-24 va-reveal va-revealed">
-    <div class="va-section-head">
-        <div><p class="va-eyebrow mb-3">The Collection</p><h2 class="va-display text-4xl md:text-5xl">Shop</h2></div>
-        <span class="va-btn-luxe">Shop All</span>
-    </div>
-    <div class="va-product-grid">
-        <div class="va-product-card va-card">
-            <div class="va-product-img"><img src="https://images.unsplash.com/photo-1615529182904-896166571fac?w=600&q=80" class="w-full h-full object-cover" alt=""></div>
-            <p class="va-eyebrow text-brand-400 mb-1">Glass Tables</p>
-            <h3 class="font-serif text-xl">Aurora Glass Table</h3>
-            <p class="va-product-price">₹18,900</p>
-        </div>
-        <div class="va-product-card va-card">
-            <div class="va-product-img"><img src="https://images.unsplash.com/photo-1532372320572-127d86b32558?w=600&q=80" class="w-full h-full object-cover" alt=""></div>
-            <p class="va-eyebrow text-brand-400 mb-1">Coffee Tables</p>
-            <h3 class="font-serif text-xl">Crystal Top Coffee</h3>
-            <p class="va-product-price">₹22,400</p>
-        </div>
-        <div class="va-product-card va-card">
-            <div class="va-product-img"><img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=600&q=80" class="w-full h-full object-cover" alt=""></div>
-            <p class="va-eyebrow text-brand-400 mb-1">Corner Tables</p>
-            <h3 class="font-serif text-xl">Nordic Corner Table</h3>
-            <p class="va-product-price">₹12,500</p>
-        </div>
-    </div>
-</section>
-
-<section id="blog" class="va-blog-luxe scroll-mt-24 va-reveal va-revealed">
-    <div class="va-section-head">
-        <div><p class="va-eyebrow mb-3">Journal</p><h2 class="va-display text-4xl md:text-5xl">Blog</h2></div>
-        <span class="va-btn-luxe">Read All</span>
-    </div>
-    <div class="max-w-[90rem] mx-auto px-5 lg:px-10 grid md:grid-cols-3 gap-10">
-        <div>
-            <div class="aspect-[16/10] overflow-hidden mb-5 bg-brand-100"><img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&q=80" class="w-full h-full object-cover" alt=""></div>
-            <time class="va-eyebrow text-brand-400">March 2026</time>
-            <h3 class="font-serif text-2xl font-light mt-2">Why Corten Steel Is Perfect for Modern Façades</h3>
-        </div>
-        <div>
-            <div class="aspect-[16/10] overflow-hidden mb-5 bg-brand-100"><img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80" class="w-full h-full object-cover" alt=""></div>
-            <time class="va-eyebrow text-brand-400">February 2026</time>
-            <h3 class="font-serif text-2xl font-light mt-2">Glass Partitions: Open Plan Without Compromise</h3>
-        </div>
-        <div>
-            <div class="aspect-[16/10] overflow-hidden mb-5 bg-brand-100"><img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80" class="w-full h-full object-cover" alt=""></div>
-            <time class="va-eyebrow text-brand-400">January 2026</time>
-            <h3 class="font-serif text-2xl font-light mt-2">PVD Coating Explained</h3>
-        </div>
-    </div>
-</section>
-
-<section class="va-cta-luxe va-reveal va-revealed">
-    <div class="va-cta-luxe-bg"><img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1600&q=85" alt=""></div>
-    <div class="va-cta-luxe-content">
-        <p class="va-eyebrow text-white/50">Begin</p>
-        <h2>Commission your next space.</h2>
-        <p class="text-white/65 font-light leading-relaxed mb-10 max-w-md mx-auto">From concept to installation — our team guides every detail.</p>
-        <span class="va-btn-luxe va-btn-luxe--light">Enquire</span>
-    </div>
-</section>
-
-<footer class="va-footer-luxe" id="site-footer">
-    <div class="max-w-[90rem] mx-auto px-5 lg:px-10 py-16 grid sm:grid-cols-2 lg:grid-cols-4 gap-10">
-        <div>
-            <p class="va-logo mb-5">VYOMIKA<span>ATELIER</span></p>
-            <p class="text-sm font-light text-white/50">Precision architectural metalwork and curated interiors.</p>
-        </div>
-        <div>
-            <p class="va-eyebrow mb-5 text-brand-500">Navigate</p>
-            <div class="space-y-2.5 text-sm font-light">
-                <a href="#shop" class="block hover:text-white transition">Shop</a>
-                <span class="block text-white/50">Services</span>
-                <a href="#blog" class="block hover:text-white transition">Blog</a>
-                <a href="#how-it-works" class="block hover:text-white transition">How It Works</a>
-                <a href="#information" class="block hover:text-white transition">Information</a>
+        <div class="am-footer__bottom">
+            <span>© 2026 Vyomika Atelier LLP. All rights reserved.</span>
+            <div class="am-footer__contact">
+                <a href="mailto:namaste@vyomikaatelier.com">namaste@vyomikaatelier.com</a>
+                <a href="tel:+919205850254">+91 9205850254</a>
             </div>
         </div>
-        <div>
-            <p class="va-eyebrow mb-5 text-brand-500">Studio</p>
-            <div class="space-y-2.5 text-sm font-light">
-                <span class="block text-white/50">Projects</span>
-                <span class="block text-white/50">About</span>
-                <span class="block text-white/50">Contact</span>
-            </div>
-        </div>
-        <div>
-            <p class="va-eyebrow mb-5 text-brand-500">Account</p>
-            <div class="space-y-2.5 text-sm font-light">
-                <span class="block text-white/50">My Account</span>
-                <span class="block text-white/50">Cart</span>
-                <span class="block text-white/50">Checkout</span>
-            </div>
-            <p class="text-sm mt-6 font-light text-white/40">hello@vyomikaatelier.com</p>
-        </div>
-    </div>
-    <div class="border-t border-white/10 py-6 text-center text-[0.55rem] tracking-[0.28em] uppercase text-white/30">
-        &copy; 2026 VYOMIKA ATELIER · Architectural Metal · India
     </div>
 </footer>
 
-<script src="js/motion.js"></script>
-<script>
-    document.querySelectorAll('.va-reveal, .va-reveal-stagger > *').forEach(function(el) {
-        el.classList.add('va-revealed');
-    });
-</script>
+<div class="am-overlay" id="am-overlay"></div>
+<aside class="am-drawer" id="am-cart-drawer">
+    <div class="am-drawer__head"><h3>Shopping Cart</h3><button type="button" id="am-cart-close">✕</button></div>
+    <div class="am-drawer__body"><p style="text-align:center;padding:2rem 0;color:var(--am-muted)">Your cart is currently empty.</p></div>
+    <div class="am-drawer__foot">
+        <a href="/cart" class="am-btn am-btn--dark am-btn--full">View Cart</a>
+        <a href="/shop" class="am-btn am-btn--outline am-btn--full" style="margin-top:0.5rem">Continue Shopping</a>
+    </div>
+</aside>
+<div class="am-modal" id="am-quickview">
+    <button type="button" class="am-modal__close" id="am-quickview-close">✕</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;padding:2rem">
+        <div><img data-qv-img src="" alt="" style="width:100%;border-radius:var(--am-radius)"></div>
+        <div>
+            <p class="am-featured__cat">PVD Partitions</p>
+            <h3 data-qv-name style="font-family:var(--am-display);font-size:1.5rem;margin-bottom:1rem"></h3>
+            <p data-qv-price style="font-size:1.25rem;font-weight:700;margin-bottom:1.5rem"></p>
+            <a href="/shop" class="am-btn am-btn--primary am-btn--full">View Full Details</a>
+        </div>
+    </div>
+</div>
+
+<div id="va-order-modal" class="am-popup-modal am-order-modal" aria-hidden="true">
+    <div class="am-popup-modal__backdrop" data-close-popup-form></div>
+    <div class="am-popup-modal__panel" role="dialog" aria-labelledby="am-popup-form-title" aria-modal="true">
+        <button type="button" class="am-popup-modal__close" data-close-popup-form aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        <div class="am-popup-modal__inner">
+            <header class="am-popup-modal__header">
+                <p class="am-popup-modal__eyebrow">Leave your requirement</p>
+                <h2 id="am-popup-form-title" class="am-popup-modal__title">Complete your order</h2>
+                <p class="am-popup-modal__subtitle" data-popup-subtitle hidden></p>
+            </header>
+            <div class="am-popup-modal__order-summary" data-popup-order-summary hidden>
+                <p class="va-modal-service-label am-popup-modal__summary-service"></p>
+                <div class="am-calculator__result am-popup-modal__summary-calc">
+                    <div class="am-calculator__result-row"><span>Dimensions</span><span id="va-modal-dim-display"></span></div>
+                    <div class="am-calculator__result-row am-calculator__result-row--price"><span>Estimated price</span><span id="va-modal-price-display"></span></div>
+                </div>
+            </div>
+            <form action="#" method="POST" enctype="multipart/form-data" class="am-popup-form" id="va-order-form" onsubmit="return false">
+                <input type="hidden" name="type" id="am-popup-type" value="order_now">
+                <input type="hidden" name="subject" id="va-modal-subject">
+                <input type="hidden" name="service_slug" id="va-modal-service-slug">
+                <input type="hidden" name="design_slug" id="va-modal-design-slug">
+                <input type="hidden" name="calculated_price" id="va-modal-price">
+                <input type="hidden" name="dimensions" id="va-modal-dimensions">
+                <input type="hidden" name="unit_type" id="va-modal-unit">
+                <input type="hidden" name="finish" id="va-modal-finish">
+                <input type="hidden" name="preferred_contact" value="whatsapp">
+                <div class="am-popup-form__field"><label for="va-modal-product">Product / enquiry</label><input type="text" id="va-modal-product" class="am-popup-form__highlight" readonly data-popup-context-field></div>
+                <div class="am-popup-form__row">
+                    <div class="am-popup-form__field"><label for="va-modal-name">Name</label><input type="text" name="name" id="va-modal-name" required class="am-input"></div>
+                    <div class="am-popup-form__field"><label for="va-modal-phone">Phone</label><input type="tel" name="phone" id="va-modal-phone" required class="am-input"></div>
+                </div>
+                <div class="am-popup-form__field"><label for="va-modal-email">Email</label><input type="email" name="email" id="va-modal-email" required class="am-input"></div>
+                <div class="am-popup-form__field"><label for="va-modal-message">Enquiry requirement</label><textarea name="message" id="va-modal-message" required rows="2" class="am-input am-textarea"></textarea></div>
+                <div class="am-popup-form__field"><label for="va-modal-drawing">Reference file <span class="am-popup-form__optional">(optional)</span></label><input type="file" name="drawing" id="va-modal-drawing" class="am-input am-input--file"></div>
+                <button type="submit" class="am-popup-form__submit"><span>Submit Requirement</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M7 17L17 7M17 7H9M17 7V15"/></svg></button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="js/preview-options.js"></script>
+<script src="js/preview-render.js"></script>
+<script src="js/preview-cart.js"></script>
+<script src="js/preview-router.js"></script>
+<script src="js/amerce.js"></script>
+<script src="js/calculator.js"></script>
 </body>
 </html>

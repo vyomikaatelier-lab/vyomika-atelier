@@ -7,19 +7,20 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Models\Project;
 use App\Models\Service;
+use App\Support\SiteContent;
 use Illuminate\Support\Facades\Schema;
 
 class HomeController extends Controller
 {
     public function index()
     {
-        $featuredProducts = Product::where('is_active', true)
-            ->where('is_featured', true)
-            ->latest()
-            ->take(6)
-            ->get();
+        $featuredProducts = Schema::hasTable('products')
+            ? Product::where('is_active', true)->where('is_featured', true)->latest()->take(6)->get()
+            : collect();
 
-        $categories = Category::where('is_active', true)->get();
+        $categories = Schema::hasTable('categories')
+            ? Category::where('is_active', true)->get()
+            : collect();
 
         $featuredServices = Schema::hasTable('services')
             ? Service::where('is_active', true)->latest()->take(6)->get()
@@ -33,12 +34,50 @@ class HomeController extends Controller
             ? BlogPost::where('is_active', true)->whereNotNull('published_at')->latest('published_at')->take(3)->get()
             : collect();
 
+        $site = SiteContent::get();
+
+        $portfolio = $featuredProjects->isNotEmpty()
+            ? $featuredProjects
+            : collect($site['portfolio'] ?? [])->map(fn (array $item) => (object) $item);
+
+        $services = $featuredServices->isNotEmpty()
+            ? $featuredServices
+            : collect($site['services'] ?? [])->map(fn (array $item) => (object) $item);
+
+        $shopItems = $featuredProducts->isNotEmpty()
+            ? $featuredProducts
+            : collect($site['shop'] ?? [])->map(fn (array $item) => (object) $item);
+
+        $blogItems = $latestPosts->isNotEmpty()
+            ? $latestPosts
+            : collect($site['blog']['posts'] ?? [])->map(fn (array $item) => (object) $item);
+
+        $trendingSlugs = collect($site['trending']['products'] ?? [])->pluck('slug')->filter();
+        $trendingFromDb = ($trendingSlugs->isNotEmpty() && Schema::hasTable('products'))
+            ? Product::where('is_active', true)->whereIn('slug', $trendingSlugs)->get()
+            : collect();
+        if ($trendingFromDb->count() < 4 && Schema::hasTable('products')) {
+            $trendingFromDb = $trendingFromDb->concat(
+                Product::where('is_active', true)
+                    ->whereNotIn('id', $trendingFromDb->pluck('id'))
+                    ->latest()
+                    ->take(4 - $trendingFromDb->count())
+                    ->get()
+            );
+        }
+
         return view('home', compact(
             'featuredProducts',
             'categories',
             'featuredServices',
             'featuredProjects',
-            'latestPosts'
+            'latestPosts',
+            'site',
+            'portfolio',
+            'services',
+            'shopItems',
+            'blogItems',
+            'trendingFromDb',
         ));
     }
 }

@@ -66,7 +66,27 @@
         return state;
     }
 
-    document.querySelectorAll('.va-calculator').forEach(function (calc) {
+    function openOrderModal(modal) {
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+        const overlay = document.getElementById('am-overlay');
+        if (overlay) overlay.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeOrderModal(modal) {
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+        const overlay = document.getElementById('am-overlay');
+        const cartOpen = document.getElementById('am-cart-drawer')?.classList.contains('is-open');
+        const qvOpen = document.getElementById('am-quickview')?.classList.contains('is-open');
+        if (overlay && !cartOpen && !qvOpen) overlay.classList.remove('is-open');
+        if (!cartOpen && !qvOpen) document.body.style.overflow = '';
+    }
+
+    function bindCalculator(calc) {
+        if (calc.dataset.bound === '1') return;
+        calc.dataset.bound = '1';
         const unitBtns = calc.querySelectorAll('.va-unit-btn');
         unitBtns.forEach(function (btn) {
             btn.addEventListener('click', function () {
@@ -96,30 +116,56 @@
             const serviceSlug = orderBtn.dataset.serviceSlug || '';
             const designSlug = orderBtn.dataset.designSlug || '';
             const serviceName = orderBtn.dataset.serviceName || 'Service';
+            const activeFinish = document.querySelector('[data-pdp-finish] [data-finish-slug].is-active');
+            const finishName = activeFinish?.dataset.finishName || '';
+
+            const typeInput = document.getElementById('am-popup-type');
+            const titleEl = document.getElementById('am-popup-form-title');
+            const subtitleEl = modal.querySelector('[data-popup-subtitle]');
+            const orderSummary = modal.querySelector('[data-popup-order-summary]');
+            const messageField = document.getElementById('va-modal-message');
+
+            if (typeInput) typeInput.value = 'order_now';
+            if (titleEl) titleEl.textContent = 'Complete your order';
+            if (subtitleEl) subtitleEl.hidden = true;
+            if (orderSummary) orderSummary.hidden = false;
+            if (messageField) messageField.placeholder = 'Installation address, timeline, finish preference…';
 
             document.getElementById('va-modal-service-slug').value = serviceSlug;
             document.getElementById('va-modal-design-slug').value = designSlug;
             document.getElementById('va-modal-price').value = Math.round(state.price);
             document.getElementById('va-modal-dimensions').value = state.dimLabel;
             document.getElementById('va-modal-unit').value = state.unit;
+            const finishField = document.getElementById('va-modal-finish');
+            if (finishField) finishField.value = finishName;
             document.getElementById('va-modal-dim-display').textContent = state.dimLabel + ' (' + state.sqft.toFixed(2) + ' sq ft)';
             document.getElementById('va-modal-price-display').textContent = formatINR(state.price);
             document.getElementById('va-modal-subject').value = serviceName + ' — Order Request';
             document.querySelector('.va-modal-service-label').textContent = serviceName;
+            const productField = document.getElementById('va-modal-product');
+            if (productField) {
+                productField.value = serviceName + (finishName ? ' · ' + finishName : '');
+            }
 
-            modal.classList.add('open');
-            modal.setAttribute('aria-hidden', 'false');
-            document.body.classList.add('va-menu-open');
+            openOrderModal(modal);
         });
+    }
+
+    function initCalculators() {
+        document.querySelectorAll('.va-calculator').forEach(bindCalculator);
+    }
+
+    initCalculators();
+    document.addEventListener('am-content-ready', initCalculators);
+    document.addEventListener('am-recalc-calculators', () => {
+        document.querySelectorAll('.va-calculator').forEach(updateCalc);
     });
 
     const modal = document.getElementById('va-order-modal');
     if (modal) {
-        modal.querySelectorAll('[data-close-modal]').forEach(function (el) {
+        modal.querySelectorAll('[data-close-popup-form], [data-close-modal]').forEach(function (el) {
             el.addEventListener('click', function () {
-                modal.classList.remove('open');
-                modal.setAttribute('aria-hidden', 'true');
-                document.body.classList.remove('va-menu-open');
+                closeOrderModal(modal);
             });
         });
     }

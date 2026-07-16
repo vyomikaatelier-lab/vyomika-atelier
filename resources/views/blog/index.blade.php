@@ -1,32 +1,89 @@
-@extends('layouts.app')
+@extends('layouts.store')
 
-@section('title', 'Blog — VYOMIKA ATELIER')
+@section('title', \App\Support\BlogContent::metaTitle())
+
+@push('meta')
+<meta name="description" content="{{ \App\Support\BlogContent::metaDescription() }}">
+<link rel="canonical" href="{{ route('blog.index') }}">
+@endpush
 
 @section('content')
-<div class="va-page-hero">
-    <p class="va-label mb-3">Insights</p>
-    <h1 class="font-serif text-5xl text-brand-900">Blog</h1>
-    <p class="text-brand-500 mt-4 max-w-lg mx-auto">Design inspiration, material guides, and project insights from the VYOMIKA ATELIER team.</p>
-</div>
 
-<div class="max-w-7xl mx-auto px-5 py-16">
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
-        @foreach($posts as $post)
-        <article>
-            <a href="{{ route('blog.show', $post->slug) }}" class="va-card group block">
-                @if($post->image)
-                    <div class="aspect-[16/10] bg-brand-100 overflow-hidden mb-5">
-                        <img src="{{ $post->image }}" alt="{{ $post->title }}" class="w-full h-full object-cover">
+@include('partials.am-page-hero', [
+    'label' => $index['label'] ?? 'Journal',
+    'title' => $index['title'] ?? 'Ideas, Materials & Projects',
+    'subtitle' => $index['subtitle'] ?? '',
+])
+
+<section class="am-page-body am-blog-index">
+    <div class="am-container">
+
+        @if($featured)
+        <article class="am-blog-featured">
+            <a href="{{ route('blog.show', $featured->slug) }}" class="am-blog-featured__link">
+                <div class="am-blog-featured__media">
+                    @if($featured->image)
+                    <img src="{{ $featured->image }}" alt="{{ $featured->heroAlt() }}" loading="eager">
+                    @endif
+                </div>
+                <div class="am-blog-featured__body">
+                    <span class="am-blog-featured__label">Featured</span>
+                    @if($featured->categoryLabel())
+                    <span class="am-blog-cat">{{ $featured->categoryLabel() }}</span>
+                    @endif
+                    <h2 class="am-blog-featured__title">{{ $featured->title }}</h2>
+                    <p class="am-blog-featured__excerpt">{{ $featured->excerpt }}</p>
+                    <div class="am-blog-meta">
+                        <span>{{ $featured->author ?? 'Vyomika Atelier LLP' }}</span>
+                        <span>{{ $featured->published_at?->format('j M Y') }}</span>
+                        <span>{{ $featured->readingTime() }} min read</span>
                     </div>
-                @endif
-                <time class="text-[10px] uppercase tracking-[0.2em] text-brand-400">{{ $post->published_at?->format('M d, Y') }}</time>
-                <h2 class="font-serif text-2xl text-brand-900 mt-2 group-hover:text-brand-500 transition">{{ $post->title }}</h2>
-                <p class="text-sm text-brand-500 mt-3 leading-relaxed">{{ $post->excerpt }}</p>
-                <span class="text-[10px] uppercase tracking-[0.2em] text-brand-400 mt-4 inline-block">Read more →</span>
+                    <span class="am-blog-featured__cta">Read article →</span>
+                </div>
             </a>
         </article>
-        @endforeach
+        @endif
+
+        @if(count($categories))
+        <nav class="am-blog-filters" aria-label="Filter articles by category">
+            <a href="{{ route('blog.index') }}"
+               class="am-blog-filters__btn {{ $activeCategory === '' ? 'is-active' : '' }}">All</a>
+            @foreach($categories as $cat)
+            <a href="{{ route('blog.index', ['category' => $cat['slug']]) }}"
+               class="am-blog-filters__btn {{ $activeCategory === $cat['slug'] ? 'is-active' : '' }}">{{ $cat['label'] }}</a>
+            @endforeach
+        </nav>
+        @endif
+
+        @if($posts->count())
+        <div class="am-blog-grid">
+            @foreach($posts as $post)
+            <article class="am-blog-card">
+                <a href="{{ route('blog.show', $post->slug) }}">
+                    @if($post->image)
+                    <div class="am-blog-card__thumb">
+                        <img src="{{ $post->image }}" alt="{{ $post->heroAlt() }}" loading="lazy">
+                    </div>
+                    @endif
+                    <div class="am-blog-card__body">
+                        <div class="am-blog-card__meta">
+                            @if($post->categoryLabel())
+                            <span class="am-blog-cat">{{ $post->categoryLabel() }}</span>
+                            @endif
+                            <span>{{ $post->published_at?->format('j M Y') }}</span>
+                        </div>
+                        <h3 class="am-blog-card__title">{{ $post->title }}</h3>
+                        <p class="am-blog-card__excerpt">{{ $post->excerpt }}</p>
+                        <span class="am-blog-card__read">{{ $post->readingTime() }} min read</span>
+                    </div>
+                </a>
+            </article>
+            @endforeach
+        </div>
+        <div class="am-pagination">{{ $posts->links('vendor.pagination.amerce') }}</div>
+        @else
+        <p class="am-blog-empty">No articles in this category yet. <a href="{{ route('blog.index') }}">View all articles</a>.</p>
+        @endif
     </div>
-    <div class="mt-14">{{ $posts->links() }}</div>
-</div>
+</section>
 @endsection

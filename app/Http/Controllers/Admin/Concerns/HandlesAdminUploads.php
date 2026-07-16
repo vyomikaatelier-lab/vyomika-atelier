@@ -1,0 +1,76 @@
+<?php
+
+namespace App\Http\Controllers\Admin\Concerns;
+
+use App\Models\MediaFile;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+
+trait HandlesAdminUploads
+{
+    protected function storeUpload(Request $request, string $field, string $directory, bool $private = false): ?string
+    {
+        if (! $request->hasFile($field)) {
+            return null;
+        }
+
+        $file = $request->file($field);
+        $path = $file->store($directory, $private ? 'local' : 'public');
+
+        MediaFile::create([
+            'disk' => $private ? 'local' : 'public',
+            'path' => $path,
+            'filename' => $file->getClientOriginalName(),
+            'mime' => $file->getMimeType(),
+            'size' => $file->getSize() ?: 0,
+            'is_private' => $private,
+        ]);
+
+        return $path;
+    }
+
+    protected function resolveImageField(Request $request, string $fileField, string $urlField, ?string $current, string $directory): ?string
+    {
+        $uploaded = $this->storeUpload($request, $fileField, $directory);
+        if ($uploaded) {
+            $this->deleteStoredPath($current);
+
+            return $uploaded;
+        }
+
+        $url = $request->input($urlField);
+
+        return filled($url) ? $url : $current;
+    }
+
+    protected function deleteStoredPath(?string $path): void
+    {
+        if (! $path || str_starts_with($path, 'http')) {
+            return;
+        }
+
+        $media = MediaFile::query()->where('path', $path)->first();
+
+        if ($media) {
+            Storage::disk($media->disk)->delete($path);
+            $media->delete();
+
+            return;
+        }
+
+        Storage::disk('public')->delete($path);
+        Storage::disk('local')->delete($path);
+    }
+
+    /** @return array<int, string>|null */
+    protected function parseMultilineUrls(?string $raw): ?array
+    {
+        if (! filled($raw)) {
+            return null;
+        }
+
+        $urls = array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $raw))));
+
+        return $urls ?: null;
+    }
+}

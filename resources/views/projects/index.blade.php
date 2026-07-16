@@ -1,31 +1,83 @@
-@extends('layouts.app')
+@extends('layouts.store')
 
-@section('title', 'Projects — VYOMIKA ATELIER')
+@php
+    $hero = $page['hero'] ?? [];
+@endphp
+
+@section('title', $page['meta_title'] ?? 'Projects — Vyomika Atelier LLP')
+
+@push('meta')
+<meta name="description" content="{{ $page['meta_description'] ?? '' }}">
+@endpush
 
 @section('content')
-<div class="va-page-hero">
-    <p class="va-label mb-3">Our Work</p>
-    <h1 class="font-serif text-5xl text-brand-900">Projects</h1>
-    <p class="text-brand-500 mt-4 max-w-lg mx-auto">A selection of completed installations across residential and commercial spaces.</p>
-</div>
 
-<div class="max-w-7xl mx-auto px-5 py-16">
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-        @foreach($projects as $project)
-        <a href="{{ route('projects.show', $project->slug) }}" class="va-card group block">
-            <div class="aspect-[4/3] bg-brand-100 overflow-hidden mb-4">
-                @if($project->image)
-                    <img src="{{ $project->image }}" alt="{{ $project->title }}" class="w-full h-full object-cover">
-                @endif
-            </div>
-            @if($project->location)
-                <p class="text-[10px] uppercase tracking-[0.2em] text-brand-400 mb-1">{{ $project->location }}</p>
-            @endif
-            <h2 class="font-serif text-xl text-brand-900 group-hover:text-brand-500 transition">{{ $project->title }}</h2>
-            <p class="text-sm text-brand-500 mt-2">{{ $project->summary }}</p>
-        </a>
-        @endforeach
+@include('partials.am-page-hero', [
+    'label' => $hero['label'] ?? 'Our Work',
+    'title' => $hero['title'] ?? 'Projects',
+    'subtitle' => $hero['subtitle'] ?? null,
+])
+
+<section class="am-page-body am-projects-index">
+    <div class="am-container">
+        @if(count($categories))
+        <nav class="am-project-filters" aria-label="Filter projects by category">
+            @foreach($categories as $cat)
+            <a href="{{ route('projects.index', $cat['slug'] ? ['category' => $cat['slug']] : []) }}"
+               class="am-project-filters__btn {{ $activeCategory === ($cat['slug'] ?? '') ? 'is-active' : '' }}">
+                {{ $cat['label'] }}
+            </a>
+            @endforeach
+        </nav>
+        @endif
+
+        @if($projects->isNotEmpty())
+        <div class="am-project-grid">
+            @foreach($projects as $project)
+            <a href="{{ route('projects.show', $project->slug) }}" class="am-project-card">
+                <div class="am-project-card__media">
+                    @if($project->image)
+                    <img src="{{ $project->image }}" alt="{{ $project->title }}" loading="lazy">
+                    @endif
+                </div>
+                <div class="am-project-card__body">
+                    <p class="am-project-card__meta">
+                        @if($project->categoryLabel())<span>{{ $project->categoryLabel() }}</span>@endif
+                        @if($project->location)<span>{{ $project->location }}</span>@endif
+                    </p>
+                    <h2 class="am-project-card__title">{{ $project->title }}</h2>
+                    @if($project->summary)
+                    <p class="am-project-card__excerpt">{{ $project->summary }}</p>
+                    @endif
+                    <span class="am-project-card__link">View project →</span>
+                </div>
+            </a>
+            @endforeach
+        </div>
+        <div class="am-pagination">{{ $projects->links() }}</div>
+        @else
+        <div class="am-empty" style="text-align:center;padding:3rem 0">
+            <p style="color:var(--am-muted);margin-bottom:1.5rem">No projects in this category yet.</p>
+            <a href="{{ route('projects.index') }}" class="am-btn am-btn--outline">View all projects</a>
+        </div>
+        @endif
     </div>
-    <div class="mt-14">{{ $projects->links() }}</div>
-</div>
+</section>
+
+@php $cta = $page['footer_cta'] ?? []; @endphp
+@if(!empty($cta['title']))
+<section class="am-section am-section--dark am-projects-cta">
+    <div class="am-container am-projects-cta__inner">
+        <div>
+            <h2 class="am-corten-section__title">{{ $cta['title'] }}</h2>
+            <p class="am-corten-section__lead">{{ $cta['body'] ?? '' }}</p>
+        </div>
+        <div class="am-projects-cta__actions">
+            <a href="{{ route('leads.create') }}" class="am-btn am-btn--primary">{{ $cta['primary_label'] ?? 'Request a Quote' }}</a>
+            <button type="button" class="am-btn am-btn--outline am-btn--light" data-open-contact-studio data-contact-context="Project enquiry">{{ $cta['secondary_label'] ?? 'Contact Us' }}</button>
+        </div>
+    </div>
+</section>
+@endif
+
 @endsection

@@ -1,422 +1,235 @@
-@extends('layouts.app')
+@extends('layouts.store')
 
-
-
-@section('title', 'VYOMIKA ATELIER — Architectural Metalwork & Interiors')
-
-
+@section('title', 'Vyomika Atelier LLP — PVD Partitions & Metal Furniture')
 
 @section('content')
 
+@php
+    use App\Support\SiteContent;
+    $heroSlides = SiteContent::heroSlides();
+    $bestSellers = SiteContent::bestSellers();
+    $categoryBanners = SiteContent::categoryBanners();
+    $trending = SiteContent::trending();
+    $spotlights = SiteContent::spotlights();
+    $ctaBand = SiteContent::get('cta_band', []);
+    $testimonials = SiteContent::testimonials();
+    $blogSection = SiteContent::blogSection();
+    $trustBadges = SiteContent::trustBadges();
 
+    $bestSellerProducts = $shopItems->isNotEmpty() ? $shopItems->take(6) : collect($bestSellers['products'] ?? []);
+    $trendingProducts = isset($trendingFromDb) && $trendingFromDb->isNotEmpty()
+        ? $trendingFromDb->take(4)
+        : collect($trending['products'] ?? []);
+    $blogPosts = $blogItems->isNotEmpty() ? $blogItems->take(3) : collect($blogSection['posts'] ?? []);
+@endphp
 
-{{-- Cinematic hero --}}
-
-<section class="va-luxe-hero">
-
-    <div class="va-luxe-hero-media">
-
-        <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1920&q=85" alt="VYOMIKA ATELIER architectural interior">
-
+{{-- Hero carousel --}}
+<section class="am-hero">
+    <div class="am-hero__slides">
+        @foreach($heroSlides as $i => $slide)
+        <div class="am-hero__slide {{ $i === 0 ? 'is-active' : '' }}">
+            <div class="am-hero__content">
+                <p class="am-hero__kicker">{{ $slide['kicker'] ?? '' }}</p>
+                <h1 class="am-hero__title">{{ $slide['title'] ?? '' }}</h1>
+                <p class="am-hero__desc">{{ $slide['description'] ?? '' }}</p>
+                <a href="{{ url($slide['cta_href'] ?? '/shop') }}" class="am-btn am-btn--primary am-btn--lg">{{ $slide['cta_label'] ?? 'Shop Now' }}</a>
+            </div>
+            <div class="am-hero__image">
+                <img src="{{ $slide['image'] ?? '' }}" alt="{{ $slide['title'] ?? '' }}" @if($i === 0) fetchpriority="high" @else loading="lazy" @endif>
+            </div>
+        </div>
+        @endforeach
     </div>
-
-    <div class="va-luxe-hero-content">
-
-        <p class="va-eyebrow text-white/60">Architectural Metal Atelier</p>
-
-        <h1>Where metal<br>becomes <em>architecture.</em></h1>
-
-        <p class="va-hero-lead">Partitions, façades, entrance systems, and bespoke fabrication — crafted with the precision of fine furniture and the permanence of steel.</p>
-
-        <div class="va-luxe-hero-cta flex flex-wrap gap-4">
-
-            <a href="{{ route('services.index') }}" class="va-btn-luxe va-btn-luxe--light"><span>Explore Services</span></a>
-
-            <a href="{{ route('projects.index') }}" class="va-btn-luxe va-btn-luxe--light"><span>View Projects</span></a>
-
-        </div>
-
-    </div>
-
-    <div class="va-luxe-hero-scroll">Scroll</div>
-
-</section>
-
-
-
-{{-- Trust strip --}}
-
-<div class="va-trust-strip va-reveal">
-
-    <div class="va-trust-strip-inner">
-
-        <div class="va-trust-item">
-
-            <p class="va-trust-num">15+</p>
-
-            <p class="va-trust-label">Years Craft</p>
-
-        </div>
-
-        <div class="va-trust-item">
-
-            <p class="va-trust-num">200+</p>
-
-            <p class="va-trust-label">Installations</p>
-
-        </div>
-
-        <div class="va-trust-item">
-
-            <p class="va-trust-num">6</p>
-
-            <p class="va-trust-label">Core Disciplines</p>
-
-        </div>
-
-        <div class="va-trust-item">
-
-            <p class="va-trust-num">Pan</p>
-
-            <p class="va-trust-label">India Delivery</p>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-
-{{-- Manifesto --}}
-
-<section class="va-manifesto va-reveal">
-
-    <div class="va-manifesto-inner">
-
-        <div>
-
-            <div class="va-rule mb-8"></div>
-
-            <p class="va-eyebrow mb-4">Our Philosophy</p>
-
-        </div>
-
-        <blockquote class="va-manifesto-quote">
-
-            We believe exceptional spaces are built on <em>precision, material honesty,</em> and an unwavering commitment to craft — from the first line drawn to the final installation.
-
-        </blockquote>
-
-    </div>
-
-</section>
-
-{{-- How it works --}}
-<section id="how-it-works" class="py-24 bg-brand-100 va-reveal scroll-mt-24">
-    <div class="va-section-head va-reveal">
-        <div>
-            <p class="va-eyebrow mb-3">Process</p>
-            <h2 class="va-display text-4xl md:text-5xl">How It Works</h2>
-        </div>
-        <a href="{{ route('contact.index') }}" class="va-btn-luxe">Get Started</a>
-    </div>
-    <div class="va-how-grid va-reveal-stagger">
-        <div class="va-how-step" style="--stagger:0">
-            <p class="va-how-num">01</p>
-            <h3 class="font-serif text-xl mb-2">Consult</h3>
-            <p class="text-sm text-brand-400 font-light leading-relaxed">Tell us your space, dimensions, materials, and timeline. We assess scope and feasibility.</p>
-        </div>
-        <div class="va-how-step" style="--stagger:1">
-            <p class="va-how-num">02</p>
-            <h3 class="font-serif text-xl mb-2">Calculate</h3>
-            <p class="text-sm text-brand-400 font-light leading-relaxed">Use our online sq ft calculator on service pages for an instant estimate, or request a detailed quote.</p>
-        </div>
-        <div class="va-how-step" style="--stagger:2">
-            <p class="va-how-num">03</p>
-            <h3 class="font-serif text-xl mb-2">Fabricate</h3>
-            <p class="text-sm text-brand-400 font-light leading-relaxed">Our atelier engineers and fabricates your partitions, façades, doors, or bespoke metalwork.</p>
-        </div>
-        <div class="va-how-step" style="--stagger:3">
-            <p class="va-how-num">04</p>
-            <h3 class="font-serif text-xl mb-2">Deliver</h3>
-            <p class="text-sm text-brand-400 font-light leading-relaxed">Professional delivery and installation — built to perform and endure for years.</p>
-        </div>
+    <div class="am-hero__dots">
+        @foreach($heroSlides as $i => $slide)
+        <button type="button" class="am-hero__dot {{ $i === 0 ? 'is-active' : '' }}" aria-label="Slide {{ $i + 1 }}"></button>
+        @endforeach
     </div>
 </section>
 
-{{-- Information --}}
-<section id="information" class="py-24 va-reveal scroll-mt-24">
-    <div class="va-info-grid">
-        <div>
-            <div class="va-rule mb-8"></div>
-            <p class="va-eyebrow mb-4">Information</p>
-            <h2 class="va-display text-3xl md:text-4xl mb-6">The atelier at a glance.</h2>
-            <p class="text-brand-400 font-light leading-relaxed mb-6">VYOMIKA ATELIER is a fabrication studio specialising in architectural metalwork — glass partitions, Corten steel façades, slim profile door systems, PVD entrance doors, bespoke furniture, and curated home decor.</p>
-            <a href="{{ route('about') }}" class="va-service-link">Read our full story →</a>
-        </div>
-        <div class="va-info-list">
-            <div class="va-info-item"><span>Services</span><span>Partitions · Façades · Doors · PVD · Furniture</span></div>
-            <div class="va-info-item"><span>Shop</span><span>Coffee tables · Corner tables · Glass tables · Handles</span></div>
-            <div class="va-info-item"><span>Calculator</span><span>Length × Height × ₹1,800 / sq ft</span></div>
-            <div class="va-info-item"><span>Enquiries</span><span>hello@vyomikaatelier.com</span></div>
-            <div class="va-info-item"><span>Website</span><span>vyomikaatelier.com</span></div>
-            <div class="va-info-item"><span>Delivery</span><span>Pan-India · Custom fabrication</span></div>
+{{-- Best sellers --}}
+<section class="am-section am-section--white am-section--edge">
+    <div class="am-section__intro">
+        <div class="am-section-head am-section-head--row">
+            <div>
+                <h2>{{ $bestSellers['title'] ?? 'Best-Selling Products' }}</h2>
+                <p>{{ $bestSellers['subtitle'] ?? '' }}</p>
+            </div>
+            <a href="{{ route('shop.index') }}" class="am-section-head__link">{{ $bestSellers['cta_label'] ?? 'View All Products' }}</a>
         </div>
     </div>
-</section>
-
-@if(isset($featuredServices) && $featuredServices->isNotEmpty())
-
-<section class="va-services-luxe">
-
-    <div class="va-section-head va-reveal">
-
-        <div>
-
-            <p class="va-eyebrow mb-3">Capabilities</p>
-
-            <h2>Services</h2>
-
-        </div>
-
-        <a href="{{ route('services.index') }}" class="va-btn-luxe">All Services</a>
-
-    </div>
-
-
-
-    @foreach($featuredServices->take(3) as $service)
-
-    <article class="va-service-feature va-reveal">
-
-        <a href="{{ route('services.show', $service->slug) }}">
-
-            @if($service->image)
-
-                <img src="{{ $service->image }}" alt="{{ $service->name }}">
-
-            @endif
-
-        </a>
-
-        <div class="va-service-feature-info">
-
-            <p class="va-eyebrow mb-4">{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</p>
-
-            <a href="{{ route('services.show', $service->slug) }}">
-
-                <h3>{{ $service->name }}</h3>
-
+    @php $banner = $bestSellers['banner'] ?? []; @endphp
+    <div class="am-section__body">
+        <div class="am-product-grid am-product-grid--with-banner">
+            @if(!empty($banner))
+            <a href="{{ url($banner['href'] ?? '/shop') }}" class="am-product-banner">
+                <img src="{{ $banner['image'] ?? '' }}" alt="{{ $banner['title'] ?? '' }}" loading="lazy">
+                <h3>{{ $banner['title'] ?? '' }}</h3>
+                <p>{{ $banner['subtitle'] ?? '' }}</p>
+                <span class="am-btn am-btn--white am-btn--sm">{{ $banner['cta'] ?? 'Shop now' }}</span>
             </a>
-
-            <p class="text-brand-400 font-light leading-relaxed mt-3 max-w-md">{{ $service->summary }}</p>
-
-            <a href="{{ route('services.show', $service->slug) }}" class="va-service-link">Discover →</a>
-
-        </div>
-
-    </article>
-
-    @endforeach
-
-</section>
-
-@endif
-
-
-
-@if(isset($featuredProjects) && $featuredProjects->isNotEmpty())
-
-<section class="va-projects-luxe">
-
-    <div class="va-section-head va-reveal">
-
-        <div>
-
-            <p class="va-eyebrow mb-3">Portfolio</p>
-
-            <h2>Selected Work</h2>
-
-        </div>
-
-        <a href="{{ route('projects.index') }}" class="va-btn-luxe va-btn-luxe--light">All Projects</a>
-
-    </div>
-
-
-
-    <div class="va-project-mosaic va-reveal-stagger">
-
-        @foreach($featuredProjects->take(3) as $i => $project)
-
-        <a href="{{ route('projects.show', $project->slug) }}"
-
-           class="va-project-tile {{ $i === 0 ? 'va-project-hero' : '' }}"
-
-           style="--stagger:{{ $i }}">
-
-            @if($project->image)
-
-                <img src="{{ $project->image }}" alt="{{ $project->title }}">
-
             @endif
+            @foreach($bestSellerProducts as $product)
+                @include('partials.am-product-card', ['product' => $product])
+            @endforeach
+        </div>
+    </div>
+</section>
 
-            <div class="va-project-tile-overlay">
+{{-- Category banners --}}
+<section class="am-section am-section--edge">
+    <div class="am-section__body">
+        <div class="am-cat-grid">
+            @foreach($categoryBanners as $cat)
+            <a href="{{ url($cat['href'] ?? '/shop') }}" class="am-cat-tile">
+                <img src="{{ $cat['image'] ?? '' }}" alt="{{ $cat['title'] ?? '' }}" loading="lazy">
+                <h3>{{ $cat['title'] ?? '' }}</h3>
+                <p>{{ $cat['subtitle'] ?? '' }}</p>
+                <span class="am-btn am-btn--white am-btn--sm">{{ $cat['cta'] ?? 'Shop Now' }}</span>
+            </a>
+            @endforeach
+        </div>
+    </div>
+</section>
 
-                @if($project->location)
+{{-- Trending --}}
+<section class="am-section am-section--white am-section--edge">
+    <div class="am-section__intro">
+        <div class="am-section-head">
+            <h2>{{ $trending['title'] ?? 'Trending Metal Finds' }}</h2>
+            <p>{{ $trending['subtitle'] ?? '' }}</p>
+        </div>
+    </div>
+    <div class="am-section__body">
+        <div class="am-product-grid am-product-grid--4">
+            @foreach($trendingProducts as $product)
+                @include('partials.am-product-card', ['product' => $product])
+            @endforeach
+        </div>
+    </div>
+</section>
 
-                    <p class="va-eyebrow text-white/50 mb-2">{{ $project->location }}</p>
+{{-- Spotlights --}}
+<section class="am-section am-section--edge">
+    <div class="am-section__intro">
+        <div class="am-section-head">
+            <h2>{{ $spotlights['title'] ?? '' }}</h2>
+            <p>{{ $spotlights['subtitle'] ?? '' }}</p>
+        </div>
+    </div>
+    <div class="am-section__body">
+        <div class="am-spotlight-grid">
+            @foreach($spotlights['items'] ?? [] as $item)
+            <div class="am-spotlight">
+                <div class="am-spotlight__image">
+                    <img src="{{ $item['image'] ?? '' }}" alt="{{ $item['title'] ?? '' }}" loading="lazy">
+                </div>
+                <div class="am-spotlight__body">
+                    <h3>{{ $item['title'] ?? '' }}</h3>
+                    <p>{{ $item['description'] ?? '' }}</p>
+                    <p class="am-spotlight__price">{{ SiteContent::formatPrice($item['price'] ?? 0) }} <span style="font-weight:400;font-size:0.85rem;color:var(--am-muted)">{{ $item['price_unit'] ?? '' }}</span></p>
+                    <a href="{{ url($item['href'] ?? '/shop') }}" class="am-btn am-btn--primary">{{ $item['cta'] ?? 'Buy now' }}</a>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+</section>
 
+{{-- CTA band --}}
+<section class="am-cta-band">
+    <h2>{{ $ctaBand['title'] ?? '' }}</h2>
+    <p>{{ $ctaBand['description'] ?? '' }}</p>
+    <a href="{{ url($ctaBand['cta_href'] ?? '/shop') }}" class="am-btn am-btn--primary am-btn--lg">{{ $ctaBand['cta_label'] ?? 'View All Products' }}</a>
+</section>
+
+{{-- Testimonials --}}
+<section class="am-section am-testimonials">
+    <div class="am-container">
+        <div class="am-section-head">
+            <h2>What Our Customers Say</h2>
+            <p>Real stories from architects, designers, and homeowners across India.</p>
+        </div>
+        <div class="am-testimonial-slider">
+            @foreach($testimonials as $i => $item)
+            <div class="am-testimonial-slide {{ $i === 0 ? 'is-active' : '' }}">
+                <p class="am-testimonial-quote">"{{ $item['quote'] }}"</p>
+                <p class="am-testimonial-author">{{ $item['client'] }}</p>
+                <p class="am-testimonial-role">{{ $item['role'] }}</p>
+            </div>
+            @endforeach
+            <div class="am-testimonial-dots">
+                @foreach($testimonials as $i => $item)
+                <button type="button" class="am-testimonial-dot {{ $i === 0 ? 'is-active' : '' }}" aria-label="Testimonial {{ $i + 1 }}"></button>
+                @endforeach
+            </div>
+        </div>
+    </div>
+</section>
+
+{{-- Blog --}}
+<section class="am-section am-section--white am-section--edge">
+    <div class="am-section__intro">
+        <div class="am-section-head">
+            <h2>{{ $blogSection['title'] ?? 'Guides, Tips & Inspiration' }}</h2>
+            <p>{{ $blogSection['subtitle'] ?? '' }}</p>
+            <a href="{{ route('blog.index') }}" class="am-section-head__link">View all articles →</a>
+        </div>
+    </div>
+    <div class="am-section__body">
+        <div class="am-blog-grid">
+            @foreach($blogPosts as $post)
+            @php
+                $isModel = $post instanceof \App\Models\BlogPost;
+                $title = $isModel ? $post->title : ($post['title'] ?? '');
+                $cat = $isModel ? 'Journal' : ($post['category'] ?? 'Blog');
+                $date = $isModel ? ($post->published_at?->format('j F Y') ?? '') : ($post['date'] ?? '');
+                $excerpt = $isModel ? ($post->excerpt ?? '') : ($post['excerpt'] ?? '');
+                $image = $isModel ? $post->image : ($post['image'] ?? '');
+                $slug = data_get($post, 'slug');
+                $url = $slug ? route('blog.show', $slug) : route('blog.index');
+            @endphp
+            <article class="am-blog-card">
+                <a href="{{ $url }}">
+                    <div class="am-blog-card__thumb">
+                        @if($image)<img src="{{ $image }}" alt="{{ $title }}" loading="lazy">@endif
+                    </div>
+                    <div class="am-blog-card__body">
+                        <div class="am-blog-card__meta">
+                            <span class="am-blog-cat">{{ $cat }}</span>
+                            <span>{{ $date }}</span>
+                        </div>
+                        <h3 class="am-blog-card__title">{{ $title }}</h3>
+                        @if($excerpt)<p class="am-blog-card__excerpt">{{ $excerpt }}</p>@endif
+                    </div>
+                </a>
+            </article>
+            @endforeach
+        </div>
+    </div>
+</section>
+
+{{-- Trust badges --}}
+<section class="am-trust">
+    <div class="am-trust-grid">
+            @foreach($trustBadges as $badge)
+            <div class="am-trust-item">
+                @if(($badge['icon'] ?? '') === 'shipping')
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 6h13v10H1zM14 9h4l3 3v4h-7V9z"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+                @elseif(($badge['icon'] ?? '') === 'delivery')
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                @elseif(($badge['icon'] ?? '') === 'returns')
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7v6h6M21 17a9 9 0 00-15-6.7L3 13"/></svg>
+                @elseif(($badge['icon'] ?? '') === 'support')
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a7 7 0 00-7 7v3a3 3 0 003 3h1v-6H7a5 5 0 019.9-1M12 22v-4M8 22h8"/></svg>
+                @else
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
                 @endif
-
-                <h3>{{ $project->title }}</h3>
-
+                <h4>{{ $badge['title'] ?? '' }}</h4>
+                <p>{{ $badge['text'] ?? '' }}</p>
             </div>
-
-        </a>
-
-        @endforeach
-
+            @endforeach
     </div>
-
 </section>
-
-@endif
-
-
-
-@if($featuredProducts->isNotEmpty())
-
-<section id="shop" class="py-24 bg-brand-50 scroll-mt-24">
-
-    <div class="va-section-head va-reveal">
-
-        <div>
-
-            <p class="va-eyebrow mb-3">The Collection</p>
-
-            <h2 class="va-display text-4xl md:text-5xl">Curated Pieces</h2>
-
-        </div>
-
-        <a href="{{ route('shop.index') }}" class="va-btn-luxe">Shop All</a>
-
-    </div>
-
-    <div class="va-product-grid va-reveal-stagger">
-
-        @foreach($featuredProducts->take(6) as $i => $product)
-
-        <a href="{{ route('shop.show', $product->slug) }}" class="va-product-card va-card group" style="--stagger:{{ $i }}">
-
-            <div class="va-product-img">
-
-                @if($product->imageUrl())
-
-                    <img src="{{ $product->imageUrl() }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
-
-                @endif
-
-            </div>
-
-            <p class="va-eyebrow text-brand-400 mb-1">{{ $product->category?->name ?? 'Piece' }}</p>
-
-            <h3>{{ $product->name }}</h3>
-
-            <p class="va-product-price">{{ $product->formattedPrice() }}</p>
-
-        </a>
-
-        @endforeach
-
-    </div>
-
-</section>
-
-@endif
-
-
-
-@if(isset($latestPosts) && $latestPosts->isNotEmpty())
-
-<section id="blog" class="va-blog-luxe scroll-mt-24">
-
-    <div class="va-section-head va-reveal">
-
-        <div>
-
-            <p class="va-eyebrow mb-3">Journal</p>
-
-            <h2 class="va-display text-4xl md:text-5xl">Insights</h2>
-
-        </div>
-
-        <a href="{{ route('blog.index') }}" class="va-btn-luxe">Read All</a>
-
-    </div>
-
-    <div class="max-w-[90rem] mx-auto px-5 lg:px-10 grid md:grid-cols-3 gap-10 va-reveal-stagger">
-
-        @foreach($latestPosts as $i => $post)
-
-        <a href="{{ route('blog.show', $post->slug) }}" class="group block" style="--stagger:{{ $i }}">
-
-            @if($post->image)
-
-            <div class="aspect-[16/10] overflow-hidden mb-5 bg-brand-100">
-
-                <img src="{{ $post->image }}" alt="" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
-
-            </div>
-
-            @endif
-
-            <time class="va-eyebrow text-brand-400">{{ $post->published_at?->format('F Y') }}</time>
-
-            <h3 class="font-serif text-2xl font-light mt-2 group-hover:text-brand-500 transition leading-snug">{{ $post->title }}</h3>
-
-        </a>
-
-        @endforeach
-
-    </div>
-
-</section>
-
-@endif
-
-
-
-<section class="va-cta-luxe va-reveal">
-
-    <div class="va-cta-luxe-bg">
-
-        <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1920&q=85" alt="">
-
-    </div>
-
-    <div class="va-cta-luxe-content">
-
-        <p class="va-eyebrow text-white/50">Begin</p>
-
-        <h2>Commission your next space.</h2>
-
-        <p class="text-white/65 font-light leading-relaxed mb-10 max-w-md mx-auto">From concept to installation — our team guides every detail of your architectural metal project.</p>
-
-        <div class="flex flex-wrap gap-4 justify-center">
-
-            <a href="{{ route('contact.index') }}" class="va-btn-luxe va-btn-luxe--light"><span>Enquire</span></a>
-
-            <a href="{{ route('services.index') }}" class="va-btn-luxe va-btn-luxe--light"><span>View Services</span></a>
-
-        </div>
-
-    </div>
-
-</section>
-
-
 
 @endsection
-

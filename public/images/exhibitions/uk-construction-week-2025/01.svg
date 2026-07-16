@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">
+  <rect width="1200" height="900" fill="#e8e6e2"/>
+  <rect x="80" y="80" width="1040" height="740" fill="none" stroke="#a8a090" stroke-width="2"/>
+  <text x="600" y="400" text-anchor="middle" font-family="Georgia, serif" font-size="34" fill="#3d3530">UK Construction Week</text>
+  <text x="600" y="450" text-anchor="middle" font-family="Georgia, serif" font-size="28" fill="#5a5248">London 2025</text>
+  <text x="600" y="510" text-anchor="middle" font-family="sans-serif" font-size="20" fill="#8a7f72">Photo 01  placeholder</text>
+</svg>

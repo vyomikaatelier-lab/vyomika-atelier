@@ -33,6 +33,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->longText('content')->nullable();
             $table->string('image')->nullable();
+            $table->string('product_slug')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
             $table->unique(['service_id', 'slug']);

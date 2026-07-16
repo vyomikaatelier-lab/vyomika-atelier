@@ -17,7 +17,8 @@
             <td class="p-3">₹{{ number_format($product->price, 0) }}</td>
             <td class="p-3">{{ $product->stock }}</td>
             <td class="p-3">{{ $product->is_active ? 'Active' : 'Hidden' }}</td>
-            <td class="p-3 text-right space-x-2">
+            <td class="p-3">
+                <a href="{{ route('shop.show', $product->slug) }}" class="text-blue-600" target="_blank" rel="noopener">View</a>
                 <a href="{{ route('admin.products.edit', $product) }}" class="text-blue-600">Edit</a>
                 <form action="{{ route('admin.products.destroy', $product) }}" method="POST" class="inline" onsubmit="return confirm('Delete?')">@csrf @method('DELETE')<button class="text-red-600">Delete</button></form>
             </td>

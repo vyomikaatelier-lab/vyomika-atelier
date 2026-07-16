@@ -19,7 +19,7 @@ return [
         ],
     ],
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@vyomikaatelier.com'),
-        'name' => env('MAIL_FROM_NAME', 'VYOMIKA ATELIER'),
+        'address' => env('MAIL_FROM_ADDRESS', 'namaste@vyomikaatelier.com'),
+        'name' => env('MAIL_FROM_NAME', 'Vyomika Atelier LLP'),
     ],
 ];

@@ -1,38 +1,135 @@
-@extends('layouts.app')
+@extends('layouts.store')
 
-@section('title', $project->title . ' — Projects — VYOMIKA ATELIER')
+@section('title', $project->seoTitle())
+
+@push('meta')
+<meta name="description" content="{{ $project->seoDescription() }}">
+@endpush
 
 @section('content')
-<div class="relative h-[50vh] min-h-[320px] bg-brand-900">
-    @if($project->image)
-        <img src="{{ $project->image }}" alt="{{ $project->title }}" class="w-full h-full object-cover opacity-85">
-    @endif
-    <div class="absolute inset-0 bg-gradient-to-t from-brand-900/80 to-transparent"></div>
-    <div class="absolute bottom-0 left-0 right-0 max-w-7xl mx-auto px-5 pb-12">
-        @if($project->location)
-            <p class="va-label text-brand-200 mb-2">{{ $project->location }}</p>
-        @endif
-        <h1 class="font-serif text-4xl md:text-5xl text-white">{{ $project->title }}</h1>
+
+<nav class="am-breadcrumbs am-breadcrumbs--legal" aria-label="Breadcrumb">
+    <div class="am-container">
+        <a href="{{ route('home') }}">Home</a><span class="am-breadcrumbs__sep">/</span>
+        <a href="{{ route('projects.index') }}">Projects</a><span class="am-breadcrumbs__sep">/</span>
+        <span aria-current="page">{{ $project->title }}</span>
     </div>
-</div>
+</nav>
 
-<div class="max-w-4xl mx-auto px-5 py-16">
-    <p class="text-brand-600 text-lg leading-relaxed mb-10">{{ $project->summary }}</p>
-    @if($project->content)
-        <div class="prose-brand text-brand-700 leading-relaxed mb-12">{!! $project->content !!}</div>
-    @endif
+@if($project->image)
+<section class="am-project-hero">
+    <img src="{{ $project->image }}" alt="{{ $project->title }}" class="am-project-hero__img">
+</section>
+@endif
 
-    @if($project->gallery && count($project->gallery) > 0)
-        <p class="va-label mb-6">Gallery</p>
-        <div class="grid sm:grid-cols-2 gap-4">
-            @foreach($project->gallery as $image)
-                <img src="{{ $image }}" alt="{{ $project->title }}" class="w-full aspect-[4/3] object-cover">
-            @endforeach
+<section class="am-page-body am-project-detail">
+    <div class="am-container">
+        <div class="am-project-detail__layout">
+            <div class="am-project-detail__main">
+                <h1 class="am-project-detail__title">{{ $project->title }}</h1>
+
+                @if($project->summary)
+                <p class="am-project-detail__overview">{{ $project->summary }}</p>
+                @endif
+
+                @if($project->content)
+                <div class="am-prose am-project-detail__content">{!! $project->content !!}</div>
+                @endif
+
+                @if($project->design_details)
+                <div class="am-project-block">
+                    <h2 class="am-project-block__title">Design Details</h2>
+                    <div class="am-prose">{!! nl2br(e($project->design_details)) !!}</div>
+                </div>
+                @endif
+
+                @if($project->materials && count($project->materials))
+                <div class="am-project-block">
+                    <h2 class="am-project-block__title">Materials &amp; Finishes</h2>
+                    <ul class="am-corten-checklist">
+                        @foreach($project->materials as $material)
+                        <li>{{ $material }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+                @endif
+
+                @if($project->gallery && count($project->gallery))
+                <div class="am-project-block">
+                    <h2 class="am-project-block__title">Gallery</h2>
+                    <div class="am-project-gallery">
+                        @foreach($project->gallery as $image)
+                        <figure class="am-project-gallery__item">
+                            <img src="{{ $image }}" alt="{{ $project->title }} detail" loading="lazy">
+                        </figure>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+                @if($project->hasTestimonial())
+                <blockquote class="am-project-testimonial">
+                    <p class="am-project-testimonial__quote">"{{ $project->testimonial_quote }}"</p>
+                    <footer>
+                        <cite class="am-project-testimonial__author">{{ $project->testimonial_author }}</cite>
+                        @if($project->testimonial_role)
+                        <span class="am-project-testimonial__role">{{ $project->testimonial_role }}</span>
+                        @endif
+                    </footer>
+                </blockquote>
+                @endif
+
+                <div class="am-project-detail__cta">
+                    <button type="button"
+                        class="am-btn am-btn--primary"
+                        data-open-project-enquiry
+                        data-project-slug="{{ $project->slug }}"
+                        data-project-title="{{ $project->title }}"
+                        @if($project->image) data-project-image="{{ $project->image }}" @endif>
+                        Inquire About a Similar Project
+                    </button>
+                    <a href="{{ route('projects.index') }}" class="am-btn am-btn--outline">← All Projects</a>
+                </div>
+            </div>
+
+            <aside class="am-project-sidebar">
+                <dl class="am-project-meta">
+                    @if($project->client)
+                    <div>
+                        <dt>Client</dt>
+                        <dd>{{ $project->client }}</dd>
+                    </div>
+                    @endif
+                    @if($project->location)
+                    <div>
+                        <dt>Location</dt>
+                        <dd>{{ $project->location }}</dd>
+                    </div>
+                    @endif
+                    @if($project->completed_at)
+                    <div>
+                        <dt>Year</dt>
+                        <dd>{{ $project->completed_at->format('Y') }}</dd>
+                    </div>
+                    @endif
+                    @if($project->categoryLabel())
+                    <div>
+                        <dt>Category</dt>
+                        <dd>{{ $project->categoryLabel() }}</dd>
+                    </div>
+                    @endif
+                </dl>
+                <div class="am-card" style="margin-top:1.5rem">
+                    <div class="am-card__body">
+                        <p class="am-card__label">Similar project?</p>
+                        <h3 class="am-card__title" style="font-size:1.1rem;margin-bottom:0.75rem">Get a Quote</h3>
+                        <p class="am-card__text" style="margin-bottom:1rem">Share dimensions, finishes and timeline — we respond within 24 hours.</p>
+                        <button type="button" class="am-btn am-btn--primary am-btn--full am-btn--sm" data-open-contact-studio data-contact-context="Quote — {{ $project->title }}">Contact Studio</button>
+                    </div>
+                </div>
+            </aside>
         </div>
-    @endif
-
-    <div class="mt-12 text-center">
-        <a href="{{ route('projects.index') }}" class="va-btn-outline">← All Projects</a>
     </div>
-</div>
+</section>
+
 @endsection

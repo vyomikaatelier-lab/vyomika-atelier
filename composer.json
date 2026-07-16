@@ -49,7 +49,8 @@
         "sort-packages": true,
         "audit": {
             "block-insecure": false
-        }
+        },
+        "cafile": "D:\\VYOMIKA ATELIER\\cacert.pem"
     },
     "minimum-stability": "stable",
     "prefer-stable": true

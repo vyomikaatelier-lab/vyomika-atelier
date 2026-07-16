@@ -27,6 +27,10 @@ class CartController extends Controller
         $quantity = max(1, (int) $request->input('quantity', 1));
         $this->cart->add($product, $quantity);
 
+        if ($request->boolean('buy_now')) {
+            return redirect()->route('checkout.index');
+        }
+
         return back()->with('success', 'Added to cart.');
     }
 

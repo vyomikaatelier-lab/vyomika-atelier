@@ -51,7 +51,8 @@ DB_PASSWORD=your_db_password
 
 MAIL_USERNAME=your@email.com
 MAIL_PASSWORD=your_email_password
-ADMIN_EMAIL=your@email.com
+ADMIN_EMAIL=admin@vyomikaatelier.com
+ADMIN_PASSWORD=<set securely during deployment>
 ```
 
 ### 4. Generate key and migrate
@@ -77,13 +78,13 @@ hPanel → SSL → enable free certificate.
 
 ## Default admin login
 
-After seeding:
+After seeding (with `ADMIN_PASSWORD` set in `.env`):
 
 - **URL:** `https://yourdomain.com/admin`
 - **Email:** `admin@vyomikaatelier.com`
-- **Password:** `changeme123`
+- **Password:** `<set securely during deployment>` (your `ADMIN_PASSWORD` value)
 
-Change this password immediately after first login.
+Change the admin password after first login. See [DEPLOY.md](DEPLOY.md) or [HOSTINGER.md](HOSTINGER.md) for how to update credentials via Tinker or `.env`.
 
 ## Local development
 

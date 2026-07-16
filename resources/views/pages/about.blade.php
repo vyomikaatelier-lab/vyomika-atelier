@@ -1,39 +1,170 @@
-@extends('layouts.app')
-
-@section('title', 'Our Story — VYOMIKA ATELIER')
-
-@section('content')
-<div class="va-page-hero">
-    <p class="va-label mb-3">About Us</p>
-    <h1 class="font-serif text-5xl text-brand-900">Our Story</h1>
-</div>
-
-<section class="max-w-7xl mx-auto px-5 py-20 grid md:grid-cols-2 gap-16 items-center">
-    <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80" alt="VYOMIKA ATELIER workspace" class="w-full aspect-[4/5] object-cover">
-    <div>
-        <div class="va-rule mb-6"></div>
-        <h2 class="font-serif text-4xl mb-6">Metal fabrication meets design</h2>
-        <p class="text-brand-700 leading-relaxed mb-5">VYOMIKA ATELIER is a fabrication studio specialising in architectural metalwork — partitions, Corten steel façades, slim profile door systems, bespoke metal furniture, and PVD-coated entrance doors.</p>
-        <p class="text-brand-700 leading-relaxed mb-5">We also curate home decor furniture including coffee tables, corner tables, and glass tables. Every project is engineered for precision, durability, and lasting aesthetic impact.</p>
-        <p class="text-brand-500 leading-relaxed italic font-serif text-xl">"Spaces deserve craftsmanship that endures."</p>
-    </div>
-</section>
-
-<section class="bg-brand-900 text-white py-20 px-5 text-center">
-    <p class="va-label text-brand-400 mb-4">What We Offer</p>
-    <div class="max-w-5xl mx-auto grid sm:grid-cols-2 lg:grid-cols-3 gap-10 mt-10">
-        <div>
-            <h3 class="font-serif text-2xl mb-3">Partitions</h3>
-            <p class="text-brand-400 text-sm leading-relaxed">Frameless glass, aluminium frame, sliding, and folding partition systems.</p>
-        </div>
-        <div>
-            <h3 class="font-serif text-2xl mb-3">Façades &amp; Doors</h3>
-            <p class="text-brand-400 text-sm leading-relaxed">Corten steel façades, slim profile doors, and main entrance PVD doors.</p>
-        </div>
-        <div>
-            <h3 class="font-serif text-2xl mb-3">Furniture &amp; PVD</h3>
-            <p class="text-brand-400 text-sm leading-relaxed">Bespoke metal furniture, rack systems, door handles, and home decor tables.</p>
-        </div>
-    </div>
-</section>
-@endsection
+@extends('layouts.store')
+
+@php
+    $hero = $page['hero'] ?? [];
+    $story = $page['brand_story'] ?? [];
+    $capabilities = $page['capabilities'] ?? [];
+    $exhibitions = $page['exhibitions'] ?? [];
+    $values = $page['values'] ?? [];
+    $cta = $page['cta'] ?? [];
+@endphp
+
+@section('title', $page['meta_title'] ?? 'About Vyomika Atelier LLP')
+
+@push('meta')
+<meta name="description" content="{{ $page['meta_description'] ?? '' }}">
+@endpush
+
+@section('content')
+
+{{-- Hero --}}
+<section class="am-about-hero" @if(!empty($hero['image'])) style="--about-hero-img: url('{{ asset(ltrim($hero['image'], '/')) }}')" @endif>
+    <div class="am-container am-about-hero__inner am-reveal">
+        @if(!empty($hero['label']))
+        <p class="am-page-hero__label">{{ $hero['label'] }}</p>
+        @endif
+        <h1 class="am-about-hero__title">{{ $hero['title'] ?? 'About Vyomika Atelier' }}</h1>
+        @if(!empty($hero['subtitle']))
+        <p class="am-about-hero__subtitle">{{ $hero['subtitle'] }}</p>
+        @endif
+    </div>
+</section>
+
+{{-- Brand Story --}}
+@if(!empty($story['paragraphs']))
+<section class="am-section am-section--white">
+    <div class="am-container am-about-story">
+        <div class="am-about-story__copy am-reveal">
+            <h2 class="am-corten-section__title">{{ $story['title'] ?? 'Crafted Beyond Convention' }}</h2>
+            @foreach($story['paragraphs'] as $paragraph)
+            <p class="am-corten-section__lead">{{ $paragraph }}</p>
+            @endforeach
+        </div>
+        @if(!empty($story['image']))
+        <div class="am-about-story__media am-reveal am-reveal--delay">
+            <img src="{{ $story['image'] }}" alt="Vyomika Atelier studio" loading="lazy">
+        </div>
+        @endif
+    </div>
+</section>
+@endif
+
+{{-- Capabilities --}}
+@if(!empty($capabilities['items']))
+<section class="am-section am-section--cream" id="capabilities">
+    <div class="am-container">
+        <h2 class="am-corten-section__title am-corten-section__title--center am-reveal">{{ $capabilities['title'] ?? 'Capabilities' }}</h2>
+        <div class="am-about-caps">
+            @foreach($capabilities['items'] as $item)
+            <article class="am-about-caps__card am-reveal">
+                <a href="{{ isset($item['route']) ? route($item['route'], $item['params'] ?? []) : '#' }}" class="am-about-caps__link">
+                    <div class="am-about-caps__media">
+                        <img src="{{ $item['image'] ?? '' }}" alt="{{ $item['name'] }}" loading="lazy">
+                    </div>
+                    <div class="am-about-caps__body">
+                        <h3>{{ $item['name'] }}</h3>
+                        <p>{{ $item['text'] }}</p>
+                    </div>
+                </a>
+            </article>
+            @endforeach
+        </div>
+    </div>
+</section>
+@endif
+
+{{-- Exhibitions --}}
+@if(!empty($exhibitions['events']))
+<section class="am-section am-section--white" id="exhibitions">
+    <div class="am-container">
+        <div class="am-about-exhibitions__head am-reveal">
+            <h2 class="am-corten-section__title">{{ $exhibitions['title'] ?? 'Our Exhibition Journey' }}</h2>
+            @if(!empty($exhibitions['subtitle']))
+            <p class="am-corten-section__lead">{{ $exhibitions['subtitle'] }}</p>
+            @endif
+        </div>
+        <div class="am-about-timeline">
+            @foreach($exhibitions['events'] as $event)
+            <article class="am-about-timeline__event am-reveal" id="exhibition-{{ $event['slug'] }}">
+                <div class="am-about-timeline__meta">
+                    <span class="am-about-timeline__year">{{ $event['year'] }}</span>
+                    <h3 class="am-about-timeline__name">{{ $event['name'] }}</h3>
+                    <p class="am-about-timeline__location">{{ $event['location'] }}</p>
+                </div>
+                <div class="am-about-timeline__content">
+                    @if(!empty($event['summary']))
+                    <p class="am-about-timeline__summary">{{ $event['summary'] }}</p>
+                    @endif
+                    @if(!empty($event['images']))
+                    <div class="am-about-gallery" data-about-gallery>
+                        @foreach($event['images'] as $i => $img)
+                        <button type="button"
+                            class="am-about-gallery__item"
+                            data-about-lightbox
+                            data-src="{{ asset(ltrim($img, '/')) }}"
+                            data-caption="{{ $event['name'] }} — {{ $event['location'] }}, {{ $event['year'] }}"
+                            aria-label="View {{ $event['name'] }} photo {{ $i + 1 }}">
+                            <img src="{{ asset(ltrim($img, '/')) }}" alt="{{ $event['name'] }} — photo {{ $i + 1 }}" loading="lazy">
+                        </button>
+                        @endforeach
+                    </div>
+                    @endif
+                </div>
+            </article>
+            @endforeach
+        </div>
+    </div>
+</section>
+@endif
+
+{{-- Values --}}
+@if(!empty($values['items']))
+<section class="am-section am-section--dark">
+    <div class="am-container">
+        <h2 class="am-corten-section__title am-corten-section__title--center am-reveal">{{ $values['title'] ?? 'What We Stand For' }}</h2>
+        <div class="am-about-values">
+            @foreach($values['items'] as $item)
+            <article class="am-about-values__card am-reveal">
+                <h3>{{ $item['title'] }}</h3>
+                <p>{{ $item['text'] }}</p>
+            </article>
+            @endforeach
+        </div>
+    </div>
+</section>
+@endif
+
+{{-- CTA --}}
+@if(!empty($cta['title']))
+<section class="am-section am-section--white am-about-cta">
+    <div class="am-container am-about-cta__inner am-reveal">
+        <div>
+            <h2 class="am-corten-section__title">{{ $cta['title'] }}</h2>
+            @if(!empty($cta['body']))
+            <p class="am-corten-section__lead">{{ $cta['body'] }}</p>
+            @endif
+        </div>
+        <div class="am-about-cta__actions">
+            @if(!empty($cta['cta_primary']['route']))
+            <a href="{{ route($cta['cta_primary']['route'], $cta['cta_primary']['params'] ?? []) }}" class="am-btn am-btn--primary am-btn--lg">{{ $cta['cta_primary']['label'] }}</a>
+            @endif
+            @if(!empty($cta['cta_secondary']['route']))
+            <button type="button" class="am-btn am-btn--outline" data-open-contact-studio data-contact-context="About page enquiry">{{ $cta['cta_secondary']['label'] }}</button>
+            @endif
+        </div>
+    </div>
+</section>
+@endif
+
+{{-- Lightbox --}}
+<div class="am-about-lightbox" id="am-about-lightbox" aria-hidden="true" role="dialog" aria-label="Exhibition photo">
+    <button type="button" class="am-about-lightbox__close" data-about-lightbox-close aria-label="Close">&times;</button>
+    <button type="button" class="am-about-lightbox__nav am-about-lightbox__nav--prev" data-about-lightbox-prev aria-label="Previous">&lsaquo;</button>
+    <figure class="am-about-lightbox__figure">
+        <img src="" alt="" class="am-about-lightbox__img" id="am-about-lightbox-img">
+        <figcaption class="am-about-lightbox__caption" id="am-about-lightbox-caption"></figcaption>
+    </figure>
+    <button type="button" class="am-about-lightbox__nav am-about-lightbox__nav--next" data-about-lightbox-next aria-label="Next">&rsaquo;</button>
+</div>
+
+@endsection

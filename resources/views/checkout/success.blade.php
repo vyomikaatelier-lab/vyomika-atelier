@@ -1,18 +1,69 @@
-@extends('layouts.app')
+@extends('layouts.store')
 
-@section('title', 'Order Confirmed — VYOMIKA ATELIER')
+@section('title', 'Order Confirmed — Vyomika Atelier LLP')
 
 @section('content')
-<div class="max-w-xl mx-auto px-4 py-20 text-center">
-    <h1 class="font-serif text-4xl mb-4">Thank You</h1>
-    <p class="text-brand-700 mb-2">Your order has been placed successfully.</p>
-    <p class="text-2xl font-medium mb-6">Order #{{ $order->order_number }}</p>
-    <p class="text-brand-500 mb-4">We'll send a confirmation to {{ $order->customer_email }}.</p>
-    @if($order->payment_method === 'bank_transfer')
-        <p class="text-brand-600 text-sm mb-8 max-w-md mx-auto">Bank transfer details will be sent to your email. Your order is confirmed once payment is received.</p>
-    @else
-        <div class="mb-8"></div>
-    @endif
-    <a href="{{ route('shop.index') }}" class="border border-brand-900 px-8 py-3 text-sm uppercase tracking-wider hover:bg-brand-100 transition inline-block">Continue Shopping</a>
-</div>
+@include('partials.am-page-hero', ['label' => 'Thank You', 'title' => 'Order Confirmed'])
+
+<section class="am-page-body">
+    <div class="am-container am-checkout-flow am-checkout-flow--centered">
+        @include('partials.am-breadcrumbs', ['items' => [
+            ['label' => 'Home', 'url' => route('home')],
+            ['label' => 'Shop', 'url' => route('shop.index')],
+            ['label' => 'Order confirmed'],
+        ]])
+
+        @include('partials.am-checkout-steps', ['current' => 4])
+
+        <div class="am-checkout-success-card am-card">
+            <div class="am-card__body">
+                <div class="am-checkout-success-card__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg>
+                </div>
+                <h2 class="am-checkout-success-card__title">Thank you for your order</h2>
+                <p class="am-checkout-success-card__text">Your order has been placed successfully.</p>
+                <p class="am-checkout-success-card__order">Order #{{ $order->order_number }}</p>
+                <p class="am-checkout-success-card__email">Confirmation sent to <strong>{{ $order->customer_email }}</strong></p>
+
+                @if($order->payment_method === 'razorpay')
+                <div class="am-checkout-notice am-checkout-notice--success">
+                    <p>Payment received. We will begin processing your order shortly.</p>
+                </div>
+                @else
+                <div class="am-checkout-notice am-checkout-notice--success">
+                    <p>Your order is confirmed. Thank you for shopping with Vyomika Atelier.</p>
+                </div>
+                @endif
+
+                @if($order->items->isNotEmpty())
+                <div class="am-checkout-summary-block">
+                    <h3 class="am-checkout-summary-block__title">Items ordered</h3>
+                    <ul class="am-order-summary__lines">
+                        @foreach($order->items as $item)
+                        <li class="am-order-summary__line">
+                            <span class="am-order-summary__meta">
+                                <span class="am-order-summary__name">{{ $item->product_name }}</span>
+                                <span class="am-order-summary__qty">Qty {{ $item->quantity }}</span>
+                            </span>
+                            <span class="am-order-summary__price">₹{{ number_format($item->total, 0) }}</span>
+                        </li>
+                        @endforeach
+                    </ul>
+                    <div class="am-order-summary__totals">
+                        <div class="am-order-summary__row am-order-summary__row--total">
+                            <span>Total</span>
+                            <span>₹{{ number_format($order->total, 0) }}</span>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                <div class="am-checkout-success-card__actions">
+                    <a href="{{ route('shop.index') }}" class="am-btn am-btn--primary">Continue Shopping</a>
+                    <button type="button" class="am-btn am-btn--outline" data-open-contact-studio data-contact-context="Order #{{ $order->order_number }}">Contact Us</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 @endsection

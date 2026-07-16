@@ -12,7 +12,7 @@ Your details are pre-filled below. Copy-paste each block in order.
 | App folder | `~/vyomika-atelier` |
 | Web root | `~/domains/vyomikaatelier.com/public_html` |
 
-Payments for now: **Cash on Delivery** and **Bank Transfer** only (Razorpay can be added later).
+Payments: **Razorpay deferred** until keys are added. Checkout shows a payment-unavailable notice and does not create orders without configured keys.
 
 ---
 
@@ -29,7 +29,7 @@ git push -u origin main
 If `git commit` asks for identity, run once:
 
 ```powershell
-git config user.email "hello@vyomikaatelier.com"
+git config user.email "namaste@vyomikaatelier.com"
 git config user.name "Vyomika Atelier"
 ```
 
@@ -82,11 +82,12 @@ DB_PASSWORD=YOUR_DB_PASSWORD_HERE
 MAIL_HOST=smtp.hostinger.com
 MAIL_PORT=465
 MAIL_ENCRYPTION=ssl
-MAIL_USERNAME=hello@vyomikaatelier.com
+MAIL_USERNAME=namaste@vyomikaatelier.com
 MAIL_PASSWORD=YOUR_EMAIL_PASSWORD
-MAIL_FROM_ADDRESS=hello@vyomikaatelier.com
+MAIL_FROM_ADDRESS=namaste@vyomikaatelier.com
 
-ADMIN_EMAIL=hello@vyomikaatelier.com
+ADMIN_EMAIL=admin@vyomikaatelier.com
+ADMIN_PASSWORD=<set securely during deployment>
 
 # Leave empty until Razorpay account is ready
 RAZORPAY_KEY=
@@ -103,7 +104,9 @@ Save: `Ctrl+O`, Enter, `Ctrl+X`
 cd ~/vyomika-atelier
 curl -sS https://getcomposer.org/installer | php
 php composer.phar install --no-dev --optimize-autoloader
-php artisan key:generate
+php artisan optimize:clear
+# Only if APP_KEY is empty in .env:
+grep -q "APP_KEY=base64:" .env || php artisan key:generate --force
 php artisan migrate --force
 php artisan db:seed --force
 php artisan storage:link
@@ -134,9 +137,49 @@ php artisan view:cache
 
 - **URL:** https://vyomikaatelier.com/admin
 - **Email:** `admin@vyomikaatelier.com`
-- **Password:** `changeme123`
+- **Password:** value you set in `.env` as `ADMIN_PASSWORD` before running `db:seed`
 
-Change password immediately after first login.
+### Change admin email or password after deployment
+
+**Option A — `.env` + re-seed (password only, if account already exists):**
+
+```bash
+nano ~/vyomika-atelier/.env
+# Set ADMIN_EMAIL=admin@vyomikaatelier.com
+# Set ADMIN_PASSWORD=your-new-strong-password
+php artisan db:seed --force
+php artisan config:cache
+```
+
+The seeder updates the password only when `ADMIN_PASSWORD` is set; it does not overwrite an existing admin unless you explicitly set a new password in `.env`.
+
+**After first successful login:** clear `ADMIN_PASSWORD` in `.env` (leave empty) so later `db:seed` runs cannot reset the admin password:
+
+```bash
+nano ~/vyomika-atelier/.env
+# Set: ADMIN_PASSWORD=
+php artisan config:cache
+```
+
+`setup-hostinger.sh` clears `ADMIN_PASSWORD` automatically after seeding.
+
+**Option B — Laravel Tinker (recommended for email change):**
+
+```bash
+cd ~/vyomika-atelier
+php artisan tinker
+```
+
+```php
+$user = \App\Models\User::where('is_admin', true)->first();
+$user->email = 'admin@vyomikaatelier.com';
+$user->password = bcrypt('your-new-strong-password');
+$user->save();
+```
+
+Use a strong unique password. Do not commit passwords to git or documentation.
+
+**Business contact email** (`namaste@vyomikaatelier.com`) is separate from admin login and remains used for mail, footer, and legal pages.
 
 ---
 

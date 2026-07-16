@@ -1,60 +1,137 @@
-@extends('layouts.app')
+@extends('layouts.store')
 
-@section('title', $product->name . ' — VYOMIKA ATELIER')
+@section('title', $product->name . ' — Vyomika Atelier LLP')
+
+@if($product->description)
+@push('meta')
+<meta name="description" content="{{ \Illuminate\Support\Str::limit(strip_tags($product->description), 155) }}">
+@endpush
+@endif
 
 @section('content')
-<div class="max-w-7xl mx-auto px-5 py-12">
-    <div class="grid lg:grid-cols-2 gap-12 lg:gap-20">
-        <div class="aspect-[3/4] bg-brand-100 overflow-hidden">
-            @if($product->imageUrl())
-                <img src="{{ $product->imageUrl() }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
-            @else
-                <div class="w-full h-full flex items-center justify-center font-serif text-8xl text-brand-200">V</div>
-            @endif
-        </div>
-        <div class="flex flex-col justify-center py-8">
-            @if($product->category)
-                <p class="va-label mb-3">{{ $product->category->name }}</p>
-            @endif
-            <h1 class="font-serif text-4xl md:text-5xl text-brand-900 mb-4">{{ $product->name }}</h1>
-            <p class="text-2xl text-brand-700 mb-8">{{ $product->formattedPrice() }}</p>
-            <div class="va-rule mb-8"></div>
-            <p class="text-brand-700 leading-relaxed mb-10">{{ $product->description }}</p>
+@php
+    use App\Models\Service;
+    $images = $product->galleryUrls();
+    $discount = $product->discountPercent();
+    $categorySlug = $product->category?->slug;
+    $showCalculator = $product->showsSqFtCalculator();
+    $calcServiceSlug = Service::serviceSlugForProduct($product->slug, $categorySlug);
+    $calcLabel = Service::estimateLabelForProduct($product->slug, $categorySlug);
+    $calcRate = \App\Models\Product::baseSqFtRate();
+    $blackRate = \App\Models\Product::blackSqFtRate();
+@endphp
 
-            @if($product->inStock())
-                <form action="{{ route('cart.add', $product) }}" method="POST" class="flex flex-wrap gap-4 items-end">
-                    @csrf
-                    <div>
-                        <label class="va-label block mb-2">Qty</label>
-                        <input type="number" name="quantity" value="1" min="1" max="{{ $product->stock }}" class="va-input w-20 text-center">
+<section class="am-page-body am-page-body--pdp">
+    <div class="am-container">
+        @include('partials.am-breadcrumbs', ['items' => [
+            ['label' => 'Home', 'url' => route('home')],
+            ['label' => 'Shop', 'url' => route('shop.index')],
+            ...($product->category ? [['label' => $product->category->name, 'url' => route('shop.index', ['category' => $product->category->slug])]] : []),
+            ['label' => $product->name],
+        ]])
+
+        <div class="am-pdp">
+            <div class="am-pdp__gallery" data-pdp-gallery>
+                <div class="am-pdp__gallery-inner">
+                    @if(count($images) > 1)
+                    <div class="am-pdp__thumbs am-pdp__thumbs--vertical">
+                        @foreach($images as $i => $src)
+                        <button type="button" class="am-pdp__thumb {{ $i === 0 ? 'is-active' : '' }}" data-pdp-thumb="{{ $src }}" aria-label="View image {{ $i + 1 }}">
+                            <img src="{{ $src }}" alt="">
+                        </button>
+                        @endforeach
                     </div>
-                    <button type="submit" class="va-btn-primary">Add to Bag</button>
-                </form>
-                <p class="text-xs text-brand-400 mt-4 tracking-wide">{{ $product->stock }} available</p>
-            @else
-                <p class="text-red-700 font-medium tracking-wide">Currently unavailable</p>
-            @endif
-        </div>
-    </div>
+                    @endif
+                    <div class="am-pdp__main">
+                        @if(count($images))
+                            <img src="{{ $images[0] }}" alt="{{ $product->name }}" id="pdp-main-image" class="am-pdp__main-img">
+                        @else
+                            <div class="am-pdp__placeholder">VA</div>
+                        @endif
+                    </div>
+                </div>
+            </div>
 
-    @if($related->isNotEmpty())
-    <section class="mt-24 pt-16 border-t border-brand-200">
-        <p class="va-label text-center mb-3">You May Also Like</p>
-        <h2 class="font-serif text-3xl text-center mb-12">Related Pieces</h2>
-        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            @foreach($related as $item)
-            <a href="{{ route('shop.show', $item->slug) }}" class="va-card group">
-                <div class="aspect-[3/4] bg-brand-100 overflow-hidden mb-3">
-                    @if($item->imageUrl())
-                        <img src="{{ $item->imageUrl() }}" alt="{{ $item->name }}" class="w-full h-full object-cover">
+            <div class="am-pdp__info">
+                @if($product->category)
+                    <p class="am-featured__cat">{{ $product->category->name }}</p>
+                @endif
+                <h1 class="am-pdp__title">{{ $product->name }}</h1>
+                <p class="am-featured__meta">
+                    @if($product->sku) SKU: {{ $product->sku }} · @endif
+                    Pan-India shipping
+                </p>
+
+                <div class="am-featured__price {{ $showCalculator ? 'am-featured__price--sqft' : '' }}">
+                    @if($showCalculator)
+                    <div class="am-pdp__sqft-price">
+                        <span class="am-pdp__sqft-price-current" data-sqft-rate-display>₹{{ number_format($calcRate, 0) }}</span>
+                        <span class="am-pdp__sqft-price-unit">/ sq ft</span>
+                    </div>
+                    <p class="am-pdp__sqft-price-note" data-sqft-black-note hidden>Black finish selected — ₹{{ number_format($blackRate, 0) }}/sq ft (+30%)</p>
+                    @else
+                    <span class="am-featured__price-current">{{ $product->formattedPrice() }}</span>
+                    @if($product->compare_price)
+                    <span class="am-featured__price-old">₹{{ number_format($product->compare_price, 0) }}</span>
+                    @endif
+                    @if($discount)
+                    <span class="am-featured__badge">-{{ $discount }}%</span>
+                    @endif
                     @endif
                 </div>
-                <p class="font-serif text-base group-hover:text-brand-500 transition">{{ $item->name }}</p>
-                <p class="text-sm text-brand-500">{{ $item->formattedPrice() }}</p>
-            </a>
-            @endforeach
+
+                <ul class="am-pdp__trust">
+                    <li>✓ PVD stainless fabrication</li>
+                    <li>✓ Secure packaging</li>
+                    <li>✓ Estimated delivery: <strong>3–4 weeks</strong></li>
+                </ul>
+
+                @include('partials.am-pdp-finish-swatches')
+
+                @if($product->description)
+                <div class="am-prose am-pdp__desc">{{ $product->description }}</div>
+                @endif
+
+                @if($showCalculator)
+                <div class="am-pdp__calc-inline">
+                    @include('partials.am-calculator', [
+                        'rate' => $calcRate,
+                        'serviceSlug' => $calcServiceSlug,
+                        'serviceName' => $product->name,
+                        'calcTitle' => 'Estimate your ' . $calcLabel,
+                    ])
+                    @include('partials.am-pdp-checkout-trust')
+                </div>
+                @else
+                <div class="am-pdp__quote-cta">
+                    <button type="button" class="am-btn am-btn--primary am-btn--lg am-btn--full" data-open-contact-studio data-contact-context="Quote — {{ $product->name }}" @if(count($images)) data-contact-image="{{ $images[0] }}" @endif>Request Quote</button>
+                </div>
+                @include('partials.am-pdp-checkout-trust')
+                @endif
+            </div>
         </div>
-    </section>
-    @endif
-</div>
+
+        @include('partials.am-product-tabs', [
+            'title' => $product->name,
+            'descriptionHtml' => $product->description ? '<div>' . $product->description . '</div>' : '',
+            'careItems' => Service::careGuidelinesForCategory($categorySlug),
+            'related' => $related,
+            'product' => $product,
+        ])
+    </div>
+</section>
 @endsection
+
+@push('scripts')
+<script>
+document.querySelectorAll('[data-pdp-thumb]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        const src = btn.dataset.pdpThumb;
+        const main = document.getElementById('pdp-main-image');
+        if (main && src) main.src = src;
+        document.querySelectorAll('[data-pdp-thumb]').forEach(b => b.classList.remove('is-active'));
+        btn.classList.add('is-active');
+    });
+});
+</script>
+@endpush
