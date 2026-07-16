@@ -24,6 +24,7 @@ class StorefrontDiagnose extends Command
             'database/data/projects-catalog.php',
             'resources/views/layouts/store.blade.php',
             'resources/views/home.blade.php',
+            'resources/views/partials/am-service-product-gallery.blade.php',
             'public/css/amerce.css',
             'public/index.php',
         ];
@@ -60,6 +61,21 @@ class StorefrontDiagnose extends Command
             $this->error('Store views missing — run git pull origin main');
 
             return 1;
+        }
+
+        $galleryBlade = base_path('resources/views/partials/am-service-product-gallery.blade.php');
+        if (is_readable($galleryBlade)) {
+            $gallerySource = file_get_contents($galleryBlade) ?: '';
+            if (str_contains($gallerySource, 'am-design-gallery__actions')) {
+                $this->error('Studio gallery blade still has View+button pair — run git pull origin main (need cc4ea2e+)');
+
+                return 1;
+            }
+            if (! str_contains($gallerySource, 'click any to order')) {
+                $this->warn('Studio gallery blade missing single-CTA copy — expected cc4ea2e+ on main');
+            } else {
+                $this->line('[OK] studio gallery single Order Now CTA');
+            }
         }
 
         $this->newLine();

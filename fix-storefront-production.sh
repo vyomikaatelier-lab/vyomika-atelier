@@ -17,6 +17,15 @@ if ! grep -q 'usesCheckoutFlow' app/Models/Product.php 2>/dev/null; then
   echo "ERROR: Product.php missing usesCheckoutFlow — git pull did not get latest main (need d9b8655+)."
   exit 1
 fi
+GALLERY_BLADE="resources/views/partials/am-service-product-gallery.blade.php"
+if grep -q 'am-design-gallery__actions' "$GALLERY_BLADE" 2>/dev/null; then
+  echo "ERROR: $GALLERY_BLADE still has View+button pair — git pull did not get cc4ea2e+ (single Order Now CTA)."
+  exit 1
+fi
+if ! grep -q 'click any to order' "$GALLERY_BLADE" 2>/dev/null; then
+  echo "ERROR: $GALLERY_BLADE missing single-CTA gallery copy — need cc4ea2e+ on main."
+  exit 1
+fi
 
 echo "2) Verify storefront files exist..."
 git checkout -- public/css/amerce.css public/css/amerce-themes.css public/js/amerce.js 2>/dev/null || true
@@ -40,8 +49,9 @@ if [ ! -f vendor/autoload.php ]; then
   php composer.phar install --no-dev --optimize-autoloader --no-interaction
 fi
 
-echo "4) Clear ALL caches (fixes stale route/view cache)..."
+echo "4) Clear ALL caches (fixes stale route/view cache — required after gallery CTA blade changes)..."
 php artisan optimize:clear
+php artisan view:clear
 
 echo "5) Migrations..."
 php artisan migrate --force
@@ -94,6 +104,13 @@ if grep -q 'Buy Now' resources/views/collections/mirror-frames/index.blade.php 2
   echo "    OK: mirror-frames blade has Buy Now buttons"
 else
   echo "WARNING: mirror-frames blade missing Buy Now — wrong branch or stale files"
+fi
+
+if grep -q 'am-design-gallery__cta--action' "$GALLERY_BLADE" 2>/dev/null \
+  && ! grep -q 'am-design-gallery__actions' "$GALLERY_BLADE" 2>/dev/null; then
+  echo "    OK: studio gallery blade has single gold Order Now CTA (cc4ea2e+)"
+else
+  echo "WARNING: studio gallery blade may still show View + Order Now pair"
 fi
 
 echo ""

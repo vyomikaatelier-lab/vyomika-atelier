@@ -26,6 +26,9 @@ php artisan migrate --force
 echo "==> Linking storage..."
 php artisan storage:link 2>/dev/null || ln -sf "$APP_DIR/storage/app/public" "$APP_DIR/public/storage"
 
+echo "==> Clearing stale caches..."
+php artisan optimize:clear
+
 echo "==> Caching config..."
 php artisan config:cache
 php artisan route:cache
