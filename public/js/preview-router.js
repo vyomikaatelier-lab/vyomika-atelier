@@ -16,7 +16,8 @@
     { slug: 'metal-furniture', name: 'Metal Furniture', keys: ['rack', 'door', 'furniture'] },
   ];
 
-  const CALC_CATEGORIES = ['partitions', 'fluted-panels', 'room-dividers', 'door-handles'];
+  const CHECKOUT_CATEGORIES = ['mirror-frames', 'coffee-tables', 'corner-tables', 'glass-tables', 'door-handles'];
+  const CALC_CATEGORIES = ['partitions', 'fluted-panels', 'room-dividers'];
 
   const FINISH_SWATCHES = [
     { slug: 'gold-mirror', name: 'Gold Mirror', hex: '#D4AF37', rate: 1800, is_black: false },
@@ -395,14 +396,24 @@ ${pageHero('Legal', page.title, lastUpdated ? 'Last updated: ' + lastUpdated : '
   }
 
   function serviceProductCardHtml(product, ctaLabel) {
-    return `<a href="/shop/${product.slug}" class="am-design-gallery__card">
-      ${product.image ? `<div class="am-design-gallery__media"><img src="${product.image}" alt="${product.name}" loading="lazy"></div>` : ''}
+    const actionHtml = usesCheckoutFlow(product)
+      ? `<a href="/shop/${product.slug}#buy" class="am-btn am-btn--primary am-btn--sm">Buy Now</a>`
+      : ctaLabel === 'Request Quote'
+        ? `<a href="/custom-order" class="am-btn am-btn--primary am-btn--sm">Request Quote</a>`
+        : `<button type="button" class="am-btn am-btn--primary am-btn--sm" data-open-order-popup data-product-name="${product.name}" data-product-slug="${product.slug}" data-service-slug="${serviceSlugForProduct(product)}">Order Now</button>`;
+    return `<article class="am-design-gallery__card am-design-gallery__card--split">
+      <a href="/shop/${product.slug}" class="am-design-gallery__media">
+        ${product.image ? `<img src="${product.image}" alt="${product.name}" loading="lazy">` : ''}
+      </a>
       <div class="am-design-gallery__body">
-        <h3 class="am-design-gallery__name">${product.name}</h3>
+        <h3 class="am-design-gallery__name"><a href="/shop/${product.slug}">${product.name}</a></h3>
         <p class="am-design-gallery__cat">${product.category || ''}</p>
-        <span class="am-design-gallery__cta">${ctaLabel}</span>
+        <div class="am-design-gallery__actions">
+          <a href="/shop/${product.slug}" class="am-btn am-btn--outline am-btn--sm">View</a>
+          ${actionHtml}
+        </div>
       </div>
-    </a>`;
+    </article>`;
   }
 
   function renderServiceGallery(slug) {
@@ -603,14 +614,17 @@ ${pageHero('Service', service.name, products.length + ' ' + meta.label + ' — '
     return ['coffee', 'table', 'console'].some((k) => slug.includes(k));
   }
 
+  function usesCheckoutFlow(product) {
+    return CHECKOUT_CATEGORIES.includes(categorySlug(product));
+  }
+
   function showsSqFtCalculator(product) {
-    if (isFurnitureProduct(product)) return false;
+    if (usesCheckoutFlow(product) || isFurnitureProduct(product)) return false;
     const slug = (product.slug || '').toLowerCase();
     const catSlug = categorySlug(product);
     if (CALC_CATEGORIES.includes(catSlug)) return true;
     if (catSlug === 'metal-furniture') return slug.includes('door') || slug.includes('rack');
     if (slug.includes('door') || slug.includes('rack')) return true;
-    if (slug.includes('handle') || slug.includes('pull')) return true;
     return false;
   }
 
@@ -1007,7 +1021,9 @@ ${showCategoryCalc ? serviceFeaturedCalc(calcService) : ''}
         </ul>
         ${finishSwatchesHtml()}
         <div class="am-prose am-pdp__desc"><p>${product.description}</p></div>
-        ${showCalc ? inlineCalcHtml(product) : `<div class="am-pdp__quote-cta">${contactStudioBtn('Request Quote', 'Quote — ' + product.name, 'am-btn am-btn--primary am-btn--lg am-btn--full')}</div>${checkoutTrustHtml()}`}
+        ${showCalc ? inlineCalcHtml(product) : usesCheckoutFlow(product)
+          ? `<div class="am-pdp__buy-inline" id="buy">${pdpBuyActionsHtml(product)}${checkoutTrustHtml()}</div>`
+          : `<div class="am-pdp__quote-cta"><button type="button" class="am-btn am-btn--primary am-btn--lg am-btn--full" data-open-order-popup data-product-name="${product.name}" data-product-slug="${product.slug}" data-service-slug="${serviceSlugForProduct(product)}">Order Now</button></div>${checkoutTrustHtml()}`}
       </div>
     </div>
     ${productTabsHtml(product.name, '<p>' + product.description + '</p>', careGuidelinesForProduct(product), related, product)}

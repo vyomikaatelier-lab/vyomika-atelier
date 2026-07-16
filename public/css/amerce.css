@@ -2070,6 +2070,16 @@ ul { list-style: none; }
   margin-top: 0.85rem;
 }
 .am-design-gallery__actions .am-btn { flex: 1 1 auto; min-width: 5.5rem; }
+.am-design-gallery__buy-form,
+.am-product-card__buy-form {
+  flex: 1 1 auto;
+  display: flex;
+  min-width: 5.5rem;
+}
+.am-design-gallery__buy-form .am-btn,
+.am-product-card__buy-form .am-btn {
+  width: 100%;
+}
 .am-design-gallery__card--split { display: flex; flex-direction: column; height: 100%; }
 .am-design-gallery__card--split .am-design-gallery__body { display: flex; flex-direction: column; flex: 1; }
 .am-design-gallery__card--split .am-design-gallery__actions { margin-top: auto; padding-top: 0.85rem; }

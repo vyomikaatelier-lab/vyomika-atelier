@@ -102,6 +102,11 @@
                     ])
                     @include('partials.am-pdp-checkout-trust')
                 </div>
+                @elseif($product->usesCheckoutFlow())
+                <div class="am-pdp__buy-inline" id="buy">
+                    @include('partials.am-pdp-buy-actions', ['product' => $product])
+                    @include('partials.am-pdp-checkout-trust')
+                </div>
                 @else
                 <div class="am-pdp__quote-cta">
                     <button type="button" class="am-btn am-btn--primary am-btn--lg am-btn--full" data-open-order-popup data-product-name="{{ $product->name }}" data-product-slug="{{ $product->slug }}" data-service-slug="{{ $calcServiceSlug }}">Order Now</button>

@@ -77,7 +77,16 @@
                     @endif
                     <div class="am-design-gallery__actions">
                         <a href="{{ $showUrl }}" class="am-btn am-btn--outline am-btn--sm">View</a>
+                        @if(!empty($design['product']))
+                        <form action="{{ route('cart.add', $design['product']) }}" method="POST" class="am-design-gallery__buy-form">
+                            @csrf
+                            <input type="hidden" name="quantity" value="1">
+                            <input type="hidden" name="buy_now" value="1">
+                            <button type="submit" class="am-btn am-btn--primary am-btn--sm">Buy Now</button>
+                        </form>
+                        @else
                         <a href="{{ $showUrl }}#buy" class="am-btn am-btn--primary am-btn--sm">Buy Now</a>
+                        @endif
                     </div>
                 </div>
             </article>

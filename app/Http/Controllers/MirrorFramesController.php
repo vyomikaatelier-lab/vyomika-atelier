@@ -10,8 +10,19 @@ class MirrorFramesController extends Controller
 {
     public function index(): View
     {
+        $page = MirrorFramesContent::all();
+        $designs = collect($page['designs'] ?? [])
+            ->map(function (array $design) {
+                $productSlug = $design['product_slug'] ?? $design['slug'];
+                $design['product'] = MirrorFramesContent::resolveProduct($productSlug);
+
+                return $design;
+            })
+            ->all();
+        $page['designs'] = $designs;
+
         return view('collections.mirror-frames.index', [
-            'page' => MirrorFramesContent::all(),
+            'page' => $page,
         ]);
     }
 

@@ -87,9 +87,28 @@ class Product extends Model
     }
 
     /** @return list<string> */
+    public static function checkoutCategorySlugs(): array
+    {
+        return [
+            'mirror-frames',
+            'coffee-tables',
+            'corner-tables',
+            'glass-tables',
+            'door-handles',
+        ];
+    }
+
+    /** @return list<string> */
     public static function calculatorCategorySlugs(): array
     {
-        return ['partitions', 'fluted-panels', 'room-dividers', 'door-handles'];
+        return ['partitions', 'fluted-panels', 'room-dividers'];
+    }
+
+    public function usesCheckoutFlow(): bool
+    {
+        $categorySlug = $this->category?->slug;
+
+        return $categorySlug && in_array($categorySlug, self::checkoutCategorySlugs(), true);
     }
 
     public function isFurnitureProduct(): bool
@@ -115,7 +134,7 @@ class Product extends Model
 
     public function showsSqFtCalculator(): bool
     {
-        if ($this->isFurnitureProduct()) {
+        if ($this->usesCheckoutFlow() || $this->isFurnitureProduct()) {
             return false;
         }
 
@@ -131,10 +150,6 @@ class Product extends Model
         }
 
         if (str_contains($slug, 'door') || str_contains($slug, 'rack')) {
-            return true;
-        }
-
-        if (str_contains($slug, 'handle') || str_contains($slug, 'pull')) {
             return true;
         }
 
