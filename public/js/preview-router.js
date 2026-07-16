@@ -6,15 +6,25 @@
 
   window.AmPreviewRouter = true;
 
-  const CATEGORIES = [
+  const SHOP_CATEGORIES = [
     { slug: '', name: 'All Products' },
-    { slug: 'partitions', name: 'PVD Partitions', keys: ['partition', 'fluted', 'divider', 'laser', 'panel'] },
-    { slug: 'corner-tables', name: 'Corner Tables', keys: ['corner'] },
-    { slug: 'coffee-tables', name: 'Coffee Tables', keys: ['coffee', 'console'] },
-    { slug: 'glass-tables', name: 'Glass Tables', keys: ['glass'] },
-    { slug: 'door-handles', name: 'Door Handles', keys: ['handle', 'pull'] },
-    { slug: 'metal-furniture', name: 'Metal Furniture', keys: ['rack', 'door', 'furniture'] },
+    { slug: 'mirror-frames', name: 'Mirror Frames' },
+    { slug: 'coffee-tables', name: 'Coffee Tables' },
+    { slug: 'corner-tables', name: 'Corner Tables' },
+    { slug: 'glass-tables', name: 'Glass Tables' },
+    { slug: 'door-handles', name: 'Door Handles' },
   ];
+
+  const PRODUCT_CATEGORY_KEYS = [
+    { slug: 'partitions', keys: ['partition', 'fluted', 'divider', 'laser', 'panel'] },
+    { slug: 'corner-tables', keys: ['corner'] },
+    { slug: 'coffee-tables', keys: ['coffee', 'console'] },
+    { slug: 'glass-tables', keys: ['glass'] },
+    { slug: 'door-handles', keys: ['handle', 'pull'] },
+    { slug: 'metal-furniture', keys: ['rack', 'door', 'furniture'] },
+  ];
+
+  const COLLECTION_CATEGORIES = ['mirror-frames', 'coffee-tables', 'corner-tables', 'glass-tables', 'door-handles'];
 
   const CHECKOUT_CATEGORIES = ['mirror-frames', 'coffee-tables', 'corner-tables', 'glass-tables', 'door-handles'];
   const CALC_CATEGORIES = ['partitions', 'fluted-panels', 'room-dividers'];
@@ -200,6 +210,18 @@ ${pageHero('Legal', page.title, lastUpdated ? 'Last updated: ' + lastUpdated : '
     (data.trending?.products || []).forEach(add);
     if (data.featured_product) add(data.featured_product);
     return Array.from(map.values());
+  }
+
+  function categoryLabel(slug) {
+    const found = SHOP_CATEGORIES.find((c) => c.slug === slug);
+    if (found && found.slug) return found.name;
+    const labels = {
+      partitions: 'PVD Partitions',
+      'fluted-panels': 'Fluted Panels',
+      'room-dividers': 'Room Dividers',
+      'metal-furniture': 'Metal Furniture',
+    };
+    return labels[slug] || slug;
   }
 
   function partitionGalleryProducts() {
@@ -611,7 +633,7 @@ ${hero ? serviceHeroHtml(hero) : pageHero('Studio', service.name, meta.action)}
     if ((cat.includes('table') || slug.includes('table')) && !slug.includes('door') && !slug.includes('rack')) return 'coffee-tables';
     if (slug.includes('door') || slug.includes('rack')) return 'metal-furniture';
     if (cat.includes('partition') || slug.includes('partition')) return 'partitions';
-    for (const c of CATEGORIES) {
+    for (const c of PRODUCT_CATEGORY_KEYS) {
       if (!c.slug || !c.keys) continue;
       if (c.keys.some((k) => cat.includes(k) || slug.includes(k))) return c.slug;
     }
@@ -738,6 +760,10 @@ ${hero ? serviceHeroHtml(hero) : pageHero('Studio', service.name, meta.action)}
       { name: product.name, slug: product.slug }
     );
     return `<div class="am-pdp__calc-inline">${calcHtml}${checkoutTrustHtml()}</div>`;
+  }
+
+  function shopProducts(data) {
+    return collectProducts(data).filter((p) => COLLECTION_CATEGORIES.includes(categorySlug(p)));
   }
 
   function filterProducts(products, params) {
@@ -928,22 +954,36 @@ ${hero ? serviceHeroHtml(hero) : pageHero('Studio', service.name, meta.action)}
   }
 
   function renderShop(params) {
-    const products = filterProducts(collectProducts(siteData), params);
     const activeCat = params.get('category') || '';
-    const catLabel = CATEGORIES.find((c) => c.slug === activeCat)?.name || 'Shop';
-    const calcService = serviceForCategory(activeCat);
-    const showCategoryCalc = CALC_CATEGORIES.includes(activeCat) && calcService;
+    if (['partitions', 'fluted-panels', 'room-dividers'].includes(activeCat)) {
+      navigate('/services/partitions', '', true);
+      return;
+    }
+    if (activeCat === 'metal-furniture') {
+      navigate('/collections/bespoke-metal-furniture', '', true);
+      return;
+    }
+    if (COLLECTION_CATEGORIES.includes(activeCat) && activeCat !== 'mirror-frames') {
+      navigate('/collections/' + activeCat, '', true);
+      return;
+    }
+    if (activeCat === 'mirror-frames') {
+      navigate('/collections/mirror-frames', '', true);
+      return;
+    }
+
+    const products = filterProducts(shopProducts(siteData), params);
+    const catLabel = SHOP_CATEGORIES.find((c) => c.slug === activeCat)?.name || 'Shop';
     setTitle(catLabel);
 
     const counts = {};
-    collectProducts(siteData).forEach((p) => {
+    shopProducts(siteData).forEach((p) => {
       const slug = categorySlug(p) || 'other';
       counts[slug] = (counts[slug] || 0) + 1;
     });
 
     document.getElementById('am-main').innerHTML = `
-${pageHero('Products', catLabel, showCategoryCalc ? calcService.summary : 'PVD partitions, fluted panels, and bespoke metal furniture.')}
-${showCategoryCalc ? serviceFeaturedCalc(calcService) : ''}
+${pageHero('Products', catLabel, 'Mirror frames, tables, and door hardware — order through our collection galleries.')}
 <section class="am-page-body">
   <div class="am-container">
     ${breadcrumbs([
@@ -954,9 +994,9 @@ ${showCategoryCalc ? serviceFeaturedCalc(calcService) : ''}
     <div class="am-layout-shop">
       <aside class="am-shop-sidebar">
         <p class="am-sidebar-title">Category</p>
-        ${CATEGORIES.map((c) => {
+        ${SHOP_CATEGORIES.map((c) => {
           const href = c.slug ? `/shop?category=${c.slug}` : '/shop';
-          const n = c.slug ? (counts[c.slug] || 0) : collectProducts(siteData).length;
+          const n = c.slug ? (counts[c.slug] || 0) : shopProducts(siteData).length;
           return `<a href="${href}" class="am-sidebar-link ${activeCat === c.slug ? 'is-active' : ''}">${c.name}<span class="am-sidebar-count">${n}</span></a>`;
         }).join('')}
       </aside>
@@ -982,7 +1022,6 @@ ${showCategoryCalc ? serviceFeaturedCalc(calcService) : ''}
         <p class="am-shop-results">${products.length} product${products.length === 1 ? '' : 's'}</p>
         ${products.length ? `<div class="am-product-grid am-product-grid--shop">${products.map(productCard).join('')}</div>` : `
         <div class="am-empty"><h3>No products found</h3><p>Try another category or search term.</p><a href="/shop" class="am-btn am-btn--outline">View All Products</a></div>`}
-        ${showCategoryCalc ? productTabsHtml(calcService.name, calcService.content || '<p>' + calcService.summary + '</p>', calcService.care, null) : ''}
       </div>
     </div>
   </div>
@@ -1937,8 +1976,8 @@ ${whyHtml ? `<section class="am-section am-section--dark"><div class="am-contain
     setTitle(page.title + ' Collection | Vyomika Atelier LLP');
     const orderBtn = (product) => `<button type="button" class="am-btn am-btn--card-primary" data-open-order-popup data-product-name="${product.name}" data-product-slug="${product.slug}" data-service-slug="${serviceSlugForProduct(product)}">Order Now</button>`;
     const cards = products.map((product) => {
-      const cat = CATEGORIES.find((c) => c.slug === categorySlug(product));
-      return `<article class="am-design-gallery__card am-collection-card"><a href="/shop/${product.slug}" class="am-design-gallery__media">${product.image ? `<img src="${product.image}" alt="${product.name}" loading="lazy">` : ''}</a><div class="am-design-gallery__body"><h3 class="am-design-gallery__name"><a href="/shop/${product.slug}">${product.name}</a></h3><p class="am-design-gallery__cat">${cat ? cat.name : ''}</p>${product.description ? `<p class="am-design-gallery__desc">${product.description}</p>` : ''}<div class="am-design-gallery__actions"><a href="/shop/${product.slug}" class="am-btn am-btn--card-view">View</a>${orderBtn(product)}</div></div></article>`;
+      const catName = categoryLabel(categorySlug(product));
+      return `<article class="am-design-gallery__card am-collection-card"><a href="/shop/${product.slug}" class="am-design-gallery__media">${product.image ? `<img src="${product.image}" alt="${product.name}" loading="lazy">` : ''}</a><div class="am-design-gallery__body"><h3 class="am-design-gallery__name"><a href="/shop/${product.slug}">${product.name}</a></h3><p class="am-design-gallery__cat">${catName}</p>${product.description ? `<p class="am-design-gallery__desc">${product.description}</p>` : ''}<div class="am-design-gallery__actions"><a href="/shop/${product.slug}" class="am-btn am-btn--card-view">View</a>${orderBtn(product)}</div></div></article>`;
     }).join('');
     document.getElementById('am-main').innerHTML = `
 <section class="am-mirror-frames-hero" style="--mirror-frames-hero-img: url('${page.image}')"><div class="am-container am-mirror-frames-hero__inner"><p class="am-page-hero__label">Collections</p><h1 class="am-mirror-frames-hero__title">${page.title}</h1><p class="am-mirror-frames-hero__subtitle">${page.subtitle}</p><div class="am-pro-hero__actions"><a href="#collection-gallery" class="am-btn am-btn--primary">Browse Designs</a><a href="/shop" class="am-btn am-btn--outline am-btn--light">Shop All Collections</a></div></div></section>

@@ -9,41 +9,8 @@
     'subtitle' => $pageSubtitle ?? null,
 ])
 
-@php
-    use App\Models\Service;
-    $calcCategories = Service::calculatorCategorySlugs();
-    $showCategoryCalc = $activeCategory && in_array($activeCategory->slug, $calcCategories, true);
-    $calcRate = 1800;
-    $calcServiceSlug = $activeCategory ? Service::serviceSlugForCategory($activeCategory->slug) : 'partitions';
-    $calcLabel = $activeCategory
-        ? (new Service(['slug' => $calcServiceSlug]))->calculatorEstimateLabel()
-        : 'partition';
-    $categoryHeroImage = match ($activeCategory?->slug) {
-        'metal-furniture' => 'https://images.unsplash.com/photo-1615529182904-896166571fac?w=800&q=80',
-        'door-handles' => 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80',
-        default => 'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg',
-    };
-@endphp
-
-@if($showCategoryCalc)
-    @include('partials.am-category-featured-calc', [
-        'title' => $activeCategory->name,
-        'summary' => $pageSubtitle,
-        'image' => $categoryHeroImage,
-        'serviceSlug' => $calcServiceSlug,
-        'calcTitle' => 'Estimate your ' . $calcLabel,
-        'rate' => $calcRate,
-    ])
-@endif
-
 <section class="am-page-body">
     <div class="am-container">
-        @php
-            $quoteSlugs = ['partitions', 'fluted-panels', 'room-dividers', 'coffee-tables', 'metal-furniture'];
-            $showQuote = in_array(request('category'), $quoteSlugs, true);
-            $categoryName = $activeCategory?->name;
-        @endphp
-
         @include('partials.am-breadcrumbs', ['items' => [
             ['label' => 'Home', 'url' => route('home')],
             ['label' => 'Shop', 'url' => route('shop.index')],
@@ -101,29 +68,6 @@
                         @endforeach
                     </div>
                     <div class="am-pagination">{{ $products->links('vendor.pagination.amerce') }}</div>
-                @endif
-
-                @if($showQuote && $categoryName)
-                <div class="am-card am-shop-quote">
-                    <div class="am-card__body">
-                        <p class="am-card__label">Custom {{ $categoryName }}</p>
-                        <h2 class="am-card__title">Need a custom size or finish?</h2>
-                        <p class="am-card__text">Send dimensions and finish preference — we'll quote fabrication and Pan-India delivery.</p>
-                        <x-lead-form-inline
-                            :service-slug="request('category')"
-                            :subject="$categoryName . ' — custom quote'"
-                            type="service_inquiry" />
-                    </div>
-                </div>
-                @endif
-
-                @if($showCategoryCalc && $activeCategory)
-                @include('partials.am-product-tabs', [
-                    'title' => $activeCategory->name,
-                    'descriptionHtml' => '<p>' . e($pageSubtitle) . '</p><p>Browse standard sizes below or use the sq ft calculator above for custom dimensions and instant estimates.</p>',
-                    'careItems' => Service::careGuidelinesForCategory($activeCategory->slug),
-                    'related' => null,
-                ])
                 @endif
             </div>
         </div>

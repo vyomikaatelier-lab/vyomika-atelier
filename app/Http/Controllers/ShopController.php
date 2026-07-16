@@ -4,23 +4,40 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Category;
+use App\Support\ShopCatalog;
 use Illuminate\Http\Request;
 
 class ShopController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::where('is_active', true)->with('category');
+        if ($request->filled('category')) {
+            $categorySlug = $request->category;
+
+            if ($redirect = ShopCatalog::studioCategoryRedirectUrl($categorySlug)) {
+                return redirect($redirect);
+            }
+
+            if ($categorySlug === 'mirror-frames') {
+                return redirect()->route('collections.mirror-frames.index');
+            }
+
+            if (in_array($categorySlug, CollectionGalleryController::slugs(), true)) {
+                return redirect()->route('collections.gallery.index', $categorySlug);
+            }
+        }
+
+        $query = ShopCatalog::applyShopScope(
+            Product::where('is_active', true)->with('category')
+        );
 
         $activeCategory = null;
         if ($request->filled('category')) {
-            $activeCategory = Category::where('slug', $request->category)->where('is_active', true)->first();
-            if ($activeCategory && in_array($activeCategory->slug, \App\Http\Controllers\CollectionGalleryController::slugs(), true)) {
-                return redirect()->route('collections.gallery.index', $activeCategory->slug);
-            }
-            if ($activeCategory && $activeCategory->slug === 'mirror-frames') {
-                return redirect()->route('collections.mirror-frames.index');
-            }
+            $activeCategory = Category::where('slug', $request->category)
+                ->where('is_active', true)
+                ->whereIn('slug', ShopCatalog::categorySlugs())
+                ->first();
+
             if ($activeCategory) {
                 $query->where('category_id', $activeCategory->id);
             } else {
@@ -45,15 +62,21 @@ class ShopController extends Controller
         };
 
         $products = $query->paginate(12)->withQueryString();
-        $categories = Category::where('is_active', true)
-            ->withCount(['products' => fn ($q) => $q->where('is_active', true)])
+
+        $categories = Category::query()
+            ->where('is_active', true)
+            ->whereIn('slug', ShopCatalog::categorySlugs())
+            ->withCount(['products' => fn ($q) => ShopCatalog::applyShopScope(
+                $q->where('is_active', true)
+            )])
+            ->having('products_count', '>', 0)
             ->orderBy('name')
             ->get();
 
         $pageTitle = $activeCategory?->name ?? ($request->filled('search') ? 'Search' : 'Shop');
         $pageSubtitle = $activeCategory
             ? 'Browse '.$activeCategory->name.' from Vyomika Atelier LLP.'
-            : 'PVD partitions, fluted panels, metal furniture, and hardware — Pan-India delivery.';
+            : 'Mirror frames, tables, and door hardware — order through our collection galleries.';
 
         return view('shop.index', compact('products', 'categories', 'activeCategory', 'pageTitle', 'pageSubtitle'));
     }
