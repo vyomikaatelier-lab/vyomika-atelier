@@ -24,6 +24,8 @@
 @endif
 
 @php
+    use App\Support\StorefrontUrl;
+
     $brand = \App\Support\SiteContent::brand();
     $announcement = \App\Support\SiteContent::announcement();
     $footer = \App\Support\SiteContent::footer();
@@ -33,6 +35,7 @@
     $cartSubtotal = $cartService->subtotal();
     $nav = config('site.nav', []);
     $legalLinks = \App\Support\LegalContent::footerLinks();
+    $storefrontLink = fn (string $name, array $params = [], string $fallback = '#') => StorefrontUrl::to($name, $params, $fallback);
 @endphp
 
 @if(!empty($announcement['text']))
@@ -63,7 +66,7 @@
             <button type="button" class="am-icon-btn" id="am-search-toggle" aria-label="Search">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
             </button>
-            <a href="{{ route('account') }}" class="am-icon-btn" aria-label="Account">
+            <a href="{{ $storefrontLink('account', [], '/account/login') }}" class="am-icon-btn" aria-label="Account">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
             </a>
             <a href="#" class="am-icon-btn" id="am-cart-toggle" aria-label="Cart">
@@ -122,7 +125,7 @@
                 <h5>Shop</h5>
                 <ul>
                     @foreach($footer['shop_links'] ?? [] as $link)
-                    <li><a href="{{ route($link['route'], $link['params'] ?? []) }}">{{ $link['label'] }}</a></li>
+                    <li><a href="{{ $storefrontLink($link['route'], $link['params'] ?? [], '/shop') }}">{{ $link['label'] }}</a></li>
                     @endforeach
                 </ul>
             </div>
@@ -130,7 +133,7 @@
                 <h5>Information</h5>
                 <ul>
                     @foreach($footer['info_links'] ?? [] as $link)
-                    <li><a href="{{ route($link['route']) }}">{{ $link['label'] }}</a></li>
+                    <li><a href="{{ $storefrontLink($link['route'], [], '/') }}">{{ $link['label'] }}</a></li>
                     @endforeach
                 </ul>
             </div>
@@ -138,7 +141,7 @@
                 <h5>Studio</h5>
                 <ul>
                     @foreach($footer['service_links'] ?? [] as $link)
-                    <li><a href="{{ route($link['route'], $link['params'] ?? []) }}">{{ $link['label'] }}</a></li>
+                    <li><a href="{{ $storefrontLink($link['route'], $link['params'] ?? [], '/services') }}">{{ $link['label'] }}</a></li>
                     @endforeach
                 </ul>
             </div>
@@ -146,7 +149,7 @@
                 <h5>Legal</h5>
                 <ul>
                     @foreach(\App\Support\LegalContent::footerLinks() as $link)
-                    <li><a href="{{ route($link['route']) }}">{{ $link['label'] }}</a></li>
+                    <li><a href="{{ $storefrontLink($link['route'], [], '/privacy-policy') }}">{{ $link['label'] }}</a></li>
                     @endforeach
                 </ul>
             </div>

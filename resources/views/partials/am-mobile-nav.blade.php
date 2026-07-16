@@ -1,7 +1,9 @@
 @php
+    use App\Support\StorefrontUrl;
+
     $resolveNavHref = function (array $item): string {
         if (isset($item['route'])) {
-            return route($item['route'], $item['params'] ?? []);
+            return StorefrontUrl::to($item['route'], $item['params'] ?? [], $item['href'] ?? '/');
         }
 
         return url($item['href'] ?? '#');

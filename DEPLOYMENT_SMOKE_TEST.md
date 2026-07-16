@@ -268,6 +268,7 @@ Or set `ADMIN_PASSWORD` in `.env` and run `php artisan db:seed --force` (updates
 | Situation | Action |
 |-----------|--------|
 | Bad deploy / 500 after cache | `php artisan optimize:clear` then fix `.env` |
+| **Public 500, admin OK** | Run `bash fix-storefront-production.sh` (clears stale route/view cache, restores symlinks). Never `rm -rf public_html/*` when it symlinks to `public/`. |
 | Migration problem | `php artisan migrate:rollback --step=1` (review migration first; do **not** use `migrate:fresh`) |
 | Restore previous code | `git checkout <previous-commit>` → `composer install --no-dev` → `php artisan migrate` → `php artisan config:cache` |
 | Broken storage link | `rm public/storage && php artisan storage:link` |

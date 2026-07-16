@@ -28,9 +28,15 @@ ln -sf "$APP_DIR/storage/app/public" "$APP_DIR/public/storage"
 chmod -R 775 storage bootstrap/cache 2>/dev/null || true
 
 php artisan migrate --force 2>/dev/null || true
+
+# Clear stale caches before rebuild (old route cache breaks new storefront layout)
+php artisan optimize:clear
+
 php artisan config:cache
 php artisan route:cache
 php artisan view:clear
-php artisan view:cache 2>/dev/null || true
+if ! php artisan view:cache; then
+  echo "WARNING: view:cache failed — check storage/logs/laravel.log and missing Blade partials."
+fi
 
 echo "=== Done — site should load without 403 ==="
