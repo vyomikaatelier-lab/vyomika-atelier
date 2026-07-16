@@ -55,7 +55,7 @@
 
 <header class="am-header">
     <div class="am-container am-header__inner">
-        <a href="{{ route('home') }}" class="am-logo">
+        <a href="{{ $storefrontLink('home', [], '/') }}" class="am-logo">
             <span class="am-logo__name">{{ $brand['name'] ?? 'Vyomika Atelier LLP' }}</span>
             <span class="am-logo__tag">{{ $brand['tagline'] ?? 'PVD Partitions & Metal Furniture' }}</span>
         </a>
@@ -81,7 +81,7 @@
 </header>
 
 <div class="am-search-bar" id="am-search-bar">
-    <form action="{{ route('shop.index') }}" method="GET" class="am-container">
+    <form action="{{ $storefrontLink('shop.index', [], '/shop') }}" method="GET" class="am-container">
         <input type="search" name="search" placeholder="Search partitions, furniture, handles…" aria-label="Search products">
         <button type="submit" class="am-btn am-btn--primary">Search</button>
         <button type="button" class="am-btn am-btn--outline" id="am-search-close">Close</button>
@@ -108,7 +108,7 @@
     <div class="am-container">
         <div class="am-footer__top">
             <div class="am-footer__brand">
-                <a href="{{ route('home') }}" class="am-logo">
+                <a href="{{ $storefrontLink('home', [], '/') }}" class="am-logo">
                     <span class="am-logo__name">{{ trim(($brand['name'] ?? 'Vyomika Atelier LLP') . ' ' . ($brand['suffix'] ?? '')) }}</span>
                 </a>
                 <p>{{ $footer['newsletter'] ?? '' }}</p>
@@ -180,7 +180,7 @@
                 <img src="{{ $item['product']->imageUrl() }}" alt="" class="am-cart-line__thumb">
                 @endif
                 <div class="am-cart-line__body">
-                    <a href="{{ route('shop.show', $item['product']->slug) }}" class="am-cart-line__name">{{ $item['product']->name }}</a>
+                    <a href="{{ $storefrontLink('shop.show', ['slug' => $item['product']->slug], '/shop/'.$item['product']->slug) }}" class="am-cart-line__name">{{ $item['product']->name }}</a>
                     <p class="am-cart-line__meta">Qty {{ $item['quantity'] }} · ₹{{ number_format($item['line_total'], 0) }}</p>
                 </div>
             </li>
@@ -192,8 +192,8 @@
         @endif
     </div>
     <div class="am-drawer__foot">
-        <a href="{{ route('cart.index') }}" class="am-btn am-btn--primary am-btn--full">View Cart</a>
-        <a href="{{ route('shop.index') }}" class="am-btn am-btn--outline am-btn--full" style="margin-top:0.5rem">Continue Shopping</a>
+        <a href="{{ $storefrontLink('cart.index', [], '/cart') }}" class="am-btn am-btn--primary am-btn--full">View Cart</a>
+        <a href="{{ $storefrontLink('shop.index', [], '/shop') }}" class="am-btn am-btn--outline am-btn--full" style="margin-top:0.5rem">Continue Shopping</a>
     </div>
 </aside>
 
@@ -205,7 +205,7 @@
             <p class="am-featured__cat">PVD Partitions</p>
             <h3 data-qv-name style="font-family:var(--am-display);font-size:1.5rem;margin-bottom:1rem"></h3>
             <p class="am-featured__price-current" data-qv-price style="font-size:1.25rem;font-weight:700;margin-bottom:1.5rem"></p>
-            <a href="{{ route('shop.index') }}" class="am-btn am-btn--primary am-btn--full" data-qv-link>View Full Details</a>
+            <a href="{{ $storefrontLink('shop.index', [], '/shop') }}" class="am-btn am-btn--primary am-btn--full" data-qv-link>View Full Details</a>
         </div>
     </div>
 </div>
