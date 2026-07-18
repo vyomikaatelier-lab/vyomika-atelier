@@ -171,7 +171,53 @@ class ProductCatalog
             return self::inferMetalFurnitureSection($productSlug);
         }
 
+        if ($productSlug) {
+            $inferred = self::inferSectionFromSlug($productSlug);
+            if ($inferred !== 'unknown') {
+                return $inferred;
+            }
+        }
+
         return 'unknown';
+    }
+
+    /**
+     * Infer shop/studio section from product slug keywords when category is missing
+     * or ambiguous (e.g. procedurally generated gallery SKUs).
+     */
+    public static function inferSectionFromSlug(string $productSlug): string
+    {
+        $slug = strtolower($productSlug);
+
+        if (preg_match('/(^|-)(railing|balustrade|handrail)(-|$)/', $slug)) {
+            return 'railings';
+        }
+
+        if (preg_match('/(partition|fluted|room-divider|slim-profile|pivot-door|entrance-door|rack-system)/', $slug)) {
+            return 'studio';
+        }
+
+        if (preg_match('/(mirror-frame|coffee-table|corner-table|glass-table|door-handle|pull-handle|side-table|console-table|nest-table)/', $slug)) {
+            return 'shop';
+        }
+
+        return 'unknown';
+    }
+
+    /** Infer a shop category slug from product slug keywords. */
+    public static function inferShopCategoryFromSlug(string $productSlug): ?string
+    {
+        $slug = strtolower($productSlug);
+
+        return match (true) {
+            str_contains($slug, 'mirror') => 'mirror-frames',
+            str_contains($slug, 'coffee-table') => 'coffee-tables',
+            str_contains($slug, 'corner-table') => 'corner-tables',
+            str_contains($slug, 'glass-table') => 'glass-tables',
+            str_contains($slug, 'door-handle') || str_contains($slug, 'pull-handle') => 'door-handles',
+            str_contains($slug, 'table') || str_contains($slug, 'furniture') => 'bespoke-metal-furniture',
+            default => null,
+        };
     }
 
     public static function serviceSlugForProduct(?string $productSlug, ?string $categorySlug = null): ?string

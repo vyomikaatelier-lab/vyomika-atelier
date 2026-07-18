@@ -23,11 +23,19 @@
                 <h2 class="am-checkout-success-card__title">Thank you for your order</h2>
                 <p class="am-checkout-success-card__text">Your order has been placed successfully.</p>
                 <p class="am-checkout-success-card__order">Order #{{ $order->order_number }}</p>
-                <p class="am-checkout-success-card__email">Confirmation sent to <strong>{{ $order->customer_email }}</strong></p>
+                @if($orderEmailSent)
+                <p class="am-checkout-success-card__email">Confirmation email sent to <strong>{{ $order->customer_email }}</strong></p>
+                @else
+                <p class="am-checkout-success-card__email">Order details for <strong>{{ $order->customer_email }}</strong>. If you do not receive an email shortly, contact us at <a href="mailto:{{ config('site.brand.email') }}">{{ config('site.brand.email') }}</a>.</p>
+                @endif
 
-                @if($order->payment_method === 'razorpay')
+                @if($order->status === 'paid')
                 <div class="am-checkout-notice am-checkout-notice--success">
-                    <p>Payment received. We will begin processing your order shortly.</p>
+                    <p>Payment received. We will begin processing your order shortly.@if($paymentEmailSent) A payment confirmation email has been sent.@endif</p>
+                </div>
+                @elseif($order->payment_method === 'razorpay')
+                <div class="am-checkout-notice">
+                    <p>Your order is awaiting payment. Please complete checkout to confirm your order.</p>
                 </div>
                 @else
                 <div class="am-checkout-notice am-checkout-notice--success">

@@ -9,14 +9,22 @@ use App\Support\ProductCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class ProductAdminController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::with('category')->latest()->paginate(15);
+        $query = Product::with('category')->latest();
 
-        return view('admin.products.index', compact('products'));
+        if ($request->query('filter') === 'unclassified') {
+            $query->unclassified();
+        }
+
+        $products = $query->paginate(15)->withQueryString();
+        $unclassifiedCount = Product::query()->unclassified()->count();
+
+        return view('admin.products.index', compact('products', 'unclassifiedCount'));
     }
 
     public function create()
@@ -99,11 +107,9 @@ class ProductAdminController extends Controller
         $productSlug = $existing?->slug ?? Str::slug($validated['name']);
         $section = $validated['section'];
 
-        // Shop→checkout, Studio→enquiry, Railings→quote. Purchase mode is
-        // derived, not freely chosen, so a tampered value is always rejected.
         $expectedPurchaseMode = Product::SECTION_PURCHASE_MODE_MAP[$section] ?? null;
         if ($validated['purchase_mode'] !== $expectedPurchaseMode) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
+            throw ValidationException::withMessages([
                 'purchase_mode' => "Purchase mode must be \"{$expectedPurchaseMode}\" for the {$section} section.",
             ]);
         }
@@ -113,26 +119,35 @@ class ProductAdminController extends Controller
             $categoryKnownSection = ProductCatalog::sectionForCategorySlug($category->slug);
 
             if ($knownSectionSlugs !== [] && ! in_array($category->slug, $knownSectionSlugs, true)) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
+                throw ValidationException::withMessages([
                     'category_id' => "The selected parent category does not belong to the {$section} section.",
                 ]);
             }
 
             if ($knownSectionSlugs === [] && $categoryKnownSection === null
                 && ProductCatalog::sectionFor($productSlug, $category->slug) === 'unknown') {
-                throw \Illuminate\Validation\ValidationException::withMessages([
+                throw ValidationException::withMessages([
                     'category_id' => 'Choose a category that is recognised for the storefront (Shop, Studio, or Railings).',
                 ]);
             }
+        }
+
+        $preview = ($existing ?? new Product())->fill([
+            ...$validated,
+            'slug' => $productSlug,
+            'is_active' => $request->boolean('is_active', true),
+        ]);
+
+        if ($preview->is_active && ! $preview->isClassified()) {
+            throw ValidationException::withMessages([
+                'section' => 'Active products must have a valid section, parent category, purchase mode, and pricing type.',
+            ]);
         }
 
         return $validated;
     }
 
     /**
-     * Map of category_id => section slug, used by the admin form to filter
-     * the "Parent category" dropdown by the selected Section.
-     *
      * @param \Illuminate\Support\Collection<int, Category> $categories
      * @return array<int, string>
      */

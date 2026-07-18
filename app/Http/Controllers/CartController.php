@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Services\CartService;
+use App\Services\StockAvailability;
 use App\Support\CartGuard;
 use Illuminate\Http\Request;
 
@@ -34,8 +35,13 @@ class CartController extends Controller
             return back()->with('error', CartGuard::MSG_INACTIVE);
         }
 
+        $available = StockAvailability::availableForProduct($product);
+        if ($available < 1) {
+            return back()->with('error', CartGuard::MSG_INACTIVE);
+        }
+
         $quantity = max(1, (int) $request->input('quantity', 1));
-        $quantity = min($quantity, min($product->stock, 99));
+        $quantity = min($quantity, min($available, 99));
         $this->cart->add($product, $quantity);
 
         if ($request->boolean('buy_now')) {
@@ -53,8 +59,9 @@ class CartController extends Controller
             return back()->with('error', CartGuard::checkoutEligibility($product));
         }
 
+        $available = StockAvailability::availableForProduct($product);
         $quantity = (int) $request->input('quantity', 1);
-        $quantity = min(max(0, $quantity), min($product->stock, 99));
+        $quantity = min(max(0, $quantity), min($available, 99));
         $this->cart->update($product, $quantity);
 
         return back()->with('success', 'Cart updated.');

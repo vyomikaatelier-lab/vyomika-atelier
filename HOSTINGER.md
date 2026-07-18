@@ -195,6 +195,18 @@ chmod -R 775 ~/vyomika-atelier/storage ~/vyomika-atelier/bootstrap/cache
 
 ---
 
+## Cron — expire unpaid orders
+
+Add this in hPanel → **Advanced** → **Cron Jobs** (runs every 15 minutes):
+
+```bash
+/usr/bin/php /home/u550969814/vyomika-atelier/artisan orders:expire-pending >> /dev/null 2>&1
+```
+
+Unpaid orders are held for `ORDER_PENDING_EXPIRY_HOURS` (default 24) before stock reservations are released.
+
+---
+
 ## Add Razorpay later
 
 When you have keys from [dashboard.razorpay.com](https://dashboard.razorpay.com):

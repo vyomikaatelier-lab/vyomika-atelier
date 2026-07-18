@@ -48,14 +48,14 @@ Route::get('/shop/mirror-frames/{design}', [MirrorFramesController::class, 'show
 Route::get('/shop/{slug}', [ShopPageController::class, 'show'])->name('shop.show');
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
-Route::post('/cart/add/{product}', [CartController::class, 'add'])->name('cart.add');
-Route::patch('/cart/update/{product}', [CartController::class, 'update'])->name('cart.update');
+Route::post('/cart/add/{product}', [CartController::class, 'add'])->middleware('throttle:cart')->name('cart.add');
+Route::patch('/cart/update/{product}', [CartController::class, 'update'])->middleware('throttle:cart')->name('cart.update');
 Route::delete('/cart/remove/{product}', [CartController::class, 'remove'])->name('cart.remove');
 
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:checkout')->name('checkout.store');
 Route::get('/checkout/pay/{order}', [PaymentController::class, 'show'])->name('checkout.pay');
-Route::post('/checkout/pay/{order}', [PaymentController::class, 'verify'])->name('checkout.pay.verify');
+Route::post('/checkout/pay/{order}', [PaymentController::class, 'verify'])->middleware('throttle:checkout')->name('checkout.pay.verify');
 Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
 
 Route::get('/services', [ServiceController::class, 'index'])->name('services.index');
@@ -81,11 +81,11 @@ Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 Route::get('/custom-order', [LeadController::class, 'create'])->name('leads.create');
-Route::post('/leads', [LeadController::class, 'store'])->name('leads.store');
-Route::post('/custom-order', [LeadController::class, 'store']);
+Route::post('/leads', [LeadController::class, 'store'])->middleware('throttle:leads')->name('leads.store');
+Route::post('/custom-order', [LeadController::class, 'store'])->middleware('throttle:leads');
 
 Route::get('/contact', [ContactController::class, 'index'])->name('contact.index');
-Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
+Route::post('/contact', [ContactController::class, 'store'])->middleware('throttle:leads')->name('contact.store');
 
 Route::get('/railings', [RailingsController::class, 'index'])->name('railings.index');
 Route::redirect('/studio/railings', '/railings');
@@ -103,18 +103,18 @@ Route::get('/professionals', [ProfessionalsController::class, 'index'])->name('p
 Route::view('/team', 'pages.team')->name('team');
 Route::prefix('account')->name('account.')->middleware('customer.guest')->group(function () {
     Route::get('/login', [AccountAuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AccountAuthController::class, 'sendLoginOtp'])->name('login.send');
-    Route::post('/login/email', [AccountAuthController::class, 'loginWithEmail'])->name('login.email');
-    Route::post('/login/mobile', [AccountAuthController::class, 'loginWithMobilePassword'])->name('login.mobile');
+    Route::post('/login', [AccountAuthController::class, 'sendLoginOtp'])->middleware('throttle:otp-send')->name('login.send');
+    Route::post('/login/email', [AccountAuthController::class, 'loginWithEmail'])->middleware('throttle:auth')->name('login.email');
+    Route::post('/login/mobile', [AccountAuthController::class, 'loginWithMobilePassword'])->middleware('throttle:auth')->name('login.mobile');
     Route::get('/register', [AccountAuthController::class, 'showRegister'])->name('register');
-    Route::post('/register', [AccountAuthController::class, 'sendRegisterOtp'])->name('register.send');
+    Route::post('/register', [AccountAuthController::class, 'sendRegisterOtp'])->middleware('throttle:otp-send')->name('register.send');
     Route::get('/forgot', [AccountAuthController::class, 'showForgot'])->name('forgot');
-    Route::post('/forgot', [AccountAuthController::class, 'sendForgotOtp'])->name('forgot.send');
+    Route::post('/forgot', [AccountAuthController::class, 'sendForgotOtp'])->middleware('throttle:otp-send')->name('forgot.send');
 });
 
 Route::get('/account/verify-otp', [AccountAuthController::class, 'showVerifyOtp'])->name('account.verify');
-Route::post('/account/verify-otp', [AccountAuthController::class, 'verifyOtp'])->name('account.verify.submit');
-Route::post('/account/resend-otp', [AccountAuthController::class, 'resendOtp'])->name('account.resend');
+Route::post('/account/verify-otp', [AccountAuthController::class, 'verifyOtp'])->middleware('throttle:otp-verify')->name('account.verify.submit');
+Route::post('/account/resend-otp', [AccountAuthController::class, 'resendOtp'])->middleware('throttle:otp-send')->name('account.resend');
 
 Route::middleware('customer')->group(function () {
     Route::get('/account', [AccountDashboardController::class, 'index'])->name('account');
@@ -139,7 +139,7 @@ Route::redirect('/shipping', '/shipping-delivery-policy');
 // Admin
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AdminAuthController::class, 'login'])->name('login.submit');
+    Route::post('/login', [AdminAuthController::class, 'login'])->middleware('throttle:auth')->name('login.submit');
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
 
     Route::middleware('admin')->group(function () {

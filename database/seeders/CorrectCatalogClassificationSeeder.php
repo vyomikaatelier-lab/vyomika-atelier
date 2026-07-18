@@ -65,22 +65,31 @@ class CorrectCatalogClassificationSeeder extends Seeder
             });
 
         $unclassified = Product::query()
-            ->whereNotIn('slug', array_keys($slugMap))
-            ->where(function ($q) {
-                $q->whereNull('section')
-                    ->orWhereNotIn('section', Product::SECTIONS);
-            })
+            ->unclassified()
             ->pluck('slug')
             ->values()
             ->all();
 
-        $this->command?->info("Catalog classification complete: {$updated} updated from slug map, {$inferred} inferred from category, {$skipped} skipped.");
+        $deactivated = 0;
+        Product::query()
+            ->active()
+            ->unclassified()
+            ->each(function (Product $product) use (&$deactivated, &$unclassified): void {
+                $product->update([
+                    'is_active' => false,
+                    'purchase_mode' => Product::PURCHASE_MODE_ENQUIRY,
+                ]);
+                $deactivated++;
+                $this->command?->warn("Deactivated unclassified active product: {$product->slug}");
+            });
+
+        $this->command?->info("Catalog classification complete: {$updated} updated from slug map, {$inferred} inferred from category, {$skipped} skipped, {$deactivated} active unclassified deactivated.");
 
         if ($unclassified !== []) {
             $this->command?->warn('Still unclassified (no slug-map entry and category could not be inferred): '.implode(', ', $unclassified));
         }
 
-        $this->writeReport($changedSlugs, $unclassified, $updated + $inferred, $skipped);
+        $this->writeReport($changedSlugs, $unclassified, $updated + $inferred, $skipped, $deactivated);
     }
 
     /**
@@ -124,12 +133,22 @@ class CorrectCatalogClassificationSeeder extends Seeder
         }
 
         $category = $product->category;
+
+        if (! $category) {
+            $inferredCategorySlug = ProductCatalog::categorySlugForProduct($product->slug)
+                ?? ProductCatalog::inferShopCategoryFromSlug($product->slug);
+
+            if ($inferredCategorySlug) {
+                $category = Category::query()->where('slug', $inferredCategorySlug)->first();
+            }
+        }
+
         if (! $category) {
             return false;
         }
 
         if ($this->applyClassification($product, $category, $section, $changedSlugs)) {
-            $this->command?->line("Inferred {$product->slug} → section={$section}, category={$categorySlug}");
+            $this->command?->line("Inferred {$product->slug} → section={$section}, category={$category->slug}");
 
             return true;
         }
@@ -197,7 +216,7 @@ class CorrectCatalogClassificationSeeder extends Seeder
     }
 
     /** @param list<string> $changedSlugs @param list<string> $unclassifiedSlugs */
-    private function writeReport(array $changedSlugs, array $unclassifiedSlugs, int $updated, int $skipped): void
+    private function writeReport(array $changedSlugs, array $unclassifiedSlugs, int $updated, int $skipped, int $deactivated = 0): void
     {
         $dir = database_path('backups');
 
@@ -212,7 +231,8 @@ class CorrectCatalogClassificationSeeder extends Seeder
             'updated_count' => $updated,
             'skipped_count' => $skipped,
             'changed_slugs' => $changedSlugs,
-            'unclassified_slugs' => $unclassifiedSlugs,
+            'unclassified_slugs' => $unclassified,
+            'active_unclassified_deactivated' => $deactivated,
         ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
         $this->command?->info("Classification report written to {$path}");

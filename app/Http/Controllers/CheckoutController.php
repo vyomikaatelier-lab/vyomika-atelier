@@ -5,18 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Services\CartService;
+use App\Services\OrderNotificationService;
 use App\Services\RazorpayService;
+use App\Services\StockAvailability;
 use App\Support\CartGuard;
 use App\Support\OrderAccess;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 
 class CheckoutController extends Controller
 {
     public function __construct(
         private CartService $cart,
-        private RazorpayService $razorpay
+        private RazorpayService $razorpay,
+        private OrderNotificationService $notifications,
     ) {}
 
     public function index()
@@ -106,9 +108,11 @@ class CheckoutController extends Controller
         $total = $subtotal + $shipping;
 
         foreach ($items as $item) {
-            if ($item['quantity'] > $item['product']->stock) {
+            $available = StockAvailability::availableForProduct($item['product']);
+
+            if ($item['quantity'] > $available) {
                 return redirect()->route('cart.index')
-                    ->with('error', "{$item['product']->name} only has {$item['product']->stock} in stock. Please update your cart.");
+                    ->with('error', "{$item['product']->name} only has {$available} available. Please update your cart.");
             }
         }
 
@@ -120,6 +124,7 @@ class CheckoutController extends Controller
                 'shipping_cost' => $shipping,
                 'total' => $total,
                 'status' => 'pending',
+                'expires_at' => now()->addHours(Order::pendingExpiryHours()),
             ]);
 
             foreach ($items as $item) {
@@ -131,8 +136,6 @@ class CheckoutController extends Controller
                     'quantity' => $item['quantity'],
                     'total' => $item['line_total'],
                 ]);
-
-                $item['product']->decrement('stock', $item['quantity']);
             }
 
             return $order;
@@ -149,7 +152,10 @@ class CheckoutController extends Controller
         $this->cart->clear();
         OrderAccess::remember($order);
 
-        return redirect()->route('checkout.pay', $order);
+        $emailSent = $this->notifications->sendOrderReceived($order->fresh('items'));
+
+        return redirect()->route('checkout.pay', $order)
+            ->with('order_email_sent', $emailSent);
     }
 
     public function success(Order $order)
@@ -160,18 +166,10 @@ class CheckoutController extends Controller
 
         $order->load('items');
 
-        return view('checkout.success', compact('order'));
-    }
-
-    private function notifyAdmin(Order $order): void
-    {
-        $adminEmail = config('services.admin_email');
-
-        if ($adminEmail) {
-            Mail::raw(
-                "New order {$order->order_number} from {$order->customer_name}. Total: ₹{$order->total}",
-                fn ($message) => $message->to($adminEmail)->subject("New Order: {$order->order_number}")
-            );
-        }
+        return view('checkout.success', [
+            'order' => $order,
+            'orderEmailSent' => $order->order_received_email_sent_at !== null,
+            'paymentEmailSent' => $order->payment_email_sent_at !== null,
+        ]);
     }
 }

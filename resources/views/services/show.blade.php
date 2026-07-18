@@ -16,7 +16,7 @@
 @section('content')
 
 @php
-    $page = config("services.{$service->slug}", []);
+    $page = config("service-pages.{$service->slug}", []);
     $hero = $page['hero'] ?? null;
 @endphp
 

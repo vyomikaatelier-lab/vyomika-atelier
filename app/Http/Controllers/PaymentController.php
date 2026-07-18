@@ -3,14 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Services\OrderNotificationService;
 use App\Services\RazorpayService;
+use App\Services\StockAvailability;
 use App\Support\OrderAccess;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
-    public function __construct(private RazorpayService $razorpay) {}
+    public function __construct(
+        private RazorpayService $razorpay,
+        private OrderNotificationService $notifications,
+    ) {}
 
     public function show(Order $order)
     {
@@ -20,6 +26,11 @@ class PaymentController extends Controller
 
         if ($order->payment_method !== 'razorpay' || $order->status !== 'pending') {
             return redirect()->route('checkout.success', $order);
+        }
+
+        if ($order->isExpired()) {
+            return redirect()->route('shop.index')
+                ->with('error', 'This order has expired. Please place a new order.');
         }
 
         if (! $this->razorpay->isConfigured()) {
@@ -43,6 +54,11 @@ class PaymentController extends Controller
             return redirect()->route('checkout.success', $order);
         }
 
+        if ($order->isExpired()) {
+            return redirect()->route('shop.index')
+                ->with('error', 'This order has expired. Please place a new order.');
+        }
+
         $validated = $request->validate([
             'razorpay_payment_id' => 'required|string',
             'razorpay_order_id' => 'required|string',
@@ -63,19 +79,35 @@ class PaymentController extends Controller
                 ->with('error', 'Payment verification failed. Please try again.');
         }
 
-        $order->update([
-            'status' => 'paid',
-            'payment_id' => $validated['razorpay_payment_id'],
-            'razorpay_order_id' => $validated['razorpay_order_id'],
-        ]);
+        try {
+            DB::transaction(function () use ($order, $validated) {
+                $locked = Order::query()->whereKey($order->id)->lockForUpdate()->first();
 
-        $adminEmail = config('services.admin_email');
-        if ($adminEmail) {
-            Mail::raw(
-                "Payment received for order {$order->order_number}. Amount: ₹{$order->total}",
-                fn ($message) => $message->to($adminEmail)->subject("Payment Received: {$order->order_number}")
-            );
+                if ($locked->status !== 'pending') {
+                    return;
+                }
+
+                $locked->update([
+                    'status' => 'paid',
+                    'payment_id' => $validated['razorpay_payment_id'],
+                    'razorpay_order_id' => $validated['razorpay_order_id'],
+                    'expires_at' => null,
+                ]);
+
+                StockAvailability::deductForPaidOrder($locked->fresh('items.product'));
+            });
+        } catch (\RuntimeException $e) {
+            Log::error('Payment verified but stock deduction failed.', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('checkout.pay', $order)
+                ->with('error', 'Payment was received but stock is no longer available. Please contact us.');
         }
+
+        $order->refresh();
+        $this->notifications->sendPaymentConfirmed($order);
 
         return redirect()->route('checkout.success', $order);
     }

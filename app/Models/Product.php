@@ -223,6 +223,27 @@ class Product extends Model
         return $this->is_active && $this->usesCheckoutFlow();
     }
 
+    public function isClassified(): bool
+    {
+        return in_array($this->section, self::SECTIONS, true)
+            && in_array($this->purchase_mode, self::PURCHASE_MODES, true)
+            && in_array($this->pricing_type, self::PRICING_TYPES, true)
+            && $this->category_id !== null;
+    }
+
+    public function scopeUnclassified($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('section')
+                ->orWhereNotIn('section', self::SECTIONS)
+                ->orWhereNull('purchase_mode')
+                ->orWhereNotIn('purchase_mode', self::PURCHASE_MODES)
+                ->orWhereNull('pricing_type')
+                ->orWhereNotIn('pricing_type', self::PRICING_TYPES)
+                ->orWhereNull('category_id');
+        });
+    }
+
     /** @deprecated Use isStudioItem(). Kept for backward compatibility. */
     public function isStudioProduct(): bool
     {

@@ -1,6 +1,6 @@
 #!/bin/bash
 # Run after every Hostinger Git redeploy (or via SSH)
-set -e
+set -euo pipefail
 
 APP_DIR="${APP_DIR:-$HOME/vyomika-atelier}"
 DOMAIN_LINK="${DOMAIN_LINK:-$HOME/domains/vyomikaatelier.com/public_html}"
@@ -20,27 +20,50 @@ if [ -d "$(dirname "$DOMAIN_LINK")" ]; then
   echo "Linked: $DOMAIN_LINK -> $APP_DIR/public"
 fi
 
-# Storage
-mkdir -p storage/app/public
+mkdir -p storage/app/public database/backups
 rm -f public/storage
 ln -sf "$APP_DIR/storage/app/public" "$APP_DIR/public/storage"
-
 chmod -R 775 storage bootstrap/cache 2>/dev/null || true
 
-php artisan migrate --force 2>/dev/null || true
+echo "=== Database backup before classification ==="
+BACKUP_FILE="database/backups/pre-deploy-$(date +%Y%m%d-%H%M%S).sql"
+if command -v mysqldump >/dev/null 2>&1 && [ -f .env ]; then
+  DB_NAME=$(grep -E '^DB_DATABASE=' .env | cut -d= -f2- | tr -d '"')
+  DB_USER=$(grep -E '^DB_USERNAME=' .env | cut -d= -f2- | tr -d '"')
+  DB_PASS=$(grep -E '^DB_PASSWORD=' .env | cut -d= -f2- | tr -d '"')
+  DB_HOST=$(grep -E '^DB_HOST=' .env | cut -d= -f2- | tr -d '"' || echo "127.0.0.1")
+  if [ -n "$DB_NAME" ] && [ -n "$DB_USER" ]; then
+    MYSQL_PWD="$DB_PASS" mysqldump -h "$DB_HOST" -u "$DB_USER" "$DB_NAME" > "$BACKUP_FILE" \
+      && echo "Backup saved to $BACKUP_FILE" \
+      || echo "WARNING: mysqldump failed — create a manual backup before classification."
+  fi
+else
+  echo "WARNING: mysqldump unavailable — create a manual backup before classification."
+fi
 
-# Clear stale caches before rebuild (old route cache breaks new storefront layout)
+echo "=== Pull latest code ==="
+git pull origin main
+
+echo "=== Composer ==="
+composer install --no-dev --optimize-autoloader
+
+echo "=== Clear caches ==="
 php artisan optimize:clear
 
-php artisan config:cache
+echo "=== Migrate ==="
+php artisan migrate --force
 
-if php artisan storefront:diagnose 2>/dev/null; then
-  php artisan route:cache
-  php artisan view:clear
-  php artisan view:cache || echo "WARNING: view:cache failed — check storage/logs/laravel.log"
-else
-  echo "WARNING: storefront:diagnose failed — run: bash fix-storefront-production.sh"
-  php artisan view:clear
-fi
+echo "=== Catalog seeders ==="
+php artisan db:seed --class=CatalogSyncSeeder --force
+php artisan db:seed --class=CorrectCatalogClassificationSeeder --force
+
+echo "=== Export site JSON ==="
+php database/scripts/export-site-json.php
+php database/scripts/export-pricing-json.php
+
+echo "=== Rebuild caches ==="
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache || echo "WARNING: view:cache failed — check storage/logs/laravel.log"
 
 echo "=== Done — site should load without 403 ==="
