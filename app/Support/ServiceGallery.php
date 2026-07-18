@@ -32,7 +32,7 @@ class ServiceGallery
             return require database_path('data/partition-gallery-products.php');
         }
 
-        $catalog = require database_path('data/service-gallery-catalog.php');
+        $catalog = CatalogData::serviceGallery();
 
         return $catalog[$serviceSlug] ?? [];
     }

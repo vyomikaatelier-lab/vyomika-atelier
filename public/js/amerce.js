@@ -127,6 +127,20 @@
     });
   }
 
+  /* Buy Now / Add to Bag forms must not bubble to product links */
+  let buyNowFormsBound = false;
+  function initBuyNowForms() {
+    if (buyNowFormsBound) return;
+    buyNowFormsBound = true;
+    document.addEventListener('click', (e) => {
+      const inBuyForm = e.target.closest('.am-product-card__buy-form, .am-design-gallery__buy-form, .am-pdp-buy__form');
+      const inCardActions = e.target.closest('.am-product-card__actions, .am-design-gallery__actions');
+      if (inBuyForm || inCardActions) {
+        e.stopPropagation();
+      }
+    }, true);
+  }
+
   /* Quick view modal */
   function initQuickView() {
     const modal = document.getElementById('am-quickview');
@@ -576,6 +590,7 @@
     initSearch();
     initCartDrawer();
     initOrderNow();
+    initBuyNowForms();
     initQuickView();
     initSizeOptions();
     initHeaderScroll();
@@ -592,6 +607,7 @@
     initHero();
     initTestimonials();
     initOrderNow();
+    initBuyNowForms();
     initQuickView();
     initSizeOptions();
     initProductTabs();

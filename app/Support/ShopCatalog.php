@@ -25,6 +25,9 @@ class ShopCatalog
     /** @param Builder<\App\Models\Product> $query */
     public static function applyShopScope(Builder $query): Builder
     {
-        return $query->whereHas('category', fn ($q) => $q->whereIn('slug', self::categorySlugs()));
+        return $query
+            ->whereHas('category', fn ($q) => $q->whereIn('slug', self::categorySlugs()))
+            ->where('section', \App\Models\Product::SECTION_SHOP)
+            ->where('purchase_mode', \App\Models\Product::PURCHASE_MODE_CHECKOUT);
     }
 }

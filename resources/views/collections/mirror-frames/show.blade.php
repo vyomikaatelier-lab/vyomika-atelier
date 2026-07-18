@@ -88,7 +88,18 @@
                 @endif
 
                 <div class="am-pdp__buy-inline" id="buy">
+                    @if($product->usesCheckoutFlow())
                     @include('partials.am-pdp-buy-actions', ['product' => $product])
+                    @else
+                    @include('partials.am-gallery-order-now-btn', [
+                        'name' => $design['name'] ?? $product->name,
+                        'slug' => $product->slug,
+                        'serviceSlug' => \App\Models\Service::serviceSlugForProduct($product->slug, $product->category?->slug) ?? '',
+                        'category' => 'Mirror Frames',
+                        'price' => $product->price,
+                        'class' => 'am-btn am-btn--primary am-btn--lg am-btn--full',
+                    ])
+                    @endif
                     @include('partials.am-pdp-checkout-trust')
                 </div>
             </div>

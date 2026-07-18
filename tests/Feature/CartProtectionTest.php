@@ -25,6 +25,20 @@ class CartProtectionTest extends TestCase
         $this->assertEquals(1, session('cart')[$product->id] ?? null);
     }
 
+    public function test_shop_buy_now_redirects_to_cart(): void
+    {
+        $category = Category::factory()->create(['slug' => 'coffee-tables']);
+        $product = Product::factory()->shop()->create(['category_id' => $category->id, 'stock' => 5]);
+
+        $response = $this->post(route('cart.add', $product), [
+            'quantity' => 1,
+            'buy_now' => 1,
+        ]);
+
+        $response->assertRedirect(route('cart.index'));
+        $this->assertEquals(1, session('cart')[$product->id] ?? null);
+    }
+
     public function test_studio_product_direct_post_is_rejected_with_enquiry_message(): void
     {
         $category = Category::factory()->create(['slug' => 'partitions']);

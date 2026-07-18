@@ -12,6 +12,15 @@ class ProductCatalog
     /** @var array<string, array{section: string, service_slug: ?string, shop_category: ?string, category: string}>|null */
     private static ?array $slugMap = null;
 
+    /** @var array<string, list<array<string, mixed>>>|null */
+    private static ?array $serviceCatalog = null;
+
+    /** @return array<string, list<array<string, mixed>>> */
+    private static function serviceCatalog(): array
+    {
+        return self::$serviceCatalog ??= CatalogData::serviceGallery();
+    }
+
     /** @return array<string, array{section: string, service_slug: ?string, shop_category: ?string, category: string}> */
     public static function slugMap(): array
     {
@@ -39,7 +48,7 @@ class ProductCatalog
             ];
         }
 
-        $serviceCatalog = require database_path('data/service-gallery-catalog.php');
+        $serviceCatalog = self::serviceCatalog();
 
         foreach ($serviceCatalog['slim-profile-door-system'] ?? [] as $item) {
             $map[$item['slug']] = [
@@ -287,7 +296,7 @@ class ProductCatalog
             return $slugs;
         }
 
-        $catalog = require database_path('data/service-gallery-catalog.php');
+        $catalog = self::serviceCatalog();
 
         return $slugs = array_values(array_column($catalog['bespoke-metal-furniture'] ?? [], 'slug'));
     }

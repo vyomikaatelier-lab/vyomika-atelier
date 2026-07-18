@@ -7,6 +7,7 @@ use App\Models\OrderItem;
 use App\Services\CartService;
 use App\Services\RazorpayService;
 use App\Support\CartGuard;
+use App\Support\OrderAccess;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -104,6 +105,13 @@ class CheckoutController extends Controller
         $shipping = $subtotal >= 5000 ? 0 : 199;
         $total = $subtotal + $shipping;
 
+        foreach ($items as $item) {
+            if ($item['quantity'] > $item['product']->stock) {
+                return redirect()->route('cart.index')
+                    ->with('error', "{$item['product']->name} only has {$item['product']->stock} in stock. Please update your cart.");
+            }
+        }
+
         $order = DB::transaction(function () use ($validated, $items, $subtotal, $shipping, $total) {
             $order = Order::create([
                 ...$validated,
@@ -139,12 +147,17 @@ class CheckoutController extends Controller
 
         $order->update(['razorpay_order_id' => $razorpayOrder['id']]);
         $this->cart->clear();
+        OrderAccess::remember($order);
 
         return redirect()->route('checkout.pay', $order);
     }
 
     public function success(Order $order)
     {
+        if (! OrderAccess::canAccess($order)) {
+            return redirect()->route('shop.index')->with('error', 'Order not found.');
+        }
+
         $order->load('items');
 
         return view('checkout.success', compact('order'));

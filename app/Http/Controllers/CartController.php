@@ -35,10 +35,11 @@ class CartController extends Controller
         }
 
         $quantity = max(1, (int) $request->input('quantity', 1));
+        $quantity = min($quantity, min($product->stock, 99));
         $this->cart->add($product, $quantity);
 
         if ($request->boolean('buy_now')) {
-            return redirect()->route('checkout.index');
+            return redirect()->route('cart.index');
         }
 
         return back()->with('success', 'Added to cart.');
@@ -53,6 +54,7 @@ class CartController extends Controller
         }
 
         $quantity = (int) $request->input('quantity', 1);
+        $quantity = min(max(0, $quantity), min($product->stock, 99));
         $this->cart->update($product, $quantity);
 
         return back()->with('success', 'Cart updated.');

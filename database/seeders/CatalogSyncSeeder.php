@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Service;
 use App\Models\ServiceDesign;
+use App\Support\CatalogData;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Schema;
 
@@ -50,7 +51,7 @@ class CatalogSyncSeeder extends Seeder
         $cat = fn (string $slug) => Category::query()->where('slug', $slug)->first();
 
         $partitionGallery = require database_path('data/partition-gallery-products.php');
-        $serviceCatalog = require database_path('data/service-gallery-catalog.php');
+        $serviceCatalog = CatalogData::serviceGallery();
         $mirrorFramesCatalog = require database_path('data/mirror-frames-catalog.php');
 
         $productsBySlug = [];

@@ -16,13 +16,15 @@
       : '';
     const old = p.compare_price ? `<span class="am-product-card__price-old">${fmt(p.compare_price)}</span>` : '';
     return `<article class="am-product-card" data-product-url="${url}">
-      <a href="${url}" class="am-product-card__thumb">
-        ${badge}
-        <img src="${p.image}" alt="${p.name}" loading="lazy">
+      <div class="am-product-card__thumb">
+        <a href="${url}" class="am-product-card__thumb-link">
+          ${badge}
+          <img src="${p.image}" alt="${p.name}" loading="lazy">
+        </a>
         <div class="am-product-card__actions">
           <form action="/cart/add/${p.slug || ''}" method="POST" class="am-product-card__buy-form"><input type="hidden" name="_token" value="preview"><input type="hidden" name="quantity" value="1"><input type="hidden" name="buy_now" value="1"><button type="submit" class="am-btn am-btn--primary am-btn--sm am-btn--full">Buy Now</button></form>
         </div>
-      </a>
+      </div>
       <div class="am-product-card__body">
         <h3 class="am-product-card__name"><a href="${url}">${p.name}</a></h3>
         <div class="am-product-card__stars" aria-hidden="true">★★★★★</div>

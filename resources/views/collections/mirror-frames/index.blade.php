@@ -64,7 +64,7 @@
                 'image' => $design['image'] ?? null,
                 'badge' => $design['badge'] ?? null,
                 'product' => $design['product'] ?? null,
-                'useCheckout' => ! empty($design['product']),
+                'useCheckout' => ($design['product'] ?? null)?->usesCheckoutFlow() ?? false,
             ])
             @endforeach
         </div>

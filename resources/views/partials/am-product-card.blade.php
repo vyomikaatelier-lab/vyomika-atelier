@@ -58,63 +58,37 @@
 
 <article class="am-product-card" data-product-url="{{ $url }}">
 
-    <a href="{{ $url }}" class="am-product-card__thumb">
-
-        @if($badge)
-
-        <span class="am-product-card__badge {{ $badge === 'NEW' ? 'am-product-card__badge--new' : '' }}">{{ $badge }}</span>
-
-        @endif
-
-        @if($image)
-
-        <img src="{{ $image }}" alt="{{ $name }}" loading="lazy">
-
-        @endif
-
-        <div class="am-product-card__actions">
-
-            @if($isModel && $useCheckout)
-
-            <form action="{{ route('cart.add', $product) }}" method="POST" class="am-product-card__buy-form">
-
-                @csrf
-
-                <input type="hidden" name="quantity" value="1">
-
-                <input type="hidden" name="buy_now" value="1">
-
-                <button type="submit" class="am-btn am-btn--primary am-btn--sm am-btn--full">Buy Now</button>
-
-            </form>
-
-            @elseif($isModel)
-
-            <button type="button"
-
-                class="am-btn am-btn--primary am-btn--sm am-btn--full"
-
-                data-open-order-popup
-
-                data-product-name="{{ $name }}"
-
-                data-product-slug="{{ $slug }}"
-
-                data-service-slug="{{ $orderServiceSlug }}">
-
-                Order Now
-
-            </button>
-
-            @else
-
-            <button type="button" class="am-btn am-btn--primary am-btn--sm am-btn--full" data-order-now data-product-url="{{ $url }}">Order Now</button>
-
+    <div class="am-product-card__thumb">
+        <a href="{{ $url }}" class="am-product-card__thumb-link">
+            @if($badge)
+            <span class="am-product-card__badge {{ $badge === 'NEW' ? 'am-product-card__badge--new' : '' }}">{{ $badge }}</span>
             @endif
-
+            @if($image)
+            <img src="{{ $image }}" alt="{{ $name }}" loading="lazy">
+            @endif
+        </a>
+        <div class="am-product-card__actions">
+            @if($isModel && $useCheckout)
+            <form action="{{ route('cart.add', $product) }}" method="POST" class="am-product-card__buy-form">
+                @csrf
+                <input type="hidden" name="quantity" value="1">
+                <input type="hidden" name="buy_now" value="1">
+                <button type="submit" class="am-btn am-btn--primary am-btn--sm am-btn--full">Buy Now</button>
+            </form>
+            @elseif($isModel)
+            <button type="button"
+                class="am-btn am-btn--primary am-btn--sm am-btn--full"
+                data-open-order-popup
+                data-product-name="{{ $name }}"
+                data-product-slug="{{ $slug }}"
+                data-service-slug="{{ $orderServiceSlug }}">
+                Order Now
+            </button>
+            @else
+            <button type="button" class="am-btn am-btn--primary am-btn--sm am-btn--full" data-order-now data-product-url="{{ $url }}">Order Now</button>
+            @endif
         </div>
-
-    </a>
+    </div>
 
     <div class="am-product-card__body">
 

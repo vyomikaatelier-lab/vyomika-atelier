@@ -261,11 +261,13 @@
       ? `<form action="/cart/add/${p.slug}" method="POST" class="am-product-card__buy-form"><input type="hidden" name="_token" value="preview"><input type="hidden" name="quantity" value="1"><input type="hidden" name="buy_now" value="1"><button type="submit" class="am-btn am-btn--primary am-btn--sm am-btn--full">Buy Now</button></form>`
       : `<button type="button" class="am-btn am-btn--primary am-btn--sm am-btn--full" data-open-order-popup data-product-name="${p.name}" data-product-slug="${p.slug}" data-service-slug="${serviceSlugForProduct(p)}">Order Now</button>`;
     return `<article class="am-product-card" data-product-url="${url}">
-      <a href="${url}" class="am-product-card__thumb">
-        ${badge}
-        ${p.image ? `<img src="${p.image}" alt="${p.name}" loading="lazy">` : ''}
+      <div class="am-product-card__thumb">
+        <a href="${url}" class="am-product-card__thumb-link">
+          ${badge}
+          ${p.image ? `<img src="${p.image}" alt="${p.name}" loading="lazy">` : ''}
+        </a>
         <div class="am-product-card__actions">${action}</div>
-      </a>
+      </div>
       <div class="am-product-card__body">
         <h3 class="am-product-card__name"><a href="${url}">${p.name}</a></h3>
         <div class="am-product-card__stars" aria-hidden="true">★★★★★</div>
@@ -2793,6 +2795,22 @@ ${pageHero('Quote', title, subtitle)}
   }
 
   function onFormSubmit(e) {
+    const cartAddForm = e.target.closest('form[action*="/cart/add/"]');
+    if (cartAddForm) {
+      e.preventDefault();
+      const action = cartAddForm.getAttribute('action') || '';
+      const slug = action.split('/cart/add/')[1]?.replace(/\/$/, '') || '';
+      const product = collectProducts(siteData).find((p) => p.slug === slug);
+      const qty = Number(cartAddForm.querySelector('[name="quantity"]')?.value) || 1;
+      if (product) window.AmPreviewCart.add(product, qty);
+      if (cartAddForm.querySelector('[name="buy_now"]')) {
+        navigate('/cart', '', true);
+      } else {
+        document.getElementById('am-cart-drawer')?.classList.add('is-open');
+        document.getElementById('am-overlay')?.classList.add('is-open');
+      }
+      return;
+    }
     const form = e.target.closest('[data-preview-form]');
     if (form) {
       e.preventDefault();
@@ -2820,7 +2838,7 @@ ${pageHero('Quote', title, subtitle)}
       const product = collectProducts(siteData).find((p) => p.slug === slug);
       const qty = Number(document.getElementById('pdp-qty')?.value) || 1;
       if (product) window.AmPreviewCart.add(product, qty);
-      navigate('/checkout', '', true);
+      navigate('/cart', '', true);
       return;
     }
     const addBtn = e.target.closest('[data-add-cart]');

@@ -10,49 +10,51 @@
  *
  * @return list<array{name: string, slug: string, category: string, price: int, compare_price: int|null, sku: string, featured: bool, image: string, desc: string}>
  */
-function generate_service_gallery_products(
-    array $featured,
-    array $patterns,
-    array $finishes,
-    array $types,
-    array $categorySlugs,
-    array $images,
-    string $skuPrefix,
-    int $target = 40,
-): array {
-    $items = [];
-    foreach ($featured as $i => $row) {
-        $items[] = [...$row, 'featured' => true];
-    }
-
-    $index = count($items);
-    foreach ($patterns as $pattern) {
-        foreach ($finishes as $finish) {
-            if (count($items) >= $target) {
-                break 2;
-            }
-
-            $type = $types[$index % count($types)];
-            $name = $finish.' '.$pattern.' '.$type;
-            $baseSlug = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', $name), '-'));
-            $slug = $baseSlug.'-'.str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT);
-
-            $items[] = [
-                'name' => $name,
-                'slug' => $slug,
-                'category' => $categorySlugs[$index % count($categorySlugs)],
-                'price' => 18000 + ($index % 14) * 2000,
-                'compare_price' => $index % 3 === 0 ? 28000 + $index * 250 : null,
-                'sku' => $skuPrefix.str_pad((string) ($index + 1), 3, '0', STR_PAD_LEFT),
-                'featured' => false,
-                'image' => $images[$index % count($images)],
-                'desc' => 'Custom '.strtolower($pattern).' '.strtolower($type).' in '.strtolower($finish).' PVD finish.',
-            ];
-            $index++;
+if (! function_exists('generate_service_gallery_products')) {
+    function generate_service_gallery_products(
+        array $featured,
+        array $patterns,
+        array $finishes,
+        array $types,
+        array $categorySlugs,
+        array $images,
+        string $skuPrefix,
+        int $target = 40,
+    ): array {
+        $items = [];
+        foreach ($featured as $i => $row) {
+            $items[] = [...$row, 'featured' => true];
         }
-    }
 
-    return $items;
+        $index = count($items);
+        foreach ($patterns as $pattern) {
+            foreach ($finishes as $finish) {
+                if (count($items) >= $target) {
+                    break 2;
+                }
+
+                $type = $types[$index % count($types)];
+                $name = $finish.' '.$pattern.' '.$type;
+                $baseSlug = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', $name), '-'));
+                $slug = $baseSlug.'-'.str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT);
+
+                $items[] = [
+                    'name' => $name,
+                    'slug' => $slug,
+                    'category' => $categorySlugs[$index % count($categorySlugs)],
+                    'price' => 18000 + ($index % 14) * 2000,
+                    'compare_price' => $index % 3 === 0 ? 28000 + $index * 250 : null,
+                    'sku' => $skuPrefix.str_pad((string) ($index + 1), 3, '0', STR_PAD_LEFT),
+                    'featured' => false,
+                    'image' => $images[$index % count($images)],
+                    'desc' => 'Custom '.strtolower($pattern).' '.strtolower($type).' in '.strtolower($finish).' PVD finish.',
+                ];
+                $index++;
+            }
+        }
+
+        return $items;
+    }
 }
 
 $doorImages = [

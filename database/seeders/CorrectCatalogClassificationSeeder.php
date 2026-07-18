@@ -48,63 +48,115 @@ class CorrectCatalogClassificationSeeder extends Seeder
         $changedSlugs = [];
 
         foreach ($slugMap as $productSlug => $meta) {
-            $category = Category::query()->where('slug', $meta['category'])->first();
-
-            if (! $category) {
-                $this->command?->warn("Category not found for {$productSlug}: {$meta['category']}");
-                $skipped++;
-
-                continue;
-            }
-
-            $product = Product::query()->where('slug', $productSlug)->first();
-
-            if (! $product) {
-                $this->command?->warn("Product not found: {$productSlug}");
-                $skipped++;
-
-                continue;
-            }
-
-            $section = $meta['section'];
-            $desired = [
-                'category_id' => $category->id,
-                'section' => $section,
-                'purchase_mode' => self::PURCHASE_MODE_BY_SECTION[$section] ?? Product::PURCHASE_MODE_ENQUIRY,
-                'pricing_type' => self::PRICING_TYPE_BY_SECTION[$section] ?? Product::PRICING_FIXED,
-            ];
-
-            $changed = false;
-            foreach ($desired as $field => $value) {
-                if ((string) $product->getAttribute($field) !== (string) $value) {
-                    $changed = true;
-                    break;
-                }
-            }
-
-            if (! $changed) {
-                continue;
-            }
-
-            $product->update($desired);
-            $updated++;
-            $changedSlugs[] = $productSlug;
-            $this->command?->line("Reassigned {$productSlug} → section={$desired['section']}, category={$meta['category']}, purchase_mode={$desired['purchase_mode']}");
+            $this->classifyProductBySlugMap($productSlug, $meta, $updated, $skipped, $changedSlugs);
         }
+
+        // Products in DB but not in the static slug map (e.g. procedurally generated
+        // gallery SKUs) — classify from category slug when inference is unambiguous.
+        $inferred = 0;
+        Product::query()
+            ->with('category')
+            ->whereNotIn('slug', array_keys($slugMap))
+            ->orderBy('slug')
+            ->each(function (Product $product) use (&$inferred, &$changedSlugs): void {
+                if ($this->classifyProductByInference($product, $changedSlugs)) {
+                    $inferred++;
+                }
+            });
 
         $unclassified = Product::query()
             ->whereNotIn('slug', array_keys($slugMap))
+            ->where(function ($q) {
+                $q->whereNull('section')
+                    ->orWhereNotIn('section', Product::SECTIONS);
+            })
             ->pluck('slug')
             ->values()
             ->all();
 
-        $this->command?->info("Catalog classification complete: {$updated} updated, {$skipped} skipped.");
+        $this->command?->info("Catalog classification complete: {$updated} updated from slug map, {$inferred} inferred from category, {$skipped} skipped.");
 
         if ($unclassified !== []) {
-            $this->command?->warn('Unclassified products (not in ProductCatalog slug map, left untouched): '.implode(', ', $unclassified));
+            $this->command?->warn('Still unclassified (no slug-map entry and category could not be inferred): '.implode(', ', $unclassified));
         }
 
-        $this->writeReport($changedSlugs, $unclassified, $updated, $skipped);
+        $this->writeReport($changedSlugs, $unclassified, $updated + $inferred, $skipped);
+    }
+
+    /**
+     * @param array{section: string, service_slug: ?string, shop_category: ?string, category: string} $meta
+     * @param list<string> $changedSlugs
+     */
+    private function classifyProductBySlugMap(string $productSlug, array $meta, int &$updated, int &$skipped, array &$changedSlugs): void
+    {
+        $category = Category::query()->where('slug', $meta['category'])->first();
+
+        if (! $category) {
+            $this->command?->warn("Category not found for {$productSlug}: {$meta['category']}");
+            $skipped++;
+
+            return;
+        }
+
+        $product = Product::query()->where('slug', $productSlug)->first();
+
+        if (! $product) {
+            $this->command?->warn("Product not found: {$productSlug}");
+            $skipped++;
+
+            return;
+        }
+
+        if ($this->applyClassification($product, $category, $meta['section'], $changedSlugs)) {
+            $updated++;
+            $this->command?->line("Reassigned {$productSlug} → section={$meta['section']}, category={$meta['category']}");
+        }
+    }
+
+    /** @param list<string> $changedSlugs */
+    private function classifyProductByInference(Product $product, array &$changedSlugs): bool
+    {
+        $categorySlug = $product->category?->slug;
+        $section = ProductCatalog::sectionFor($product->slug, $categorySlug);
+
+        if ($section === 'unknown' || ! in_array($section, Product::SECTIONS, true)) {
+            return false;
+        }
+
+        $category = $product->category;
+        if (! $category) {
+            return false;
+        }
+
+        if ($this->applyClassification($product, $category, $section, $changedSlugs)) {
+            $this->command?->line("Inferred {$product->slug} → section={$section}, category={$categorySlug}");
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /** @param list<string> $changedSlugs */
+    private function applyClassification(Product $product, Category $category, string $section, array &$changedSlugs): bool
+    {
+        $desired = [
+            'category_id' => $category->id,
+            'section' => $section,
+            'purchase_mode' => self::PURCHASE_MODE_BY_SECTION[$section] ?? Product::PURCHASE_MODE_ENQUIRY,
+            'pricing_type' => self::PRICING_TYPE_BY_SECTION[$section] ?? Product::PRICING_FIXED,
+        ];
+
+        foreach ($desired as $field => $value) {
+            if ((string) $product->getAttribute($field) !== (string) $value) {
+                $product->update($desired);
+                $changedSlugs[] = $product->slug;
+
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function exportBackup(): void

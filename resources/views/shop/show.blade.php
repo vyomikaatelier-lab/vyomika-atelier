@@ -19,6 +19,7 @@
     $sectionLabel = StorefrontRoutes::productSectionLabel($product);
     $isStudio = $product->isStudioItem();
     $showCalculator = $isStudio;
+    $showCheckoutBuy = $product->usesCheckoutFlow();
     $calcServiceSlug = Service::serviceSlugForProduct($product->slug, $categorySlug) ?? '';
     $calcLabel = Service::estimateLabelForProduct($product->slug, $categorySlug);
     $calcRate = \App\Models\Product::baseSqFtRate();
@@ -101,9 +102,21 @@
                     ])
                     @include('partials.am-pdp-checkout-trust')
                 </div>
-                @else
+                @elseif($showCheckoutBuy)
                 <div class="am-pdp__buy-inline" id="buy">
                     @include('partials.am-pdp-buy-actions', ['product' => $product])
+                    @include('partials.am-pdp-checkout-trust')
+                </div>
+                @else
+                <div class="am-pdp__quote-cta" id="buy">
+                    @include('partials.am-gallery-order-now-btn', [
+                        'name' => $product->name,
+                        'slug' => $product->slug,
+                        'serviceSlug' => $calcServiceSlug,
+                        'category' => $sectionLabel ?? '',
+                        'price' => $product->price,
+                        'class' => 'am-btn am-btn--primary am-btn--lg am-btn--full',
+                    ])
                     @include('partials.am-pdp-checkout-trust')
                 </div>
                 @endif
