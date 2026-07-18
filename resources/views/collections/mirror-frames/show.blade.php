@@ -20,8 +20,8 @@
     <div class="am-container">
         @include('partials.am-breadcrumbs', ['items' => [
             ['label' => 'Home', 'url' => route('home')],
-            ['label' => 'Collections', 'url' => route('shop.index')],
-            ['label' => 'Mirror Frames', 'url' => route('collections.mirror-frames.index')],
+            ['label' => 'Shop', 'url' => route('shop.index')],
+            ['label' => 'Mirror Frames', 'url' => route('shop.mirror-frames.index')],
             ['label' => $design['name'] ?? $product->name],
         ]])
 
@@ -87,8 +87,8 @@
                 <div class="am-prose am-pdp__desc">{{ $design['description'] ?? $product->description }}</div>
                 @endif
 
-                <div class="am-pdp__quote-cta" id="buy">
-                    <button type="button" class="am-btn am-btn--primary am-btn--lg am-btn--full" data-open-order-popup data-product-name="{{ $product->name }}" data-product-slug="{{ $product->slug }}" data-service-slug="partitions">Order Now</button>
+                <div class="am-pdp__buy-inline" id="buy">
+                    @include('partials.am-pdp-buy-actions', ['product' => $product])
                     @include('partials.am-pdp-checkout-trust')
                 </div>
             </div>

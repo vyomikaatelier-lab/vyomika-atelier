@@ -85,7 +85,8 @@ class Service extends Model
     {
         return match ($this->slug) {
             'partitions' => ['partitions', 'fluted-panels', 'room-dividers'],
-            'slim-profile-door-system', 'main-entrance-pvd-doors' => ['metal-furniture', 'door-handles'],
+            'slim-profile-door-system' => ['metal-furniture'],
+            'main-entrance-pvd-doors' => ['metal-furniture'],
             'rack-systems-metal-pvd' => ['metal-furniture'],
             default => [],
         };
@@ -125,44 +126,33 @@ class Service extends Model
         return Product::calculatorCategorySlugs();
     }
 
-    public static function serviceSlugForProduct(?string $productSlug, ?string $categorySlug): string
+    public static function serviceSlugForProduct(?string $productSlug, ?string $categorySlug): ?string
     {
-        if ($productSlug && (str_contains($productSlug, 'door') || str_contains($productSlug, 'handle'))) {
-            return 'main-entrance-pvd-doors';
-        }
-
-        if ($productSlug && str_contains($productSlug, 'rack')) {
-            return 'rack-systems-metal-pvd';
-        }
-
-        return self::serviceSlugForCategory($categorySlug);
+        return \App\Support\ProductCatalog::serviceSlugForProduct($productSlug, $categorySlug);
     }
 
-    public static function serviceSlugForCategory(?string $categorySlug): string
+    public static function serviceSlugForCategory(?string $categorySlug): ?string
     {
         return match ($categorySlug) {
             'partitions', 'fluted-panels', 'room-dividers' => 'partitions',
-            'door-handles' => 'main-entrance-pvd-doors',
-            'metal-furniture' => 'rack-systems-metal-pvd',
-            default => 'partitions',
+            default => null,
         };
     }
 
     /** @return list<string> */
     public static function careGuidelinesForCategory(?string $categorySlug): array
     {
-        return (new self(['slug' => self::serviceSlugForCategory($categorySlug)]))->careGuidelines();
+        $serviceSlug = self::serviceSlugForCategory($categorySlug);
+
+        if (! $serviceSlug) {
+            return \App\Support\ProductCatalog::careGuidelinesForProduct(null, $categorySlug);
+        }
+
+        return (new self(['slug' => $serviceSlug]))->careGuidelines();
     }
 
     public static function estimateLabelForProduct(?string $productSlug, ?string $categorySlug): string
     {
-        if ($productSlug && (str_contains($productSlug, 'door') || str_contains($productSlug, 'handle'))) {
-            return 'door';
-        }
-        if ($productSlug && str_contains($productSlug, 'rack')) {
-            return 'display rack';
-        }
-
-        return (new self(['slug' => self::serviceSlugForCategory($categorySlug)]))->calculatorEstimateLabel();
+        return \App\Support\ProductCatalog::estimateLabelForProduct($productSlug, $categorySlug);
     }
 }

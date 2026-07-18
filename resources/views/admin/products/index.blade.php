@@ -9,11 +9,12 @@
 </div>
 
 <table class="w-full bg-white rounded-lg shadow text-sm">
-    <thead class="border-b"><tr class="text-left"><th class="p-3">Name</th><th class="p-3">Price</th><th class="p-3">Stock</th><th class="p-3">Status</th><th class="p-3"></th></tr></thead>
+    <thead class="border-b"><tr class="text-left"><th class="p-3">Name</th><th class="p-3">Section</th><th class="p-3">Price</th><th class="p-3">Stock</th><th class="p-3">Status</th><th class="p-3"></th></tr></thead>
     <tbody>
         @foreach($products as $product)
         <tr class="border-b">
             <td class="p-3">{{ $product->name }}</td>
+            <td class="p-3">{{ ucfirst($product->resolvedSection() ?? '—') }}</td>
             <td class="p-3">₹{{ number_format($product->price, 0) }}</td>
             <td class="p-3">{{ $product->stock }}</td>
             <td class="p-3">{{ $product->is_active ? 'Active' : 'Hidden' }}</td>

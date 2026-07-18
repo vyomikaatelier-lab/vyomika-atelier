@@ -17,6 +17,8 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\AboutController;
 use App\Http\Controllers\RailingsController;
+use App\Http\Controllers\StudioController;
+use App\Http\Controllers\ShopPageController;
 use App\Http\Controllers\MirrorFramesController;
 use App\Http\Controllers\CollectionGalleryController;
 use App\Http\Controllers\AccountAuthController;
@@ -41,7 +43,9 @@ use App\Http\Controllers\Admin\MediaAdminController;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::redirect('/preview.html', '/');
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
-Route::get('/shop/{slug}', [ProductController::class, 'show'])->name('shop.show');
+Route::get('/shop/mirror-frames', [MirrorFramesController::class, 'index'])->name('shop.mirror-frames.index');
+Route::get('/shop/mirror-frames/{design}', [MirrorFramesController::class, 'show'])->name('shop.mirror-frames.show');
+Route::get('/shop/{slug}', [ShopPageController::class, 'show'])->name('shop.show');
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/add/{product}', [CartController::class, 'add'])->name('cart.add');
@@ -56,9 +60,18 @@ Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])-
 
 Route::get('/services', [ServiceController::class, 'index'])->name('services.index');
 Route::redirect('/corten-steel', '/services/corten-steel-facade');
-Route::redirect('/services/bespoke-metal-furniture', '/collections/bespoke-metal-furniture');
+Route::redirect('/services/bespoke-metal-furniture', '/shop/bespoke-metal-furniture');
+Route::redirect('/services/partitions', '/studio/pvd-partitions');
+Route::redirect('/services/slim-profile-door-system', '/studio/slim-profile-door-systems');
+Route::redirect('/services/main-entrance-pvd-doors', '/studio/main-entrance-pvd-doors');
+Route::redirect('/services/rack-systems-metal-pvd', '/studio/metal-pvd-rack-systems');
 Route::get('/services/{slug}', [ServiceController::class, 'show'])->name('services.show');
 Route::get('/services/{serviceSlug}/{designSlug}', [ServiceController::class, 'design'])->name('services.design');
+
+Route::get('/studio', [StudioController::class, 'index'])->name('studio.index');
+Route::get('/studio/{slug}', [StudioController::class, 'show'])
+    ->whereIn('slug', \App\Support\StorefrontRoutes::studioUrlSlugs())
+    ->name('studio.show');
 
 Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
 Route::get('/projects/{slug}', [ProjectController::class, 'show'])->name('projects.show');
@@ -74,13 +87,15 @@ Route::post('/custom-order', [LeadController::class, 'store']);
 Route::get('/contact', [ContactController::class, 'index'])->name('contact.index');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 
-Route::get('/studio/railings', [RailingsController::class, 'index'])->name('studio.railings');
+Route::get('/railings', [RailingsController::class, 'index'])->name('railings.index');
+Route::redirect('/studio/railings', '/railings');
 
-Route::get('/collections/mirror-frames', [MirrorFramesController::class, 'index'])->name('collections.mirror-frames.index');
-Route::get('/collections/mirror-frames/{design}', [MirrorFramesController::class, 'show'])->name('collections.mirror-frames.show');
-
-Route::get('/collections/{slug}', [CollectionGalleryController::class, 'index'])
-    ->whereIn('slug', CollectionGalleryController::slugs())
+// Legacy collection URLs → shop (preserve named routes for old links)
+Route::get('/collections/mirror-frames', fn () => redirect()->route('shop.mirror-frames.index', [], 301))->name('collections.mirror-frames.index');
+Route::get('/collections/mirror-frames/{design}', fn (string $design) => redirect()->route('shop.mirror-frames.show', $design, 301))->name('collections.mirror-frames.show');
+Route::get('/collections/{slug}', function (string $slug) {
+    return redirect()->route('shop.show', $slug, 301);
+})->whereIn('slug', CollectionGalleryController::slugs())
     ->name('collections.gallery.index');
 
 Route::get('/about', [AboutController::class, 'index'])->name('about');

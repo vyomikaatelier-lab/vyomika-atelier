@@ -10,6 +10,7 @@
     'serviceSlug' => '',
     'finish' => '',
     'price' => null,
+    'useCheckout' => false,
 ])
 
 <article class="am-design-gallery__card am-design-gallery__card--split am-collection-card">
@@ -35,7 +36,9 @@
         @endif
         <div class="am-design-gallery__actions">
             <a href="{{ $showUrl }}" class="am-btn am-btn--card-view">View</a>
-            @if($product)
+            @if($product && $useCheckout)
+            @include('partials.am-gallery-buy-now-btn', ['product' => $product])
+            @elseif($product)
             @include('partials.am-gallery-order-now-btn', [
                 'name' => $title,
                 'slug' => $product->slug,

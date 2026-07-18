@@ -5,6 +5,7 @@
     'careHeading' => 'Composition, Material & Care Guidelines',
     'related' => null,
     'product' => null,
+    'categoryLabel' => null,
 ])
 
 <section class="am-pdp-tabs-wrap">
@@ -42,7 +43,7 @@
                 <h3>Product Specifications</h3>
                 <dl class="am-pdp-spec-table">
                     @if($product)
-                        @if($product->category)<div><dt>Category</dt><dd>{{ $product->category->name }}</dd></div>@endif
+                        @if($categoryLabel)<div><dt>Category</dt><dd>{{ $categoryLabel }}</dd></div>@endif
                         @if($product->sku)<div><dt>SKU</dt><dd>{{ $product->sku }}</dd></div>@endif
                         <div><dt>Material</dt><dd>Grade 304/316 stainless steel with PVD coating</dd></div>
                         <div><dt>Finish options</dt><dd>Gold Mirror, Gold Brush, Rose Gold Mirror, Rose Gold Brush, Champagne Mirror, Champagne Brush, Black Mirror (+30%), Black Brush (+30%)</dd></div>

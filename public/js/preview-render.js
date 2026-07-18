@@ -10,20 +10,21 @@
   }
 
   function productCard(p) {
+    const url = `/shop/${p.slug || ''}`;
     const badge = p.badge
       ? `<span class="am-product-card__badge ${p.badge === 'NEW' ? 'am-product-card__badge--new' : ''}">${p.badge}</span>`
       : '';
     const old = p.compare_price ? `<span class="am-product-card__price-old">${fmt(p.compare_price)}</span>` : '';
-    return `<article class="am-product-card" data-product-url="/shop/${p.slug || ''}">
-      <a href="/shop/${p.slug || ''}" class="am-product-card__thumb">
+    return `<article class="am-product-card" data-product-url="${url}">
+      <a href="${url}" class="am-product-card__thumb">
         ${badge}
         <img src="${p.image}" alt="${p.name}" loading="lazy">
         <div class="am-product-card__actions">
-          <button type="button" class="am-btn am-btn--dark am-btn--sm am-btn--full" data-order-now data-product-url="/shop/${p.slug || ''}">Order Now</button>
+          <form action="/cart/add/${p.slug || ''}" method="POST" class="am-product-card__buy-form"><input type="hidden" name="_token" value="preview"><input type="hidden" name="quantity" value="1"><input type="hidden" name="buy_now" value="1"><button type="submit" class="am-btn am-btn--primary am-btn--sm am-btn--full">Buy Now</button></form>
         </div>
       </a>
       <div class="am-product-card__body">
-        <h3 class="am-product-card__name"><a href="/shop/${p.slug || ''}">${p.name}</a></h3>
+        <h3 class="am-product-card__name"><a href="${url}">${p.name}</a></h3>
         <div class="am-product-card__stars" aria-hidden="true">★★★★★</div>
         <div class="am-product-card__price">
           <span class="am-product-card__price-current">${fmt(p.price)}</span>${old}

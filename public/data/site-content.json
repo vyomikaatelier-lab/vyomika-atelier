@@ -16,58 +16,62 @@
     },
     "nav": [
         {
-            "label": "Studio",
+            "label": "Home",
+            "href": "/"
+        },
+        {
+            "label": "Shop",
             "children": [
                 {
-                    "label": "PVD Partitions",
-                    "href": "/services/partitions"
+                    "label": "Mirror Frames",
+                    "href": "/shop/mirror-frames"
                 },
                 {
-                    "label": "Slim Profile Door System",
-                    "href": "/services/slim-profile-door-system"
+                    "label": "Corner Tables",
+                    "href": "/shop/corner-tables"
                 },
                 {
-                    "label": "Main Entrance PVD Doors",
-                    "href": "/services/main-entrance-pvd-doors"
+                    "label": "Coffee Tables",
+                    "href": "/shop/coffee-tables"
                 },
                 {
-                    "label": "Rack Systems, Metal PVD",
-                    "href": "/services/rack-systems-metal-pvd"
+                    "label": "Glass Tables",
+                    "href": "/shop/glass-tables"
                 },
                 {
-                    "label": "Railings",
-                    "href": "/studio/railings"
+                    "label": "Door Handles",
+                    "href": "/shop/door-handles"
+                },
+                {
+                    "label": "Bespoke Metal Furniture",
+                    "href": "/shop/bespoke-metal-furniture"
                 }
             ]
         },
         {
-            "label": "Collections",
+            "label": "Studio",
             "children": [
                 {
-                    "label": "Mirror Frames",
-                    "href": "/collections/mirror-frames"
+                    "label": "PVD Partitions",
+                    "href": "/studio/pvd-partitions"
                 },
                 {
-                    "label": "Bespoke Furniture",
-                    "href": "/collections/bespoke-metal-furniture"
+                    "label": "Slim Profile Door Systems",
+                    "href": "/studio/slim-profile-door-systems"
                 },
                 {
-                    "label": "Corner Tables",
-                    "href": "/collections/corner-tables"
+                    "label": "Main Entrance PVD Doors",
+                    "href": "/studio/main-entrance-pvd-doors"
                 },
                 {
-                    "label": "Coffee Tables",
-                    "href": "/collections/coffee-tables"
-                },
-                {
-                    "label": "Glass Tables",
-                    "href": "/collections/glass-tables"
-                },
-                {
-                    "label": "Door Handles",
-                    "href": "/collections/door-handles"
+                    "label": "Metal PVD Rack Systems",
+                    "href": "/studio/metal-pvd-rack-systems"
                 }
             ]
+        },
+        {
+            "label": "Railings",
+            "href": "/railings"
         },
         {
             "label": "Corten steel",
@@ -106,7 +110,7 @@
                 "description": "Statement room dividers in wave, fluted, and laser-cut patterns — engineered for offices, showrooms, and luxury homes.",
                 "image": "https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg",
                 "cta_label": "Explore Collection",
-                "cta_href": "/shop?category=partitions"
+                "cta_href": "/studio/pvd-partitions"
             },
             {
                 "kicker": "METAL FURNITURE",
@@ -114,7 +118,7 @@
                 "description": "Coffee tables, console tables, and PVD rack systems — custom sizes with Pan-India delivery from our Mumbai studio.",
                 "image": "https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg",
                 "cta_label": "Shop Furniture",
-                "cta_href": "/collections/coffee-tables"
+                "cta_href": "/shop/coffee-tables"
             }
         ]
     },
@@ -207,21 +211,21 @@
             "title": "PVD Partitions",
             "subtitle": "Wave, fluted & laser-cut dividers",
             "cta": "Shop Now",
-            "href": "/shop?category=partitions",
+            "href": "/studio/pvd-partitions",
             "image": "https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg"
         },
         {
             "title": "Fluted Panels",
             "subtitle": "Up to 20% off bestsellers",
             "cta": "Shop Now",
-            "href": "/shop?category=partitions",
+            "href": "/studio/pvd-partitions",
             "image": "https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg"
         },
         {
             "title": "Metal Furniture",
             "subtitle": "Tables, consoles & racks",
             "cta": "Shop Now",
-            "href": "/collections/coffee-tables",
+            "href": "/shop/coffee-tables",
             "image": "https://images.unsplash.com/photo-1532372320572-127d86b32558?w=800&q=80"
         },
         {
@@ -399,27 +403,27 @@
             },
             {
                 "label": "Mirror Frames",
-                "href": "/collections/mirror-frames"
-            },
-            {
-                "label": "Bespoke Furniture",
-                "href": "/collections/bespoke-metal-furniture"
+                "href": "/shop/mirror-frames"
             },
             {
                 "label": "Corner Tables",
-                "href": "/collections/corner-tables"
+                "href": "/shop/corner-tables"
             },
             {
                 "label": "Coffee Tables",
-                "href": "/collections/coffee-tables"
+                "href": "/shop/coffee-tables"
             },
             {
                 "label": "Glass Tables",
-                "href": "/collections/glass-tables"
+                "href": "/shop/glass-tables"
             },
             {
                 "label": "Door Handles",
-                "href": "/collections/door-handles"
+                "href": "/shop/door-handles"
+            },
+            {
+                "label": "Bespoke Metal Furniture",
+                "href": "/shop/bespoke-metal-furniture"
             }
         ],
         "info_links": [
@@ -438,28 +442,28 @@
             {
                 "label": "Contact",
                 "href": "/contact"
+            },
+            {
+                "label": "Railings",
+                "href": "/railings"
             }
         ],
         "service_links": [
             {
                 "label": "PVD Partitions",
-                "href": "/services/partitions"
+                "href": "/studio/pvd-partitions"
             },
             {
-                "label": "Slim Profile Door System",
-                "href": "/services/slim-profile-door-system"
+                "label": "Slim Profile Door Systems",
+                "href": "/studio/slim-profile-door-systems"
             },
             {
                 "label": "Main Entrance PVD Doors",
-                "href": "/services/main-entrance-pvd-doors"
+                "href": "/studio/main-entrance-pvd-doors"
             },
             {
-                "label": "Rack Systems, Metal PVD",
-                "href": "/services/rack-systems-metal-pvd"
-            },
-            {
-                "label": "Railings",
-                "href": "/studio/railings"
+                "label": "Metal PVD Rack Systems",
+                "href": "/studio/metal-pvd-rack-systems"
             }
         ],
         "legal_links": [

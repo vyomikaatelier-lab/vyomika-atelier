@@ -2,13 +2,18 @@
 
 @php
     $hero = $page['hero'] ?? [];
+    $pageCategoryLabel = $pageCategoryLabel ?? (
+        \App\Support\StorefrontRoutes::isShopCategory($slug)
+            ? \App\Support\StorefrontRoutes::shopCategoryLabel($slug)
+            : $category->name
+    );
 @endphp
 
 @section('title', $page['meta_title'] ?? ($category->name.' — Vyomika Atelier LLP'))
 
 @push('meta')
 <meta name="description" content="{{ $page['meta_description'] ?? '' }}">
-<link rel="canonical" href="{{ route('collections.gallery.index', $slug) }}">
+<link rel="canonical" href="{{ route('shop.show', $slug) }}">
 @endpush
 
 @section('content')
@@ -26,7 +31,9 @@
 
 @include('partials.am-collection-gallery-grid', [
     'products' => $products,
-    'galleryTitle' => $page['gallery_title'] ?? $category->name,
+    'galleryTitle' => $page['gallery_title'] ?? $pageCategoryLabel,
+    'parentCategoryName' => $pageCategoryLabel,
+    'shopPageSlug' => $slug,
 ])
 
 @endsection

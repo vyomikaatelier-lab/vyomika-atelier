@@ -8,7 +8,7 @@ return [
     'meta_description' => 'PVD-framed wall mirrors, floor mirrors, backlit bathroom mirrors and bespoke vanity designs — fixed prices with Pan-India delivery from Vyomika Atelier LLP.',
 
     'hero' => [
-        'label' => 'Collections',
+        'label' => 'Shop',
         'title' => 'Mirror Frames',
         'subtitle' => 'Architectural mirror frames in champagne, rose gold and matte black PVD — from arched wall mirrors to LED dressing mirrors and retail display systems.',
         'highlights' => [
@@ -17,7 +17,7 @@ return [
             'Pan-India delivery',
         ],
         'cta_primary' => ['label' => 'Browse Designs', 'href' => '#mirror-designs'],
-        'cta_secondary' => ['label' => 'Shop All Collections', 'href' => '/shop'],
+        'cta_secondary' => ['label' => 'Browse All Shop', 'href' => '/shop'],
         'image' => 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=1400&q=80',
     ],
 

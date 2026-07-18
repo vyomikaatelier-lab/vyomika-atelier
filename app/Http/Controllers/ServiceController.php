@@ -20,7 +20,7 @@ class ServiceController extends Controller
     public function show(string $slug)
     {
         if ($slug === 'bespoke-metal-furniture') {
-            return redirect()->route('collections.gallery.index', 'bespoke-metal-furniture', 301);
+            return redirect()->route('shop.show', 'bespoke-metal-furniture', 301);
         }
 
         $service = Service::where('slug', $slug)->where('is_active', true)

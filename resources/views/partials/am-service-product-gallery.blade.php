@@ -3,6 +3,7 @@
     'heading' => 'Design Gallery',
     'ctaLabel' => 'Order Now',
     'serviceSlug' => '',
+    'categoryLabel' => '',
 ])
 
 @if($products->isNotEmpty())
@@ -12,8 +13,9 @@
     <div class="am-design-gallery__grid am-design-gallery__grid--studio">
         @foreach($products as $product)
         @php
-            $productUrl = \App\Support\StorefrontUrl::to('shop.show', ['slug' => $product->slug], '/shop/'.$product->slug);
-            $resolvedService = $serviceSlug ?: \App\Models\Service::serviceSlugForProduct($product->slug, $product->category?->slug);
+            $productUrl = \App\Support\StorefrontRoutes::productUrl($product);
+            $resolvedService = $serviceSlug ?: (\App\Models\Service::serviceSlugForProduct($product->slug, $product->category?->slug) ?? '');
+            $itemLabel = $categoryLabel ?: \App\Support\StorefrontRoutes::productSectionLabel($product);
         @endphp
         <article class="am-design-gallery__card am-design-gallery__card--split">
             @include('partials.am-gallery-media', [
@@ -25,8 +27,8 @@
                 <h3 class="am-design-gallery__name">
                     <a href="{{ $productUrl }}">{{ $product->name }}</a>
                 </h3>
-                @if($product->category)
-                <p class="am-design-gallery__cat">{{ $product->category->name }}</p>
+                @if($itemLabel)
+                <p class="am-design-gallery__cat">{{ $itemLabel }}</p>
                 @endif
                 @if($product->description)
                 <p class="am-design-gallery__desc">{{ $product->description }}</p>
@@ -40,7 +42,7 @@
                         'name' => $product->name,
                         'slug' => $product->slug,
                         'serviceSlug' => $resolvedService,
-                        'category' => $product->category?->name ?? '',
+                        'category' => $itemLabel,
                         'price' => $product->price,
                     ])
                     @endif

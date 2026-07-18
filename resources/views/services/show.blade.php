@@ -2,11 +2,16 @@
 
 @section('title', ($service->meta_title ?? $service->name) . ' — Vyomika Atelier LLP')
 
-@if($service->meta_description)
-    @push('styles')
-    <meta name="description" content="{{ $service->meta_description }}">
-    @endpush
+@push('meta')
+@if($studioUrl = \App\Support\StorefrontRoutes::studioUrlForService($service->slug))
+<link rel="canonical" href="{{ route('studio.show', $studioUrl) }}">
+@else
+<link rel="canonical" href="{{ route('services.show', $service->slug) }}">
 @endif
+@if($service->meta_description)
+<meta name="description" content="{{ $service->meta_description }}">
+@endif
+@endpush
 
 @section('content')
 
@@ -23,6 +28,7 @@
     'label' => 'Studio',
     'title' => $service->name,
     'subtitle' => \App\Support\ServiceGallery::galleryHeroSubtitle($service, $galleryProducts->count()),
+    'showLabel' => false,
 ])
 @endif
 
@@ -42,6 +48,7 @@
             'heading' => \App\Support\ServiceGallery::galleryHeading($service),
             'ctaLabel' => \App\Support\ServiceGallery::galleryCtaLabel($service),
             'serviceSlug' => $service->slug,
+            'categoryLabel' => $service->name,
         ])
     </div>
 </section>

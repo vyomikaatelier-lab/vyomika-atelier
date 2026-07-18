@@ -13,7 +13,17 @@
     { slug: 'corner-tables', name: 'Corner Tables' },
     { slug: 'glass-tables', name: 'Glass Tables' },
     { slug: 'door-handles', name: 'Door Handles' },
+    { slug: 'bespoke-metal-furniture', name: 'Bespoke Metal Furniture' },
   ];
+
+  const SHOP_CATEGORY_LABELS = {
+    'mirror-frames': 'Mirror Frames',
+    'corner-tables': 'Corner Tables',
+    'coffee-tables': 'Coffee Tables',
+    'glass-tables': 'Glass Tables',
+    'door-handles': 'Door Handles',
+    'bespoke-metal-furniture': 'Bespoke Metal Furniture',
+  };
 
   const PRODUCT_CATEGORY_KEYS = [
     { slug: 'partitions', keys: ['partition', 'fluted', 'divider', 'laser', 'panel'] },
@@ -24,29 +34,175 @@
     { slug: 'metal-furniture', keys: ['rack', 'door', 'furniture'] },
   ];
 
-  const COLLECTION_CATEGORIES = ['mirror-frames', 'coffee-tables', 'corner-tables', 'glass-tables', 'door-handles'];
+  const COLLECTION_CATEGORIES = ['mirror-frames', 'coffee-tables', 'corner-tables', 'glass-tables', 'door-handles', 'bespoke-metal-furniture'];
+
+  const SHOP_GALLERY_SLUGS = ['mirror-frames', 'coffee-tables', 'corner-tables', 'glass-tables', 'door-handles', 'bespoke-metal-furniture'];
+
+  const STUDIO_URL_TO_SERVICE = {
+    'pvd-partitions': 'partitions',
+    'slim-profile-door-systems': 'slim-profile-door-system',
+    'main-entrance-pvd-doors': 'main-entrance-pvd-doors',
+    'metal-pvd-rack-systems': 'rack-systems-metal-pvd',
+  };
+
+  const STUDIO_SERVICE_TO_URL = Object.fromEntries(
+    Object.entries(STUDIO_URL_TO_SERVICE).map(([url, service]) => [service, url])
+  );
 
   const CHECKOUT_CATEGORIES = ['mirror-frames', 'coffee-tables', 'corner-tables', 'glass-tables', 'door-handles'];
+
+  const STUDIO_SERVICE_LABELS = {
+    partitions: 'PVD Partitions',
+    'slim-profile-door-system': 'Slim Profile Door Systems',
+    'main-entrance-pvd-doors': 'Main Entrance PVD Doors',
+    'rack-systems-metal-pvd': 'Metal PVD Rack Systems',
+  };
+
+  let productClassificationMap = null;
+
+  function buildProductClassificationMap() {
+    if (productClassificationMap) return productClassificationMap;
+    const map = {};
+    partitionGalleryProducts().forEach((p) => {
+      map[p.slug] = { section: 'studio', service_slug: 'partitions', shop_category: null };
+    });
+    mirrorGalleryProducts().forEach((p) => {
+      map[p.slug] = { section: 'shop', service_slug: null, shop_category: 'mirror-frames' };
+    });
+    slimDoorGalleryProducts().forEach((p) => {
+      map[p.slug] = { section: 'studio', service_slug: 'slim-profile-door-system', shop_category: null };
+    });
+    entranceDoorGalleryProducts().forEach((p) => {
+      if (categorySlug(p) === 'door-handles') {
+        map[p.slug] = { section: 'shop', service_slug: null, shop_category: 'door-handles' };
+      } else {
+        map[p.slug] = { section: 'studio', service_slug: 'main-entrance-pvd-doors', shop_category: null };
+      }
+    });
+    rackGalleryProducts().forEach((p) => {
+      map[p.slug] = { section: 'studio', service_slug: 'rack-systems-metal-pvd', shop_category: null };
+    });
+    furnitureGalleryProducts().forEach((p) => {
+      const cat = categorySlug(p);
+      const shopCat = COLLECTION_CATEGORIES.includes(cat) ? cat : 'bespoke-metal-furniture';
+      map[p.slug] = { section: 'shop', service_slug: null, shop_category: shopCat };
+    });
+    productClassificationMap = map;
+    return map;
+  }
+
+  function bespokeMetalFurnitureSlugs() {
+    return furnitureGalleryProducts().map((p) => p.slug);
+  }
+
+  function isBespokeMetalFurnitureProduct(slug) {
+    return bespokeMetalFurnitureSlugs().includes(slug);
+  }
+
+  function inferMetalFurnitureService(slug) {
+    const s = (slug || '').toLowerCase();
+    if (isBespokeMetalFurnitureProduct(slug)) return null;
+    if (s.includes('rack')) return 'rack-systems-metal-pvd';
+    if (s.includes('slim-') || s.includes('slim-profile')) return 'slim-profile-door-system';
+    if (!s.includes('door') && !s.includes('suite') && !s.includes('entrance')) return null;
+    if (/\b(pivot|sliding|hinged|folding|stacking|frameless)\b/.test(s)) return 'slim-profile-door-system';
+    if (s.includes('entrance') || s.includes('main-') || s.includes('grand') || s.includes('security')) return 'main-entrance-pvd-doors';
+    if (s.includes('door') || s.includes('gate') || s.includes('portal')) return 'main-entrance-pvd-doors';
+    return null;
+  }
+
+  function productClassification(product) {
+    const map = buildProductClassificationMap();
+    if (product?.slug && map[product.slug]) return map[product.slug];
+    const cat = categorySlug(product);
+    if (COLLECTION_CATEGORIES.includes(cat) || cat === 'door-handles') {
+      return { section: 'shop', service_slug: null, shop_category: cat === 'metal-furniture' ? 'bespoke-metal-furniture' : cat };
+    }
+    if (['partitions', 'fluted-panels', 'room-dividers'].includes(cat)) {
+      return { section: 'studio', service_slug: 'partitions', shop_category: null };
+    }
+    if (cat === 'metal-furniture') {
+      const service = inferMetalFurnitureService(product.slug);
+      if (service) return { section: 'studio', service_slug: service, shop_category: null };
+      return { section: 'shop', service_slug: null, shop_category: 'bespoke-metal-furniture' };
+    }
+    return { section: 'unknown', service_slug: null, shop_category: null };
+  }
+
+  function isStudioProduct(product) {
+    return productClassification(product).section === 'studio';
+  }
+
+  function sectionLabelForProduct(product, shopContextSlug) {
+    if (shopContextSlug && SHOP_CATEGORY_LABELS[shopContextSlug]) {
+      return SHOP_CATEGORY_LABELS[shopContextSlug];
+    }
+    const cls = productClassification(product);
+    if (cls.section === 'studio') return STUDIO_SERVICE_LABELS[cls.service_slug] || '';
+    if (cls.shop_category) return SHOP_CATEGORY_LABELS[cls.shop_category] || shopCategoryLabel(cls.shop_category);
+    return '';
+  }
+
+  function productBreadcrumbItems(product, shopContextSlug) {
+    const cls = productClassification(product);
+    if (cls.section === 'studio') {
+      const studioUrl = STUDIO_SERVICE_TO_URL[cls.service_slug];
+      return [
+        { label: 'Home', url: '/' },
+        { label: 'Studio', url: '/studio' },
+        { label: STUDIO_SERVICE_LABELS[cls.service_slug] || 'Studio', url: studioUrl ? `/studio/${studioUrl}` : null },
+        { label: product.name },
+      ];
+    }
+    const items = [{ label: 'Home', url: '/' }, { label: 'Shop', url: '/shop' }];
+    const shopCat = (shopContextSlug && SHOP_CATEGORY_LABELS[shopContextSlug])
+      ? shopContextSlug
+      : shopCategorySlugForProduct(product);
+    if (shopCat) items.push({ label: shopCategoryLabel(shopCat), url: shopCategoryUrl(shopCat) });
+    items.push({ label: product.name });
+    return items;
+  }
+
   const CALC_CATEGORIES = ['partitions', 'fluted-panels', 'room-dividers'];
 
-  const FINISH_SWATCHES = [
-    { slug: 'gold-mirror', name: 'Gold Mirror', hex: '#D4AF37', rate: 1800, is_black: false },
-    { slug: 'gold-brush', name: 'Gold Brush', hex: '#C5A028', rate: 1800, is_black: false },
-    { slug: 'rose-gold-mirror', name: 'Rose Gold Mirror', hex: '#B76E79', rate: 1800, is_black: false },
-    { slug: 'rose-gold-brush', name: 'Rose Gold Brush', hex: '#A85A65', rate: 1800, is_black: false },
-    { slug: 'champagne-mirror', name: 'Champagne Mirror', hex: '#C9A86C', rate: 1800, is_black: false },
-    { slug: 'champagne-brush', name: 'Champagne Brush', hex: '#B8956A', rate: 1800, is_black: false },
-    { slug: 'black-mirror', name: 'Black Mirror', hex: '#1A1A1A', rate: 2340, is_black: true },
-    { slug: 'black-brush', name: 'Black Brush', hex: '#2C2C2C', rate: 2340, is_black: true },
-  ];
-  const BLACK_SQFT_RATE = 2340;
+  // Same source as App\Models\Product::baseSqFtRate()/blackSqFtRate() (config/pricing.php),
+  // synced to public/data/pricing.json via database/scripts/export-pricing-json.php.
+  // The literal 1800/1.3 below are fallback defaults only, used if pricing.json
+  // fails to load — pricingData (loaded in boot()) is always the primary source.
+  function basePricingRate() {
+    return (pricingData && pricingData.base_sqft_rate) || 1800;
+  }
+
+  function blackPricingRate() {
+    if (pricingData && pricingData.black_sqft_rate) return pricingData.black_sqft_rate;
+    const multiplier = (pricingData && pricingData.black_finish_multiplier) || 1.3;
+
+    return Math.round(basePricingRate() * multiplier);
+  }
+
+  function getFinishSwatches() {
+    const base = basePricingRate();
+    const black = blackPricingRate();
+
+    return [
+      { slug: 'gold-mirror', name: 'Gold Mirror', hex: '#D4AF37', rate: base, is_black: false },
+      { slug: 'gold-brush', name: 'Gold Brush', hex: '#C5A028', rate: base, is_black: false },
+      { slug: 'rose-gold-mirror', name: 'Rose Gold Mirror', hex: '#B76E79', rate: base, is_black: false },
+      { slug: 'rose-gold-brush', name: 'Rose Gold Brush', hex: '#A85A65', rate: base, is_black: false },
+      { slug: 'champagne-mirror', name: 'Champagne Mirror', hex: '#C9A86C', rate: base, is_black: false },
+      { slug: 'champagne-brush', name: 'Champagne Brush', hex: '#B8956A', rate: base, is_black: false },
+      { slug: 'black-mirror', name: 'Black Mirror', hex: '#1A1A1A', rate: black, is_black: true },
+      { slug: 'black-brush', name: 'Black Brush', hex: '#2C2C2C', rate: black, is_black: true },
+    ];
+  }
 
   function finishSwatchesHtml() {
-    const def = FINISH_SWATCHES.find((s) => s.slug === 'champagne-mirror') || FINISH_SWATCHES[0];
-    return `<div class="am-pdp-finish" data-pdp-finish data-base-rate="1800">
+    const swatches = getFinishSwatches();
+    const def = swatches.find((s) => s.slug === 'champagne-mirror') || swatches[0];
+    return `<div class="am-pdp-finish" data-pdp-finish data-base-rate="${basePricingRate()}">
       <label class="am-pdp-finish__label">PVD Finish: <span class="am-pdp-finish__value" data-finish-label>${def.name}</span></label>
       <div class="am-pdp-finish__swatches" role="listbox" aria-label="Select PVD finish">
-        ${FINISH_SWATCHES.map((s) => `
+        ${swatches.map((s) => `
         <button type="button" class="am-pdp-finish__swatch ${s.slug === def.slug ? 'is-active' : ''}" role="option"
           aria-selected="${s.slug === def.slug ? 'true' : 'false'}" aria-label="${s.name}"
           data-finish-slug="${s.slug}" data-finish-name="${s.name}" data-finish-rate="${s.rate}"
@@ -69,6 +225,7 @@
   let mirrorFramesData = null;
   let aboutData = null;
   let blogData = null;
+  let pricingData = null;
 
   const LEGAL_PATHS = {
     'privacy-policy': 'privacy',
@@ -95,13 +252,34 @@
   }
 
   function productCard(p) {
-    return window.AmPreview?.productCard(p) ?? '';
+    const url = `/shop/${p.slug || ''}`;
+    const badge = p.badge
+      ? `<span class="am-product-card__badge ${p.badge === 'NEW' ? 'am-product-card__badge--new' : ''}">${p.badge}</span>`
+      : '';
+    const old = p.compare_price ? `<span class="am-product-card__price-old">${fmt(p.compare_price)}</span>` : '';
+    const action = usesCheckoutFlow(p)
+      ? `<form action="/cart/add/${p.slug}" method="POST" class="am-product-card__buy-form"><input type="hidden" name="_token" value="preview"><input type="hidden" name="quantity" value="1"><input type="hidden" name="buy_now" value="1"><button type="submit" class="am-btn am-btn--primary am-btn--sm am-btn--full">Buy Now</button></form>`
+      : `<button type="button" class="am-btn am-btn--primary am-btn--sm am-btn--full" data-open-order-popup data-product-name="${p.name}" data-product-slug="${p.slug}" data-service-slug="${serviceSlugForProduct(p)}">Order Now</button>`;
+    return `<article class="am-product-card" data-product-url="${url}">
+      <a href="${url}" class="am-product-card__thumb">
+        ${badge}
+        ${p.image ? `<img src="${p.image}" alt="${p.name}" loading="lazy">` : ''}
+        <div class="am-product-card__actions">${action}</div>
+      </a>
+      <div class="am-product-card__body">
+        <h3 class="am-product-card__name"><a href="${url}">${p.name}</a></h3>
+        <div class="am-product-card__stars" aria-hidden="true">★★★★★</div>
+        <div class="am-product-card__price">
+          <span class="am-product-card__price-current">${fmt(p.price)}</span>${old}
+        </div>
+      </div>
+    </article>`;
   }
 
-  function pageHero(label, title, subtitle) {
+  function pageHero(label, title, subtitle, showLabel = true) {
     return `<section class="am-page-hero">
       <div class="am-container">
-        <p class="am-page-hero__label">${label}</p>
+        ${showLabel && label ? `<p class="am-page-hero__label">${label}</p>` : ''}
         <h1 class="am-page-hero__title">${title}</h1>
         ${subtitle ? `<p class="am-page-hero__subtitle">${subtitle}</p>` : ''}
       </div>
@@ -219,9 +397,45 @@ ${pageHero('Legal', page.title, lastUpdated ? 'Last updated: ' + lastUpdated : '
       partitions: 'PVD Partitions',
       'fluted-panels': 'Fluted Panels',
       'room-dividers': 'Room Dividers',
-      'metal-furniture': 'Metal Furniture',
+      'metal-furniture': 'Bespoke Metal Furniture',
     };
     return labels[slug] || slug;
+  }
+
+  function shopCategorySlugForProduct(product) {
+    if (isStudioProduct(product)) return null;
+    const cls = productClassification(product);
+    if (cls.shop_category) return cls.shop_category;
+    const slug = categorySlug(product);
+    if (COLLECTION_CATEGORIES.includes(slug)) return slug;
+    if (slug === 'metal-furniture') return 'bespoke-metal-furniture';
+    return null;
+  }
+
+  function shopPageProductSlugs(pageSlug) {
+    if (pageSlug === 'bespoke-metal-furniture') return bespokeMetalFurnitureSlugs();
+    const subtypeLabels = {
+      'coffee-tables': 'coffee tables',
+      'corner-tables': 'corner tables',
+      'glass-tables': 'glass tables',
+    };
+    if (subtypeLabels[pageSlug]) {
+      const needle = subtypeLabels[pageSlug];
+      return furnitureGalleryProducts()
+        .filter((p) => (p.category || '').toLowerCase() === needle || categorySlug(p) === pageSlug)
+        .map((p) => p.slug);
+    }
+    return collectProducts(siteData)
+      .filter((p) => productClassification(p).shop_category === pageSlug)
+      .map((p) => p.slug);
+  }
+
+  function shopCategoryLabel(slug) {
+    return SHOP_CATEGORY_LABELS[slug] || categoryLabel(slug);
+  }
+
+  function shopCategoryUrl(slug) {
+    return slug === 'mirror-frames' ? '/shop/mirror-frames' : `/shop/${slug}`;
   }
 
   function partitionGalleryProducts() {
@@ -403,7 +617,21 @@ ${pageHero('Legal', page.title, lastUpdated ? 'Last updated: ' + lastUpdated : '
 
   function catalogProductsForService(serviceSlug) {
     const fn = SERVICE_GALLERY_CATALOG[serviceSlug];
-    return fn ? fn() : [];
+    if (!fn) return [];
+    const products = fn();
+    if (serviceSlug === 'main-entrance-pvd-doors') {
+      return products.filter((p) => productClassification(p).service_slug === 'main-entrance-pvd-doors');
+    }
+    if (serviceSlug === 'slim-profile-door-system') {
+      return products.filter((p) => productClassification(p).service_slug === 'slim-profile-door-system');
+    }
+    if (serviceSlug === 'rack-systems-metal-pvd') {
+      return products.filter((p) => productClassification(p).service_slug === 'rack-systems-metal-pvd');
+    }
+    if (serviceSlug === 'partitions') {
+      return products.filter((p) => productClassification(p).service_slug === 'partitions');
+    }
+    return products;
   }
 
   function serviceGalleryMeta(serviceSlug) {
@@ -417,19 +645,20 @@ ${pageHero('Legal', page.title, lastUpdated ? 'Last updated: ' + lastUpdated : '
     return map[serviceSlug] || { heading: 'Design Gallery', label: 'designs', cta: 'Order Now', action: 'select a style to configure & order' };
   }
 
-  function serviceProductCardHtml(product, ctaLabel) {
+  function serviceProductCardHtml(product, ctaLabel, categoryLabel) {
     const primaryHtml = usesCheckoutFlow(product)
       ? `<form action="/cart/add/${product.slug}" method="POST" class="am-design-gallery__buy-form"><input type="hidden" name="_token" value="preview"><input type="hidden" name="quantity" value="1"><input type="hidden" name="buy_now" value="1"><button type="submit" class="am-btn am-btn--card-primary">Buy Now</button></form>`
       : ctaLabel === 'Request Quote'
         ? `<a href="/custom-order" class="am-btn am-btn--card-primary">Request Quote</a>`
         : `<button type="button" class="am-btn am-btn--card-primary" data-open-order-popup data-product-name="${product.name}" data-product-slug="${product.slug}" data-service-slug="${serviceSlugForProduct(product)}">Order Now</button>`;
+    const catHtml = categoryLabel ? `<p class="am-design-gallery__cat">${categoryLabel}</p>` : '';
     return `<article class="am-design-gallery__card">
       <a href="/shop/${product.slug}" class="am-design-gallery__media">
         ${product.image ? `<img src="${product.image}" alt="${product.name}" loading="lazy">` : ''}
       </a>
       <div class="am-design-gallery__body">
         <h3 class="am-design-gallery__name"><a href="/shop/${product.slug}">${product.name}</a></h3>
-        <p class="am-design-gallery__cat">${product.category || ''}</p>
+        ${catHtml}
         <div class="am-design-gallery__actions">
           <a href="/shop/${product.slug}" class="am-btn am-btn--card-view">View</a>
           ${primaryHtml}
@@ -446,7 +675,7 @@ ${pageHero('Legal', page.title, lastUpdated ? 'Last updated: ' + lastUpdated : '
   };
 
   function serviceHeroHtml(hero) {
-    return `<section class="am-mirror-frames-hero am-service-hero" style="--mirror-frames-hero-img: url('${hero.image}')"><div class="am-container am-mirror-frames-hero__inner"><p class="am-page-hero__label">${hero.label}</p><h1 class="am-mirror-frames-hero__title">${hero.title}</h1><p class="am-mirror-frames-hero__subtitle">${hero.subtitle}</p><div class="am-pro-hero__actions"><a href="#service-gallery" class="am-btn am-btn--primary">Browse Designs</a><a href="/custom-order" class="am-btn am-btn--outline am-btn--light">Request Quote</a></div></div></section>${hero.intro ? `<section class="am-section am-section--white"><div class="am-container am-mirror-frames-intro"><h2 class="am-corten-section__title am-corten-section__title--center">${hero.title}</h2><p class="am-corten-section__lead am-corten-section__lead--center">${hero.intro}</p></div></section>` : ''}`;
+    return `<section class="am-mirror-frames-hero am-service-hero" style="--mirror-frames-hero-img: url('${hero.image}')"><div class="am-container am-mirror-frames-hero__inner"><h1 class="am-mirror-frames-hero__title">${hero.title}</h1><p class="am-mirror-frames-hero__subtitle">${hero.subtitle}</p><div class="am-pro-hero__actions"><a href="#service-gallery" class="am-btn am-btn--primary">Browse Designs</a><a href="/custom-order" class="am-btn am-btn--outline am-btn--light">Request Quote</a></div></div></section>${hero.intro ? `<section class="am-section am-section--white"><div class="am-container am-mirror-frames-intro"><h2 class="am-corten-section__title am-corten-section__title--center">${hero.title}</h2><p class="am-corten-section__lead am-corten-section__lead--center">${hero.intro}</p></div></section>` : ''}`;
   }
 
   function renderServiceGallery(slug) {
@@ -460,14 +689,14 @@ ${pageHero('Legal', page.title, lastUpdated ? 'Last updated: ' + lastUpdated : '
     const hero = SERVICE_HEROES[slug];
     setTitle(service.name);
     document.getElementById('am-main').innerHTML = `
-${hero ? serviceHeroHtml(hero) : pageHero('Studio', service.name, meta.action)}
+${hero ? serviceHeroHtml(hero) : pageHero('Studio', service.name, meta.action, false)}
 <section class="am-page-body am-page-body--gallery-only" id="service-gallery">
   <div class="am-container">
     <section class="am-design-gallery am-design-gallery--service">
       <p class="am-card__label">Design Gallery</p>
       <h2 class="am-design-gallery__title">${meta.heading}</h2>
       <div class="am-design-gallery__grid am-design-gallery__grid--dense">
-        ${products.map((p) => serviceProductCardHtml(p, meta.cta)).join('')}
+        ${products.map((p) => serviceProductCardHtml(p, meta.cta, service.name)).join('')}
       </div>
     </section>
   </div>
@@ -648,37 +877,23 @@ ${hero ? serviceHeroHtml(hero) : pageHero('Studio', service.name, meta.action)}
   }
 
   function usesCheckoutFlow(product) {
-    return false;
+    return productClassification(product).section === 'shop';
   }
 
   function showsSqFtCalculator(product) {
-    if (usesCheckoutFlow(product) || isFurnitureProduct(product)) return false;
-    const slug = (product.slug || '').toLowerCase();
-    const catSlug = categorySlug(product);
-    if (CALC_CATEGORIES.includes(catSlug)) return true;
-    if (catSlug === 'metal-furniture') return slug.includes('door') || slug.includes('rack');
-    if (slug.includes('door') || slug.includes('rack')) return true;
-    return false;
+    return isStudioProduct(product);
   }
 
   function serviceSlugForProduct(product) {
-    const slug = product.slug || '';
-    const catSlug = categorySlug(product);
-    if (slug.includes('door') || slug.includes('handle')) return 'main-entrance-pvd-doors';
-    if (slug.includes('rack')) return 'rack-systems-metal-pvd';
-    if (['partitions', 'fluted-panels', 'room-dividers'].includes(catSlug)) return 'partitions';
-    if (catSlug === 'door-handles') return 'main-entrance-pvd-doors';
-    return 'partitions';
+    return productClassification(product).service_slug || '';
   }
 
   function estimateLabelForProduct(product) {
-    const slug = (product.slug || '').toLowerCase();
-    if (slug.includes('door') || slug.includes('handle') || slug.includes('pull')) return 'door';
-    if (slug.includes('rack')) return 'display rack';
-    const catSlug = categorySlug(product);
-    if (catSlug === 'door-handles') return 'door';
-    if (['partitions', 'fluted-panels', 'room-dividers'].includes(catSlug)) return 'partition';
-    return 'partition';
+    const serviceSlug = serviceSlugForProduct(product);
+    if (serviceSlug === 'partitions') return 'partition';
+    if (serviceSlug === 'rack-systems-metal-pvd') return 'display rack';
+    if (serviceSlug === 'slim-profile-door-system' || serviceSlug === 'main-entrance-pvd-doors') return 'door';
+    return 'product';
   }
 
   function careGuidelinesForProduct(product) {
@@ -753,17 +968,17 @@ ${hero ? serviceHeroHtml(hero) : pageHero('Studio', service.name, meta.action)}
 
   function inlineCalcHtml(product) {
     const serviceSlug = serviceSlugForProduct(product);
-    const service = getService(serviceSlug) || { slug: serviceSlug, name: product.name, rate_per_sqft: 1800 };
+    const service = getService(serviceSlug) || { slug: serviceSlug, name: product.name, rate_per_sqft: basePricingRate() };
     const label = estimateLabelForProduct(product);
     const calcHtml = serviceCalcHtml(
       { ...service, calc_label: label },
       { name: product.name, slug: product.slug }
     );
-    return `<div class="am-pdp__calc-inline">${calcHtml}${checkoutTrustHtml()}</div>`;
+    return `<div class="am-pdp__calc-inline" id="buy">${calcHtml}${checkoutTrustHtml()}</div>`;
   }
 
   function shopProducts(data) {
-    return collectProducts(data).filter((p) => COLLECTION_CATEGORIES.includes(categorySlug(p)));
+    return collectProducts(data).filter((p) => productClassification(p).section === 'shop');
   }
 
   function filterProducts(products, params) {
@@ -817,8 +1032,28 @@ ${hero ? serviceHeroHtml(hero) : pageHero('Studio', service.name, meta.action)}
       return;
     }
 
+    if (parts[0] === 'shop' && parts[1] === 'mirror-frames' && parts.length === 2) {
+      renderMirrorFramesIndex();
+      return;
+    }
+
+    if (parts[0] === 'shop' && parts[1] === 'mirror-frames' && parts.length === 3) {
+      renderMirrorFramesDesign(parts[2]);
+      return;
+    }
+
+    if (parts[0] === 'shop' && parts.length === 2 && STUDIO_URL_TO_SERVICE[parts[1]]) {
+      navigate('/studio/' + parts[1], '', true);
+      return;
+    }
+
+    if (parts[0] === 'shop' && parts.length === 2 && SHOP_GALLERY_SLUGS.includes(parts[1])) {
+      renderCollectionGallery(parts[1]);
+      return;
+    }
+
     if (parts[0] === 'shop' && parts.length === 2) {
-      renderProduct(parts[1]);
+      renderProduct(parts[1], params);
       return;
     }
 
@@ -919,24 +1154,54 @@ ${hero ? serviceHeroHtml(hero) : pageHero('Studio', service.name, meta.action)}
       return;
     }
 
+    if (parts[0] === 'studio' && parts.length === 1) {
+      renderStudioIndex();
+      return;
+    }
+
+    if (parts[0] === 'studio' && parts.length === 2 && SHOP_GALLERY_SLUGS.includes(parts[1])) {
+      navigate('/shop/' + parts[1], '', true);
+      return;
+    }
+
+    if (parts[0] === 'studio' && parts.length === 2 && STUDIO_URL_TO_SERVICE[parts[1]]) {
+      renderServiceGallery(STUDIO_URL_TO_SERVICE[parts[1]]);
+      return;
+    }
+
     if (parts[0] === 'studio' && parts[1] === 'railings') {
+      navigate('/railings', '', true);
+      return;
+    }
+
+    if (parts[0] === 'railings') {
       renderRailings();
       return;
     }
 
     if (parts[0] === 'collections' && parts[1] === 'mirror-frames' && parts.length === 2) {
-      renderMirrorFramesIndex();
+      navigate('/shop/mirror-frames', '', true);
       return;
     }
 
     if (parts[0] === 'collections' && parts[1] === 'mirror-frames' && parts.length === 3) {
-      renderMirrorFramesDesign(parts[2]);
+      navigate('/shop/mirror-frames/' + parts[2], '', true);
       return;
     }
 
     const collectionSlugs = ['coffee-tables', 'corner-tables', 'glass-tables', 'door-handles', 'bespoke-metal-furniture'];
     if (parts[0] === 'collections' && collectionSlugs.includes(parts[1]) && parts.length === 2) {
-      renderCollectionGallery(parts[1]);
+      navigate('/shop/' + parts[1], '', true);
+      return;
+    }
+
+    if (parts[0] === 'services' && parts.length === 2 && STUDIO_SERVICE_TO_URL[parts[1]]) {
+      navigate('/studio/' + STUDIO_SERVICE_TO_URL[parts[1]], '', true);
+      return;
+    }
+
+    if (parts[0] === 'services' && parts.length === 2 && parts[1] === 'bespoke-metal-furniture') {
+      navigate('/shop/bespoke-metal-furniture', '', true);
       return;
     }
 
@@ -956,19 +1221,19 @@ ${hero ? serviceHeroHtml(hero) : pageHero('Studio', service.name, meta.action)}
   function renderShop(params) {
     const activeCat = params.get('category') || '';
     if (['partitions', 'fluted-panels', 'room-dividers'].includes(activeCat)) {
-      navigate('/services/partitions', '', true);
+      navigate('/studio/pvd-partitions', '', true);
       return;
     }
     if (activeCat === 'metal-furniture') {
-      navigate('/collections/bespoke-metal-furniture', '', true);
+      navigate('/shop/bespoke-metal-furniture', '', true);
       return;
     }
     if (COLLECTION_CATEGORIES.includes(activeCat) && activeCat !== 'mirror-frames') {
-      navigate('/collections/' + activeCat, '', true);
+      navigate('/shop/' + activeCat, '', true);
       return;
     }
     if (activeCat === 'mirror-frames') {
-      navigate('/collections/mirror-frames', '', true);
+      navigate('/shop/mirror-frames', '', true);
       return;
     }
 
@@ -983,7 +1248,7 @@ ${hero ? serviceHeroHtml(hero) : pageHero('Studio', service.name, meta.action)}
     });
 
     document.getElementById('am-main').innerHTML = `
-${pageHero('Products', catLabel, 'Mirror frames, tables, and door hardware — order through our collection galleries.')}
+${pageHero('Products', catLabel, 'Mirror frames, tables, and door hardware — order through our collection galleries.', false)}
 <section class="am-page-body">
   <div class="am-container">
     ${breadcrumbs([
@@ -1029,26 +1294,26 @@ ${pageHero('Products', catLabel, 'Mirror frames, tables, and door hardware — o
     document.dispatchEvent(new CustomEvent('am-content-ready'));
   }
 
-  function renderProduct(slug) {
+  function renderProduct(slug, params = new URLSearchParams()) {
     const product = collectProducts(siteData).find((p) => p.slug === slug);
     if (!product) {
       renderNotFound('/shop/' + slug);
       return;
     }
     setTitle(product.name);
+    const shopContext = params.get('from');
+    const sectionLabel = sectionLabelForProduct(product, shopContext);
+    const crumbItems = productBreadcrumbItems(product, shopContext);
     const old = product.compare_price ? `<span class="am-featured__price-old">${fmt(product.compare_price)}</span>` : '';
     const badge = product.badge ? `<span class="am-featured__badge">${product.badge}</span>` : '';
     const showCalc = showsSqFtCalculator(product);
     const related = relatedForProduct(product);
+    const catHtml = sectionLabel ? `<p class="am-featured__cat">${sectionLabel}</p>` : '';
 
     document.getElementById('am-main').innerHTML = `
 <section class="am-page-body am-page-body--pdp">
   <div class="am-container">
-    ${breadcrumbs([
-      { label: 'Home', url: '/' },
-      { label: 'Shop', url: '/shop' },
-      { label: product.name },
-    ])}
+    ${breadcrumbs(crumbItems)}
     <div class="am-pdp">
       <div class="am-pdp__gallery">
         <div class="am-pdp__gallery-inner">
@@ -1056,16 +1321,16 @@ ${pageHero('Products', catLabel, 'Mirror frames, tables, and door hardware — o
         </div>
       </div>
       <div class="am-pdp__info">
-        <p class="am-featured__cat">${product.category}</p>
+        ${catHtml}
         <h1 class="am-pdp__title">${product.name}</h1>
         <p class="am-featured__meta">SKU: ${product.sku} · Pan-India shipping</p>
         ${showCalc ? `
         <div class="am-featured__price am-featured__price--sqft">
           <div class="am-pdp__sqft-price">
-            <span class="am-pdp__sqft-price-current" data-sqft-rate-display>₹1,800</span>
+            <span class="am-pdp__sqft-price-current" data-sqft-rate-display>${fmt(basePricingRate())}</span>
             <span class="am-pdp__sqft-price-unit">/ sq ft</span>
           </div>
-          <p class="am-pdp__sqft-price-note" data-sqft-black-note hidden>Black finish selected — ₹2,340/sq ft (+30%)</p>
+          <p class="am-pdp__sqft-price-note" data-sqft-black-note hidden>Black finish selected — ${fmt(blackPricingRate())}/sq ft (+30%)</p>
         </div>` : `
         <div class="am-featured__price">
           <span class="am-featured__price-current">${fmt(product.price)}</span>${old}${badge}
@@ -1079,10 +1344,10 @@ ${pageHero('Products', catLabel, 'Mirror frames, tables, and door hardware — o
         <div class="am-prose am-pdp__desc"><p>${product.description}</p></div>
         ${showCalc ? inlineCalcHtml(product) : usesCheckoutFlow(product)
           ? `<div class="am-pdp__buy-inline" id="buy">${pdpBuyActionsHtml(product)}${checkoutTrustHtml()}</div>`
-          : `<div class="am-pdp__quote-cta"><button type="button" class="am-btn am-btn--primary am-btn--lg am-btn--full" data-open-order-popup data-product-name="${product.name}" data-product-slug="${product.slug}" data-service-slug="${serviceSlugForProduct(product)}">Order Now</button></div>${checkoutTrustHtml()}`}
+          : `<div class="am-pdp__quote-cta" id="buy"><button type="button" class="am-btn am-btn--primary am-btn--lg am-btn--full" data-open-order-popup data-product-name="${product.name}" data-product-slug="${product.slug}" data-service-slug="${serviceSlugForProduct(product)}">Order Now</button>${checkoutTrustHtml()}</div>`}
       </div>
     </div>
-    ${productTabsHtml(product.name, '<p>' + product.description + '</p>', careGuidelinesForProduct(product), related, product)}
+    ${productTabsHtml(product.name, '<p>' + product.description + '</p>', careGuidelinesForProduct(product), related, product, sectionLabel)}
   </div>
 </section>`;
     document.dispatchEvent(new CustomEvent('am-content-ready'));
@@ -1252,7 +1517,7 @@ ${pageHero('Secure Checkout', 'Checkout', 'Preview mode — form submission is s
     if (window.AmPreview?.calculatorHtml) {
       const featured = {
         name: design?.name || service.name,
-        rate_per_sqft: service.rate_per_sqft || 1800,
+        rate_per_sqft: service.rate_per_sqft || basePricingRate(),
       };
       return window.AmPreview.calculatorHtml(featured)
         .replace('data-service-slug="partitions"', `data-service-slug="${service.slug}"`)
@@ -1263,15 +1528,16 @@ ${pageHero('Secure Checkout', 'Checkout', 'Preview mode — form submission is s
     return '';
   }
 
-  function productTabsHtml(title, contentHtml, careItems, relatedProducts, product) {
+  function productTabsHtml(title, contentHtml, careItems, relatedProducts, product, categoryLabel) {
     const care = (careItems || []).map((item) => `<li>${item}</li>`).join('');
     const related = relatedProducts?.length ? `
     <div class="am-pdp-related-block">
       <div class="am-pdp-tabs__nav am-pdp-tabs__nav--sub"><span class="am-pdp-tabs__tab is-active">Related Products</span></div>
       <div class="am-product-grid am-product-grid--4">${relatedProducts.map(productCard).join('')}</div>
     </div>` : '';
+    const catLabel = categoryLabel || (product ? shopCategoryLabel(shopCategorySlugForProduct(product)) : null);
     const specRows = product ? `
-      <div><dt>Category</dt><dd>${product.category || '—'}</dd></div>
+      ${catLabel ? `<div><dt>Category</dt><dd>${catLabel}</dd></div>` : ''}
       <div><dt>SKU</dt><dd>${product.sku || '—'}</dd></div>
       <div><dt>Material</dt><dd>Grade 304/316 stainless steel with PVD coating</dd></div>
       <div><dt>Finish options</dt><dd>Gold Mirror, Gold Brush, Rose Gold Mirror, Rose Gold Brush, Champagne Mirror, Champagne Brush, Black Mirror (+30%), Black Brush (+30%)</dd></div>
@@ -1387,7 +1653,7 @@ ${pageHero('Secure Checkout', 'Checkout', 'Preview mode — form submission is s
     const name = design?.name || service.name;
     const image = design?.image || service.image;
     const summary = design?.description || service.summary;
-    const rate = service.rate_per_sqft || 1800;
+    const rate = service.rate_per_sqft || basePricingRate();
     return `<section class="am-section am-section--featured am-section--edge">
       <div class="am-section__body">
         <div class="am-featured am-featured--edge am-featured--with-calc">
@@ -1445,9 +1711,36 @@ ${pageHero('Secure Checkout', 'Checkout', 'Preview mode — form submission is s
     return `<a href="/services/${service.slug}/${design.slug}" class="am-design-gallery__card">${inner}</a>`;
   }
 
+  function renderStudioIndex() {
+    setTitle('Studio');
+    const studioServices = (siteData.services || []).filter((s) => STUDIO_SERVICE_TO_URL[s.slug]);
+    document.getElementById('am-main').innerHTML = `
+${pageHero('Studio', 'Custom Architectural Solutions', 'PVD partitions, door systems, rack systems and bespoke metal fabrication — engineered to your drawings.', false)}
+<section class="am-page-body">
+  <div class="am-container">
+    <div class="am-grid-3">
+      ${studioServices.map((s) => `
+      <a href="/studio/${STUDIO_SERVICE_TO_URL[s.slug]}" class="am-card">
+        <div class="am-card__thumb">${s.image ? `<img src="${s.image}" alt="${s.name}" loading="lazy">` : ''}</div>
+        <div class="am-card__body">
+          <h2 class="am-card__title">${s.name}</h2>
+          <p class="am-card__text">${s.summary || ''}</p>
+          <span class="am-card__text" style="margin-top:1rem;display:inline-block">Order Now →</span>
+        </div>
+      </a>`).join('')}
+    </div>
+  </div>
+</section>`;
+    document.dispatchEvent(new CustomEvent('am-content-ready'));
+  }
+
   function renderService(slug) {
     if (slug === 'bespoke-metal-furniture') {
-      navigate('/collections/bespoke-metal-furniture', '', true);
+      navigate('/shop/bespoke-metal-furniture', '', true);
+      return;
+    }
+    if (STUDIO_SERVICE_TO_URL[slug]) {
+      navigate('/studio/' + STUDIO_SERVICE_TO_URL[slug], '', true);
       return;
     }
     const service = getService(slug);
@@ -1903,7 +2196,6 @@ ${cta.title ? `
     document.getElementById('am-main').innerHTML = `
 <section class="am-railings-hero" style="--railings-hero-img: url('${hero.image || ''}')">
   <div class="am-container am-railings-hero__inner">
-    <p class="am-page-hero__label">${hero.label || 'Studio'}</p>
     <h1 class="am-railings-hero__title">${hero.title || 'Railings'}</h1>
     <p class="am-railings-hero__subtitle">${hero.subtitle || ''}</p>
     ${highlightsHtml ? `<ul class="am-pro-hero__highlights">${highlightsHtml}</ul>` : ''}
@@ -1964,23 +2256,23 @@ ${whyHtml ? `<section class="am-section am-section--dark"><div class="am-contain
       'corner-tables': { title: 'Corner Tables', subtitle: 'Compact PVD corner and accent tables for bedrooms and entryways.', image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1400&q=80', gallery: 'Corner Table Designs', intro: 'Designed for tight footprints without compromising presence.' },
       'glass-tables': { title: 'Glass Tables', subtitle: 'Tempered glass tables with slim PVD frames.', image: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?w=1400&q=80', gallery: 'Glass Table Designs', intro: 'Floating glass surfaces on precision-welded PVD frames.' },
       'door-handles': { title: 'Door Handles', subtitle: 'Architectural door pulls in PVD stainless.', image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1400&q=80', gallery: 'Door Handle Designs', intro: 'Pull handles fabricated to match your door systems.' },
-      'bespoke-metal-furniture': { title: 'Bespoke Metal Furniture', subtitle: 'PVD coffee tables, corner tables, glass accent pieces and console tables.', image: 'https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg', gallery: 'Furniture Designs', intro: 'Each piece is fabricated in our Mumbai studio from grade 304/316 stainless with PVD coating.', categories: ['coffee-tables', 'corner-tables', 'glass-tables', 'metal-furniture'] },
+      'bespoke-metal-furniture': { title: 'Bespoke Metal Furniture', subtitle: 'PVD coffee tables, corner tables, glass accent pieces and console tables.', image: 'https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg', gallery: 'Furniture Designs', intro: 'Each piece is fabricated in our Mumbai studio from grade 304/316 stainless with PVD coating.', catalogSlugs: bespokeMetalFurnitureSlugs() },
     };
     const page = pages[slug];
     if (!page) {
-      renderNotFound('/collections/' + slug);
+      renderNotFound('/shop/' + slug);
       return;
     }
-    const catSlugs = page.categories || [slug];
-    const products = filterProducts(collectProducts(siteData), new URLSearchParams()).filter((p) => catSlugs.includes(categorySlug(p)));
+    const pageSlugs = page.catalogSlugs || shopPageProductSlugs(slug);
+    const products = filterProducts(collectProducts(siteData), new URLSearchParams()).filter((p) => pageSlugs.includes(p.slug));
+    const fromQuery = SHOP_GALLERY_SLUGS.includes(slug) ? `?from=${encodeURIComponent(slug)}` : '';
     setTitle(page.title + ' Collection | Vyomika Atelier LLP');
-    const orderBtn = (product) => `<button type="button" class="am-btn am-btn--card-primary" data-open-order-popup data-product-name="${product.name}" data-product-slug="${product.slug}" data-service-slug="${serviceSlugForProduct(product)}">Order Now</button>`;
+    const buyNowBtn = (product) => `<form action="/cart/add/${product.slug}" method="POST" class="am-design-gallery__buy-form"><input type="hidden" name="_token" value="preview"><input type="hidden" name="quantity" value="1"><input type="hidden" name="buy_now" value="1"><button type="submit" class="am-btn am-btn--card-primary">Buy Now</button></form>`;
     const cards = products.map((product) => {
-      const catName = categoryLabel(categorySlug(product));
-      return `<article class="am-design-gallery__card am-collection-card"><a href="/shop/${product.slug}" class="am-design-gallery__media">${product.image ? `<img src="${product.image}" alt="${product.name}" loading="lazy">` : ''}</a><div class="am-design-gallery__body"><h3 class="am-design-gallery__name"><a href="/shop/${product.slug}">${product.name}</a></h3><p class="am-design-gallery__cat">${catName}</p>${product.description ? `<p class="am-design-gallery__desc">${product.description}</p>` : ''}<div class="am-design-gallery__actions"><a href="/shop/${product.slug}" class="am-btn am-btn--card-view">View</a>${orderBtn(product)}</div></div></article>`;
+      return `<article class="am-design-gallery__card am-collection-card"><a href="/shop/${product.slug}${fromQuery}" class="am-design-gallery__media">${product.image ? `<img src="${product.image}" alt="${product.name}" loading="lazy">` : ''}</a><div class="am-design-gallery__body"><h3 class="am-design-gallery__name"><a href="/shop/${product.slug}${fromQuery}">${product.name}</a></h3><p class="am-design-gallery__cat">${page.title}</p>${product.description ? `<p class="am-design-gallery__desc">${product.description}</p>` : ''}<div class="am-design-gallery__actions"><a href="/shop/${product.slug}${fromQuery}" class="am-btn am-btn--card-view">View</a>${buyNowBtn(product)}</div></div></article>`;
     }).join('');
     document.getElementById('am-main').innerHTML = `
-<section class="am-mirror-frames-hero" style="--mirror-frames-hero-img: url('${page.image}')"><div class="am-container am-mirror-frames-hero__inner"><p class="am-page-hero__label">Collections</p><h1 class="am-mirror-frames-hero__title">${page.title}</h1><p class="am-mirror-frames-hero__subtitle">${page.subtitle}</p><div class="am-pro-hero__actions"><a href="#collection-gallery" class="am-btn am-btn--primary">Browse Designs</a><a href="/shop" class="am-btn am-btn--outline am-btn--light">Shop All Collections</a></div></div></section>
+<section class="am-mirror-frames-hero" style="--mirror-frames-hero-img: url('${page.image}')"><div class="am-container am-mirror-frames-hero__inner"><h1 class="am-mirror-frames-hero__title">${page.title}</h1><p class="am-mirror-frames-hero__subtitle">${page.subtitle}</p><div class="am-pro-hero__actions"><a href="#collection-gallery" class="am-btn am-btn--primary">Browse Designs</a><a href="/shop" class="am-btn am-btn--outline am-btn--light">Browse All Shop</a></div></div></section>
 <section class="am-section am-section--white"><div class="am-container am-mirror-frames-intro"><h2 class="am-corten-section__title am-corten-section__title--center">${page.title}</h2><p class="am-corten-section__lead am-corten-section__lead--center">${page.intro}</p></div></section>
 <section class="am-section am-section--cream am-collection-designs" id="collection-gallery"><div class="am-container"><div class="am-mirror-frames-section-head"><p class="am-card__label">Design Gallery</p><h2 class="am-corten-section__title">${page.gallery}</h2></div><div class="am-design-gallery__grid am-design-gallery__grid--dense">${cards}</div></div></section>`;
     document.dispatchEvent(new CustomEvent('am-content-ready'));
@@ -1997,15 +2289,15 @@ ${whyHtml ? `<section class="am-section am-section--dark"><div class="am-contain
     const highlightsHtml = (hero.highlights || []).map((h) => `<li>${h}</li>`).join('');
     const designsHtml = designs.map((design) => `
       <article class="am-design-gallery__card am-mirror-frames-card">
-        <a href="/collections/mirror-frames/${design.slug}" class="am-design-gallery__media">
+        <a href="/shop/mirror-frames/${design.slug}" class="am-design-gallery__media">
           ${design.image ? `<img src="${design.image}" alt="${design.name}" loading="lazy">${design.badge ? `<span class="am-mirror-frames-card__badge">${design.badge}</span>` : ''}` : ''}
         </a>
         <div class="am-design-gallery__body">
-          <h3 class="am-design-gallery__name"><a href="/collections/mirror-frames/${design.slug}">${design.name}</a></h3>
+          <h3 class="am-design-gallery__name"><a href="/shop/mirror-frames/${design.slug}">${design.name}</a></h3>
           ${design.description ? `<p class="am-design-gallery__desc">${design.description}</p>` : ''}
           <div class="am-design-gallery__actions">
-            <a href="/collections/mirror-frames/${design.slug}" class="am-btn am-btn--card-view">View</a>
-            <a href="/collections/mirror-frames/${design.slug}" class="am-btn am-btn--card-primary">Order Now</a>
+            <a href="/shop/mirror-frames/${design.slug}" class="am-btn am-btn--card-view">View</a>
+            <form action="/cart/add/${design.product_slug || design.slug}" method="POST" class="am-design-gallery__buy-form"><input type="hidden" name="_token" value="preview"><input type="hidden" name="quantity" value="1"><input type="hidden" name="buy_now" value="1"><button type="submit" class="am-btn am-btn--card-primary">Buy Now</button></form>
           </div>
         </div>
       </article>`).join('');
@@ -2018,7 +2310,6 @@ ${whyHtml ? `<section class="am-section am-section--dark"><div class="am-contain
     document.getElementById('am-main').innerHTML = `
 <section class="am-mirror-frames-hero" style="--mirror-frames-hero-img: url('${hero.image || ''}')">
   <div class="am-container am-mirror-frames-hero__inner">
-    <p class="am-page-hero__label">${hero.label || 'Collections'}</p>
     <h1 class="am-mirror-frames-hero__title">${hero.title || 'Mirror Frames'}</h1>
     <p class="am-mirror-frames-hero__subtitle">${hero.subtitle || ''}</p>
     ${highlightsHtml ? `<ul class="am-pro-hero__highlights">${highlightsHtml}</ul>` : ''}
@@ -2038,12 +2329,12 @@ ${finishesHtml ? `<section class="am-section am-section--white"><div class="am-c
     const page = mirrorFramesData || {};
     const design = (page.designs || []).find((d) => d.slug === designSlug);
     if (!design) {
-      renderNotFound('/collections/mirror-frames/' + designSlug);
+      renderNotFound('/shop/mirror-frames/' + designSlug);
       return;
     }
     const product = mirrorGalleryProducts().find((p) => p.slug === design.product_slug || p.design_slug === designSlug);
     if (!product) {
-      renderNotFound('/collections/mirror-frames/' + designSlug);
+      renderNotFound('/shop/mirror-frames/' + designSlug);
       return;
     }
     setTitle(design.name);
@@ -2057,8 +2348,8 @@ ${finishesHtml ? `<section class="am-section am-section--white"><div class="am-c
   <div class="am-container">
     ${breadcrumbs([
       { label: 'Home', url: '/' },
-      { label: 'Collections', url: '/shop' },
-      { label: 'Mirror Frames', url: '/collections/mirror-frames' },
+      { label: 'Shop', url: '/shop' },
+      { label: 'Mirror Frames', url: '/shop/mirror-frames' },
       { label: design.name },
     ])}
     <div class="am-pdp">
@@ -2088,7 +2379,7 @@ ${finishesHtml ? `<section class="am-section am-section--white"><div class="am-c
         </div>
       </div>
     </div>
-    ${productTabsHtml(design.name, '<p>' + (design.description || product.description) + '</p>', [], related.map((p) => ({ ...p, href: '/collections/mirror-frames/' + (p.design_slug || p.slug) })), product)}
+    ${productTabsHtml(design.name, '<p>' + (design.description || product.description) + '</p>', [], related.map((p) => ({ ...p, href: '/shop/mirror-frames/' + (p.design_slug || p.slug) })), product)}
   </div>
 </section>`;
     document.dispatchEvent(new CustomEvent('am-content-ready'));
@@ -2408,13 +2699,15 @@ ${pageHero('Thank You', 'Order Confirmed', '')}
   function renderSitemap() {
     setTitle('Sitemap');
     const links = [
-      '/', '/shop', '/services', '/projects', '/blog', '/about', '/professionals', '/studio/railings', '/collections/mirror-frames', '/contact', '/custom-order',
+      '/', '/shop', '/studio', '/services', '/projects', '/blog', '/about', '/professionals', '/railings', '/shop/mirror-frames', '/contact', '/custom-order',
+      '/studio/pvd-partitions', '/studio/slim-profile-door-systems', '/studio/main-entrance-pvd-doors', '/studio/metal-pvd-rack-systems',
+      '/shop/corner-tables', '/shop/coffee-tables', '/shop/glass-tables', '/shop/door-handles', '/shop/bespoke-metal-furniture',
       '/privacy-policy', '/terms-and-conditions', '/shipping-delivery-policy',
     ];
     (siteData.portfolio || []).forEach((p) => links.push('/projects/' + p.slug));
     (blogData?.posts || siteData.blog?.posts || []).forEach((p) => links.push('/blog/' + p.slug));
     collectProducts(siteData).forEach((p) => links.push('/shop/' + p.slug));
-    (mirrorFramesData?.designs || []).forEach((d) => links.push('/collections/mirror-frames/' + d.slug));
+    (mirrorFramesData?.designs || []).forEach((d) => links.push('/shop/mirror-frames/' + d.slug));
     document.getElementById('am-main').innerHTML = `
 <section class="am-page-body">
   <div class="am-container">
@@ -2707,6 +3000,23 @@ ${pageHero('Quote', title, subtitle)}
     };
     mirrorXhr.onerror = done;
     mirrorXhr.send();
+
+    // Same base sq ft rate as App\Models\Product::baseSqFtRate() (config/pricing.php).
+    // Regenerate after changing config/pricing.php: php database/scripts/export-pricing-json.php
+    const pricingXhr = new XMLHttpRequest();
+    pricingXhr.open('GET', 'data/pricing.json', true);
+    pricingXhr.onload = function () {
+      if (pricingXhr.status >= 200 && pricingXhr.status < 300) {
+        try {
+          pricingData = JSON.parse(pricingXhr.responseText);
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      done();
+    };
+    pricingXhr.onerror = done;
+    pricingXhr.send();
   }
 
   if (document.readyState === 'loading') {

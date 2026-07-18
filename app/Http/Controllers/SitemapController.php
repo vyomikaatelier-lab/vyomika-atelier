@@ -16,6 +16,7 @@ use App\Models\Service;
 
 use App\Support\BlogContent;
 use App\Support\MirrorFramesContent;
+use App\Support\StorefrontRoutes;
 
 use Illuminate\Http\Response;
 
@@ -41,6 +42,8 @@ class SitemapController extends Controller
 
             ['loc' => route('shop.index'), 'changefreq' => 'weekly', 'priority' => '0.9'],
 
+            ['loc' => route('studio.index'), 'changefreq' => 'monthly', 'priority' => '0.85'],
+
             ['loc' => route('services.index'), 'changefreq' => 'monthly', 'priority' => '0.8'],
 
             ['loc' => route('projects.index'), 'changefreq' => 'weekly', 'priority' => '0.8'],
@@ -51,9 +54,9 @@ class SitemapController extends Controller
 
             ['loc' => route('professionals.index'), 'changefreq' => 'monthly', 'priority' => '0.7'],
 
-            ['loc' => route('studio.railings'), 'changefreq' => 'monthly', 'priority' => '0.8'],
+            ['loc' => route('railings.index'), 'changefreq' => 'monthly', 'priority' => '0.8'],
 
-            ['loc' => route('collections.mirror-frames.index'), 'changefreq' => 'weekly', 'priority' => '0.85'],
+            ['loc' => route('shop.mirror-frames.index'), 'changefreq' => 'weekly', 'priority' => '0.85'],
 
             ['loc' => route('contact.index'), 'changefreq' => 'monthly', 'priority' => '0.7'],
 
@@ -71,17 +74,29 @@ class SitemapController extends Controller
 
         }
 
-        foreach (\App\Http\Controllers\CollectionGalleryController::slugs() as $collectionSlug) {
+        foreach (StorefrontRoutes::shopCategorySlugs() as $shopSlug) {
+            if ($shopSlug === 'mirror-frames') {
+                continue;
+            }
+
             $urls[] = [
-                'loc' => route('collections.gallery.index', $collectionSlug),
+                'loc' => route('shop.show', $shopSlug),
                 'changefreq' => 'weekly',
                 'priority' => '0.85',
             ];
         }
 
+        foreach (StorefrontRoutes::studioUrlSlugs() as $studioSlug) {
+            $urls[] = [
+                'loc' => route('studio.show', $studioSlug),
+                'changefreq' => 'monthly',
+                'priority' => '0.8',
+            ];
+        }
+
         foreach (MirrorFramesContent::all()['designs'] ?? [] as $design) {
             $urls[] = [
-                'loc' => route('collections.mirror-frames.show', $design['slug']),
+                'loc' => route('shop.mirror-frames.show', $design['slug']),
                 'changefreq' => 'weekly',
                 'priority' => '0.75',
             ];
@@ -227,6 +242,14 @@ class SitemapController extends Controller
 
                 ->each(function (Service $service) use (&$urls) {
 
+                    if (StorefrontRoutes::studioUrlForService($service->slug)) {
+                        return;
+                    }
+
+                    if ($service->slug === 'bespoke-metal-furniture') {
+                        return;
+                    }
+
                     $urls[] = [
 
                         'loc' => route('services.show', $service->slug),
@@ -254,5 +277,4 @@ class SitemapController extends Controller
     }
 
 }
-
 

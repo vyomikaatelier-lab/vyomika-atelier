@@ -2,7 +2,6 @@
 
 <section class="am-mirror-frames-hero am-service-hero" style="--mirror-frames-hero-img: url('{{ $hero['image'] ?? '' }}')">
     <div class="am-container am-mirror-frames-hero__inner">
-        <p class="am-page-hero__label">{{ $hero['label'] ?? 'Studio' }}</p>
         <h1 class="am-mirror-frames-hero__title">{{ $hero['title'] ?? '' }}</h1>
         <p class="am-mirror-frames-hero__subtitle">{{ $hero['subtitle'] ?? '' }}</p>
         @if(!empty($hero['highlights']))

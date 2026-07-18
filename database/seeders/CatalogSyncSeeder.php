@@ -30,6 +30,7 @@ class CatalogSyncSeeder extends Seeder
             ['name' => 'Door Handles', 'slug' => 'door-handles'],
             ['name' => 'Mirror Frames', 'slug' => 'mirror-frames'],
             ['name' => 'Metal Furniture', 'slug' => 'metal-furniture'],
+            ['name' => 'Bespoke Metal Furniture', 'slug' => 'bespoke-metal-furniture'],
         ];
 
         foreach ($categories as $index => $cat) {

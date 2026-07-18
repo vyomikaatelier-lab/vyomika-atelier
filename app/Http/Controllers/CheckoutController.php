@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Services\CartService;
 use App\Services\RazorpayService;
+use App\Support\CartGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -19,6 +20,9 @@ class CheckoutController extends Controller
 
     public function index()
     {
+        // CartService::all() revalidates every item against CartGuard and
+        // silently drops anything no longer eligible (deactivated, or
+        // reclassified as Studio/Railings) before the checkout page renders.
         if ($this->cart->isEmpty()) {
             return redirect()->route('shop.index')->with('error', 'Your cart is empty.');
         }
@@ -46,6 +50,19 @@ class CheckoutController extends Controller
         if (! $this->razorpay->isConfigured()) {
             return redirect()->route('checkout.index')
                 ->with('error', 'Online payment is not available right now. Please contact us to complete your order.');
+        }
+
+        // Defense in depth: revalidate every cart line right before order
+        // creation. CartService::all() already self-heals on read, but this
+        // makes the "no Studio/Railings item may ever become an Order" rule
+        // explicit at the exact point orders are persisted.
+        $ineligible = $this->cart->all()->first(
+            fn (array $item) => ! CartGuard::isEligible($item['product'])
+        );
+
+        if ($ineligible) {
+            return redirect()->route('checkout.index')
+                ->with('error', CartGuard::checkoutEligibility($ineligible['product']));
         }
 
         $validated = $request->validate([

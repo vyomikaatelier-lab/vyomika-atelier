@@ -8,7 +8,7 @@ return [
     'meta_description' => 'Glass, fabricated, per-step baluster and wrought iron railings for indoor and exterior staircases — straight, L-shape, U-shape, curved and custom layouts. Request a quotation from Vyomika Atelier LLP.',
 
     'hero' => [
-        'label' => 'Studio',
+        'label' => 'Railings',
         'title' => 'Railings & Balustrades',
         'subtitle' => 'Precision-fabricated stair railings, glass balustrades and bespoke metal guards — engineered for Indian residences, hospitality and commercial projects.',
         'highlights' => [

@@ -40,45 +40,40 @@ class ServiceGallery
     /** @return Collection<int, Product> */
     public static function productsFor(Service $service): Collection
     {
-        $slugs = collect(static::catalogFor($service->slug))->pluck('slug')->filter()->values();
+        $slugs = ProductCatalog::productSlugsForService($service->slug);
 
-        if ($slugs->isEmpty()) {
-            return static::queryFor($service)->orderBy('name')->get();
+        if ($slugs !== []) {
+            $products = Product::query()
+                ->with('category')
+                ->where('is_active', true)
+                ->whereIn('slug', $slugs)
+                ->get()
+                ->keyBy('slug');
+
+            return collect($slugs)
+                ->map(fn (string $slug) => $products->get($slug))
+                ->filter()
+                ->values();
         }
 
-        $products = Product::query()
-            ->with('category')
-            ->where('is_active', true)
-            ->whereIn('slug', $slugs)
-            ->get()
-            ->keyBy('slug');
-
-        return $slugs
-            ->map(fn (string $slug) => $products->get($slug))
-            ->filter()
-            ->values();
+        return static::queryFor($service)->orderBy('name')->get();
     }
 
     public static function queryFor(Service $service): Builder
     {
-        $query = Product::query()
+        $slugs = ProductCatalog::productSlugsForService($service->slug);
+
+        if ($slugs !== []) {
+            return Product::query()
+                ->with('category')
+                ->where('is_active', true)
+                ->whereIn('slug', $slugs);
+        }
+
+        return Product::query()
             ->with('category')
             ->where('is_active', true)
             ->whereHas('category', fn ($q) => $q->whereIn('slug', $service->relatedCategorySlugs()));
-
-        return match ($service->slug) {
-            'slim-profile-door-system' => $query->where(fn ($q) => $q
-                ->where('slug', 'like', '%door%')
-                ->orWhere('slug', 'like', '%pivot%')
-                ->orWhere('slug', 'like', '%sliding%')
-                ->orWhere('slug', 'like', '%hinged%')),
-            'main-entrance-pvd-doors' => $query->where(fn ($q) => $q
-                ->where('slug', 'like', '%door%')
-                ->orWhere('slug', 'like', '%handle%')
-                ->orWhere('slug', 'like', '%pull%')),
-            'rack-systems-metal-pvd' => $query->where('slug', 'like', '%rack%'),
-            default => $query,
-        };
     }
 
     public static function galleryHeading(Service $service): string

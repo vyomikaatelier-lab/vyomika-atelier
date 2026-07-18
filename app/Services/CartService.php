@@ -3,20 +3,36 @@
 namespace App\Services;
 
 use App\Models\Product;
+use App\Support\CartGuard;
 use Illuminate\Support\Collection;
 
 class CartService
 {
     private const SESSION_KEY = 'cart';
 
+    /**
+     * Current cart contents, revalidated against CartGuard on every read.
+     * Any item that is no longer eligible (deactivated, reclassified as
+     * Studio/Railings, or deleted) is silently dropped from the session so
+     * legacy/invalid cart items never reach checkout or order creation.
+     */
     public function all(): Collection
     {
         $cart = session(self::SESSION_KEY, []);
-        $products = Product::whereIn('id', array_keys($cart))->get()->keyBy('id');
 
-        return collect($cart)->map(function ($quantity, $productId) use ($products) {
+        if ($cart === []) {
+            return collect();
+        }
+
+        $products = Product::with('category')->whereIn('id', array_keys($cart))->get()->keyBy('id');
+        $invalidIds = [];
+
+        $items = collect($cart)->map(function ($quantity, $productId) use ($products, &$invalidIds) {
             $product = $products->get($productId);
-            if (! $product) {
+
+            if (! CartGuard::isEligible($product)) {
+                $invalidIds[] = $productId;
+
                 return null;
             }
 
@@ -26,12 +42,28 @@ class CartService
                 'line_total' => $product->price * $quantity,
             ];
         })->filter()->values();
+
+        if ($invalidIds !== []) {
+            $this->removeMany($invalidIds);
+        }
+
+        return $items;
     }
 
     public function add(Product $product, int $quantity = 1): void
     {
         $cart = session(self::SESSION_KEY, []);
         $cart[$product->id] = ($cart[$product->id] ?? 0) + $quantity;
+        session([self::SESSION_KEY => $cart]);
+    }
+
+    /** @param array<int, int|string> $productIds */
+    public function removeMany(array $productIds): void
+    {
+        $cart = session(self::SESSION_KEY, []);
+        foreach ($productIds as $productId) {
+            unset($cart[$productId]);
+        }
         session([self::SESSION_KEY => $cart]);
     }
 

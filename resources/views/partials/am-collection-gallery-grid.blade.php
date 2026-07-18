@@ -2,6 +2,8 @@
     'products',
     'sectionTitle' => 'Design Gallery',
     'galleryTitle' => 'Designs',
+    'parentCategoryName' => null,
+    'shopPageSlug' => null,
 ])
 
 @if($products->isNotEmpty())
@@ -14,7 +16,14 @@
         <div class="am-design-gallery__grid am-design-gallery__grid--dense">
             @foreach($products as $product)
             @php
-                $showUrl = \App\Support\StorefrontUrl::to('shop.show', ['slug' => $product->slug], '/shop/'.$product->slug);
+                $showUrl = \App\Support\StorefrontRoutes::productUrl(
+                    $product,
+                    \App\Support\StorefrontRoutes::isShopCategory((string) $shopPageSlug) ? $shopPageSlug : null
+                );
+                $cardCategoryLabel = $parentCategoryName
+                    ?: (\App\Support\StorefrontRoutes::isShopCategory((string) $shopPageSlug)
+                        ? \App\Support\StorefrontRoutes::shopCategoryLabel($shopPageSlug)
+                        : null);
             @endphp
             @include('partials.am-design-gallery-card', [
                 'showUrl' => $showUrl,
@@ -22,7 +31,8 @@
                 'description' => $product->description,
                 'image' => $product->imageUrl(),
                 'product' => $product,
-                'categoryName' => $product->category?->name,
+                'categoryName' => $cardCategoryLabel,
+                'useCheckout' => $product->usesCheckoutFlow(),
             ])
             @endforeach
         </div>

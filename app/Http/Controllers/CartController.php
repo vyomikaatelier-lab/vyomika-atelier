@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Services\CartService;
+use App\Support\CartGuard;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
@@ -18,10 +19,19 @@ class CartController extends Controller
         return view('cart.index', compact('items', 'subtotal'));
     }
 
+    /**
+     * Server-side gate: only active Shop products with purchase_mode=checkout
+     * may enter the cart. Studio and Railings items are always rejected here,
+     * even on a direct/forged POST that bypasses the storefront UI.
+     */
     public function add(Request $request, Product $product)
     {
-        if (! $product->is_active || ! $product->inStock()) {
-            return back()->with('error', 'This product is currently unavailable.');
+        if ($message = CartGuard::checkoutEligibility($product)) {
+            return back()->with('error', $message);
+        }
+
+        if (! $product->inStock()) {
+            return back()->with('error', CartGuard::MSG_INACTIVE);
         }
 
         $quantity = max(1, (int) $request->input('quantity', 1));
@@ -36,6 +46,12 @@ class CartController extends Controller
 
     public function update(Request $request, Product $product)
     {
+        if (! CartGuard::isEligible($product)) {
+            $this->cart->remove($product);
+
+            return back()->with('error', CartGuard::checkoutEligibility($product));
+        }
+
         $quantity = (int) $request->input('quantity', 1);
         $this->cart->update($product, $quantity);
 

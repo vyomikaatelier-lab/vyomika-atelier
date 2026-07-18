@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call(CatalogSyncSeeder::class);
+        $this->call(CorrectCatalogClassificationSeeder::class);
 
         if (Project::count() === 0 && BlogPost::count() === 0) {
             $this->seedProjectsAndBlog();

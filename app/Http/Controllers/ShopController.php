@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Category;
 use App\Support\ShopCatalog;
+use App\Support\StorefrontRoutes;
 use Illuminate\Http\Request;
 
 class ShopController extends Controller
@@ -19,11 +20,11 @@ class ShopController extends Controller
             }
 
             if ($categorySlug === 'mirror-frames') {
-                return redirect()->route('collections.mirror-frames.index');
+                return redirect()->route('shop.mirror-frames.index');
             }
 
-            if (in_array($categorySlug, CollectionGalleryController::slugs(), true)) {
-                return redirect()->route('collections.gallery.index', $categorySlug);
+            if (StorefrontRoutes::isShopCategory($categorySlug)) {
+                return redirect()->route('shop.show', $categorySlug);
             }
         }
 

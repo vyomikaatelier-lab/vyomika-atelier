@@ -35,8 +35,8 @@ class StorefrontDiagnose extends Command
         }
 
         $routes = [
-            'home', 'shop.index', 'shop.show', 'legal.privacy', 'studio.railings',
-            'collections.mirror-frames.index', 'professionals.index', 'account',
+            'home', 'shop.index', 'shop.show', 'shop.mirror-frames.index', 'studio.index', 'studio.show',
+            'railings.index', 'legal.privacy', 'professionals.index', 'account',
             'leads.store', 'blog.index',
         ];
 

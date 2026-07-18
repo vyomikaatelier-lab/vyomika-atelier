@@ -9,14 +9,13 @@
 
 @push('meta')
 <meta name="description" content="{{ $page['meta_description'] ?? '' }}">
-<link rel="canonical" href="{{ route('collections.mirror-frames.index') }}">
+<link rel="canonical" href="{{ route('shop.mirror-frames.index') }}">
 @endpush
 
 @section('content')
 
 <section class="am-mirror-frames-hero" style="--mirror-frames-hero-img: url('{{ $hero['image'] ?? '' }}')">
     <div class="am-container am-mirror-frames-hero__inner">
-        <p class="am-page-hero__label">{{ $hero['label'] ?? 'Collections' }}</p>
         <h1 class="am-mirror-frames-hero__title">{{ $hero['title'] ?? 'Mirror Frames' }}</h1>
         <p class="am-mirror-frames-hero__subtitle">{{ $hero['subtitle'] ?? '' }}</p>
         @if(!empty($hero['highlights']))
@@ -56,7 +55,7 @@
         <div class="am-design-gallery__grid am-design-gallery__grid--dense am-mirror-frames-grid">
             @foreach($designs as $design)
             @php
-                $showUrl = route('collections.mirror-frames.show', $design['slug']);
+                $showUrl = route('shop.mirror-frames.show', $design['slug']);
             @endphp
             @include('partials.am-design-gallery-card', [
                 'showUrl' => $showUrl,
@@ -65,6 +64,7 @@
                 'image' => $design['image'] ?? null,
                 'badge' => $design['badge'] ?? null,
                 'product' => $design['product'] ?? null,
+                'useCheckout' => ! empty($design['product']),
             ])
             @endforeach
         </div>

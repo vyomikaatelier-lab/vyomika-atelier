@@ -4,9 +4,9 @@
 
 @section('content')
 @include('partials.am-page-hero', [
-    'label' => 'Products',
     'title' => $pageTitle ?? 'Shop',
     'subtitle' => $pageSubtitle ?? null,
+    'showLabel' => false,
 ])
 
 <section class="am-page-body">

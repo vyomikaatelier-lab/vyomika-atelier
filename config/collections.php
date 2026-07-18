@@ -8,7 +8,7 @@ return [
         'meta_title' => 'Coffee Tables Collection | Vyomika Atelier LLP',
         'meta_description' => 'PVD metal coffee tables with glass, marble and fluted bases — fixed prices with Pan-India delivery from Vyomika Atelier LLP.',
         'hero' => [
-            'label' => 'Collections',
+            'label' => 'Shop',
             'title' => 'Coffee Tables',
             'subtitle' => 'Bespoke PVD coffee tables in champagne, rose gold and matte black — tempered glass, marble and metal bases engineered for living rooms and hospitality lounges.',
             'highlights' => [
@@ -17,7 +17,7 @@ return [
                 'Pan-India delivery',
             ],
             'cta_primary' => ['label' => 'Browse Designs', 'href' => '#collection-gallery'],
-            'cta_secondary' => ['label' => 'Shop All Collections', 'href' => '/shop'],
+            'cta_secondary' => ['label' => 'Browse All Shop', 'href' => '/shop'],
             'image' => 'https://images.unsplash.com/photo-1532372320572-127d86b32558?w=1400&q=80',
         ],
         'intro' => [
@@ -30,7 +30,7 @@ return [
         'meta_title' => 'Corner Tables Collection | Vyomika Atelier LLP',
         'meta_description' => 'PVD corner and side tables with marble and glass tops — fixed prices with Pan-India delivery from Vyomika Atelier LLP.',
         'hero' => [
-            'label' => 'Collections',
+            'label' => 'Shop',
             'title' => 'Corner Tables',
             'subtitle' => 'Compact PVD corner and accent tables for bedrooms, entryways and lounge seating — marble, glass and metal combinations in champagne and rose gold finishes.',
             'highlights' => [
@@ -39,7 +39,7 @@ return [
                 'Pan-India delivery',
             ],
             'cta_primary' => ['label' => 'Browse Designs', 'href' => '#collection-gallery'],
-            'cta_secondary' => ['label' => 'Shop All Collections', 'href' => '/shop'],
+            'cta_secondary' => ['label' => 'Browse All Shop', 'href' => '/shop'],
             'image' => 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1400&q=80',
         ],
         'intro' => [
@@ -52,7 +52,7 @@ return [
         'meta_title' => 'Glass Tables Collection | Vyomika Atelier LLP',
         'meta_description' => 'PVD-framed glass side and accent tables — fixed prices with Pan-India delivery from Vyomika Atelier LLP.',
         'hero' => [
-            'label' => 'Collections',
+            'label' => 'Shop',
             'title' => 'Glass Tables',
             'subtitle' => 'Tempered glass tables with slim PVD frames — side tables, nesting sets and statement accent pieces for modern interiors.',
             'highlights' => [
@@ -61,7 +61,7 @@ return [
                 'Pan-India delivery',
             ],
             'cta_primary' => ['label' => 'Browse Designs', 'href' => '#collection-gallery'],
-            'cta_secondary' => ['label' => 'Shop All Collections', 'href' => '/shop'],
+            'cta_secondary' => ['label' => 'Browse All Shop', 'href' => '/shop'],
             'image' => 'https://images.unsplash.com/photo-1617806118233-18e1de247200?w=1400&q=80',
         ],
         'intro' => [
@@ -74,7 +74,7 @@ return [
         'meta_title' => 'Door Handles Collection | Vyomika Atelier LLP',
         'meta_description' => 'PVD door pulls and entrance handles in champagne, rose gold and matte black — Pan-India delivery from Vyomika Atelier LLP.',
         'hero' => [
-            'label' => 'Collections',
+            'label' => 'Shop',
             'title' => 'Door Handles',
             'subtitle' => 'Architectural door pulls and entrance handles in PVD stainless — slim profiles, brushed and mirror finishes for residential and commercial doors.',
             'highlights' => [
@@ -83,7 +83,7 @@ return [
                 'Pan-India delivery',
             ],
             'cta_primary' => ['label' => 'Browse Designs', 'href' => '#collection-gallery'],
-            'cta_secondary' => ['label' => 'Shop All Collections', 'href' => '/shop'],
+            'cta_secondary' => ['label' => 'Browse All Shop', 'href' => '/shop'],
             'image' => 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1400&q=80',
         ],
         'intro' => [
@@ -95,9 +95,9 @@ return [
     'bespoke-metal-furniture' => [
         'meta_title' => 'Bespoke Metal Furniture | Vyomika Atelier LLP',
         'meta_description' => 'Bespoke PVD metal furniture — coffee tables, corner tables, glass tables and consoles — fabricated to order from Vyomika Atelier LLP.',
-        'category_slugs' => ['coffee-tables', 'corner-tables', 'glass-tables', 'metal-furniture'],
+        'category_slugs' => ['bespoke-metal-furniture'],
         'hero' => [
-            'label' => 'Collections',
+            'label' => 'Shop',
             'title' => 'Bespoke Metal Furniture',
             'subtitle' => 'PVD coffee tables, corner tables, glass accent pieces and console tables — bespoke dimensions and finishes for residential and hospitality interiors.',
             'highlights' => [

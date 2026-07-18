@@ -2,7 +2,6 @@
 
 namespace App\Support;
 
-use App\Http\Controllers\CollectionGalleryController;
 use Illuminate\Database\Eloquent\Builder;
 
 class ShopCatalog
@@ -10,21 +9,15 @@ class ShopCatalog
     /** @return list<string> */
     public static function categorySlugs(): array
     {
-        return [
-            'mirror-frames',
-            'coffee-tables',
-            'corner-tables',
-            'glass-tables',
-            'door-handles',
-        ];
+        return StorefrontRoutes::shopCategorySlugs();
     }
 
     /** Redirect legacy shop category URLs for studio-only categories. */
     public static function studioCategoryRedirectUrl(string $slug): ?string
     {
         return match ($slug) {
-            'partitions', 'fluted-panels', 'room-dividers' => route('services.show', 'partitions'),
-            'metal-furniture' => route('collections.gallery.index', 'bespoke-metal-furniture'),
+            'partitions', 'fluted-panels', 'room-dividers' => route('studio.show', 'pvd-partitions'),
+            'metal-furniture' => route('shop.show', 'bespoke-metal-furniture'),
             default => null,
         };
     }

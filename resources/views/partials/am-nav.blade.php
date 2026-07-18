@@ -29,20 +29,40 @@
         $route = $item['route'];
         $params = $item['params'] ?? [];
 
+        if ($route === 'shop.show' && request()->routeIs('shop.show')) {
+            return request()->route('slug') === ($params['slug'] ?? null);
+        }
+
+        if ($route === 'shop.mirror-frames.index') {
+            return request()->routeIs('shop.mirror-frames.*');
+        }
+
+        if ($route === 'studio.show' && request()->routeIs('studio.show')) {
+            return request()->route('slug') === ($params['slug'] ?? null);
+        }
+
+        if ($route === 'studio.index') {
+            return request()->routeIs('studio.index');
+        }
+
+        if ($route === 'railings.index') {
+            return request()->routeIs('railings.index');
+        }
+
         if ($route === 'services.show' && request()->routeIs('services.show')) {
             return request()->route('slug') === ($params['slug'] ?? null);
         }
 
-        if ($route === 'collections.gallery.index' && request()->routeIs('collections.gallery.index')) {
+        if ($route === 'collections.gallery.index' && request()->routeIs(['shop.show', 'collections.gallery.index'])) {
             return request()->route('slug') === ($params['slug'] ?? null);
         }
 
         if ($route === 'collections.mirror-frames.index') {
-            return request()->routeIs('collections.mirror-frames.*');
+            return request()->routeIs(['shop.mirror-frames.*', 'collections.mirror-frames.*']);
         }
 
         if ($route === 'studio.railings') {
-            return request()->routeIs('studio.railings');
+            return request()->routeIs(['railings.index', 'studio.railings']);
         }
 
         if ($route === 'shop.index' && request()->routeIs('shop.index') && isset($params['category'])) {

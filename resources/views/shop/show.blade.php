@@ -11,11 +11,15 @@
 @section('content')
 @php
     use App\Models\Service;
+    use App\Support\ProductCatalog;
+    use App\Support\StorefrontRoutes;
     $images = $product->galleryUrls();
     $discount = $product->discountPercent();
     $categorySlug = $product->category?->slug;
-    $showCalculator = $product->showsSqFtCalculator();
-    $calcServiceSlug = Service::serviceSlugForProduct($product->slug, $categorySlug);
+    $sectionLabel = StorefrontRoutes::productSectionLabel($product);
+    $isStudio = $product->isStudioItem();
+    $showCalculator = $isStudio;
+    $calcServiceSlug = Service::serviceSlugForProduct($product->slug, $categorySlug) ?? '';
     $calcLabel = Service::estimateLabelForProduct($product->slug, $categorySlug);
     $calcRate = \App\Models\Product::baseSqFtRate();
     $blackRate = \App\Models\Product::blackSqFtRate();
@@ -23,12 +27,7 @@
 
 <section class="am-page-body am-page-body--pdp">
     <div class="am-container">
-        @include('partials.am-breadcrumbs', ['items' => [
-            ['label' => 'Home', 'url' => route('home')],
-            ['label' => 'Shop', 'url' => route('shop.index')],
-            ...($product->category ? [['label' => $product->category->name, 'url' => route('shop.index', ['category' => $product->category->slug])]] : []),
-            ['label' => $product->name],
-        ]])
+        @include('partials.am-breadcrumbs', ['items' => StorefrontRoutes::productBreadcrumbs($product)])
 
         <div class="am-pdp">
             <div class="am-pdp__gallery" data-pdp-gallery>
@@ -53,8 +52,8 @@
             </div>
 
             <div class="am-pdp__info">
-                @if($product->category)
-                    <p class="am-featured__cat">{{ $product->category->name }}</p>
+                @if($sectionLabel)
+                    <p class="am-featured__cat">{{ $sectionLabel }}</p>
                 @endif
                 <h1 class="am-pdp__title">{{ $product->name }}</h1>
                 <p class="am-featured__meta">
@@ -93,7 +92,7 @@
                 @endif
 
                 @if($showCalculator)
-                <div class="am-pdp__calc-inline">
+                <div class="am-pdp__calc-inline" id="buy">
                     @include('partials.am-calculator', [
                         'rate' => $calcRate,
                         'serviceSlug' => $calcServiceSlug,
@@ -103,10 +102,10 @@
                     @include('partials.am-pdp-checkout-trust')
                 </div>
                 @else
-                <div class="am-pdp__quote-cta" id="buy">
-                    <button type="button" class="am-btn am-btn--primary am-btn--lg am-btn--full" data-open-order-popup data-product-name="{{ $product->name }}" data-product-slug="{{ $product->slug }}" data-service-slug="{{ $calcServiceSlug }}">Order Now</button>
+                <div class="am-pdp__buy-inline" id="buy">
+                    @include('partials.am-pdp-buy-actions', ['product' => $product])
+                    @include('partials.am-pdp-checkout-trust')
                 </div>
-                @include('partials.am-pdp-checkout-trust')
                 @endif
             </div>
         </div>
@@ -114,9 +113,10 @@
         @include('partials.am-product-tabs', [
             'title' => $product->name,
             'descriptionHtml' => $product->description ? '<div>' . $product->description . '</div>' : '',
-            'careItems' => Service::careGuidelinesForCategory($categorySlug),
+            'careItems' => ProductCatalog::careGuidelinesForProduct($product->slug, $categorySlug),
             'related' => $related,
             'product' => $product,
+            'categoryLabel' => $sectionLabel,
         ])
     </div>
 </section>

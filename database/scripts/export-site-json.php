@@ -18,9 +18,12 @@ $nav = array_map(function ($item) {
                     $params = $child['params'] ?? [];
                     $href = match ($child['route']) {
                         'shop.index' => '/shop' . (isset($params['category']) ? '?category=' . $params['category'] : ''),
+                        'shop.mirror-frames.index' => '/shop/mirror-frames',
+                        'shop.show' => '/shop/' . ($params['slug'] ?? ''),
+                        'studio.show' => '/studio/' . ($params['slug'] ?? ''),
+                        'studio.index' => '/studio',
+                        'railings.index' => '/railings',
                         'services.show' => '/services/' . ($params['slug'] ?? ''),
-                        'collections.mirror-frames.index' => '/collections/mirror-frames',
-                        'collections.gallery.index' => '/collections/' . ($params['slug'] ?? ''),
                         default => '/' . str_replace('.index', '', str_replace('.', '/', $child['route'])),
                     };
 
@@ -36,14 +39,17 @@ $nav = array_map(function ($item) {
         $params = $item['params'] ?? [];
         $href = match ($item['route']) {
             'shop.index' => '/shop',
+            'shop.mirror-frames.index' => '/shop/mirror-frames',
+            'shop.show' => '/shop/' . ($params['slug'] ?? ''),
+            'studio.show' => '/studio/' . ($params['slug'] ?? ''),
+            'studio.index' => '/studio',
+            'railings.index' => '/railings',
             'services.show' => '/services/' . ($params['slug'] ?? ''),
             'services.index' => '/services',
             'projects.index' => '/projects',
             'blog.index' => '/blog',
             'about' => '/about',
             'professionals.index' => '/professionals',
-            'studio.railings' => '/studio/railings',
-            'collections.mirror-frames.index' => '/collections/mirror-frames',
             default => '/' . str_replace('.index', '', str_replace('.', '/', $item['route'])),
         };
 
