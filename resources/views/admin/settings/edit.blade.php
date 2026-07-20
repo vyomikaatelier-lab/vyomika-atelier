@@ -37,27 +37,29 @@
 
     <section class="space-y-4">
         <div>
-            <h2 class="font-medium">PVD finish swatches</h2>
+            <h2 class="text-lg font-semibold">PVD finish swatches</h2>
             <p class="text-sm text-gray-500 mt-1">Upload square photos (104×104 px or larger) for each finish shown on product pages. Leave blank to use the default placeholder.</p>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            @foreach($finishSwatches as $swatch)
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            @foreach(array_chunk($finishSwatches, 2) as $column)
+            <div class="flex flex-col gap-3">
+                @foreach($column as $swatch)
             @php
                 $current = $finishSwatchImages[$swatch['slug']] ?? null;
                 $preview = $current
                     ? (\Illuminate\Support\Str::startsWith($current, 'http') ? $current : asset($current))
                     : asset('images/finishes/'.$swatch['slug'].'.svg');
             @endphp
-            <div class="border rounded p-3 space-y-2">
-                <div class="flex items-center gap-3">
-                    <img src="{{ $preview }}" alt="{{ $swatch['name'] }}" class="w-14 h-14 rounded object-cover border" style="background: {{ $swatch['hex'] }}">
-                    <div>
-                        <p class="font-medium text-sm">{{ $swatch['name'] }}</p>
-                        <p class="text-xs text-gray-500">{{ $swatch['slug'] }}</p>
-                    </div>
+            <div class="border rounded p-3 space-y-2 text-center">
+                <div class="flex flex-col items-center gap-2">
+                    <img src="{{ $preview }}" alt="{{ $swatch['name'] }}" class="w-20 h-20 rounded-full object-cover border-2" style="background: {{ $swatch['hex'] }}">
+                    <p class="font-semibold text-sm">{{ $swatch['name'] }}</p>
+                    <p class="text-xs text-gray-500">{{ $swatch['slug'] }}</p>
                 </div>
                 <input type="file" name="finish_image_{{ $swatch['slug'] }}" accept="image/jpeg,image/png,image/webp" class="w-full border px-2 py-1 rounded text-sm">
                 <input type="text" name="finish_url_{{ $swatch['slug'] }}" value="{{ old('finish_url_'.$swatch['slug'], \Illuminate\Support\Str::startsWith((string) $current, 'http') ? $current : '') }}" placeholder="Or image URL (https://…)" class="w-full border px-2 py-1 rounded text-sm" inputmode="url">
+            </div>
+                @endforeach
             </div>
             @endforeach
         </div>

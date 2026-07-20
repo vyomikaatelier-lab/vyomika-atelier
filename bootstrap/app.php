@@ -16,6 +16,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'customer' => \App\Http\Middleware\CustomerAccountMiddleware::class,
             'customer.guest' => \App\Http\Middleware\RedirectVerifiedCustomerMiddleware::class,
         ]);
+
+        // Razorpay redirect callback POSTs without a CSRF token.
+        $middleware->validateCsrfTokens(except: [
+            'checkout/pay/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

@@ -9,8 +9,8 @@
     'subtitle' => 'Order #' . $order->order_number,
 ])
 
-<section class="am-page-body">
-    <div class="am-container am-checkout-flow am-checkout-flow--centered">
+<section class="am-page-body am-page-body--checkout-pay">
+    <div class="am-checkout-flow am-checkout-flow--centered am-checkout-flow--pay">
         @include('partials.am-breadcrumbs', ['items' => [
             ['label' => 'Home', 'url' => route('home')],
             ['label' => 'Checkout', 'url' => route('checkout.index')],
@@ -19,31 +19,65 @@
 
         @include('partials.am-checkout-steps', ['current' => 3])
 
-        <div class="am-checkout-stack">
+        @if(session('error'))
+        <p class="am-checkout-notice am-checkout-notice--error" role="alert">{{ session('error') }}</p>
+        @endif
+
+        <p class="am-checkout-pay__error" id="rzp-error" role="alert" hidden></p>
+
+        <div class="am-checkout-pay-layout">
             <div class="am-card am-checkout-pay-card">
                 <div class="am-card__body">
                     <p class="am-checkout-pay-card__eyebrow">Amount due</p>
                     <p class="am-checkout-pay-card__amount">₹{{ number_format($order->total, 0) }}</p>
-                    <p class="am-checkout-pay-card__text">Pay with UPI, debit/credit card, or net banking via Razorpay.</p>
+                    <p class="am-checkout-pay-card__text">Choose a payment method below. You will continue on Razorpay’s secure payment page (not a popup).</p>
+                </div>
+            </div>
 
-                    @if(session('error'))
-                        <p class="am-checkout-pay__error" role="alert">{{ session('error') }}</p>
+            <div class="am-card am-checkout-panel am-checkout-panel--payment">
+                <div class="am-card__body">
+                    <h2 class="am-checkout-panel__title">Payment method</h2>
+                    <p class="am-checkout-panel__hint">Indian UPI, debit/credit card, or net banking</p>
+
+                    <div class="am-checkout-pay-methods" role="list">
+                        <button type="button" class="am-checkout-pay-method" data-pay-method="upi" role="listitem">
+                            <span class="am-checkout-pay-method__icon" aria-hidden="true">UPI</span>
+                            <span class="am-checkout-pay-method__body">
+                                <span class="am-checkout-pay-method__label">Pay with UPI</span>
+                                <span class="am-checkout-pay-method__hint">Google Pay, PhonePe, Paytm, BHIM</span>
+                            </span>
+                            <span class="am-checkout-pay-method__arrow" aria-hidden="true">→</span>
+                        </button>
+                        <button type="button" class="am-checkout-pay-method" data-pay-method="card" role="listitem">
+                            <span class="am-checkout-pay-method__icon" aria-hidden="true">Card</span>
+                            <span class="am-checkout-pay-method__body">
+                                <span class="am-checkout-pay-method__label">Debit / Credit Card</span>
+                                <span class="am-checkout-pay-method__hint">Visa, Mastercard, RuPay</span>
+                            </span>
+                            <span class="am-checkout-pay-method__arrow" aria-hidden="true">→</span>
+                        </button>
+                        <button type="button" class="am-checkout-pay-method" data-pay-method="netbanking" role="listitem">
+                            <span class="am-checkout-pay-method__icon" aria-hidden="true">Bank</span>
+                            <span class="am-checkout-pay-method__body">
+                                <span class="am-checkout-pay-method__label">Net Banking</span>
+                                <span class="am-checkout-pay-method__hint">All major Indian banks</span>
+                            </span>
+                            <span class="am-checkout-pay-method__arrow" aria-hidden="true">→</span>
+                        </button>
+                    </div>
+
+                    @if(str_starts_with($razorpayKey ?? '', 'rzp_test_'))
+                    <p class="am-checkout-pay-test-hint">Test mode: UPI <code>test@razorpay</code> · Card <code>4111 1111 1111 1111</code></p>
                     @endif
-                    <p class="am-checkout-pay__error" id="rzp-error" role="alert" hidden></p>
 
-                    <button type="button" id="rzp-button" class="am-btn am-btn--primary am-btn--lg am-btn--full">Pay Now</button>
-
-                    <p class="am-checkout-pay-card__help">
-                        <button type="button" class="am-link-btn" data-open-contact-studio data-contact-context="Checkout help">Need help?</button>
-                        <span>Confirmation to {{ $order->customer_email }}</span>
-                    </p>
+                    @include('partials.am-pdp-checkout-trust')
                 </div>
             </div>
 
             <div class="am-card am-checkout-pay-details">
                 <div class="am-card__body">
                     <h2 class="am-checkout-panel__title">Order details</h2>
-                    <dl class="am-checkout-pay-details__list">
+                    <dl class="am-checkout-pay-details__list am-checkout-pay-details__list--centered">
                         <div>
                             <dt>Order number</dt>
                             <dd>#{{ $order->order_number }}</dd>
@@ -68,7 +102,10 @@
                 </div>
             </div>
 
-            @include('partials.am-pdp-checkout-trust')
+            <p class="am-checkout-pay-card__help am-checkout-pay-card__help--centered">
+                <button type="button" class="am-link-btn" data-open-contact-studio data-contact-context="Checkout help">Need help?</button>
+                <span>Confirmation to {{ $order->customer_email }}</span>
+            </p>
         </div>
     </div>
 </section>
@@ -79,15 +116,27 @@
 (function () {
     const storeOrderId = @json($order->id);
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || @json(csrf_token());
-    const payButton = document.getElementById('rzp-button');
     const errorEl = document.getElementById('rzp-error');
     const createOrderUrl = @json(route('api.create-order'));
-    const verifyPaymentUrl = @json(route('api.verify-payment'));
+    const verifyUrl = @json(route('checkout.pay.verify', $order));
+    const methodButtons = document.querySelectorAll('[data-pay-method]');
+    let paying = false;
 
     function showError(message) {
         if (!errorEl) return;
         errorEl.textContent = message;
         errorEl.hidden = !message;
+        if (message) {
+            errorEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }
+
+    function setBusy(busy) {
+        paying = busy;
+        methodButtons.forEach((btn) => {
+            btn.disabled = busy;
+            btn.classList.toggle('is-loading', busy);
+        });
     }
 
     function postJson(url, body) {
@@ -110,69 +159,53 @@
         });
     }
 
-    payButton.addEventListener('click', async function () {
-        showError('');
-        payButton.disabled = true;
-        payButton.textContent = 'Opening payment…';
+    methodButtons.forEach((button) => {
+        button.addEventListener('click', async function () {
+            if (paying) return;
 
-        try {
-            const orderData = await postJson(createOrderUrl, { store_order_id: storeOrderId });
+            showError('');
+            setBusy(true);
 
-            const options = {
-                key: orderData.key,
-                amount: orderData.amount,
-                currency: orderData.currency,
-                name: 'Vyomika Atelier LLP',
-                description: 'Order {{ $order->order_number }}',
-                order_id: orderData.order_id,
-                prefill: {
-                    name: @json($order->customer_name),
-                    email: @json($order->customer_email),
-                    contact: @json($order->customer_phone),
-                },
-                theme: { color: '#b38b42' },
-                handler: async function (response) {
-                    payButton.disabled = true;
-                    payButton.textContent = 'Verifying payment…';
-                    showError('');
+            try {
+                const orderData = await postJson(createOrderUrl, { store_order_id: storeOrderId });
 
-                    try {
-                        const result = await postJson(verifyPaymentUrl, {
-                            store_order_id: storeOrderId,
-                            razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_order_id: response.razorpay_order_id,
-                            razorpay_signature: response.razorpay_signature,
-                        });
-                        window.location.href = result.redirect || @json(route('checkout.success', $order));
-                    } catch (err) {
-                        showError(err.message);
-                        payButton.disabled = false;
-                        payButton.textContent = 'Pay Now';
-                    }
-                },
-                modal: {
-                    ondismiss: function () {
-                        showError('Payment cancelled. You can try again when ready.');
-                        payButton.disabled = false;
-                        payButton.textContent = 'Pay Now';
+                const options = {
+                    key: orderData.key,
+                    amount: orderData.amount,
+                    currency: orderData.currency,
+                    name: 'Vyomika Atelier LLP',
+                    description: 'Order {{ $order->order_number }}',
+                    order_id: orderData.order_id,
+                    callback_url: verifyUrl,
+                    redirect: true,
+                    prefill: {
+                        name: @json($order->customer_name),
+                        email: @json($order->customer_email),
+                        contact: @json($order->customer_phone),
                     },
-                },
-            };
+                    theme: { color: '#b38b42' },
+                    method: {
+                        upi: button.dataset.payMethod === 'upi',
+                        card: button.dataset.payMethod === 'card',
+                        netbanking: button.dataset.payMethod === 'netbanking',
+                        wallet: false,
+                        emi: false,
+                        paylater: false,
+                    },
+                };
 
-            const rzp = new Razorpay(options);
-            rzp.on('payment.failed', function (event) {
-                const reason = event.error?.description || event.error?.reason || 'Payment failed. Please try again.';
-                showError(reason);
-                payButton.disabled = false;
-                payButton.textContent = 'Pay Now';
-            });
-            rzp.open();
-        } catch (err) {
-            showError(err.message);
-        } finally {
-            payButton.disabled = false;
-            payButton.textContent = 'Pay Now';
-        }
+                const rzp = new Razorpay(options);
+                rzp.on('payment.failed', function (event) {
+                    const reason = event.error?.description || event.error?.reason || 'Payment failed. Please try again.';
+                    showError(reason);
+                    setBusy(false);
+                });
+                rzp.open();
+            } catch (err) {
+                showError(err.message);
+                setBusy(false);
+            }
+        });
     });
 })();
 </script>

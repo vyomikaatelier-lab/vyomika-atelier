@@ -5,8 +5,8 @@
 @section('content')
 @include('partials.am-page-hero', ['label' => 'Secure Checkout', 'title' => 'Checkout'])
 
-<section class="am-page-body">
-    <div class="am-container am-checkout-flow am-checkout-flow--centered">
+<section class="am-page-body am-page-body--checkout">
+    <div class="am-checkout-flow am-checkout-flow--centered">
         @include('partials.am-breadcrumbs', ['items' => [
             ['label' => 'Home', 'url' => route('home')],
             ['label' => 'Cart', 'url' => route('cart.index')],
