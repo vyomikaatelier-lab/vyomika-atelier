@@ -12,7 +12,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\Project;
 use App\Models\User;
-use Illuminate\Support\Facades\Schema;
+use App\Support\LeadStatus;
 
 class DashboardController extends Controller
 {
@@ -25,7 +25,10 @@ class DashboardController extends Controller
             'projects' => Project::count(),
             'blog_posts' => BlogPost::count(),
             'exhibitions' => Schema::hasTable('exhibitions') ? Exhibition::count() : 0,
-            'new_leads' => Lead::where('status', 'new')->count(),
+            'new_leads' => Lead::where('status', LeadStatus::NEW)->where('enquiry_type', '!=', 'vendor_marketing')->count(),
+            'hot_leads' => Lead::where('priority', 'hot')->count(),
+            'overdue_followups' => Lead::whereNotNull('next_follow_up_at')->where('next_follow_up_at', '<', now())->count(),
+            'vendor_leads' => Lead::where('enquiry_type', 'vendor_marketing')->count(),
             'professional_applications' => Lead::where('type', 'professional_application')->where('status', 'new')->count(),
             'railing_quotes' => Lead::where('type', 'railing_quotation')->where('status', 'new')->count(),
             'customers' => User::where('is_admin', false)->count(),

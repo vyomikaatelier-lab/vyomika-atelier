@@ -15,6 +15,8 @@
             @include('partials.am-account-otp-inputs')
             <input type="hidden" name="otp" id="otp-combined" value="">
 
+            <x-form-protection-fields form-key="account_verify_otp" :show-intent="false" />
+
             <button type="submit" class="am-account-card__submit">
                 <span>{{ config('account.copy.verify_otp') }}</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
@@ -25,6 +27,7 @@
             @if($canResend && $providerReady)
             <form action="{{ route('account.resend') }}" method="POST">
                 @csrf
+                <x-form-protection-fields :form-key="$purpose === 'register' ? 'account_register' : ($purpose === 'forgot' ? 'account_forgot_otp' : 'account_login_otp')" :show-intent="false" />
                 <button type="submit" class="am-account-card__link-btn">{{ config('account.copy.resend_otp') }}</button>
             </form>
             @else

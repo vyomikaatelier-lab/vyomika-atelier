@@ -59,6 +59,7 @@
                     <input type="hidden" name="login_method" value="mobile">
                     <input type="hidden" name="mobile_login_mode" value="otp">
                     @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'login-otp'])
+                    <x-form-protection-fields form-key="account_login_otp" :show-intent="false" />
                     <button type="submit" class="am-account-card__submit" @disabled(! $providerReady)>
                         <span>Send WhatsApp OTP</span>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
@@ -151,6 +152,7 @@
                     <input type="checkbox" name="consent" value="1" @checked(old('consent')) required>
                     <span>I agree to the <a href="{{ route('legal.terms') }}" target="_blank" rel="noopener">Terms &amp; Conditions</a> and <a href="{{ route('legal.privacy') }}" target="_blank" rel="noopener">Privacy Policy</a>.</span>
                 </label>
+                <x-form-protection-fields form-key="account_register" :show-intent="false" />
                 <button type="submit" class="am-account-card__submit" @disabled(! $providerReady)>
                     <span>Create account</span>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>

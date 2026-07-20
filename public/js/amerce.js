@@ -439,6 +439,10 @@
       modal.classList.add('open');
       modal.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
+      const form = modal.querySelector('#va-order-form');
+      if (window.vaFormProtection && typeof window.vaFormProtection.refreshFormLoadedAt === 'function') {
+        window.vaFormProtection.refreshFormLoadedAt(form);
+      }
       modal.querySelector('#va-modal-name, input[name="name"]')?.focus();
     }
 

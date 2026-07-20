@@ -23,6 +23,8 @@
                 @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'forgot'])
             </div>
 
+            <x-form-protection-fields form-key="account_forgot_otp" :show-intent="false" />
+
             <button type="submit" class="am-account-card__submit" @disabled(! $providerReady)>
                 <span>Send WhatsApp OTP</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>

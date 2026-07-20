@@ -142,6 +142,8 @@
         <option value="email" @selected(old('preferred_contact') === 'email')>Email</option>
     </select>
 
+    <x-form-protection-fields form-key="railing_quotation" />
+
     <button type="submit" class="am-btn am-btn--primary am-btn--full">Submit Quotation Request</button>
     <p class="am-pro-form__note">Our studio team typically responds within one business day with next steps and an indicative quotation.</p>
 </form>

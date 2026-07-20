@@ -18,6 +18,10 @@ class ProfessionalApplicationAdminController extends Controller
             $query->where('status', $request->status);
         }
 
+        if ($request->filled('protection_status')) {
+            $query->where('protection_status', $request->protection_status);
+        }
+
         if ($request->filled('q')) {
             $q = $request->string('q');
             $query->where(function ($builder) use ($q) {

@@ -6,6 +6,7 @@ use App\Exceptions\WhatsAppDeliveryException;
 use App\Exceptions\WhatsAppNotConfiguredException;
 use App\Models\User;
 use App\Models\WhatsappOtpVerification;
+use App\Services\FormProtectionService;
 use App\Services\PhoneNumberService;
 use App\Services\WhatsappOtpService;
 use Illuminate\Http\Request;
@@ -21,6 +22,7 @@ class AccountAuthController extends Controller
     public function __construct(
         private WhatsappOtpService $otp,
         private PhoneNumberService $phones,
+        private FormProtectionService $formProtection,
     ) {}
 
     public function showLogin()
@@ -105,6 +107,10 @@ class AccountAuthController extends Controller
 
     public function sendRegisterOtp(Request $request)
     {
+        if ($response = $this->guardOtpForm($request, 'account_register')) {
+            return $response;
+        }
+
         if (! $this->otp->providerConfigured()) {
             return back()->withInput()->withErrors([
                 'mobile' => 'WhatsApp verification is not available yet. Please contact the studio.',
@@ -170,6 +176,8 @@ class AccountAuthController extends Controller
             return $this->otpErrorResponse($e);
         }
 
+        $this->formProtection->hitRateLimiters($request, 'account_register');
+
         $request->session()->put('account_register_password', $validated['password']);
         $this->storePendingVerification($request, $record, $phone);
 
@@ -209,6 +217,10 @@ class AccountAuthController extends Controller
 
     public function verifyOtp(Request $request)
     {
+        if ($response = $this->guardOtpForm($request, 'account_verify_otp')) {
+            return $response;
+        }
+
         $record = $this->pendingVerification($request);
         if (! $record) {
             return redirect()->route('account.login');
@@ -220,6 +232,7 @@ class AccountAuthController extends Controller
 
         if (! $this->otp->verify($record, $validated['otp'])) {
             $record->refresh();
+            $this->formProtection->hitRateLimiters($request, 'account_verify_otp');
 
             if ($record->isExpired() || ! $record->hasAttemptsRemaining()) {
                 return back()->withErrors(['otp' => config('account.copy.failure')]);
@@ -254,6 +267,16 @@ class AccountAuthController extends Controller
             return redirect()->route('account.login');
         }
 
+        $formKey = match ($record->purpose) {
+            'register' => 'account_register',
+            'forgot' => 'account_forgot_otp',
+            default => 'account_login_otp',
+        };
+
+        if ($response = $this->guardOtpForm($request, $formKey)) {
+            return $response;
+        }
+
         if (! $this->otp->canResend($record->mobile_e164)) {
             return back()->withErrors(['otp' => 'Please wait before requesting another code.']);
         }
@@ -263,6 +286,8 @@ class AccountAuthController extends Controller
         } catch (WhatsAppNotConfiguredException|WhatsAppDeliveryException|\RuntimeException $e) {
             return $this->otpErrorResponse($e);
         }
+
+        $this->formProtection->hitRateLimiters($request, $formKey);
 
         $request->session()->put('account_pending_verification_id', $newRecord->id);
 
@@ -281,6 +306,12 @@ class AccountAuthController extends Controller
 
     private function dispatchOtp(Request $request, string $purpose)
     {
+        $formKey = $purpose === 'forgot' ? 'account_forgot_otp' : 'account_login_otp';
+
+        if ($response = $this->guardOtpForm($request, $formKey)) {
+            return $response;
+        }
+
         if (! $this->otp->providerConfigured()) {
             return back()->withInput()->withErrors([
                 'mobile' => 'WhatsApp verification is not available yet. Please contact the studio.',
@@ -309,6 +340,7 @@ class AccountAuthController extends Controller
             try {
                 $record = $this->otp->send($phone['e164'], $purpose, null, $request->ip());
                 $this->storePendingVerification($request, $record, $phone);
+                $this->formProtection->hitRateLimiters($request, $formKey);
             } catch (WhatsAppNotConfiguredException|WhatsAppDeliveryException|\RuntimeException $e) {
                 Log::warning('Login OTP send failed', ['mobile_e164' => $phone['e164'], 'error' => $e->getMessage()]);
 
@@ -415,5 +447,25 @@ class AccountAuthController extends Controller
             : 'Unable to send verification code right now. Please try again shortly.';
 
         return back()->withInput()->withErrors(['mobile' => $message]);
+    }
+
+    /**
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\Response|null
+     */
+    private function guardOtpForm(Request $request, string $formKey)
+    {
+        $check = $this->formProtection->validateSubmission($request, $formKey, false);
+
+        if (! $check['reject']) {
+            return null;
+        }
+
+        if ($check['rate_limited']) {
+            return response(config('form_protection.messages.rate_limited'), 429);
+        }
+
+        return back()
+            ->withInput($request->except(['password', 'password_confirmation', 'cf-turnstile-response']))
+            ->withErrors(['form' => $check['message']]);
     }
 }

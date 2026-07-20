@@ -21,7 +21,7 @@ return [
         'expiry_minutes' => 5,
         'resend_delay_seconds' => 30,
         'max_verification_attempts' => 5,
-        'max_sends_per_hour' => 5,
+        'max_sends_per_hour' => 3,
     ],
 
     'copy' => [

@@ -8,4 +8,6 @@ return [
     ],
 
     'admin_email' => env('ADMIN_EMAIL', 'admin@vyomikaatelier.com'),
+
+    'marketing_email' => env('MARKETING_EMAIL'),
 ];

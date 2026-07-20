@@ -120,6 +120,8 @@
         <div class="am-footer__bottom">
             <span>© {{ date('Y') }} {{ $brandName }}. All rights reserved.</span>
             <div class="am-footer__contact am-footer__contact--desktop">
+                <a href="{{ route('vendor-proposal.index') }}">Vendor &amp; Service Proposals</a>
+                <a href="{{ route('catalogue.index') }}">Request Catalogue</a>
                 <a href="mailto:{{ $brand['email'] ?? '' }}">{{ $brand['email'] ?? '' }}</a>
                 @if($phoneDisplay)
                 <a href="tel:{{ $phoneRaw }}">{{ $phoneDisplay }}</a>

@@ -18,6 +18,7 @@
             <input type="tel" name="phone" value="{{ old('phone') }}" placeholder="Phone (optional)" class="am-input">
             <input type="text" name="subject" value="{{ old('subject') }}" placeholder="Subject" required class="am-input">
             <textarea name="message" placeholder="Your message…" required rows="5" class="am-input am-textarea">{{ old('message') }}</textarea>
+            <x-form-protection-fields form-key="contact" />
             <button type="submit" class="am-btn am-btn--primary am-btn--full">Send Message</button>
         </form>
         <div style="margin-top:3rem;text-align:center">

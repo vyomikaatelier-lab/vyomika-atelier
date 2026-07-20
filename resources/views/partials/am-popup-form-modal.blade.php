@@ -70,6 +70,8 @@
                     <input type="file" name="drawing" id="va-modal-drawing" accept=".jpg,.jpeg,.png,.webp,.pdf" class="am-input am-input--file">
                 </div>
 
+                <x-form-protection-fields form-key="order_now" />
+
                 @include('partials.am-popup-form-submit', ['label' => 'Submit Requirement'])
             </form>
         </div>

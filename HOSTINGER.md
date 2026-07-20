@@ -231,6 +231,9 @@ If the site shows 403 or old CSS after a Git redeploy, `post-deploy.sh` re-creat
 | `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | From Razorpay dashboard |
 | `MAIL_*` | Hostinger or Cloudflare SMTP credentials |
 | `ADMIN_EMAIL` | Your admin notification inbox |
+| `MARKETING_EMAIL` | Vendor/marketing proposal inbox (optional) |
+| `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile for public forms |
+| `LEAD_IP_HASH_SALT` | Random string for hashed lead IP fingerprints |
 
 Order emails implement `ShouldQueue`. With `QUEUE_CONNECTION=database` and **no queue worker**, emails are marked sent but never delivered. Use `sync` on shared hosting.
 
@@ -257,6 +260,22 @@ Add this in hPanel → **Advanced** → **Cron Jobs** (runs every 15 minutes):
 ```
 
 Unpaid orders are held for `ORDER_PENDING_EXPIRY_HOURS` (default 24) before stock reservations are released.
+
+---
+
+## Cron — daily lead summary
+
+Add this in hPanel → **Advanced** → **Cron Jobs** (runs daily at 8:00 AM IST):
+
+```bash
+/usr/bin/php /home/u550969814/vyomika-atelier/artisan leads:daily-summary >> /home/u550969814/vyomika-atelier/storage/logs/cron-leads-summary.log 2>&1
+```
+
+Set `MARKETING_EMAIL`, `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, and `LEAD_IP_HASH_SALT` in `.env` before going live. Upload the catalogue PDF to `storage/app/catalogue/vyomika-atelier-catalogue.pdf` (create the folder if needed). Run migrations after deploy:
+
+```bash
+php artisan migrate --force
+```
 
 ---
 

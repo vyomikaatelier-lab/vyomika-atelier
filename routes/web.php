@@ -16,6 +16,10 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\FormProtectionController;
+use App\Http\Controllers\CatalogueRequestController;
+use App\Http\Controllers\DealerApplicationController;
+use App\Http\Controllers\VendorProposalController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\AboutController;
 use App\Http\Controllers\RailingsController;
@@ -90,11 +94,25 @@ Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 Route::get('/custom-order', [LeadController::class, 'create'])->name('leads.create');
-Route::post('/leads', [LeadController::class, 'store'])->middleware('throttle:leads')->name('leads.store');
-Route::post('/custom-order', [LeadController::class, 'store'])->middleware('throttle:leads');
+Route::post('/leads', [LeadController::class, 'store'])->middleware('throttle:general-enquiry')->name('leads.store');
+Route::post('/custom-order', [LeadController::class, 'store'])->middleware('throttle:general-enquiry');
 
 Route::get('/contact', [ContactController::class, 'index'])->name('contact.index');
-Route::post('/contact', [ContactController::class, 'store'])->middleware('throttle:leads')->name('contact.store');
+Route::post('/contact', [ContactController::class, 'store'])->middleware('throttle:general-enquiry')->name('contact.store');
+
+Route::get('/form-protection/token/{formKey}', [FormProtectionController::class, 'token'])
+    ->middleware('throttle:60,1')
+    ->name('form-protection.token');
+
+Route::get('/vendor-proposals', [VendorProposalController::class, 'show'])->name('vendor-proposal.index');
+Route::post('/vendor-proposals', [VendorProposalController::class, 'store'])->middleware('throttle:vendor-proposal')->name('vendor-proposal.store');
+
+Route::get('/catalogue', [CatalogueRequestController::class, 'show'])->name('catalogue.index');
+Route::post('/catalogue', [CatalogueRequestController::class, 'store'])->middleware('throttle:catalogue-request')->name('catalogue.store');
+Route::get('/catalogue/download/{token}', [CatalogueRequestController::class, 'download'])->name('catalogue.download');
+
+Route::get('/dealer-application', [DealerApplicationController::class, 'show'])->name('dealer.index');
+Route::post('/dealer-application', [DealerApplicationController::class, 'store'])->middleware('throttle:professional-application')->name('dealer.store');
 
 Route::get('/railings', [RailingsController::class, 'index'])->name('railings.index');
 Route::redirect('/studio/railings', '/railings');
@@ -157,6 +175,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('products', ProductAdminController::class)->except(['show']);
         Route::resource('orders', OrderAdminController::class)->only(['index', 'show', 'update']);
         Route::resource('leads', LeadAdminController::class)->only(['index', 'show', 'update', 'destroy']);
+        Route::post('leads/{lead}/false-positive', [LeadAdminController::class, 'markFalsePositive'])->name('leads.false-positive');
+        Route::post('leads/{lead}/qualified', [LeadAdminController::class, 'markQualified'])->name('leads.qualified');
+        Route::post('leads/{lead}/mark-vendor', [LeadAdminController::class, 'markVendor'])->name('leads.mark-vendor');
+        Route::post('leads/{lead}/mark-spam', [LeadAdminController::class, 'markSpam'])->name('leads.mark-spam');
+        Route::post('leads/{lead}/merge-duplicate', [LeadAdminController::class, 'mergeDuplicate'])->name('leads.merge-duplicate');
+        Route::post('leads/{lead}/block-identity', [LeadAdminController::class, 'blockIdentity'])->name('leads.block-identity');
+        Route::post('leads/{lead}/restore', [LeadAdminController::class, 'restore'])->name('leads.restore');
         Route::get('leads/{lead}/attachment', [LeadAdminController::class, 'downloadAttachment'])->name('leads.attachment');
 
         Route::resource('categories', CategoryAdminController::class)->except(['show']);

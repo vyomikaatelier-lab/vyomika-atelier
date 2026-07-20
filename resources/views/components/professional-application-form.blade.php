@@ -66,6 +66,8 @@
         <option value="whatsapp" @selected(old('preferred_contact') === 'whatsapp')>WhatsApp</option>
     </select>
 
+    <x-form-protection-fields form-key="professional_application" />
+
     <button type="submit" class="am-btn am-btn--primary am-btn--full">Submit Application</button>
     <p class="am-pro-form__note">By submitting, you agree to be contacted regarding partnership verification. We typically respond within 2–3 business days.</p>
 </form>

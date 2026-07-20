@@ -25,6 +25,7 @@
                 <option value="whatsapp" @selected(old('preferred_contact') === 'whatsapp')>WhatsApp</option>
             </select>
             <textarea name="message" placeholder="Describe your requirements — dimensions, material, colour, room type…" required rows="6" class="am-input am-textarea">{{ old('message') }}</textarea>
+            <x-form-protection-fields form-key="custom_order" />
             <button type="submit" class="am-btn am-btn--primary am-btn--full">Submit Request</button>
         </form>
     </div>

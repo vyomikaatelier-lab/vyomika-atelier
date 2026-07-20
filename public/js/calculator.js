@@ -72,6 +72,10 @@
         const overlay = document.getElementById('am-overlay');
         if (overlay) overlay.classList.add('is-open');
         document.body.style.overflow = 'hidden';
+        const form = modal.querySelector('#va-order-form');
+        if (window.vaFormProtection && typeof window.vaFormProtection.refreshFormLoadedAt === 'function') {
+            window.vaFormProtection.refreshFormLoadedAt(form);
+        }
     }
 
     function closeOrderModal(modal) {

@@ -8,7 +8,15 @@
         <p><strong>Email:</strong> {{ $application->email }}</p>
         <p><strong>Phone:</strong> {{ $application->phone }}</p>
         <p><strong>Status:</strong> {{ $application->statusLabel() }}</p>
+        <p><strong>Protection:</strong> {{ $application->protectionStatusLabel() }} · Risk {{ $application->risk_score }}/100</p>
+        @if(is_array($application->risk_reasons) && $application->risk_reasons !== [])
+            <p class="text-xs text-gray-500">Reasons: {{ implode(', ', $application->risk_reasons) }}</p>
+        @endif
+        @if($application->enquiryIntentLabel())
+            <p><strong>Intent:</strong> {{ $application->enquiryIntentLabel() }}</p>
+        @endif
         <p><strong>Submitted:</strong> {{ $application->created_at->format('d M Y H:i') }}</p>
+        <p><a href="{{ route('admin.leads.show', $application) }}" class="text-blue-600 text-sm">Manage protection actions →</a></p>
         @if(is_array($application->metadata) && count($application->metadata))
             <hr class="my-3">
             <p class="font-medium">Structured details</p>

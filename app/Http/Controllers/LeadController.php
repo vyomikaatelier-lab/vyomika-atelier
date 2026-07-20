@@ -8,15 +8,18 @@ namespace App\Http\Controllers;
 
 use App\Models\Lead;
 use App\Models\MediaFile;
+use App\Services\LeadProtectionService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
 
 
 
 class LeadController extends Controller
 
 {
+
+    public function __construct(
+        private LeadProtectionService $leadProtection,
+    ) {}
 
     public function create()
 
@@ -31,6 +34,13 @@ class LeadController extends Controller
     public function store(Request $request)
 
     {
+
+        $type = $request->input('type') ?? ($request->filled('calculated_price') ? 'order_now' : 'custom_order');
+        $formKey = $this->formKeyForType($type, $request->hasFile('drawing'));
+
+        if ($response = $this->leadProtection->guard($request, $formKey)) {
+            return $response;
+        }
 
         $rules = [
 
@@ -59,6 +69,8 @@ class LeadController extends Controller
             'unit_type' => 'nullable|string|max:50',
 
             'type' => 'nullable|in:custom_order,service_inquiry,order_now,professional_application,railing_quotation',
+
+            'enquiry_intent' => 'required|string|in:' . implode(',', array_keys(config('form_protection.enquiry_intents', []))),
 
             'company' => 'nullable|string|max:255',
 
@@ -218,7 +230,7 @@ class LeadController extends Controller
 
             $validated['railing_height'], $validated['project_location'], $validated['timeline'], $validated['whatsapp'],
 
-            $validated['drawing']
+            $validated['drawing'], $validated['enquiry_intent']
 
         );
 
@@ -330,7 +342,9 @@ class LeadController extends Controller
 
 
 
-        $lead = Lead::create([
+        $formKey = $this->formKeyForType($type, $drawingPath !== null);
+
+        $result = $this->leadProtection->finalizeLead($request, $formKey, [
             ...$validated,
             'type' => $type,
             'status' => 'new',
@@ -342,14 +356,15 @@ class LeadController extends Controller
                     : null,
             ]),
             'admin_notes' => null,
+            'project_location' => $extras['project_location'] ?? null,
+            'timeline' => $extras['timeline'] ?? null,
         ]);
 
+        $lead = $result['lead'];
 
 
-        $adminEmail = config('services.admin_email');
 
-        if ($adminEmail) {
-
+        if ($result['notify']) {
             $details = "New {$lead->typeLabel()} from {$lead->name} ({$lead->email}).";
 
             if ($lead->service_slug) {
@@ -370,35 +385,31 @@ class LeadController extends Controller
 
             $details .= "\n\n{$lead->message}";
 
-
-
-            Mail::raw(
-
+            $this->leadProtection->notifyAdmin(
+                $lead,
                 $details,
-
-                fn ($message) => $message->to($adminEmail)->subject("New {$lead->typeLabel()} — Vyomika Atelier LLP")
-
+                "New {$lead->typeLabel()} — Vyomika Atelier LLP"
             );
-
         }
 
 
 
-        $success = match ($type) {
-
-            'professional_application' => 'Thank you! Your professional application was received. We will review and contact you within 2–3 business days.',
-
-            'railing_quotation' => 'Thank you! Your railing quotation request was received. Our studio team will contact you within one business day.',
-
-            default => 'Thank you! We received your request and will contact you soon.',
-
-        };
-
-
+        $success = $result['success_message'];
 
         return back()->with('success', $success);
 
     }
 
-}
+    private function formKeyForType(string $type, bool $hasFile): string
+    {
+        return match ($type) {
+            'professional_application' => 'professional_application',
+            'railing_quotation' => 'railing_quotation',
+            'order_now' => 'order_now',
+            'service_inquiry' => 'service_inquiry',
+            'custom_order' => $hasFile ? 'order_now' : 'custom_order',
+            default => 'custom_order',
+        };
+    }
 
+}
