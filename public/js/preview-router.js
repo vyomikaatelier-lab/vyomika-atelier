@@ -196,34 +196,40 @@
     ];
   }
 
+  function finishSwatchBtnHtml(s, def) {
+    return `<button type="button" class="am-pdp-finish__swatch ${s.slug === def.slug ? 'is-active' : ''}" role="option"
+      aria-selected="${s.slug === def.slug ? 'true' : 'false'}" aria-label="${s.name}"
+      data-finish-slug="${s.slug}" data-finish-name="${s.name}" data-finish-rate="${s.rate}"
+      data-finish-black="${s.is_black ? '1' : '0'}" style="--swatch-color: ${s.hex}"
+      title="${s.name}${s.is_black ? ' (+30%)' : ''}">
+      <span class="am-pdp-finish__swatch-media">
+        <img src="images/finishes/${s.slug}.jpg" alt="" class="am-pdp-finish__swatch-img"
+          data-finish-fallback="images/finishes/${s.slug}.svg"
+          onerror="if(this.dataset.fallback){this.onerror=null;this.src=this.dataset.fallback}">
+      </span>
+      <span class="am-pdp-finish__swatch-name">${s.name}</span>
+    </button>`;
+  }
+
   function finishSwatchesHtml() {
     const swatches = getFinishSwatches();
     const def = swatches.find((s) => s.slug === 'champagne-mirror') || swatches[0];
-    const columns = [];
+    const mirrors = [];
+    const brushes = [];
     for (let i = 0; i < swatches.length; i += 2) {
-      columns.push(swatches.slice(i, i + 2));
+      mirrors.push(swatches[i]);
+      if (swatches[i + 1]) brushes.push(swatches[i + 1]);
     }
-    const colHtml = columns.map((col) => `
-      <div class="am-pdp-finish__col">
-        ${col.map((s) => `
-        <button type="button" class="am-pdp-finish__swatch ${s.slug === def.slug ? 'is-active' : ''}" role="option"
-          aria-selected="${s.slug === def.slug ? 'true' : 'false'}" aria-label="${s.name}"
-          data-finish-slug="${s.slug}" data-finish-name="${s.name}" data-finish-rate="${s.rate}"
-          data-finish-black="${s.is_black ? '1' : '0'}" style="--swatch-color: ${s.hex}"
-          title="${s.name}${s.is_black ? ' (+30%)' : ''}">
-          <span class="am-pdp-finish__swatch-media">
-            <img src="images/finishes/${s.slug}.jpg" alt="" class="am-pdp-finish__swatch-img"
-              data-finish-fallback="images/finishes/${s.slug}.svg"
-              onerror="if(this.dataset.fallback){this.onerror=null;this.src=this.dataset.fallback}">
-          </span>
-          <span class="am-pdp-finish__swatch-name">${s.name}</span>
-        </button>`).join('')}
-      </div>`).join('');
     return `<div class="am-pdp-finish" data-pdp-finish data-base-rate="${basePricingRate()}">
       <p class="am-pdp-finish__heading">PVD Finish</p>
       <p class="am-pdp-finish__selected">Selected: <span class="am-pdp-finish__value" data-finish-label>${def.name}</span></p>
       <div class="am-pdp-finish__grid" role="listbox" aria-label="Select PVD finish">
-        ${colHtml}
+        <div class="am-pdp-finish__row am-pdp-finish__row--mirror">
+          ${mirrors.map((s) => finishSwatchBtnHtml(s, def)).join('')}
+        </div>
+        <div class="am-pdp-finish__row am-pdp-finish__row--brush">
+          ${brushes.map((s) => finishSwatchBtnHtml(s, def)).join('')}
+        </div>
       </div>
       <p class="am-pdp-finish__note">Black Mirror &amp; Black Brush: +30% on sq ft rate</p>
     </div>`;
