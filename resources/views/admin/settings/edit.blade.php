@@ -3,7 +3,7 @@
 @section('content')
 <h1 class="text-2xl font-semibold mb-6">Site Settings</h1>
 <form method="POST" action="{{ route('admin.settings.update') }}" enctype="multipart/form-data" class="bg-white p-6 rounded shadow space-y-6 max-w-3xl">
-    @csrf @method('PUT')
+    @csrf
     <section class="space-y-3">
         <h2 class="font-medium">Business</h2>
         <input name="brand_name" value="{{ old('brand_name', $brand['name'] ?? '') }}" placeholder="Business name" required class="w-full border px-3 py-2 rounded">
@@ -17,7 +17,7 @@
     <section class="space-y-3">
         <h2 class="font-medium">Social links</h2>
         @foreach(['instagram','facebook','linkedin','pinterest','youtube'] as $network)
-            <input name="{{ $network }}" value="{{ old($network, $social[$network] ?? '') }}" placeholder="{{ ucfirst($network) }} URL" class="w-full border px-3 py-2 rounded">
+            <input name="{{ $network }}" value="{{ old($network, $social[$network] ?? '') }}" placeholder="{{ ucfirst($network) }} URL (https://…)" class="w-full border px-3 py-2 rounded">
         @endforeach
     </section>
     <section class="space-y-3">
@@ -57,11 +57,11 @@
                     </div>
                 </div>
                 <input type="file" name="finish_image_{{ $swatch['slug'] }}" accept="image/jpeg,image/png,image/webp" class="w-full border px-2 py-1 rounded text-sm">
-                <input type="url" name="finish_url_{{ $swatch['slug'] }}" value="{{ old('finish_url_'.$swatch['slug'], \Illuminate\Support\Str::startsWith((string) $current, 'http') ? $current : '') }}" placeholder="Or image URL" class="w-full border px-2 py-1 rounded text-sm">
+                <input type="text" name="finish_url_{{ $swatch['slug'] }}" value="{{ old('finish_url_'.$swatch['slug'], \Illuminate\Support\Str::startsWith((string) $current, 'http') ? $current : '') }}" placeholder="Or image URL (https://…)" class="w-full border px-2 py-1 rounded text-sm" inputmode="url">
             </div>
             @endforeach
         </div>
     </section>
-    <button class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Save settings</button>
+    <button type="submit" class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Save settings</button>
 </form>
 @endsection

@@ -188,7 +188,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('customers/{customer}', [CustomerAdminController::class, 'update'])->name('customers.update');
 
         Route::get('settings', [SiteSettingAdminController::class, 'edit'])->name('settings.edit');
-        Route::put('settings', [SiteSettingAdminController::class, 'update'])->name('settings.update');
+        Route::match(['put', 'post'], 'settings', [SiteSettingAdminController::class, 'update'])->name('settings.update');
 
         Route::get('legal', [LegalPageAdminController::class, 'index'])->name('legal.index');
         Route::get('legal/{legal}/edit', [LegalPageAdminController::class, 'edit'])->name('legal.edit');

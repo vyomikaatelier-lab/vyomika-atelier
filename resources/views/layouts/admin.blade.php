@@ -55,8 +55,12 @@
             @if(session('success'))
                 <div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-4 text-sm">{{ session('success') }}</div>
             @endif
+            @if(session('error'))
+                <div class="bg-red-100 text-red-800 px-4 py-2 rounded mb-4 text-sm">{{ session('error') }}</div>
+            @endif
             @if($errors->any())
                 <div class="bg-red-100 text-red-800 px-4 py-2 rounded mb-4 text-sm">
+                    <p class="font-medium mb-1">Could not save settings:</p>
                     <ul class="list-disc pl-4">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
                 </div>
             @endif
