@@ -58,15 +58,17 @@ Route::post('/cart/add/{product}', [CartController::class, 'add'])->middleware('
 Route::patch('/cart/update/{product}', [CartController::class, 'update'])->middleware('throttle:cart')->name('cart.update');
 Route::delete('/cart/remove/{product}', [CartController::class, 'remove'])->name('cart.remove');
 
-Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:checkout')->name('checkout.store');
-Route::get('/checkout/pay/{order}', [PaymentController::class, 'show'])->name('checkout.pay');
-Route::post('/checkout/pay/{order}', [PaymentController::class, 'verify'])->middleware('throttle:checkout')->name('checkout.pay.verify');
-Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
+Route::middleware('checkout.customer')->group(function () {
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:checkout')->name('checkout.store');
+    Route::get('/checkout/pay/{order}', [PaymentController::class, 'show'])->name('checkout.pay');
+    Route::post('/checkout/pay/{order}', [PaymentController::class, 'verify'])->middleware('throttle:checkout')->name('checkout.pay.verify');
+    Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
 
-Route::prefix('api')->middleware('throttle:checkout')->group(function () {
-    Route::post('/create-order', [RazorpayCheckoutController::class, 'createOrder'])->name('api.create-order');
-    Route::post('/verify-payment', [RazorpayCheckoutController::class, 'verifyPayment'])->name('api.verify-payment');
+    Route::prefix('api')->middleware('throttle:checkout')->group(function () {
+        Route::post('/create-order', [RazorpayCheckoutController::class, 'createOrder'])->name('api.create-order');
+        Route::post('/verify-payment', [RazorpayCheckoutController::class, 'verifyPayment'])->name('api.verify-payment');
+    });
 });
 
 Route::post('/webhooks/razorpay', RazorpayWebhookController::class)->name('webhooks.razorpay');

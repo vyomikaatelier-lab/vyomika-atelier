@@ -4823,6 +4823,19 @@ ul { list-style: none; }
   .am-address-form__grid { grid-template-columns: 1fr; }
   .am-address-form__field--full { grid-column: auto; }
 }
+@media (max-width: 480px) {
+  .am-address-form__grid .am-input,
+  .am-address-form__grid .am-input--select,
+  .am-address-form__grid .am-textarea {
+    font-size: 16px;
+    min-height: 44px;
+  }
+  .am-checkout-form,
+  .am-checkout-flow {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
 .am-btn--ghost { background: transparent; color: var(--am-muted); text-decoration: underline; }
 @media (max-width: 480px) {
   .am-account-phone { grid-template-columns: 1fr; }

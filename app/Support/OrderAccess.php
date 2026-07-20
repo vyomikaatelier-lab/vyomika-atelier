@@ -39,6 +39,10 @@ class OrderAccess
             return true;
         }
 
+        if ($order->user_id && (int) $order->user_id === (int) $user->id) {
+            return true;
+        }
+
         if ($user->mobile && $order->customer_phone) {
             $mobile = preg_replace('/\D/', '', (string) $user->mobile);
             $phone = preg_replace('/\D/', '', (string) $order->customer_phone);

@@ -70,13 +70,24 @@
                             'firstName' => old('first_name', $nameParts[0] ?? ''),
                             'lastName' => old('last_name', $nameParts[1] ?? ''),
                             'company' => old('company', $addressMeta['company'] ?? ''),
-                            'street' => old('address_line1', $defaultAddress?->address_line1 ?? ''),
+                            'houseBuilding' => old('house_building', $defaultAddress?->house_building ?? $defaultAddress?->address_line1 ?? ''),
+                            'street' => old('street', $defaultAddress?->street ?? ''),
+                            'locality' => old('locality', $defaultAddress?->locality ?? ''),
+                            'landmark' => old('landmark', $defaultAddress?->landmark ?? ''),
                             'city' => old('city', $defaultAddress?->city ?? $user->city ?? ''),
                             'state' => old('state', $defaultAddress?->state ?? ''),
                             'pincode' => old('pincode', $defaultAddress?->pincode ?? ''),
                             'phone' => old('phone', $defaultAddress?->phone ?? $user->mobile ?? ''),
-                            'country' => old('country', $addressMeta['country'] ?? 'India'),
+                            'altMobile' => old('alt_mobile', $defaultAddress?->alt_mobile ?? ''),
+                            'country' => old('country', $defaultAddress?->country ?? $addressMeta['country'] ?? 'India'),
+                            'addressType' => old('address_type', $defaultAddress?->address_type ?? 'home'),
+                            'floor' => old('floor', $defaultAddress?->floor ?? ''),
+                            'liftAvailable' => old('lift_available', $defaultAddress?->lift_available),
+                            'deliveryInstructions' => old('delivery_instructions', $defaultAddress?->delivery_instructions ?? ''),
                         ])
+                        <label class="am-account-consent am-address-form__default">
+                            <input type="checkbox" name="billing_same_as_shipping" value="1" @checked(old('billing_same_as_shipping', true))> Billing address same as shipping
+                        </label>
                         <label class="am-account-consent am-address-form__default">
                             <input type="checkbox" name="is_default" value="1" @checked(old('is_default', true))> Set as default delivery address
                         </label>

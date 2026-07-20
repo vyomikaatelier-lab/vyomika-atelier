@@ -66,7 +66,7 @@ class WhatsappOtpService
         RateLimiter::hit($this->resendDelayKey($mobileE164), (int) config('account.otp.resend_delay_seconds', 30));
 
         Log::info('OTP verification initiated', [
-            'mobile_e164' => $mobileE164,
+            'mobile_e164' => $this->phones->maskE164($mobileE164),
             'purpose' => $purpose,
             'verification_id' => $record->id,
         ]);
@@ -107,7 +107,7 @@ class WhatsappOtpService
         if (! Hash::check($otp, $record->otp_hash)) {
             Log::info('OTP verification failed', [
                 'verification_id' => $record->id,
-                'mobile_e164' => $record->mobile_e164,
+                'mobile_e164' => $this->phones->maskE164($record->mobile_e164),
                 'purpose' => $record->purpose,
                 'attempt' => $record->attempts,
             ]);
@@ -119,7 +119,7 @@ class WhatsappOtpService
 
         Log::info('OTP verification succeeded', [
             'verification_id' => $record->id,
-            'mobile_e164' => $record->mobile_e164,
+            'mobile_e164' => $this->phones->maskE164($record->mobile_e164),
             'purpose' => $record->purpose,
         ]);
 

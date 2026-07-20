@@ -8,14 +8,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Order extends Model
 {
     protected $fillable = [
+        'user_id',
         'order_number',
         'customer_name',
         'customer_email',
         'customer_phone',
+        'alt_mobile',
         'shipping_address',
         'city',
         'state',
         'pincode',
+        'country',
         'subtotal',
         'shipping_cost',
         'total',
@@ -24,6 +27,9 @@ class Order extends Model
         'payment_id',
         'razorpay_order_id',
         'notes',
+        'shipping_snapshot',
+        'billing_snapshot',
+        'checkout_token',
         'expires_at',
         'stock_deducted_at',
         'order_received_email_sent_at',
@@ -38,6 +44,8 @@ class Order extends Model
             'subtotal' => 'decimal:2',
             'shipping_cost' => 'decimal:2',
             'total' => 'decimal:2',
+            'shipping_snapshot' => 'array',
+            'billing_snapshot' => 'array',
             'expires_at' => 'datetime',
             'stock_deducted_at' => 'datetime',
             'order_received_email_sent_at' => 'datetime',
@@ -50,6 +58,11 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     public static function generateOrderNumber(): string

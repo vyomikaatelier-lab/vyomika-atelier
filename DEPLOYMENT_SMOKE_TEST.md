@@ -155,10 +155,13 @@ cd ~/vyomika-atelier && bash setup-hostinger.sh
 | 11 | Custom order | `/custom-order` | Form submits → lead in admin |
 | 12 | Account register | `/account/register` | Shows WhatsApp-not-configured message if env empty |
 | 13 | Account login | `/account/login` | OTP/email flows; disabled account blocked |
-| 14 | Cart | `/cart` | Items persist in session |
-| 15 | Buy Now | PDP → cart/checkout | Adds to cart |
-| 16 | Checkout (no Razorpay) | `/checkout` | Notice: *"Online payment is not configured yet. Please contact the studio to complete your order."* |
-| 17 | Checkout submit | POST checkout | **Blocked** — redirect with error; **no order created** |
+| 14 | Cart | `/cart` | Items persist in session (guest OK) |
+| 15 | Buy Now | PDP → checkout | Guest redirected to login; verified customer reaches checkout |
+| 16 | Checkout (guest) | `/checkout` | Redirect to `/account/login` with sign-in message |
+| 17 | Checkout (unverified) | `/checkout` | Redirect to `/account/verify-otp` |
+| 18 | Checkout (verified, no Razorpay) | `/checkout` | Notice: *"Online payment is currently unavailable. Please contact Vyomika Atelier to complete your order."* |
+| 19 | Checkout submit (no keys) | POST checkout | **Blocked** — redirect with error; **no order created** |
+| 20 | Address validation | Checkout form | India: 6-digit PIN + state dropdown; international: free-form PIN |
 
 ### Admin (`/admin`)
 
@@ -200,9 +203,10 @@ cd ~/vyomika-atelier && bash setup-hostinger.sh
 
 ### Razorpay — deferred
 
-- Leave `RAZORPAY_KEY` and `RAZORPAY_SECRET` empty until live keys are ready.
-- **Checkout UI message** (when keys missing): *"Online payment is not configured yet. Please contact the studio to complete your order."*
+- Leave `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` empty until live keys are ready.
+- **Checkout UI message** (when keys missing): *"Online payment is currently unavailable. Please contact Vyomika Atelier to complete your order."*
 - **Server guard:** `CheckoutController::store()` rejects order creation without configured keys.
+- **Auth guard:** Checkout routes require authenticated, active, phone-verified customer (`checkout.customer` middleware).
 - **Payment page guard:** `PaymentController::show()` redirects if keys missing.
 - **No fake payments:** `PaymentController::verify()` requires valid Razorpay HMAC signature.
 - **After keys added:** set env vars → `php artisan config:cache` → checkout button enables.

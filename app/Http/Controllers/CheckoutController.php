@@ -4,14 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Services\AddressValidationService;
 use App\Services\CartService;
 use App\Services\OrderNotificationService;
 use App\Services\RazorpayService;
 use App\Services\StockAvailability;
 use App\Support\CartGuard;
+use App\Support\CheckoutCustomer;
 use App\Support\OrderAccess;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class CheckoutController extends Controller
 {
@@ -19,21 +24,22 @@ class CheckoutController extends Controller
         private CartService $cart,
         private RazorpayService $razorpay,
         private OrderNotificationService $notifications,
+        private AddressValidationService $addresses,
     ) {}
 
     public function index()
     {
-        // CartService::all() revalidates every item against CartGuard and
-        // silently drops anything no longer eligible (deactivated, or
-        // reclassified as Studio/Railings) before the checkout page renders.
         if ($this->cart->isEmpty()) {
             return redirect()->route('shop.index')->with('error', 'Your cart is empty.');
         }
 
+        $user = Auth::user();
         $items = $this->cart->all();
         $subtotal = $this->cart->subtotal();
         $shipping = $subtotal >= 5000 ? 0 : 199;
         $total = $subtotal + $shipping;
+        $defaultAddress = $user?->addresses()->where('is_default', true)->first()
+            ?? $user?->addresses()->first();
 
         return view('checkout.index', [
             'items' => $items,
@@ -41,18 +47,24 @@ class CheckoutController extends Controller
             'shipping' => $shipping,
             'total' => $total,
             'razorpayEnabled' => $this->razorpay->isConfigured(),
+            'defaultAddress' => $defaultAddress,
+            'user' => $user,
         ]);
     }
 
     public function store(Request $request)
     {
+        if ($message = CheckoutCustomer::denialMessage(Auth::user())) {
+            return redirect()->route('checkout.index')->with('error', $message);
+        }
+
         if ($this->cart->isEmpty()) {
             return redirect()->route('shop.index')->with('error', 'Your cart is empty.');
         }
 
         if (! $this->razorpay->isConfigured()) {
             return redirect()->route('checkout.index')
-                ->with('error', 'Online payment is not available right now. Please contact us to complete your order.');
+                ->with('error', config('addresses.payment_unavailable_message'));
         }
 
         $pendingId = session(OrderAccess::SESSION_KEY);
@@ -64,10 +76,6 @@ class CheckoutController extends Controller
             }
         }
 
-        // Defense in depth: revalidate every cart line right before order
-        // creation. CartService::all() already self-heals on read, but this
-        // makes the "no Studio/Railings item may ever become an Order" rule
-        // explicit at the exact point orders are persisted.
         $ineligible = $this->cart->all()->first(
             fn (array $item) => ! CartGuard::isEligible($item['product'])
         );
@@ -77,45 +85,24 @@ class CheckoutController extends Controller
                 ->with('error', CartGuard::checkoutEligibility($ineligible['product']));
         }
 
-        if ($request->filled('first_name') || $request->filled('last_name')) {
-            $request->merge([
-                'customer_name' => trim($request->input('first_name', '').' '.$request->input('last_name', '')),
-            ]);
+        try {
+            $addressInput = $this->addresses->mapCheckoutInput($request->all());
+            $validatedAddress = $this->addresses->validate($addressInput, true);
+        } catch (ValidationException $e) {
+            return redirect()->route('checkout.index')
+                ->withErrors($e->errors())
+                ->withInput();
         }
 
-        $validated = $request->validate([
-            'customer_name' => 'required|string|max:255',
-            'first_name' => 'nullable|string|max:60',
-            'last_name' => 'nullable|string|max:60',
-            'customer_email' => 'required|email|max:255',
-            'customer_phone' => 'required|string|max:20',
-            'shipping_address' => 'required|string|max:500',
-            'city' => 'required|string|max:100',
-            'state' => 'nullable|string|max:100',
-            'pincode' => 'required|string|max:20',
-            'country' => 'required|string|max:100',
-            'country_other' => 'nullable|required_if:country,Other|string|max:100',
-            'payment_method' => 'required|in:razorpay',
-            'notes' => 'nullable|string|max:1000',
-            'company' => 'nullable|string|max:255',
-        ]);
-
-        if ($request->filled('first_name')) {
-            $validated['customer_name'] = trim($request->input('first_name') . ' ' . $request->input('last_name'));
-        }
-
-        $country = $validated['country'] === 'Other'
-            ? trim((string) ($validated['country_other'] ?? ''))
-            : $validated['country'];
+        $snapshot = $this->addresses->toSnapshot($validatedAddress);
+        $user = Auth::user();
 
         $noteLines = array_filter([
-            $validated['notes'] ?? null,
-            $request->filled('company') ? 'Company: ' . $request->input('company') : null,
-            $country ? 'Country/Region: ' . $country : null,
+            $validatedAddress['delivery_instructions'] ?? null,
+            $validatedAddress['notes'] ?? null,
+            filled($validatedAddress['company'] ?? null) ? 'Company: ' . $validatedAddress['company'] : null,
+            $snapshot['country'] ? 'Country/Region: ' . $snapshot['country'] : null,
         ]);
-        $validated['notes'] = $noteLines ? implode("\n", $noteLines) : null;
-
-        unset($validated['first_name'], $validated['last_name'], $validated['company'], $validated['country'], $validated['country_other']);
 
         $items = $this->cart->all();
         $subtotal = $this->cart->subtotal();
@@ -131,14 +118,45 @@ class CheckoutController extends Controller
             }
         }
 
-        $order = DB::transaction(function () use ($validated, $items, $subtotal, $shipping, $total) {
+        $checkoutToken = $request->session()->get('checkout_submit_token');
+        if ($checkoutToken) {
+            $duplicate = Order::query()
+                ->where('checkout_token', $checkoutToken)
+                ->where('status', 'pending')
+                ->where('created_at', '>=', now()->subHour())
+                ->first();
+
+            if ($duplicate && ! $duplicate->isExpired()) {
+                return redirect()->route('checkout.pay', $duplicate)
+                    ->with('info', 'Resuming your pending order.');
+            }
+        }
+
+        $checkoutToken = (string) Str::uuid();
+        $request->session()->put('checkout_submit_token', $checkoutToken);
+
+        $order = DB::transaction(function () use ($request, $snapshot, $validatedAddress, $noteLines, $items, $subtotal, $shipping, $total, $user, $checkoutToken) {
             $order = Order::create([
-                ...$validated,
+                'user_id' => $user->id,
                 'order_number' => Order::generateOrderNumber(),
+                'customer_name' => $snapshot['full_name'],
+                'customer_email' => $snapshot['email'],
+                'customer_phone' => $snapshot['phone'],
+                'alt_mobile' => $snapshot['alt_mobile'],
+                'shipping_address' => $snapshot['formatted_line'],
+                'city' => $snapshot['city'],
+                'state' => $snapshot['state'],
+                'pincode' => $snapshot['pincode'],
+                'country' => $snapshot['country'],
                 'subtotal' => $subtotal,
                 'shipping_cost' => $shipping,
                 'total' => $total,
                 'status' => 'pending',
+                'payment_method' => 'razorpay',
+                'notes' => $noteLines ? implode("\n", $noteLines) : null,
+                'shipping_snapshot' => $snapshot,
+                'billing_snapshot' => $validatedAddress['billing_same_as_shipping'] ? $snapshot : null,
+                'checkout_token' => $checkoutToken,
                 'expires_at' => now()->addHours(Order::pendingExpiryHours()),
             ]);
 
@@ -153,6 +171,32 @@ class CheckoutController extends Controller
                     'quantity' => $item['quantity'],
                     'total' => $item['line_total'],
                 ]);
+            }
+
+            if ($request->boolean('save_address')) {
+                    $user->addresses()->create([
+                        'label' => ucfirst($snapshot['address_type']),
+                        'name' => $snapshot['full_name'],
+                        'phone' => $snapshot['phone'],
+                        'alt_mobile' => $snapshot['alt_mobile'],
+                        'email' => $snapshot['email'],
+                        'address_line1' => $snapshot['formatted_line'],
+                        'house_building' => $snapshot['house_building'],
+                        'street' => $snapshot['street'],
+                        'locality' => $snapshot['locality'],
+                        'landmark' => $snapshot['landmark'],
+                        'city' => $snapshot['city'],
+                        'state' => $snapshot['state'],
+                        'pincode' => $snapshot['pincode'],
+                        'country' => $snapshot['country'],
+                        'address_type' => $snapshot['address_type'],
+                        'floor' => $snapshot['floor'],
+                        'lift_available' => $snapshot['lift_available'],
+                        'delivery_instructions' => $snapshot['delivery_instructions'],
+                        'billing_same_as_shipping' => $snapshot['billing_same_as_shipping'],
+                        'pin_lookup_status' => $snapshot['pin_lookup_status'],
+                        'is_default' => $user->addresses()->count() === 0,
+                    ]);
             }
 
             return $order;

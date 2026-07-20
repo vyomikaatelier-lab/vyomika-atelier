@@ -55,7 +55,7 @@ class CartController extends Controller
         $this->cart->add($product, $quantity, is_string($finishSlug) ? $finishSlug : null);
 
         if ($request->boolean('buy_now')) {
-            return redirect()->route('cart.index');
+            return redirect()->route('checkout.index');
         }
 
         return back()->with('success', 'Added to cart.');

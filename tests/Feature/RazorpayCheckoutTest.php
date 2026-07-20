@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Order;
+use App\Models\User;
 use App\Services\OrderPaymentService;
 use App\Services\RazorpayService;
 use App\Support\OrderAccess;
@@ -22,6 +23,17 @@ class RazorpayCheckoutTest extends TestCase
             'services.razorpay.key' => 'rzp_test_key',
             'services.razorpay.secret' => 'rzp_test_secret',
         ]);
+    }
+
+    private function actingForOrder(Order $order)
+    {
+        $user = User::factory()->create([
+            'email' => $order->customer_email,
+            'mobile' => preg_replace('/\D/', '', $order->customer_phone) ?: '9876543210',
+        ]);
+
+        return $this->actingAs($user)
+            ->withSession([OrderAccess::SESSION_KEY => $order->id]);
     }
 
     private function makeOrder(array $overrides = []): Order
@@ -44,7 +56,9 @@ class RazorpayCheckoutTest extends TestCase
 
     public function test_create_order_api_requires_store_order_id(): void
     {
-        $response = $this->postJson(route('api.create-order'), [
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->postJson(route('api.create-order'), [
             'amount' => 10000,
             'currency' => 'INR',
             'receipt' => 'TEST-1',
@@ -65,7 +79,7 @@ class RazorpayCheckoutTest extends TestCase
 
         $order = $this->makeOrder();
 
-        $response = $this->withSession([OrderAccess::SESSION_KEY => $order->id])
+        $response = $this->actingForOrder($order)
             ->postJson(route('api.create-order'), ['store_order_id' => $order->id]);
 
         $response->assertOk()
@@ -83,7 +97,7 @@ class RazorpayCheckoutTest extends TestCase
     {
         $order = $this->makeOrder(['razorpay_order_id' => 'order_verify_test']);
 
-        $response = $this->withSession([OrderAccess::SESSION_KEY => $order->id])
+        $response = $this->actingForOrder($order)
             ->postJson(route('api.verify-payment'), [
                 'store_order_id' => $order->id,
                 'razorpay_payment_id' => 'pay_test',
@@ -101,7 +115,7 @@ class RazorpayCheckoutTest extends TestCase
         $paymentId = 'pay_valid_test';
         $signature = hash_hmac('sha256', 'order_paid_test|'.$paymentId, 'rzp_test_secret');
 
-        $response = $this->withSession([OrderAccess::SESSION_KEY => $order->id])
+        $response = $this->actingForOrder($order)
             ->postJson(route('api.verify-payment'), [
                 'store_order_id' => $order->id,
                 'razorpay_payment_id' => $paymentId,

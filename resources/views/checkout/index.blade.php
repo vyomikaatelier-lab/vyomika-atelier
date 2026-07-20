@@ -31,8 +31,15 @@
         @endif
 
         @unless($razorpayEnabled)
-        <p class="am-checkout-notice" role="alert">Online payment is not configured yet. Add <code>RAZORPAY_KEY_ID</code> and <code>RAZORPAY_KEY_SECRET</code> to the server <code>.env</code>, then run <code>php artisan config:cache</code>. Until then, use Contact Us to place an order.</p>
+        <p class="am-checkout-notice" role="alert">{{ config('addresses.payment_unavailable_message') }}</p>
         @endunless
+
+        @php
+            $addr = $defaultAddress ?? null;
+            $addrMeta = $addr ? \App\Models\CustomerAddress::decodeLine2($addr->address_line2) : ['company' => '', 'country' => 'India'];
+            $checkoutName = old('customer_name', $addr?->name ?? $user?->name ?? '');
+            $checkoutParts = $checkoutName ? explode(' ', $checkoutName, 2) : ['', ''];
+        @endphp
 
         <form action="{{ route('checkout.store') }}" method="POST" class="am-checkout-stack am-checkout-form am-address-form">
             @csrf
@@ -43,28 +50,34 @@
                     <h2 class="am-checkout-panel__title">Shipping details</h2>
                     <p class="am-checkout-panel__hint">Worldwide delivery · estimated 3–4 weeks after order confirmation</p>
 
-                    @php
-                        $checkoutName = old('customer_name', '');
-                        $checkoutParts = $checkoutName ? explode(' ', $checkoutName, 2) : ['', ''];
-                    @endphp
                     <div class="am-checkout-form__address">
                         @include('partials.am-address-form-grid', [
                             'mode' => 'checkout',
-                            'userEmail' => old('customer_email'),
+                            'userEmail' => old('customer_email', $user?->email),
                             'firstName' => old('first_name', $checkoutParts[0] ?? ''),
                             'lastName' => old('last_name', $checkoutParts[1] ?? ''),
-                            'company' => old('company'),
-                            'street' => old('shipping_address'),
-                            'city' => old('city'),
-                            'state' => old('state'),
-                            'pincode' => old('pincode'),
-                            'phone' => old('customer_phone'),
-                            'country' => old('country', 'India'),
+                            'company' => old('company', $addrMeta['company'] ?? ''),
+                            'houseBuilding' => old('house_building', $addr?->house_building ?? $addr?->address_line1 ?? ''),
+                            'street' => old('street', $addr?->street ?? ''),
+                            'locality' => old('locality', $addr?->locality ?? ''),
+                            'landmark' => old('landmark', $addr?->landmark ?? ''),
+                            'city' => old('city', $addr?->city ?? $user?->city ?? ''),
+                            'state' => old('state', $addr?->state ?? ''),
+                            'pincode' => old('pincode', $addr?->pincode ?? ''),
+                            'phone' => old('customer_phone', $addr?->phone ?? $user?->mobile ?? ''),
+                            'altMobile' => old('alt_mobile', $addr?->alt_mobile ?? ''),
+                            'country' => old('country', $addr?->country ?? $addrMeta['country'] ?? 'India'),
+                            'addressType' => old('address_type', $addr?->address_type ?? 'home'),
+                            'floor' => old('floor', $addr?->floor ?? ''),
+                            'liftAvailable' => old('lift_available', $addr?->lift_available),
+                            'deliveryInstructions' => old('delivery_instructions', $addr?->delivery_instructions ?? ''),
                         ])
-                        <div class="am-checkout-field am-address-form__field--full">
-                            <label for="notes">Order notes <span class="am-checkout-field__optional">(optional)</span></label>
-                            <textarea id="notes" name="notes" rows="2" class="am-input am-textarea" placeholder="Delivery instructions, GST details…">{{ old('notes') }}</textarea>
-                        </div>
+                        <label class="am-account-consent am-address-form__default">
+                            <input type="checkbox" name="save_address" value="1" @checked(old('save_address'))> Save this address to my account
+                        </label>
+                        <label class="am-account-consent am-address-form__default">
+                            <input type="checkbox" name="billing_same_as_shipping" value="1" @checked(old('billing_same_as_shipping', true))> Billing address same as shipping
+                        </label>
                     </div>
                 </div>
             </div>

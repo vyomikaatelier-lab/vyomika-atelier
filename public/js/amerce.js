@@ -613,10 +613,35 @@
       const grid = select.closest('.am-address-form__grid');
       const otherWrap = grid?.querySelector('[data-country-other-wrap]');
       const otherInput = grid?.querySelector('[name="country_other"]');
+      const stateSelect = grid?.querySelector('[data-state-select]');
+      const stateText = grid?.querySelector('[data-state-text]');
+      const pinInput = grid?.querySelector('[data-pincode-input]');
       const toggle = () => {
         const isOther = select.value === 'Other';
+        const isIndia = select.value === 'India';
         if (otherWrap) otherWrap.hidden = !isOther;
         if (otherInput) otherInput.required = isOther;
+        if (stateSelect) {
+          stateSelect.hidden = !isIndia;
+          stateSelect.disabled = !isIndia;
+          stateSelect.required = isIndia;
+        }
+        if (stateText) {
+          stateText.hidden = isIndia;
+          stateText.disabled = isIndia;
+          stateText.required = !isIndia;
+        }
+        if (pinInput) {
+          if (isIndia) {
+            pinInput.setAttribute('pattern', '[1-9][0-9]{5}');
+            pinInput.setAttribute('maxlength', '6');
+            pinInput.setAttribute('inputmode', 'numeric');
+          } else {
+            pinInput.removeAttribute('pattern');
+            pinInput.removeAttribute('maxlength');
+            pinInput.removeAttribute('inputmode');
+          }
+        }
       };
       select.addEventListener('change', toggle);
       toggle();

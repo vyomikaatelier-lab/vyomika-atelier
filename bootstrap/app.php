@@ -15,10 +15,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'customer' => \App\Http\Middleware\CustomerAccountMiddleware::class,
             'customer.guest' => \App\Http\Middleware\RedirectVerifiedCustomerMiddleware::class,
+            'checkout.customer' => \App\Http\Middleware\EnsureCheckoutCustomer::class,
         ]);
 
         $middleware->web(append: [
             \App\Http\Middleware\CaptureAttribution::class,
+            \App\Http\Middleware\SecurityHeaders::class,
         ]);
 
         // Razorpay redirect callback POSTs without a CSRF token.

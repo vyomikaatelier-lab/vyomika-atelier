@@ -12,11 +12,24 @@ class CustomerAddress extends Model
         'label',
         'name',
         'phone',
+        'alt_mobile',
+        'email',
         'address_line1',
         'address_line2',
+        'house_building',
+        'street',
+        'locality',
+        'landmark',
         'city',
         'state',
         'pincode',
+        'country',
+        'address_type',
+        'floor',
+        'lift_available',
+        'delivery_instructions',
+        'billing_same_as_shipping',
+        'pin_lookup_status',
         'is_default',
     ];
 
@@ -24,6 +37,8 @@ class CustomerAddress extends Model
     {
         return [
             'is_default' => 'boolean',
+            'lift_available' => 'boolean',
+            'billing_same_as_shipping' => 'boolean',
         ];
     }
 
@@ -35,14 +50,18 @@ class CustomerAddress extends Model
     public function formatted(): string
     {
         $decoded = self::decodeLine2($this->address_line2);
+        $country = $this->country ?: $decoded['country'];
 
         $parts = array_filter([
-            $this->address_line1,
+            $this->house_building ?: $this->address_line1,
+            $this->street,
+            $this->locality,
+            $this->landmark ? 'Near ' . $this->landmark : null,
             $decoded['company'] ?: null,
             $this->city,
             $this->state,
             $this->pincode,
-            $decoded['country'] !== 'India' ? $decoded['country'] : null,
+            $country !== 'India' ? $country : null,
         ]);
 
         return implode(', ', $parts);

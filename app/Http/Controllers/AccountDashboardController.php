@@ -5,18 +5,23 @@ namespace App\Http\Controllers;
 use App\Models\CustomerAddress;
 use App\Models\Lead;
 use App\Models\Order;
+use App\Services\AddressValidationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class AccountDashboardController extends Controller
 {
+    public function __construct(private AddressValidationService $addresses) {}
+
     public function index()
     {
         $user = Auth::user();
 
         $orders = Order::query()
             ->where(function ($q) use ($user) {
-                $q->where('customer_email', $user->email);
+                $q->where('user_id', $user->id)
+                    ->orWhere('customer_email', $user->email);
                 if ($user->mobile) {
                     $q->orWhere('customer_phone', 'like', '%' . $user->mobile);
                 }
@@ -72,28 +77,14 @@ class AccountDashboardController extends Controller
     {
         $user = Auth::user();
 
-        $validated = $request->validate([
-            'label' => 'required|string|max:60',
-            'first_name' => 'required|string|max:60',
-            'last_name' => 'required|string|max:60',
-            'name' => 'nullable|string|max:120',
-            'phone' => 'required|string|max:20',
-            'address_line1' => 'required|string|max:255',
-            'company' => 'nullable|string|max:255',
-            'address_line2' => 'nullable|string|max:255',
-            'city' => 'required|string|max:100',
-            'state' => 'nullable|string|max:100',
-            'pincode' => 'required|string|max:20',
-            'country' => 'required|string|max:100',
-            'country_other' => 'nullable|required_if:country,Other|string|max:100',
-            'is_default' => 'nullable|boolean',
-        ]);
+        try {
+            $validated = $this->addresses->validate($request->all());
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
+        }
 
-        $name = trim($validated['first_name'] . ' ' . $validated['last_name']);
-        $country = $validated['country'] === 'Other'
-            ? trim((string) ($validated['country_other'] ?? ''))
-            : $validated['country'];
-        $addressLine2 = CustomerAddress::encodeLine2($validated['company'] ?? null, $country);
+        $snapshot = $this->addresses->toSnapshot($validated);
+        $addressLine2 = CustomerAddress::encodeLine2($validated['company'] ?? null, $snapshot['country']);
 
         if ($request->boolean('is_default')) {
             $user->addresses()->update(['is_default' => false]);
@@ -101,13 +92,26 @@ class AccountDashboardController extends Controller
 
         $user->addresses()->create([
             'label' => $validated['label'],
-            'name' => $name,
-            'phone' => $validated['phone'],
-            'address_line1' => $validated['address_line1'],
+            'name' => $snapshot['full_name'],
+            'phone' => $snapshot['phone'],
+            'alt_mobile' => $snapshot['alt_mobile'],
+            'email' => $snapshot['email'] ?: $user->email,
+            'address_line1' => $snapshot['formatted_line'],
             'address_line2' => $addressLine2,
-            'city' => $validated['city'],
-            'state' => $validated['state'],
-            'pincode' => $validated['pincode'],
+            'house_building' => $snapshot['house_building'],
+            'street' => $snapshot['street'],
+            'locality' => $snapshot['locality'],
+            'landmark' => $snapshot['landmark'],
+            'city' => $snapshot['city'],
+            'state' => $snapshot['state'],
+            'pincode' => $snapshot['pincode'],
+            'country' => $snapshot['country'],
+            'address_type' => $snapshot['address_type'],
+            'floor' => $snapshot['floor'],
+            'lift_available' => $snapshot['lift_available'],
+            'delivery_instructions' => $snapshot['delivery_instructions'],
+            'billing_same_as_shipping' => $snapshot['billing_same_as_shipping'],
+            'pin_lookup_status' => $snapshot['pin_lookup_status'],
             'is_default' => $request->boolean('is_default') || $user->addresses()->count() === 0,
         ]);
 

@@ -256,7 +256,7 @@ class AccountAuthController extends Controller
         $request->session()->forget('account_pending_verification_id');
         $request->session()->forget('account_register_password');
 
-        return redirect()->route('account')
+        return redirect()->intended(route('account'))
             ->with('success', config('account.copy.success'));
     }
 
@@ -342,7 +342,7 @@ class AccountAuthController extends Controller
                 $this->storePendingVerification($request, $record, $phone);
                 $this->formProtection->hitRateLimiters($request, $formKey);
             } catch (WhatsAppNotConfiguredException|WhatsAppDeliveryException|\RuntimeException $e) {
-                Log::warning('Login OTP send failed', ['mobile_e164' => $phone['e164'], 'error' => $e->getMessage()]);
+                Log::warning('Login OTP send failed', ['mobile_e164' => $this->phones->maskE164($phone['e164']), 'error' => $e->getMessage()]);
 
                 return $this->otpErrorResponse($e);
             }
@@ -352,7 +352,7 @@ class AccountAuthController extends Controller
         }
 
         Log::info('OTP requested for unknown or unverified mobile', [
-            'mobile_e164' => $phone['e164'],
+            'mobile_e164' => $this->phones->maskE164($phone['e164']),
             'purpose' => $purpose,
         ]);
 

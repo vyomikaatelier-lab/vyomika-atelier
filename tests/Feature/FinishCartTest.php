@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\User;
 use App\Support\FinishSwatches;
 use App\Support\OrderAccess;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -53,7 +54,9 @@ class FinishCartTest extends TestCase
             'stock' => 5,
         ]);
 
-        $this->withSession([
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->withSession([
             'cart' => [
                 $product->id => [
                     'quantity' => 1,
@@ -61,17 +64,19 @@ class FinishCartTest extends TestCase
                     'finish_name' => 'Rose Gold Brush',
                 ],
             ],
-        ]);
-
-        $response = $this->post(route('checkout.store'), [
-            'customer_name' => 'Jane Doe',
+        ])->post(route('checkout.store'), [
+            'first_name' => 'Jane',
+            'last_name' => 'Doe',
             'customer_email' => 'jane@example.com',
-            'customer_phone' => '9999999999',
-            'shipping_address' => '123 Test Street',
+            'customer_phone' => '9876543210',
+            'house_building' => '123 Test Building',
+            'street' => 'Test Street',
             'city' => 'Mumbai',
+            'state' => 'Maharashtra',
             'pincode' => '400001',
             'country' => 'India',
             'payment_method' => 'razorpay',
+            'billing_same_as_shipping' => '1',
         ]);
 
         $response->assertRedirect();

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\User;
 use App\Support\OrderAccess;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -32,21 +33,30 @@ class OrderAccessTest extends TestCase
         ], $overrides));
     }
 
+    private function orderOwner(Order $order): User
+    {
+        return User::factory()->create([
+            'email' => $order->customer_email,
+            'mobile' => '9999999999',
+        ]);
+    }
+
     public function test_guest_cannot_view_checkout_success_for_foreign_order(): void
     {
         $order = $this->makeOrder(['status' => 'paid']);
 
         $response = $this->get(route('checkout.success', $order));
 
-        $response->assertRedirect(route('shop.index'));
-        $response->assertSessionHas('error');
+        $response->assertRedirect(route('account.login'));
     }
 
     public function test_guest_can_view_checkout_success_for_session_order(): void
     {
         $order = $this->makeOrder(['status' => 'paid']);
+        $user = $this->orderOwner($order);
 
-        $response = $this->withSession([OrderAccess::SESSION_KEY => $order->id])
+        $response = $this->actingAs($user)
+            ->withSession([OrderAccess::SESSION_KEY => $order->id])
             ->get(route('checkout.success', $order));
 
         $response->assertOk();
@@ -59,8 +69,7 @@ class OrderAccessTest extends TestCase
 
         $response = $this->get(route('checkout.pay', $order));
 
-        $response->assertRedirect(route('shop.index'));
-        $response->assertSessionHas('error');
+        $response->assertRedirect(route('account.login'));
     }
 
     public function test_payment_verify_rejects_mismatched_razorpay_order_id(): void
@@ -68,8 +77,10 @@ class OrderAccessTest extends TestCase
         $category = Category::factory()->create(['slug' => 'coffee-tables']);
         Product::factory()->shop()->create(['category_id' => $category->id]);
         $order = $this->makeOrder();
+        $user = $this->orderOwner($order);
 
-        $response = $this->withSession([OrderAccess::SESSION_KEY => $order->id])
+        $response = $this->actingAs($user)
+            ->withSession([OrderAccess::SESSION_KEY => $order->id])
             ->post(route('checkout.pay.verify', $order), [
                 'razorpay_payment_id' => 'pay_test',
                 'razorpay_order_id' => 'order_wrong',
@@ -79,5 +90,20 @@ class OrderAccessTest extends TestCase
         $response->assertRedirect(route('checkout.pay', $order));
         $response->assertSessionHas('error');
         $this->assertSame('pending', $order->fresh()->status);
+    }
+
+    public function test_authenticated_owner_can_access_order_by_user_id(): void
+    {
+        $user = User::factory()->create();
+        $order = $this->makeOrder([
+            'user_id' => $user->id,
+            'customer_email' => $user->email,
+            'status' => 'paid',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('checkout.success', $order));
+
+        $response->assertOk();
+        $response->assertSee($order->order_number);
     }
 }
