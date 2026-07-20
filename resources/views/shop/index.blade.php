@@ -7,18 +7,22 @@
     'title' => $pageTitle ?? 'Shop',
     'subtitle' => $pageSubtitle ?? null,
     'showLabel' => false,
+    'class' => 'am-page-hero--hide-mobile',
 ])
 
-<section class="am-page-body">
+<section class="am-page-body am-page-body--catalog">
     <div class="am-container">
-        @include('partials.am-breadcrumbs', ['items' => [
-            ['label' => 'Home', 'url' => route('home')],
-            ['label' => 'Shop', 'url' => route('shop.index')],
-            ...($activeCategory ? [['label' => $activeCategory->name]] : []),
-        ]])
+        @include('partials.am-breadcrumbs', [
+            'class' => 'am-breadcrumbs--hide-mobile',
+            'items' => [
+                ['label' => 'Home', 'url' => route('home')],
+                ['label' => 'Shop', 'url' => route('shop.index')],
+                ...($activeCategory ? [['label' => $activeCategory->name]] : []),
+            ],
+        ])
 
         <div class="am-layout-shop">
-            <aside class="am-shop-sidebar">
+            <aside class="am-shop-sidebar am-shop-sidebar--desktop-only" aria-label="Product categories">
                 <p class="am-sidebar-title">Category</p>
                 <a href="{{ route('shop.index', request()->only('search', 'sort')) }}" class="am-sidebar-link {{ !request('category') ? 'is-active' : '' }}">All Products</a>
                 @foreach($categories as $category)
@@ -31,6 +35,7 @@
             </aside>
 
             <div class="am-shop-main">
+                <h1 class="am-shop-mobile-title">{{ $pageTitle ?? 'Shop' }}</h1>
                 <div class="am-shop-toolbar">
                     <form method="GET" class="am-shop-search">
                         @foreach(request()->except('search', 'page') as $key => $value)

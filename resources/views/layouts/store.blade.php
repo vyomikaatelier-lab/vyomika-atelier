@@ -80,7 +80,7 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 6h15l-1.5 9h-12z"/><circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/><path d="M6 6L5 3H2"/></svg>
                 @if($cartCount)<span class="am-cart-count">{{ $cartCount }}</span>@endif
             </a>
-            <button type="button" class="am-icon-btn am-menu-toggle" id="am-menu-toggle" aria-label="Menu">
+            <button type="button" class="am-icon-btn am-menu-toggle" id="am-menu-toggle" aria-label="Menu" aria-expanded="false" aria-controls="am-mobile-nav">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
             </button>
         </div>
@@ -111,65 +111,7 @@
 
 <main>@yield('content')</main>
 
-<footer class="am-footer">
-    <div class="am-container">
-        <div class="am-footer__top">
-            <div class="am-footer__brand">
-                <a href="{{ $storefrontLink('home', [], '/') }}" class="am-logo">
-                    <span class="am-logo__name">{{ trim(($brand['name'] ?? 'Vyomika Atelier LLP') . ' ' . ($brand['suffix'] ?? '')) }}</span>
-                </a>
-                <p>{{ $footer['newsletter'] ?? '' }}</p>
-                <form class="am-footer__newsletter" action="#" method="POST" onsubmit="return false">
-                    <input type="email" placeholder="Your email address" aria-label="Email for newsletter">
-                    <button type="submit" class="am-btn am-btn--primary am-btn--sm">Subscribe</button>
-                </form>
-                <p style="margin-top:1.25rem;font-size:0.8rem">
-                    {{ $brand['address_shop'] ?? 'Pan-India fabrication & delivery' }}<br>
-                    {{ $brand['address_office'] ?? 'Mumbai, India' }}
-                </p>
-            </div>
-            <div>
-                <h5>Shop</h5>
-                <ul>
-                    @foreach($footer['shop_links'] ?? [] as $link)
-                    <li><a href="{{ $storefrontLink($link['route'], $link['params'] ?? [], '/shop') }}">{{ $link['label'] }}</a></li>
-                    @endforeach
-                </ul>
-            </div>
-            <div>
-                <h5>Information</h5>
-                <ul>
-                    @foreach($footer['info_links'] ?? [] as $link)
-                    <li><a href="{{ $storefrontLink($link['route'], [], '/') }}">{{ $link['label'] }}</a></li>
-                    @endforeach
-                </ul>
-            </div>
-            <div>
-                <h5>Studio</h5>
-                <ul>
-                    @foreach($footer['service_links'] ?? [] as $link)
-                    <li><a href="{{ $storefrontLink($link['route'], $link['params'] ?? [], '/services') }}">{{ $link['label'] }}</a></li>
-                    @endforeach
-                </ul>
-            </div>
-            <div>
-                <h5>Legal</h5>
-                <ul>
-                    @foreach(\App\Support\LegalContent::footerLinks() as $link)
-                    <li><a href="{{ $storefrontLink($link['route'], [], '/privacy-policy') }}">{{ $link['label'] }}</a></li>
-                    @endforeach
-                </ul>
-            </div>
-        </div>
-        <div class="am-footer__bottom">
-            <span>© {{ date('Y') }} {{ trim(($brand['name'] ?? 'Vyomika Atelier LLP') . ' ' . ($brand['suffix'] ?? '')) }}. All rights reserved.</span>
-            <div class="am-footer__contact">
-                <a href="mailto:{{ $brand['email'] ?? '' }}">{{ $brand['email'] ?? '' }}</a>
-                <a href="tel:{{ preg_replace('/\s+/', '', $brand['phone'] ?? '') }}">{{ $brand['phone'] ?? '' }}</a>
-            </div>
-        </div>
-    </div>
-</footer>
+@include('partials.am-footer')
 
 <div class="am-overlay" id="am-overlay"></div>
 

@@ -7,14 +7,18 @@
     'title' => 'Custom Architectural Solutions',
     'subtitle' => 'PVD partitions, door systems, rack systems and bespoke metal fabrication — engineered to your drawings.',
     'showLabel' => false,
+    'class' => 'am-page-hero--compact-mobile',
 ])
 
-<section class="am-page-body">
+<section class="am-page-body am-page-body--catalog">
     <div class="am-container">
-        @include('partials.am-breadcrumbs', ['items' => [
-            ['label' => 'Home', 'url' => route('home')],
-            ['label' => 'Studio'],
-        ]])
+        @include('partials.am-breadcrumbs', [
+            'class' => 'am-breadcrumbs--hide-mobile',
+            'items' => [
+                ['label' => 'Home', 'url' => route('home')],
+                ['label' => 'Studio'],
+            ],
+        ])
         <div class="am-grid-3">
             @foreach($services as $service)
             @php

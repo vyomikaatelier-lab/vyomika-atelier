@@ -1,6 +1,6 @@
-@props(['items' => []])
+@props(['items' => [], 'class' => ''])
 @if(count($items))
-<nav class="am-breadcrumbs" aria-label="Breadcrumb">
+<nav class="am-breadcrumbs{{ $class ? ' ' . $class : '' }}" aria-label="Breadcrumb">
     <ol>
         @foreach($items as $item)
         <li>

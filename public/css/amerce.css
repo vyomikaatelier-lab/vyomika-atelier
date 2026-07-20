@@ -1246,6 +1246,7 @@ ul { list-style: none; }
 }
 .am-footer__brand .am-logo__name { color: var(--am-gold-dark); }
 .am-footer__brand p { font-size: 0.85rem; margin: 1rem 0; line-height: 1.7; }
+.am-footer__brand-address { margin-top: 1.25rem; font-size: 0.8rem; }
 .am-footer__newsletter { display: flex; gap: 0.5rem; margin-top: 1rem; }
 .am-footer__newsletter input {
   flex: 1;
@@ -2081,12 +2082,14 @@ ul { list-style: none; }
   max-width: 7.25rem;
   aspect-ratio: 1;
   height: auto;
-  padding: 4px;
+  padding: 0;
   border: 3px solid var(--am-border);
   border-radius: 50%;
   background: var(--am-white);
   overflow: hidden;
   position: relative;
+  flex-shrink: 0;
+  margin-inline: auto;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .am-pdp-finish__swatch.is-active .am-pdp-finish__swatch-media {
@@ -2094,16 +2097,21 @@ ul { list-style: none; }
   box-shadow: 0 0 0 3px rgba(179, 139, 66, 0.25);
 }
 .am-pdp-finish__swatch-img {
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  inset: 5px;
+  width: auto;
+  height: auto;
+  max-width: none;
+  margin: 0;
   object-fit: cover;
+  object-position: center center;
   display: block;
   border-radius: 50%;
 }
 .am-pdp-finish__swatch-fallback {
   display: none;
   position: absolute;
-  inset: 4px;
+  inset: 5px;
   border-radius: 50%;
   background: var(--swatch-color, #ccc);
 }
@@ -2143,9 +2151,17 @@ ul { list-style: none; }
   .am-pdp-finish__row {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.45rem 0.35rem;
+    align-items: start;
+    justify-items: center;
+  }
+  .am-pdp-finish__swatch {
+    width: 100%;
+    max-width: 5.5rem;
+    margin-inline: auto;
   }
   .am-pdp-finish__swatch-media {
-    max-width: none;
+    max-width: 100%;
+    width: 100%;
   }
   .am-pdp-finish__heading {
     font-size: 1.1rem;

@@ -1,6 +1,6 @@
 {{-- Page hero for inner pages --}}
-@props(['label' => '', 'title' => '', 'subtitle' => null, 'showLabel' => true])
-<section class="am-page-hero">
+@props(['label' => '', 'title' => '', 'subtitle' => null, 'showLabel' => true, 'class' => ''])
+<section class="am-page-hero{{ $class ? ' ' . $class : '' }}">
     <div class="am-container">
         @if($showLabel && $label)<p class="am-page-hero__label">{{ $label }}</p>@endif
         <h1 class="am-page-hero__title">{{ $title }}</h1>

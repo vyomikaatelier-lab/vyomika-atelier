@@ -109,6 +109,69 @@
     });
   }
 
+  function initFooterAccordion() {
+    var footer = document.querySelector('.am-footer');
+    if (!footer || footer.dataset.footerAccordionBound === 'true') return;
+    footer.dataset.footerAccordionBound = 'true';
+
+    var mq = window.matchMedia('(max-width: 1023px)');
+    var storageKey = 'am-footer-accordion';
+
+    function readState() {
+      try {
+        return JSON.parse(sessionStorage.getItem(storageKey) || '{}');
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function writeState(id, open) {
+      try {
+        var state = readState();
+        if (open) state[id] = true;
+        else delete state[id];
+        sessionStorage.setItem(storageKey, JSON.stringify(state));
+      } catch (e) { /* ignore */ }
+    }
+
+    function setPanel(btn, open) {
+      var panelId = btn.getAttribute('aria-controls');
+      var panel = panelId ? document.getElementById(panelId) : btn.nextElementSibling;
+      if (!panel) return;
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      panel.hidden = !open;
+    }
+
+    function closeAll(exceptBtn) {
+      footer.querySelectorAll('[data-am-footer-toggle]').forEach(function (btn) {
+        if (btn !== exceptBtn) setPanel(btn, false);
+      });
+    }
+
+    footer.querySelectorAll('[data-am-footer-toggle]').forEach(function (btn) {
+      var panelId = btn.getAttribute('aria-controls');
+      var saved = readState();
+      if (mq.matches && panelId && saved[panelId]) {
+        setPanel(btn, true);
+      }
+
+      btn.addEventListener('click', function () {
+        if (!mq.matches) return;
+        var open = btn.getAttribute('aria-expanded') !== 'true';
+        if (open) closeAll(btn);
+        setPanel(btn, open);
+        if (panelId) writeState(panelId, open);
+      });
+    });
+
+    mq.addEventListener('change', function (e) {
+      if (e.matches) return;
+      footer.querySelectorAll('[data-am-footer-toggle]').forEach(function (btn) {
+        setPanel(btn, false);
+      });
+    });
+  }
+
   function initDoubleSubmitGuard() {
     document.addEventListener(
       'submit',
@@ -142,12 +205,14 @@
       initFocusScroll();
       initAdminNav();
       initAdminTables();
+      initFooterAccordion();
       initDoubleSubmitGuard();
     });
   } else {
     initFocusScroll();
     initAdminNav();
     initAdminTables();
+    initFooterAccordion();
     initDoubleSubmitGuard();
   }
 })();

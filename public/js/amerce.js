@@ -56,24 +56,55 @@
   }
 
   /* Mobile menu */
+  let mobileNavBound = false;
   function initMobileNav() {
     const toggle = document.getElementById('am-menu-toggle');
     const close = document.getElementById('am-menu-close');
     const nav = document.getElementById('am-mobile-nav');
+    const overlay = document.getElementById('am-overlay');
     if (!toggle || !nav) return;
+    if (mobileNavBound) return;
+    mobileNavBound = true;
 
-    const open = () => { nav.classList.add('is-open'); document.body.style.overflow = 'hidden'; };
-    const shut = () => { nav.classList.remove('is-open'); document.body.style.overflow = ''; };
+    const isMobileViewport = () => window.matchMedia('(max-width: 1023px)').matches;
 
-    toggle.addEventListener('click', open);
+    const open = () => {
+      if (!isMobileViewport()) return;
+      nav.classList.add('is-open');
+      document.body.classList.add('am-menu-open');
+      document.body.style.overflow = 'hidden';
+      toggle.setAttribute('aria-expanded', 'true');
+    };
+    const shut = () => {
+      nav.classList.remove('is-open');
+      document.body.classList.remove('am-menu-open');
+      document.body.style.overflow = '';
+      toggle.setAttribute('aria-expanded', 'false');
+    };
+
+    toggle.addEventListener('click', () => {
+      if (nav.classList.contains('is-open')) shut();
+      else open();
+    });
     close?.addEventListener('click', shut);
+    overlay?.addEventListener('click', () => {
+      if (nav.classList.contains('is-open')) shut();
+    });
     nav.querySelectorAll('a').forEach(a => a.addEventListener('click', shut));
     nav.querySelectorAll('[data-am-nav-toggle]').forEach(btn => {
       btn.addEventListener('click', () => {
-        const open = btn.getAttribute('aria-expanded') === 'true';
-        btn.setAttribute('aria-expanded', open ? 'false' : 'true');
-        btn.nextElementSibling?.classList.toggle('is-open', !open);
+        const expanded = btn.getAttribute('aria-expanded') === 'true';
+        btn.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+        btn.nextElementSibling?.classList.toggle('is-open', !expanded);
       });
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && nav.classList.contains('is-open')) shut();
+    });
+
+    window.matchMedia('(min-width: 1024px)').addEventListener('change', (e) => {
+      if (e.matches) shut();
     });
   }
 

@@ -296,8 +296,9 @@
     </article>`;
   }
 
-  function pageHero(label, title, subtitle, showLabel = true) {
-    return `<section class="am-page-hero">
+  function pageHero(label, title, subtitle, showLabel = true, extraClass = '') {
+    const heroClass = extraClass ? `am-page-hero ${extraClass}` : 'am-page-hero';
+    return `<section class="${heroClass}">
       <div class="am-container">
         ${showLabel && label ? `<p class="am-page-hero__label">${label}</p>` : ''}
         <h1 class="am-page-hero__title">${title}</h1>
@@ -371,13 +372,12 @@ ${pageHero('Legal', page.title, lastUpdated ? 'Last updated: ' + lastUpdated : '
     document.dispatchEvent(new CustomEvent('am-content-ready'));
   }
 
-  function breadcrumbs(items) {
-    return `<nav class="am-breadcrumbs" aria-label="Breadcrumb">
-      ${items.map((item, i) => {
-        if (i === items.length - 1) return `<span aria-current="page">${item.label}</span>`;
-        return `<a href="${item.url}">${item.label}</a><span class="am-breadcrumbs__sep">/</span>`;
-      }).join('')}
-    </nav>`;
+  function breadcrumbs(items, extraClass = '') {
+    const crumbClass = extraClass ? `am-breadcrumbs ${extraClass}` : 'am-breadcrumbs';
+    return `<nav class="${crumbClass}" aria-label="Breadcrumb"><ol>${items.map((item, i) => {
+        if (i === items.length - 1) return `<li><span aria-current="page">${item.label}</span></li>`;
+        return `<li><a href="${item.url}">${item.label}</a></li>`;
+      }).join('')}</ol></nav>`;
   }
 
   function collectProducts(data) {
@@ -1268,16 +1268,16 @@ ${hero ? serviceHeroHtml(hero) : pageHero('Studio', service.name, meta.action, f
     });
 
     document.getElementById('am-main').innerHTML = `
-${pageHero('Products', catLabel, 'Mirror frames, tables, and door hardware — order through our collection galleries.', false)}
-<section class="am-page-body">
+${pageHero('Products', catLabel, 'Mirror frames, tables, and door hardware — order through our collection galleries.', false, 'am-page-hero--hide-mobile')}
+<section class="am-page-body am-page-body--catalog">
   <div class="am-container">
     ${breadcrumbs([
       { label: 'Home', url: '/' },
       { label: 'Shop', url: '/shop' },
       ...(activeCat ? [{ label: catLabel }] : []),
-    ])}
+    ], 'am-breadcrumbs--hide-mobile')}
     <div class="am-layout-shop">
-      <aside class="am-shop-sidebar">
+      <aside class="am-shop-sidebar am-shop-sidebar--desktop-only" aria-label="Product categories">
         <p class="am-sidebar-title">Category</p>
         ${SHOP_CATEGORIES.map((c) => {
           const href = c.slug ? `/shop?category=${c.slug}` : '/shop';
@@ -1286,6 +1286,7 @@ ${pageHero('Products', catLabel, 'Mirror frames, tables, and door hardware — o
         }).join('')}
       </aside>
       <div class="am-shop-main">
+        <h1 class="am-shop-mobile-title">${catLabel}</h1>
         <div class="am-shop-toolbar">
           <form class="am-shop-search" data-preview-form>
             ${activeCat ? `<input type="hidden" name="category" value="${activeCat}">` : ''}
@@ -1735,8 +1736,8 @@ ${pageHero('Secure Checkout', 'Checkout', 'Preview mode — form submission is s
     setTitle('Studio');
     const studioServices = (siteData.services || []).filter((s) => STUDIO_SERVICE_TO_URL[s.slug]);
     document.getElementById('am-main').innerHTML = `
-${pageHero('Studio', 'Custom Architectural Solutions', 'PVD partitions, door systems, rack systems and bespoke metal fabrication — engineered to your drawings.', false)}
-<section class="am-page-body">
+${pageHero('Studio', 'Custom Architectural Solutions', 'PVD partitions, door systems, rack systems and bespoke metal fabrication — engineered to your drawings.', false, 'am-page-hero--compact-mobile')}
+<section class="am-page-body am-page-body--catalog">
   <div class="am-container">
     <div class="am-grid-3">
       ${studioServices.map((s) => `
