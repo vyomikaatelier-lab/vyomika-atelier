@@ -45,7 +45,14 @@ echo "=== Pull latest code ==="
 git pull origin main
 
 echo "=== Composer ==="
-composer install --no-dev --optimize-autoloader
+if [ -f composer.phar ]; then
+  php composer.phar install --no-dev --optimize-autoloader
+elif command -v composer >/dev/null 2>&1; then
+  composer install --no-dev --optimize-autoloader
+else
+  echo "ERROR: composer not found — run: curl -sS https://getcomposer.org/installer | php"
+  exit 1
+fi
 
 echo "=== Clear caches ==="
 php artisan optimize:clear
@@ -60,8 +67,13 @@ php artisan db:seed --class=CorrectCatalogClassificationSeeder --force
 echo "=== Export site JSON ==="
 php database/scripts/export-site-json.php
 php database/scripts/export-pricing-json.php
+php database/scripts/export-finishes-json.php
 
 echo "=== Rebuild caches ==="
+php artisan storefront:diagnose || {
+  echo "ERROR: storefront:diagnose failed — fix errors before caching routes/views."
+  exit 1
+}
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache || echo "WARNING: view:cache failed — check storage/logs/laravel.log"

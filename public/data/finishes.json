@@ -1,0 +1,13 @@
+{
+    "swatches": [
+        {"slug": "gold-mirror", "name": "Gold Mirror", "hex": "#D4AF37", "rate": 1800, "is_black": false, "image": "images/finishes/gold-mirror.jpg", "image_url": "/images/finishes/gold-mirror.jpg", "fallback_svg": "/images/finishes/gold-mirror.svg"},
+        {"slug": "gold-brush", "name": "Gold Brush", "hex": "#C5A028", "rate": 1800, "is_black": false, "image": "images/finishes/gold-brush.jpg", "image_url": "/images/finishes/gold-brush.jpg", "fallback_svg": "/images/finishes/gold-brush.svg"},
+        {"slug": "rose-gold-mirror", "name": "Rose Gold Mirror", "hex": "#B76E79", "rate": 1800, "is_black": false, "image": "images/finishes/rose-gold-mirror.jpg", "image_url": "/images/finishes/rose-gold-mirror.jpg", "fallback_svg": "/images/finishes/rose-gold-mirror.svg"},
+        {"slug": "rose-gold-brush", "name": "Rose Gold Brush", "hex": "#A85A65", "rate": 1800, "is_black": false, "image": "images/finishes/rose-gold-brush.jpg", "image_url": "/images/finishes/rose-gold-brush.jpg", "fallback_svg": "/images/finishes/rose-gold-brush.svg"},
+        {"slug": "champagne-mirror", "name": "Champagne Mirror", "hex": "#C9A86C", "rate": 1800, "is_black": false, "image": "images/finishes/champagne-mirror.jpg", "image_url": "/images/finishes/champagne-mirror.jpg", "fallback_svg": "/images/finishes/champagne-mirror.svg"},
+        {"slug": "champagne-brush", "name": "Champagne Brush", "hex": "#B8956A", "rate": 1800, "is_black": false, "image": "images/finishes/champagne-brush.jpg", "image_url": "/images/finishes/champagne-brush.jpg", "fallback_svg": "/images/finishes/champagne-brush.svg"},
+        {"slug": "black-mirror", "name": "Black Mirror", "hex": "#1A1A1A", "rate": 2340, "is_black": true, "image": "images/finishes/black-mirror.jpg", "image_url": "/images/finishes/black-mirror.jpg", "fallback_svg": "/images/finishes/black-mirror.svg"},
+        {"slug": "black-brush", "name": "Black Brush", "hex": "#2C2C2C", "rate": 2340, "is_black": true, "image": "images/finishes/black-brush.jpg", "image_url": "/images/finishes/black-brush.jpg", "fallback_svg": "/images/finishes/black-brush.svg"}
+    ],
+    "generated_at": "2026-07-20T00:00:00+00:00"
+}

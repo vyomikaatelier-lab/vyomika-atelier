@@ -40,6 +40,7 @@ class SiteSettingAdminController extends Controller
             $slug = $swatch['slug'];
             $finishRules['finish_image_'.$slug] = 'nullable|image|mimes:jpeg,jpg,png,webp|max:4096';
             $finishRules['finish_url_'.$slug] = 'nullable|string|max:500';
+            $finishRules['finish_clear_'.$slug] = 'nullable|boolean';
         }
 
         try {
@@ -119,7 +120,9 @@ class SiteSettingAdminController extends Controller
                 $fileKey = 'finish_image_'.$slug;
                 $urlKey = 'finish_url_'.$slug;
 
-                if ($request->hasFile($fileKey)) {
+                if ($request->boolean('finish_clear_'.$slug)) {
+                    unset($finishImages[$slug]);
+                } elseif ($request->hasFile($fileKey)) {
                     $path = $request->file($fileKey)->store('finishes', 'public');
                     $finishImages[$slug] = 'storage/'.$path;
                 } elseif (filled($request->input($urlKey))) {

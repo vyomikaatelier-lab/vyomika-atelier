@@ -75,6 +75,11 @@ class SiteContent
         return self::get('footer', []);
     }
 
+    public static function social(): array
+    {
+        return self::get('social', []);
+    }
+
     public static function formatPrice(int|float|null $amount): string
     {
         if ($amount === null) {

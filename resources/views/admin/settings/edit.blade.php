@@ -58,6 +58,10 @@
                 </div>
                 <input type="file" name="finish_image_{{ $swatch['slug'] }}" accept="image/jpeg,image/png,image/webp" class="w-full border px-2 py-1 rounded text-sm">
                 <input type="text" name="finish_url_{{ $swatch['slug'] }}" value="{{ old('finish_url_'.$swatch['slug'], \Illuminate\Support\Str::startsWith((string) $current, 'http') ? $current : '') }}" placeholder="Or image URL (https://…)" class="w-full border px-2 py-1 rounded text-sm" inputmode="url">
+                <label class="flex items-center justify-center gap-2 text-xs text-gray-600">
+                    <input type="checkbox" name="finish_clear_{{ $swatch['slug'] }}" value="1" @checked(old('finish_clear_'.$swatch['slug']))>
+                    Reset to default
+                </label>
             </div>
                 @endforeach
             </div>

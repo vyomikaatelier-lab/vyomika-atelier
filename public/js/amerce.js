@@ -253,6 +253,9 @@
       const label = root.querySelector('[data-finish-label]');
       const active = root.querySelector('[data-finish-slug].is-active') || root.querySelector('[data-finish-slug]');
       if (active) {
+        document.querySelectorAll('[data-finish-input="slug"]').forEach((input) => {
+          input.value = active.getAttribute('data-finish-slug') || '';
+        });
         applyFinish(
           Number(active.dataset.finishRate),
           active.dataset.finishName || '',
@@ -269,6 +272,9 @@
           btn.classList.add('is-active');
           btn.setAttribute('aria-selected', 'true');
           if (label) label.textContent = btn.getAttribute('data-finish-name') || '';
+          document.querySelectorAll('[data-finish-input="slug"]').forEach((input) => {
+            input.value = btn.getAttribute('data-finish-slug') || '';
+          });
           applyFinish(
             Number(btn.dataset.finishRate),
             btn.dataset.finishName || '',

@@ -8,6 +8,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Api\RazorpayCheckoutController;
+use App\Http\Controllers\Api\RazorpayWebhookController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ProfessionalsController;
@@ -63,6 +64,8 @@ Route::prefix('api')->middleware('throttle:checkout')->group(function () {
     Route::post('/create-order', [RazorpayCheckoutController::class, 'createOrder'])->name('api.create-order');
     Route::post('/verify-payment', [RazorpayCheckoutController::class, 'verifyPayment'])->name('api.verify-payment');
 });
+
+Route::post('/webhooks/razorpay', RazorpayWebhookController::class)->name('webhooks.razorpay');
 
 Route::get('/services', [ServiceController::class, 'index'])->name('services.index');
 Route::redirect('/corten-steel', '/services/corten-steel-facade');

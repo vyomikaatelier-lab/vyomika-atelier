@@ -1,9 +1,15 @@
 @props(['product'])
 
+@php
+    use App\Support\FinishSwatches;
+    $defaultFinish = FinishSwatches::resolve(null);
+@endphp
+
 <div class="am-pdp-buy">
     @if($product->inStock())
-    <form action="{{ route('cart.add', $product) }}" method="POST" class="am-pdp-buy__form">
+    <form action="{{ route('cart.add', $product) }}" method="POST" class="am-pdp-buy__form" data-pdp-buy-form>
         @csrf
+        <input type="hidden" name="finish_slug" value="{{ $defaultFinish['slug'] }}" data-finish-input="slug">
         <div class="am-pdp-buy__qty">
             <label for="pdp-qty" class="am-pdp-buy__qty-label">Quantity</label>
             <input type="number" id="pdp-qty" name="quantity" value="1" min="1" max="{{ min($product->stock, 99) }}" class="am-input am-pdp-buy__qty-input" inputmode="numeric">

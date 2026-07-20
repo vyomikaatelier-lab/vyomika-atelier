@@ -1,6 +1,6 @@
-@props(['hero' => []])
+@props(['hero' => [], 'class' => ''])
 
-<section class="am-mirror-frames-hero am-service-hero" style="--mirror-frames-hero-img: url('{{ $hero['image'] ?? '' }}')">
+<section class="am-mirror-frames-hero am-service-hero{{ $class ? ' ' . $class : '' }}" style="--mirror-frames-hero-img: url('{{ $hero['image'] ?? '' }}')">
     <div class="am-container am-mirror-frames-hero__inner">
         <h1 class="am-mirror-frames-hero__title">{{ $hero['title'] ?? '' }}</h1>
         <p class="am-mirror-frames-hero__subtitle">{{ $hero['subtitle'] ?? '' }}</p>

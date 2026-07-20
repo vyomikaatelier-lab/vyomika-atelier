@@ -13,6 +13,7 @@ class OrderPaymentService
     public function __construct(
         private RazorpayService $razorpay,
         private OrderNotificationService $notifications,
+        private CartService $cart,
     ) {}
 
     /**
@@ -56,6 +57,18 @@ class OrderPaymentService
             throw new RuntimeException('Payment verification failed.', 400);
         }
 
+        $this->completeFromGateway($order, $razorpayPaymentId, $razorpayOrderId);
+    }
+
+    public function completeFromGateway(
+        Order $order,
+        string $razorpayPaymentId,
+        string $razorpayOrderId,
+    ): void {
+        if ($order->razorpay_order_id && $razorpayOrderId !== $order->razorpay_order_id) {
+            throw new RuntimeException('Payment does not match this order.', 400);
+        }
+
         try {
             DB::transaction(function () use ($order, $razorpayPaymentId, $razorpayOrderId) {
                 $locked = Order::query()->whereKey($order->id)->lockForUpdate()->first();
@@ -74,7 +87,7 @@ class OrderPaymentService
                 StockAvailability::deductForPaidOrder($locked->fresh('items.product'));
             });
         } catch (RuntimeException $e) {
-            Log::error('Payment verified but stock deduction failed.', [
+            Log::error('Payment confirmed but stock deduction failed.', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage(),
             ]);
@@ -88,6 +101,7 @@ class OrderPaymentService
         $order->refresh();
 
         if ($order->status === 'paid') {
+            $this->cart->clear();
             $this->notifications->sendPaymentConfirmed($order);
         }
     }

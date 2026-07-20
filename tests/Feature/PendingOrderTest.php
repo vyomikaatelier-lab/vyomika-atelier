@@ -53,6 +53,6 @@ class PendingOrderTest extends TestCase
 
         $response = $this->post(route('cart.add', $product), ['quantity' => 2]);
         $response->assertRedirect();
-        $this->assertSame(2, session('cart')[$product->id]);
+        $this->assertSame(2, session('cart')[$product->id]['quantity'] ?? null);
     }
 }

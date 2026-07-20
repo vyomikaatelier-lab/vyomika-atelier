@@ -525,6 +525,27 @@ main,
 
 /* ── Mobile / tablet: hide duplicate in-page navigation ── */
 @media (max-width: 767px) {
+  .am-service-hero--compact-mobile,
+  .am-mirror-frames-hero.am-service-hero--compact-mobile {
+    padding-top: calc(var(--am-header-h) + 1rem);
+    padding-bottom: 1.25rem;
+  }
+
+  .am-service-hero--compact-mobile .am-mirror-frames-hero__subtitle,
+  .am-mirror-frames-hero.am-service-hero--compact-mobile .am-mirror-frames-hero__subtitle {
+    display: none;
+  }
+
+  .am-service-hero--compact-mobile .am-pro-hero__highlights,
+  .am-mirror-frames-hero.am-service-hero--compact-mobile .am-pro-hero__highlights {
+    display: none;
+  }
+
+  .am-service-hero--compact-mobile .am-pro-hero__actions,
+  .am-mirror-frames-hero.am-service-hero--compact-mobile .am-pro-hero__actions {
+    margin-top: 0.75rem;
+  }
+
   .am-breadcrumbs--hide-mobile,
   .am-shop-sidebar--desktop-only,
   .am-page-hero--hide-mobile {

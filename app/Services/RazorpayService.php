@@ -127,6 +127,19 @@ class RazorpayService
         return hash_equals($expected, $signature);
     }
 
+    public function verifyWebhookSignature(string $body, string $signature): bool
+    {
+        $secret = config('services.razorpay.webhook_secret');
+
+        if (! filled($secret)) {
+            return false;
+        }
+
+        $expected = hash_hmac('sha256', $body, $secret);
+
+        return hash_equals($expected, $signature);
+    }
+
     private function api()
     {
         return Http::withBasicAuth($this->key(), $this->secret());

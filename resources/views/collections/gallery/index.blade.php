@@ -18,7 +18,7 @@
 
 @section('content')
 
-@include('partials.am-service-hero', ['hero' => $hero])
+@include('partials.am-service-hero', ['hero' => $hero, 'class' => 'am-service-hero--compact-mobile'])
 
 @if(!empty($page['intro']['body']))
 <section class="am-section am-section--white">

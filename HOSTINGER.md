@@ -79,6 +79,11 @@ DB_DATABASE=u550969814_vyomika
 DB_USERNAME=u550969814_vyomika
 DB_PASSWORD=YOUR_DB_PASSWORD_HERE
 
+# Shared hosting: prefer file drivers (database session/cache can 500 if misconfigured)
+SESSION_DRIVER=file
+CACHE_STORE=file
+QUEUE_CONNECTION=sync
+
 MAIL_HOST=smtp.hostinger.com
 MAIL_PORT=465
 MAIL_ENCRYPTION=ssl
@@ -89,9 +94,10 @@ MAIL_FROM_ADDRESS=namaste@vyomikaatelier.com
 ADMIN_EMAIL=admin@vyomikaatelier.com
 ADMIN_PASSWORD=<set securely during deployment>
 
-# Leave empty until Razorpay account is ready
-RAZORPAY_KEY=
-RAZORPAY_SECRET=
+# Razorpay Standard Checkout (from dashboard.razorpay.com)
+RAZORPAY_KEY_ID=
+RAZORPAY_KEY_SECRET=
+# Legacy names still work: RAZORPAY_KEY / RAZORPAY_SECRET
 ```
 
 Save: `Ctrl+O`, Enter, `Ctrl+X`
@@ -111,6 +117,7 @@ php artisan migrate --force
 php artisan db:seed --force
 php artisan storage:link
 chmod -R 775 storage bootstrap/cache
+php artisan storefront:diagnose
 ```
 
 Link site to domain:
@@ -118,6 +125,7 @@ Link site to domain:
 ```bash
 rm -rf ~/domains/vyomikaatelier.com/public_html
 ln -s ~/vyomika-atelier/public ~/domains/vyomikaatelier.com/public_html
+php artisan storefront:diagnose
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
@@ -183,6 +191,51 @@ Use a strong unique password. Do not commit passwords to git or documentation.
 
 ---
 
+## Every redeploy (after `git push`)
+
+SSH in and run the post-deploy script (pulls latest code, re-links symlinks, migrates, exports JSON, rebuilds caches):
+
+```bash
+cd ~/vyomika-atelier
+bash post-deploy.sh
+```
+
+Or manually:
+
+```bash
+cd ~/vyomika-atelier
+git pull origin main
+php composer.phar install --no-dev --optimize-autoloader
+php artisan optimize:clear
+php artisan migrate --force
+php artisan storefront:diagnose
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+**Important:** Always run `php artisan storefront:diagnose` before `route:cache` / `view:cache`. Stale or broken views cached without a diagnose pass have caused public storefront 500 errors while admin still worked.
+
+If the site shows 403 or old CSS after a Git redeploy, `post-deploy.sh` re-creates the `public_html` → `public` symlink automatically.
+
+---
+
+## Production `.env` checklist
+
+| Variable | Recommended on Hostinger |
+|----------|------------------------|
+| `APP_DEBUG` | `false` |
+| `SESSION_DRIVER` | `file` |
+| `CACHE_STORE` | `file` |
+| `QUEUE_CONNECTION` | `sync` (unless you run `queue:work` via cron) |
+| `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | From Razorpay dashboard |
+| `MAIL_*` | Hostinger or Cloudflare SMTP credentials |
+| `ADMIN_EMAIL` | Your admin notification inbox |
+
+Order emails implement `ShouldQueue`. With `QUEUE_CONNECTION=database` and **no queue worker**, emails are marked sent but never delivered. Use `sync` on shared hosting.
+
+---
+
 ## If something breaks
 
 ```bash
@@ -200,7 +253,7 @@ chmod -R 775 ~/vyomika-atelier/storage ~/vyomika-atelier/bootstrap/cache
 Add this in hPanel → **Advanced** → **Cron Jobs** (runs every 15 minutes):
 
 ```bash
-/usr/bin/php /home/u550969814/vyomika-atelier/artisan orders:expire-pending >> /dev/null 2>&1
+/usr/bin/php /home/u550969814/vyomika-atelier/artisan orders:expire-pending >> /home/u550969814/vyomika-atelier/storage/logs/cron-expire-orders.log 2>&1
 ```
 
 Unpaid orders are held for `ORDER_PENDING_EXPIRY_HOURS` (default 24) before stock reservations are released.
@@ -213,8 +266,15 @@ When you have keys from [dashboard.razorpay.com](https://dashboard.razorpay.com)
 
 ```bash
 nano ~/vyomika-atelier/.env
-# Add RAZORPAY_KEY and RAZORPAY_SECRET
+# RAZORPAY_KEY_ID=rzp_live_...
+# RAZORPAY_KEY_SECRET=...
 php artisan config:cache
 ```
 
 Online payment will appear automatically on checkout.
+
+Configure a webhook in the Razorpay dashboard pointing to:
+
+`https://vyomikaatelier.com/webhooks/razorpay`
+
+Events: `payment.captured`, `order.paid`. Set `RAZORPAY_WEBHOOK_SECRET` in `.env` to the secret Razorpay provides, then run `php artisan config:cache`.

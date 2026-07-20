@@ -22,7 +22,7 @@ class CartProtectionTest extends TestCase
         $response->assertRedirect();
         $response->assertSessionHas('success');
         $response->assertSessionMissing('error');
-        $this->assertEquals(1, session('cart')[$product->id] ?? null);
+        $this->assertSame(1, session('cart')[$product->id]['quantity'] ?? null);
     }
 
     public function test_shop_buy_now_redirects_to_cart(): void
@@ -36,7 +36,7 @@ class CartProtectionTest extends TestCase
         ]);
 
         $response->assertRedirect(route('cart.index'));
-        $this->assertEquals(1, session('cart')[$product->id] ?? null);
+        $this->assertSame(1, session('cart')[$product->id]['quantity'] ?? null);
     }
 
     public function test_studio_product_direct_post_is_rejected_with_enquiry_message(): void

@@ -181,31 +181,38 @@
   }
 
   function getFinishSwatches() {
+    if (finishesData && Array.isArray(finishesData.swatches) && finishesData.swatches.length) {
+      return finishesData.swatches;
+    }
+
     const base = basePricingRate();
     const black = blackPricingRate();
 
     return [
-      { slug: 'gold-mirror', name: 'Gold Mirror', hex: '#D4AF37', rate: base, is_black: false },
-      { slug: 'gold-brush', name: 'Gold Brush', hex: '#C5A028', rate: base, is_black: false },
-      { slug: 'rose-gold-mirror', name: 'Rose Gold Mirror', hex: '#B76E79', rate: base, is_black: false },
-      { slug: 'rose-gold-brush', name: 'Rose Gold Brush', hex: '#A85A65', rate: base, is_black: false },
-      { slug: 'champagne-mirror', name: 'Champagne Mirror', hex: '#C9A86C', rate: base, is_black: false },
-      { slug: 'champagne-brush', name: 'Champagne Brush', hex: '#B8956A', rate: base, is_black: false },
-      { slug: 'black-mirror', name: 'Black Mirror', hex: '#1A1A1A', rate: black, is_black: true },
-      { slug: 'black-brush', name: 'Black Brush', hex: '#2C2C2C', rate: black, is_black: true },
+      { slug: 'gold-mirror', name: 'Gold Mirror', hex: '#D4AF37', rate: base, is_black: false, image_url: 'images/finishes/gold-mirror.jpg', fallback_svg: 'images/finishes/gold-mirror.svg' },
+      { slug: 'gold-brush', name: 'Gold Brush', hex: '#C5A028', rate: base, is_black: false, image_url: 'images/finishes/gold-brush.jpg', fallback_svg: 'images/finishes/gold-brush.svg' },
+      { slug: 'rose-gold-mirror', name: 'Rose Gold Mirror', hex: '#B76E79', rate: base, is_black: false, image_url: 'images/finishes/rose-gold-mirror.jpg', fallback_svg: 'images/finishes/rose-gold-mirror.svg' },
+      { slug: 'rose-gold-brush', name: 'Rose Gold Brush', hex: '#A85A65', rate: base, is_black: false, image_url: 'images/finishes/rose-gold-brush.jpg', fallback_svg: 'images/finishes/rose-gold-brush.svg' },
+      { slug: 'champagne-mirror', name: 'Champagne Mirror', hex: '#C9A86C', rate: base, is_black: false, image_url: 'images/finishes/champagne-mirror.jpg', fallback_svg: 'images/finishes/champagne-mirror.svg' },
+      { slug: 'champagne-brush', name: 'Champagne Brush', hex: '#B8956A', rate: base, is_black: false, image_url: 'images/finishes/champagne-brush.jpg', fallback_svg: 'images/finishes/champagne-brush.svg' },
+      { slug: 'black-mirror', name: 'Black Mirror', hex: '#1A1A1A', rate: black, is_black: true, image_url: 'images/finishes/black-mirror.jpg', fallback_svg: 'images/finishes/black-mirror.svg' },
+      { slug: 'black-brush', name: 'Black Brush', hex: '#2C2C2C', rate: black, is_black: true, image_url: 'images/finishes/black-brush.jpg', fallback_svg: 'images/finishes/black-brush.svg' },
     ];
   }
 
   function finishSwatchBtnHtml(s, def) {
+    const img = s.image_url || `images/finishes/${s.slug}.jpg`;
+    const fallback = s.fallback_svg || `images/finishes/${s.slug}.svg`;
     return `<button type="button" class="am-pdp-finish__swatch ${s.slug === def.slug ? 'is-active' : ''}" role="option"
       aria-selected="${s.slug === def.slug ? 'true' : 'false'}" aria-label="${s.name}"
       data-finish-slug="${s.slug}" data-finish-name="${s.name}" data-finish-rate="${s.rate}"
       data-finish-black="${s.is_black ? '1' : '0'}" style="--swatch-color: ${s.hex}"
       title="${s.name}${s.is_black ? ' (+30%)' : ''}">
       <span class="am-pdp-finish__swatch-media">
-        <img src="images/finishes/${s.slug}.jpg" alt="" class="am-pdp-finish__swatch-img"
-          data-finish-fallback="images/finishes/${s.slug}.svg"
+        <img src="${img}" alt="" class="am-pdp-finish__swatch-img"
+          data-finish-fallback="${fallback}"
           onerror="if(this.dataset.fallback){this.onerror=null;this.src=this.dataset.fallback}">
+        <span class="am-pdp-finish__swatch-fallback" aria-hidden="true"></span>
       </span>
       <span class="am-pdp-finish__swatch-name">${s.name}</span>
     </button>`;
@@ -244,6 +251,7 @@
   let aboutData = null;
   let blogData = null;
   let pricingData = null;
+  let finishesData = null;
 
   const LEGAL_PATHS = {
     'privacy-policy': 'privacy',
@@ -2907,7 +2915,7 @@ ${pageHero('Quote', title, subtitle)}
   });
 
   function boot() {
-    let pending = 9;
+    let pending = 10;
     function done() {
       pending -= 1;
       if (pending > 0) return;
@@ -3054,6 +3062,21 @@ ${pageHero('Quote', title, subtitle)}
     };
     pricingXhr.onerror = done;
     pricingXhr.send();
+
+    const finishesXhr = new XMLHttpRequest();
+    finishesXhr.open('GET', 'data/finishes.json', true);
+    finishesXhr.onload = function () {
+      if (finishesXhr.status >= 200 && finishesXhr.status < 300) {
+        try {
+          finishesData = JSON.parse(finishesXhr.responseText);
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      done();
+    };
+    finishesXhr.onerror = done;
+    finishesXhr.send();
   }
 
   if (document.readyState === 'loading') {

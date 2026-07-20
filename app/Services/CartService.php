@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Product;
 use App\Support\CartGuard;
+use App\Support\FinishSwatches;
 use Illuminate\Support\Collection;
 
 class CartService
@@ -11,10 +12,27 @@ class CartService
     private const SESSION_KEY = 'cart';
 
     /**
+     * @return array{quantity: int, finish_slug: ?string, finish_name: ?string}
+     */
+    private function normalizeLine(mixed $value): array
+    {
+        if (is_array($value)) {
+            return [
+                'quantity' => max(1, (int) ($value['quantity'] ?? 1)),
+                'finish_slug' => filled($value['finish_slug'] ?? null) ? (string) $value['finish_slug'] : null,
+                'finish_name' => filled($value['finish_name'] ?? null) ? (string) $value['finish_name'] : null,
+            ];
+        }
+
+        return [
+            'quantity' => max(1, (int) $value),
+            'finish_slug' => null,
+            'finish_name' => null,
+        ];
+    }
+
+    /**
      * Current cart contents, revalidated against CartGuard on every read.
-     * Any item that is no longer eligible (deactivated, reclassified as
-     * Studio/Railings, or deleted) is silently dropped from the session so
-     * legacy/invalid cart items never reach checkout or order creation.
      */
     public function all(): Collection
     {
@@ -27,8 +45,9 @@ class CartService
         $products = Product::with('category')->whereIn('id', array_keys($cart))->get()->keyBy('id');
         $invalidIds = [];
 
-        $items = collect($cart)->map(function ($quantity, $productId) use ($products, &$invalidIds) {
+        $items = collect($cart)->map(function ($line, $productId) use ($products, &$invalidIds) {
             $product = $products->get($productId);
+            $normalized = $this->normalizeLine($line);
 
             if (! CartGuard::isEligible($product)) {
                 $invalidIds[] = $productId;
@@ -38,8 +57,10 @@ class CartService
 
             return [
                 'product' => $product,
-                'quantity' => (int) $quantity,
-                'line_total' => $product->price * $quantity,
+                'quantity' => $normalized['quantity'],
+                'finish_slug' => $normalized['finish_slug'],
+                'finish_name' => $normalized['finish_name'],
+                'line_total' => $product->price * $normalized['quantity'],
             ];
         })->filter()->values();
 
@@ -50,10 +71,18 @@ class CartService
         return $items;
     }
 
-    public function add(Product $product, int $quantity = 1): void
+    public function add(Product $product, int $quantity = 1, ?string $finishSlug = null): void
     {
         $cart = session(self::SESSION_KEY, []);
-        $cart[$product->id] = ($cart[$product->id] ?? 0) + $quantity;
+        $existing = $this->normalizeLine($cart[$product->id] ?? null);
+        $finish = FinishSwatches::resolve($finishSlug ?? $existing['finish_slug']);
+
+        $cart[$product->id] = [
+            'quantity' => ($existing['quantity'] ?? 0) + $quantity,
+            'finish_slug' => $finish['slug'],
+            'finish_name' => $finish['name'],
+        ];
+
         session([self::SESSION_KEY => $cart]);
     }
 
@@ -73,9 +102,18 @@ class CartService
 
         if ($quantity <= 0) {
             unset($cart[$product->id]);
-        } else {
-            $cart[$product->id] = $quantity;
+
+            session([self::SESSION_KEY => $cart]);
+
+            return;
         }
+
+        $existing = $this->normalizeLine($cart[$product->id] ?? ['quantity' => $quantity]);
+        $cart[$product->id] = [
+            'quantity' => $quantity,
+            'finish_slug' => $existing['finish_slug'],
+            'finish_name' => $existing['finish_name'],
+        ];
 
         session([self::SESSION_KEY => $cart]);
     }
@@ -94,7 +132,8 @@ class CartService
 
     public function count(): int
     {
-        return (int) collect(session(self::SESSION_KEY, []))->sum();
+        return (int) collect(session(self::SESSION_KEY, []))
+            ->sum(fn ($line) => $this->normalizeLine($line)['quantity']);
     }
 
     public function subtotal(): float

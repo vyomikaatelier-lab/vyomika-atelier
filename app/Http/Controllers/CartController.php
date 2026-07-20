@@ -16,8 +16,17 @@ class CartController extends Controller
     {
         $items = $this->cart->all();
         $subtotal = $this->cart->subtotal();
+        $pendingOrder = null;
 
-        return view('cart.index', compact('items', 'subtotal'));
+        $pendingId = session(\App\Support\OrderAccess::SESSION_KEY);
+        if ($pendingId) {
+            $pendingOrder = \App\Models\Order::query()->find($pendingId);
+            if ($pendingOrder && ($pendingOrder->status !== 'pending' || $pendingOrder->isExpired())) {
+                $pendingOrder = null;
+            }
+        }
+
+        return view('cart.index', compact('items', 'subtotal', 'pendingOrder'));
     }
 
     /**
@@ -42,7 +51,8 @@ class CartController extends Controller
 
         $quantity = max(1, (int) $request->input('quantity', 1));
         $quantity = min($quantity, min($available, 99));
-        $this->cart->add($product, $quantity);
+        $finishSlug = $request->input('finish_slug');
+        $this->cart->add($product, $quantity, is_string($finishSlug) ? $finishSlug : null);
 
         if ($request->boolean('buy_now')) {
             return redirect()->route('cart.index');

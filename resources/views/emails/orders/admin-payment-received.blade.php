@@ -11,7 +11,7 @@ Verified payment for order **{{ $order->order_number }}**.
 | Item | Qty | Total |
 |:-----|:---:|------:|
 @foreach($order->items as $item)
-| {{ $item->product_name }} | {{ $item->quantity }} | ₹{{ number_format($item->total, 0) }} |
+| {{ $item->product_name }}@if($item->finish_name) ({{ $item->finish_name }})@endif | {{ $item->quantity }} | ₹{{ number_format($item->total, 0) }} |
 @endforeach
 @endcomponent
 

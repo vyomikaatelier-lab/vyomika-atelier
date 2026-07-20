@@ -42,6 +42,7 @@
     $cartSubtotal = $cartService->subtotal();
     $nav = config('site.nav', []);
     $legalLinks = \App\Support\LegalContent::footerLinks();
+    $social = \App\Support\SiteContent::social();
     $storefrontLink = fn (string $name, array $params = [], string $fallback = '#') => StorefrontUrl::to($name, $params, $fallback);
 @endphp
 

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Order;
+use App\Services\OrderPaymentService;
 use App\Services\RazorpayService;
 use App\Support\OrderAccess;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -41,28 +42,15 @@ class RazorpayCheckoutTest extends TestCase
         ], $overrides));
     }
 
-    public function test_create_order_api_requires_minimum_amount(): void
+    public function test_create_order_api_requires_store_order_id(): void
     {
         $response = $this->postJson(route('api.create-order'), [
-            'amount' => 50,
+            'amount' => 10000,
             'currency' => 'INR',
             'receipt' => 'TEST-1',
         ]);
 
         $response->assertStatus(422);
-    }
-
-    public function test_create_order_api_returns_401_when_not_configured(): void
-    {
-        config(['services.razorpay.key' => '', 'services.razorpay.secret' => '']);
-
-        $response = $this->postJson(route('api.create-order'), [
-            'amount' => 10000,
-            'currency' => 'INR',
-            'receipt' => 'TEST-2',
-        ]);
-
-        $response->assertStatus(401);
     }
 
     public function test_create_order_api_for_store_order(): void

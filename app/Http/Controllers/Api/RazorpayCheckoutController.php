@@ -16,35 +16,10 @@ class RazorpayCheckoutController extends Controller
     public function createOrder(Request $request, RazorpayService $razorpay, OrderPaymentService $payments): JsonResponse
     {
         $validated = $request->validate([
-            'store_order_id' => 'nullable|integer|exists:orders,id',
-            'amount' => 'nullable|integer|min:'.RazorpayService::MIN_AMOUNT_PAISE,
-            'currency' => 'nullable|string|in:INR',
-            'receipt' => 'nullable|string|max:40',
+            'store_order_id' => 'required|integer|exists:orders,id',
         ]);
 
-        if (isset($validated['store_order_id'])) {
-            return $this->createOrderForStoreOrder($validated['store_order_id'], $payments, $razorpay);
-        }
-
-        $validated = $request->validate([
-            'amount' => 'required|integer|min:'.RazorpayService::MIN_AMOUNT_PAISE,
-            'currency' => 'required|string|in:INR',
-            'receipt' => 'required|string|max:40',
-        ]);
-
-        $result = $razorpay->createPaymentOrder(
-            $validated['amount'],
-            $validated['receipt']
-        );
-
-        if (! $result['success']) {
-            return response()->json(['message' => $result['message']], $result['status']);
-        }
-
-        return response()->json([
-            ...$result['data'],
-            'key' => $razorpay->key(),
-        ]);
+        return $this->createOrderForStoreOrder($validated['store_order_id'], $payments, $razorpay);
     }
 
     public function verifyPayment(Request $request, OrderPaymentService $payments): JsonResponse

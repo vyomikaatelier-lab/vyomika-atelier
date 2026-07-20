@@ -55,6 +55,15 @@ class CheckoutController extends Controller
                 ->with('error', 'Online payment is not available right now. Please contact us to complete your order.');
         }
 
+        $pendingId = session(OrderAccess::SESSION_KEY);
+        if ($pendingId) {
+            $existing = Order::query()->find($pendingId);
+            if ($existing && $existing->status === 'pending' && ! $existing->isExpired()) {
+                return redirect()->route('checkout.pay', $existing)
+                    ->with('info', 'You already have an order awaiting payment. Complete payment or wait for it to expire before placing a new order.');
+            }
+        }
+
         // Defense in depth: revalidate every cart line right before order
         // creation. CartService::all() already self-heals on read, but this
         // makes the "no Studio/Railings item may ever become an Order" rule
@@ -138,6 +147,8 @@ class CheckoutController extends Controller
                     'order_id' => $order->id,
                     'product_id' => $item['product']->id,
                     'product_name' => $item['product']->name,
+                    'finish_slug' => $item['finish_slug'],
+                    'finish_name' => $item['finish_name'],
                     'price' => $item['product']->price,
                     'quantity' => $item['quantity'],
                     'total' => $item['line_total'],
@@ -155,7 +166,6 @@ class CheckoutController extends Controller
         }
 
         $order->update(['razorpay_order_id' => $razorpayOrder['id']]);
-        $this->cart->clear();
         OrderAccess::remember($order);
 
         $emailSent = $this->notifications->sendOrderReceived($order->fresh('items'));

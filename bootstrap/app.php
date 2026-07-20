@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Razorpay redirect callback POSTs without a CSRF token.
         $middleware->validateCsrfTokens(except: [
             'checkout/pay/*',
+            'webhooks/razorpay',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

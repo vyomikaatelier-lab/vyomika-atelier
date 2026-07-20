@@ -2,7 +2,8 @@
     $brandName = trim(($brand['name'] ?? 'Vyomika Atelier LLP') . ' ' . ($brand['suffix'] ?? ''));
     $phoneRaw = preg_replace('/\s+/', '', $brand['phone'] ?? '');
     $phoneDisplay = $brand['phone'] ?? '';
-    $whatsappDigits = preg_replace('/\D/', '', $phoneRaw);
+    $whatsappSource = $social['whatsapp'] ?? $brand['phone'] ?? '';
+    $whatsappDigits = preg_replace('/\D/', '', (string) $whatsappSource);
     $whatsappUrl = $whatsappDigits !== '' ? 'https://wa.me/' . ltrim($whatsappDigits, '+') : null;
 @endphp
 
@@ -14,10 +15,6 @@
                     <span class="am-logo__name">{{ $brandName }}</span>
                 </a>
                 <p>{{ $footer['newsletter'] ?? '' }}</p>
-                <form class="am-footer__newsletter" action="#" method="POST" onsubmit="return false">
-                    <input type="email" placeholder="Your email address" aria-label="Email for newsletter">
-                    <button type="submit" class="am-btn am-btn--primary am-btn--sm">Subscribe</button>
-                </form>
                 <p class="am-footer__brand-address">
                     {{ $brand['address_shop'] ?? 'Pan-India fabrication & delivery' }}<br>
                     {{ $brand['address_office'] ?? 'Mumbai, India' }}

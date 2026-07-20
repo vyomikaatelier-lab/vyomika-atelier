@@ -15,6 +15,13 @@
 
         @include('partials.am-checkout-steps', ['current' => 1])
 
+        @if(!empty($pendingOrder))
+        <div class="am-alert am-alert--info" style="margin-bottom:1.25rem">
+            Order <strong>{{ $pendingOrder->order_number }}</strong> is awaiting payment.
+            <a href="{{ route('checkout.pay', $pendingOrder) }}" class="am-btn am-btn--primary am-btn--sm" style="margin-left:0.75rem">Complete Payment</a>
+        </div>
+        @endif
+
         @if($items->isEmpty())
             <div class="am-checkout-empty am-card">
                 <div class="am-card__body">
@@ -49,6 +56,9 @@
                                         <a href="{{ route('shop.show', $item['product']->slug) }}">{{ $item['product']->name }}</a>
                                     </h3>
                                     <p class="am-cart-row__unit">{{ $item['product']->formattedPrice() }} each</p>
+                                    @if(!empty($item['finish_name']))
+                                    <p class="am-cart-row__meta">Finish: {{ $item['finish_name'] }}</p>
+                                    @endif
                                     <form action="{{ route('cart.update', $item['product']) }}" method="POST" class="am-cart-row__qty-form">
                                         @csrf @method('PATCH')
                                         <label for="qty-{{ $item['product']->id }}">Quantity</label>
