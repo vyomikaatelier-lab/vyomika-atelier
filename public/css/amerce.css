@@ -2663,6 +2663,11 @@ ul { list-style: none; }
   background: rgba(179, 139, 66, 0.08);
   border-color: rgba(179, 139, 66, 0.25);
 }
+.am-checkout-notice--error {
+  background: rgba(180, 60, 60, 0.06);
+  border-color: rgba(180, 60, 60, 0.22);
+  color: #6b2e2e;
+}
 .am-checkout-summary-block {
   margin-top: 1.75rem;
   padding-top: 1.5rem;

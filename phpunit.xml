@@ -31,6 +31,8 @@
         <env name="SESSION_DRIVER" value="array"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="WHATSAPP_DRIVER" value="null"/>
+        <env name="RAZORPAY_KEY_ID" value=""/>
+        <env name="RAZORPAY_KEY_SECRET" value=""/>
         <env name="RAZORPAY_KEY" value=""/>
         <env name="RAZORPAY_SECRET" value=""/>
     </php>

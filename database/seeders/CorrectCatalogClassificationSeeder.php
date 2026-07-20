@@ -74,7 +74,7 @@ class CorrectCatalogClassificationSeeder extends Seeder
         Product::query()
             ->active()
             ->unclassified()
-            ->each(function (Product $product) use (&$deactivated, &$unclassified): void {
+            ->each(function (Product $product) use (&$deactivated): void {
                 $product->update([
                     'is_active' => false,
                     'purchase_mode' => Product::PURCHASE_MODE_ENQUIRY,
@@ -231,7 +231,7 @@ class CorrectCatalogClassificationSeeder extends Seeder
             'updated_count' => $updated,
             'skipped_count' => $skipped,
             'changed_slugs' => $changedSlugs,
-            'unclassified_slugs' => $unclassified,
+            'unclassified_slugs' => $unclassifiedSlugs,
             'active_unclassified_deactivated' => $deactivated,
         ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 

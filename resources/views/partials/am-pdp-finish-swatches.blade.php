@@ -6,6 +6,7 @@
 
 @php
     use App\Models\Product;
+    use App\Support\FinishSwatches;
     $options = $swatches ?? Product::finishSwatches();
     $baseRate = $baseRate ?? Product::baseSqFtRate();
     $default = collect($options)->firstWhere('slug', $defaultSlug) ?? $options[0];
@@ -18,8 +19,8 @@
     <div class="am-pdp-finish__swatches" role="listbox" aria-label="Select PVD finish">
         @foreach($options as $swatch)
         @php
-            $imgJpg = asset($swatch['image']);
-            $imgSvg = asset(str_replace('.jpg', '.svg', $swatch['image']));
+            $imgJpg = FinishSwatches::imageUrl($swatch['image']);
+            $imgSvg = FinishSwatches::fallbackSvg($swatch['image']);
         @endphp
         <button type="button"
             class="am-pdp-finish__swatch {{ $swatch['slug'] === $default['slug'] ? 'is-active' : '' }}"

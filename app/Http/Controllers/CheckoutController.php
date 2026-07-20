@@ -68,6 +68,12 @@ class CheckoutController extends Controller
                 ->with('error', CartGuard::checkoutEligibility($ineligible['product']));
         }
 
+        if ($request->filled('first_name') || $request->filled('last_name')) {
+            $request->merge([
+                'customer_name' => trim($request->input('first_name', '').' '.$request->input('last_name', '')),
+            ]);
+        }
+
         $validated = $request->validate([
             'customer_name' => 'required|string|max:255',
             'first_name' => 'nullable|string|max:60',

@@ -7,6 +7,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\Api\RazorpayCheckoutController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ProfessionalsController;
@@ -57,6 +58,11 @@ Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('thro
 Route::get('/checkout/pay/{order}', [PaymentController::class, 'show'])->name('checkout.pay');
 Route::post('/checkout/pay/{order}', [PaymentController::class, 'verify'])->middleware('throttle:checkout')->name('checkout.pay.verify');
 Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
+
+Route::prefix('api')->middleware('throttle:checkout')->group(function () {
+    Route::post('/create-order', [RazorpayCheckoutController::class, 'createOrder'])->name('api.create-order');
+    Route::post('/verify-payment', [RazorpayCheckoutController::class, 'verifyPayment'])->name('api.verify-payment');
+});
 
 Route::get('/services', [ServiceController::class, 'index'])->name('services.index');
 Route::redirect('/corten-steel', '/services/corten-steel-facade');

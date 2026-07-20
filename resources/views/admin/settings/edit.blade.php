@@ -2,7 +2,7 @@
 @section('title', 'Site Settings')
 @section('content')
 <h1 class="text-2xl font-semibold mb-6">Site Settings</h1>
-<form method="POST" action="{{ route('admin.settings.update') }}" class="bg-white p-6 rounded shadow space-y-6 max-w-3xl">
+<form method="POST" action="{{ route('admin.settings.update') }}" enctype="multipart/form-data" class="bg-white p-6 rounded shadow space-y-6 max-w-3xl">
     @csrf @method('PUT')
     <section class="space-y-3">
         <h2 class="font-medium">Business</h2>
@@ -33,6 +33,34 @@
         <input name="grievance_officer_email" value="{{ old('grievance_officer_email', $business['grievance_officer_email'] ?? '') }}" class="w-full border px-3 py-2 rounded" placeholder="Officer email">
         <input name="grievance_officer_phone" value="{{ old('grievance_officer_phone', $business['grievance_officer_phone'] ?? '') }}" class="w-full border px-3 py-2 rounded" placeholder="Officer phone">
         <input name="legal_last_updated" value="{{ old('legal_last_updated', $legalLastUpdated) }}" class="w-full border px-3 py-2 rounded" placeholder="Legal last updated label">
+    </section>
+
+    <section class="space-y-4">
+        <div>
+            <h2 class="font-medium">PVD finish swatches</h2>
+            <p class="text-sm text-gray-500 mt-1">Upload square photos (104×104 px or larger) for each finish shown on product pages. Leave blank to use the default placeholder.</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            @foreach($finishSwatches as $swatch)
+            @php
+                $current = $finishSwatchImages[$swatch['slug']] ?? null;
+                $preview = $current
+                    ? (\Illuminate\Support\Str::startsWith($current, 'http') ? $current : asset($current))
+                    : asset('images/finishes/'.$swatch['slug'].'.svg');
+            @endphp
+            <div class="border rounded p-3 space-y-2">
+                <div class="flex items-center gap-3">
+                    <img src="{{ $preview }}" alt="{{ $swatch['name'] }}" class="w-14 h-14 rounded object-cover border" style="background: {{ $swatch['hex'] }}">
+                    <div>
+                        <p class="font-medium text-sm">{{ $swatch['name'] }}</p>
+                        <p class="text-xs text-gray-500">{{ $swatch['slug'] }}</p>
+                    </div>
+                </div>
+                <input type="file" name="finish_image_{{ $swatch['slug'] }}" accept="image/jpeg,image/png,image/webp" class="w-full border px-2 py-1 rounded text-sm">
+                <input type="url" name="finish_url_{{ $swatch['slug'] }}" value="{{ old('finish_url_'.$swatch['slug'], \Illuminate\Support\Str::startsWith((string) $current, 'http') ? $current : '') }}" placeholder="Or image URL" class="w-full border px-2 py-1 rounded text-sm">
+            </div>
+            @endforeach
+        </div>
     </section>
     <button class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Save settings</button>
 </form>

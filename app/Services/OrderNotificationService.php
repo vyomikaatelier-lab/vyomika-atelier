@@ -135,7 +135,8 @@ class OrderNotificationService
         }
 
         $host = config("mail.mailers.{$mailer}.host");
+        $password = config("mail.mailers.{$mailer}.password");
 
-        return filled($host) || $mailer === 'sendmail';
+        return (filled($host) && filled($password)) || $mailer === 'sendmail';
     }
 }

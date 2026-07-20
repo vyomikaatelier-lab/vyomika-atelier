@@ -15,8 +15,23 @@
 
         @include('partials.am-checkout-steps', ['current' => 2])
 
+        @if(session('error'))
+        <p class="am-checkout-notice am-checkout-notice--error" role="alert">{{ session('error') }}</p>
+        @endif
+
+        @if($errors->any())
+        <div class="am-checkout-notice am-checkout-notice--error" role="alert">
+            <p>Please fix the following:</p>
+            <ul>
+                @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+        @endif
+
         @unless($razorpayEnabled)
-        <p class="am-checkout-notice" role="alert">Online payment is not configured yet. Please contact the studio to complete your order.</p>
+        <p class="am-checkout-notice" role="alert">Online payment is not configured yet. Add <code>RAZORPAY_KEY_ID</code> and <code>RAZORPAY_KEY_SECRET</code> to the server <code>.env</code>, then run <code>php artisan config:cache</code>. Until then, use Contact Us to place an order.</p>
         @endunless
 
         <form action="{{ route('checkout.store') }}" method="POST" class="am-checkout-stack am-checkout-form am-address-form">

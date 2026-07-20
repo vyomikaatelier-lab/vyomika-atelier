@@ -29,6 +29,7 @@
                     @if(session('error'))
                         <p class="am-checkout-pay__error" role="alert">{{ session('error') }}</p>
                     @endif
+                    <p class="am-checkout-pay__error" id="rzp-error" role="alert" hidden></p>
 
                     <button type="button" id="rzp-button" class="am-btn am-btn--primary am-btn--lg am-btn--full">Pay Now</button>
 
@@ -75,42 +76,105 @@
 @push('scripts')
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
-    document.getElementById('rzp-button').onclick = function () {
-        const options = {
-            key: @json($razorpayKey),
-            amount: {{ (int) round($order->total * 100) }},
-            currency: 'INR',
-            name: 'Vyomika Atelier LLP',
-            description: 'Order {{ $order->order_number }}',
-            order_id: @json($order->razorpay_order_id),
-            prefill: {
-                name: @json($order->customer_name),
-                email: @json($order->customer_email),
-                contact: @json($order->customer_phone),
+(function () {
+    const storeOrderId = @json($order->id);
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || @json(csrf_token());
+    const payButton = document.getElementById('rzp-button');
+    const errorEl = document.getElementById('rzp-error');
+    const createOrderUrl = @json(route('api.create-order'));
+    const verifyPaymentUrl = @json(route('api.verify-payment'));
+
+    function showError(message) {
+        if (!errorEl) return;
+        errorEl.textContent = message;
+        errorEl.hidden = !message;
+    }
+
+    function postJson(url, body) {
+        return fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
             },
-            handler: function (response) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = @json(route('checkout.pay.verify', $order));
-                const csrf = document.createElement('input');
-                csrf.type = 'hidden';
-                csrf.name = '_token';
-                csrf.value = @json(csrf_token());
-                form.appendChild(csrf);
-                ['razorpay_payment_id', 'razorpay_order_id', 'razorpay_signature'].forEach(function (field) {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = field;
-                    input.value = response[field];
-                    form.appendChild(input);
-                });
-                document.body.appendChild(form);
-                form.submit();
-            },
-            theme: { color: '#b38b42' }
-        };
-        new Razorpay(options).open();
-    };
+            credentials: 'same-origin',
+            body: JSON.stringify(body),
+        }).then(async (response) => {
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data.message || 'Something went wrong. Please try again.');
+            }
+            return data;
+        });
+    }
+
+    payButton.addEventListener('click', async function () {
+        showError('');
+        payButton.disabled = true;
+        payButton.textContent = 'Opening payment…';
+
+        try {
+            const orderData = await postJson(createOrderUrl, { store_order_id: storeOrderId });
+
+            const options = {
+                key: orderData.key,
+                amount: orderData.amount,
+                currency: orderData.currency,
+                name: 'Vyomika Atelier LLP',
+                description: 'Order {{ $order->order_number }}',
+                order_id: orderData.order_id,
+                prefill: {
+                    name: @json($order->customer_name),
+                    email: @json($order->customer_email),
+                    contact: @json($order->customer_phone),
+                },
+                theme: { color: '#b38b42' },
+                handler: async function (response) {
+                    payButton.disabled = true;
+                    payButton.textContent = 'Verifying payment…';
+                    showError('');
+
+                    try {
+                        const result = await postJson(verifyPaymentUrl, {
+                            store_order_id: storeOrderId,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_signature: response.razorpay_signature,
+                        });
+                        window.location.href = result.redirect || @json(route('checkout.success', $order));
+                    } catch (err) {
+                        showError(err.message);
+                        payButton.disabled = false;
+                        payButton.textContent = 'Pay Now';
+                    }
+                },
+                modal: {
+                    ondismiss: function () {
+                        showError('Payment cancelled. You can try again when ready.');
+                        payButton.disabled = false;
+                        payButton.textContent = 'Pay Now';
+                    },
+                },
+            };
+
+            const rzp = new Razorpay(options);
+            rzp.on('payment.failed', function (event) {
+                const reason = event.error?.description || event.error?.reason || 'Payment failed. Please try again.';
+                showError(reason);
+                payButton.disabled = false;
+                payButton.textContent = 'Pay Now';
+            });
+            rzp.open();
+        } catch (err) {
+            showError(err.message);
+        } finally {
+            payButton.disabled = false;
+            payButton.textContent = 'Pay Now';
+        }
+    });
+})();
 </script>
 @endpush
 @endsection

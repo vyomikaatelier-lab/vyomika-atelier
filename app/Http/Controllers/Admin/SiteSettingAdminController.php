@@ -17,6 +17,8 @@ class SiteSettingAdminController extends Controller
             'store' => array_merge(config('site.store', []), SiteSetting::getValue('store', [])),
             'business' => array_merge(config('legal.business', []), SiteSetting::getValue('business', [])),
             'legalLastUpdated' => SiteSetting::getValue('legal_last_updated', config('legal.last_updated')),
+            'finishSwatches' => config('finishes.swatches', []),
+            'finishSwatchImages' => \App\Support\FinishSwatches::imageOverrides(),
         ]);
     }
 
@@ -86,6 +88,28 @@ class SiteSettingAdminController extends Controller
         if (filled($validated['legal_last_updated'])) {
             SiteSetting::setValue('legal_last_updated', $validated['legal_last_updated']);
         }
+
+        $finishImages = \App\Support\FinishSwatches::imageOverrides();
+
+        foreach (config('finishes.swatches', []) as $swatch) {
+            $slug = $swatch['slug'];
+            $fileKey = 'finish_image_'.$slug;
+            $urlKey = 'finish_url_'.$slug;
+
+            if ($request->hasFile($fileKey)) {
+                $request->validate([
+                    $fileKey => 'image|mimes:jpeg,jpg,png,webp|max:4096',
+                ]);
+                $finishImages[$slug] = 'storage/'.$request->file($fileKey)->store('finishes', 'public');
+            } elseif (filled($request->input($urlKey))) {
+                $request->validate([
+                    $urlKey => 'url|max:500',
+                ]);
+                $finishImages[$slug] = $request->input($urlKey);
+            }
+        }
+
+        SiteSetting::setValue('finish_swatches', $finishImages);
 
         return back()->with('success', 'Site settings saved.');
     }

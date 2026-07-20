@@ -101,4 +101,32 @@ class CheckoutTest extends TestCase
         $response->assertSessionHas('error');
         $this->assertSame(0, Order::query()->count());
     }
+
+    public function test_checkout_accepts_first_and_last_name_without_customer_name_field(): void
+    {
+        config([
+            'services.razorpay.key' => 'rzp_test',
+            'services.razorpay.secret' => 'secret_test',
+        ]);
+
+        \Illuminate\Support\Facades\Http::fake([
+            'api.razorpay.com/*' => \Illuminate\Support\Facades\Http::response(['id' => 'order_test_xyz'], 200),
+        ]);
+
+        $category = Category::factory()->create(['slug' => 'coffee-tables']);
+        $product = Product::factory()->shop()->create(['category_id' => $category->id, 'stock' => 5]);
+
+        $this->withSession(['cart' => [$product->id => 1]]);
+
+        $payload = $this->validCheckoutPayload();
+        unset($payload['customer_name']);
+        $payload['first_name'] = 'Jane';
+        $payload['last_name'] = 'Doe';
+
+        $response = $this->post(route('checkout.store'), $payload);
+
+        $response->assertRedirect();
+        $this->assertSame(1, Order::query()->count());
+        $this->assertSame('Jane Doe', Order::query()->value('customer_name'));
+    }
 }

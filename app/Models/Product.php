@@ -290,26 +290,7 @@ class Product extends Model
     /** @return list<array{slug: string, name: string, image: string, hex: string, rate: int, is_black: bool}> */
     public static function finishSwatches(): array
     {
-        $base = self::baseSqFtRate();
-        $blackRate = self::blackSqFtRate();
-
-        $swatches = [
-            ['slug' => 'gold-mirror', 'name' => 'Gold Mirror', 'hex' => '#D4AF37', 'is_black' => false],
-            ['slug' => 'gold-brush', 'name' => 'Gold Brush', 'hex' => '#C5A028', 'is_black' => false],
-            ['slug' => 'rose-gold-mirror', 'name' => 'Rose Gold Mirror', 'hex' => '#B76E79', 'is_black' => false],
-            ['slug' => 'rose-gold-brush', 'name' => 'Rose Gold Brush', 'hex' => '#A85A65', 'is_black' => false],
-            ['slug' => 'champagne-mirror', 'name' => 'Champagne Mirror', 'hex' => '#C9A86C', 'is_black' => false],
-            ['slug' => 'champagne-brush', 'name' => 'Champagne Brush', 'hex' => '#B8956A', 'is_black' => false],
-            ['slug' => 'black-mirror', 'name' => 'Black Mirror', 'hex' => '#1A1A1A', 'is_black' => true],
-            ['slug' => 'black-brush', 'name' => 'Black Brush', 'hex' => '#2C2C2C', 'is_black' => true],
-        ];
-
-        return array_map(function (array $s) use ($base, $blackRate) {
-            $s['rate'] = $s['is_black'] ? $blackRate : $base;
-            $s['image'] = 'images/finishes/'.$s['slug'].'.jpg';
-
-            return $s;
-        }, $swatches);
+        return \App\Support\FinishSwatches::all();
     }
 
     public static function baseSqFtRate(): int
