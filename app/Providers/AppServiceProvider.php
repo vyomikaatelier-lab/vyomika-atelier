@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Contracts\WhatsAppProvider;
 use App\Services\WhatsApp\MetaWhatsAppProvider;
+use App\Services\WhatsApp\Msg91WhatsAppProvider;
 use App\Support\CmsSettings;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -16,6 +17,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(WhatsAppProvider::class, function () {
             return match (config('whatsapp.driver')) {
+                'msg91' => new Msg91WhatsAppProvider,
                 default => new MetaWhatsAppProvider,
             };
         });

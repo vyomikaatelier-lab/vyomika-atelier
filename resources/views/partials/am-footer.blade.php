@@ -1,5 +1,6 @@
 @php
     $brandName = trim(($brand['name'] ?? 'Vyomika Atelier LLP') . ' ' . ($brand['suffix'] ?? ''));
+    $business = \App\Support\LegalContent::business();
     $phoneRaw = preg_replace('/\s+/', '', $brand['phone'] ?? '');
     $phoneDisplay = $brand['phone'] ?? '';
     $whatsappSource = $social['whatsapp'] ?? $brand['phone'] ?? '';
@@ -17,7 +18,13 @@
                 <p>{{ $footer['newsletter'] ?? '' }}</p>
                 <p class="am-footer__brand-address">
                     {{ $brand['address_shop'] ?? 'Pan-India fabrication & delivery' }}<br>
-                    {{ $brand['address_office'] ?? 'Mumbai, India' }}
+                    {{ $brand['address_office'] ?? ($business['address'] ?? 'Delhi, India') }}<br>
+                    @if(!empty($business['legal_name']))
+                    <span class="am-footer__legal-entity">{{ $business['legal_name'] }}</span>
+                    @endif
+                    @if(!empty($business['gstin']))
+                    · GSTIN {{ $business['gstin'] }}
+                    @endif
                 </p>
             </div>
             <div>
@@ -59,7 +66,7 @@
                 <a href="{{ $storefrontLink('home', [], '/') }}" class="am-logo">
                     <span class="am-logo__name">{{ $brandName }}</span>
                 </a>
-                <p class="am-footer__compact-tagline">PVD partitions &amp; bespoke metal fabrication — Mumbai studio, Pan-India delivery.</p>
+                <p class="am-footer__compact-tagline">PVD partitions &amp; bespoke metal fabrication — Delhi studio, Pan-India delivery.</p>
                 <div class="am-footer__compact-cta">
                     @if($whatsappUrl)
                     <a href="{{ $whatsappUrl }}" class="am-btn am-btn--primary am-btn--full" target="_blank" rel="noopener noreferrer">WhatsApp</a>

@@ -1646,6 +1646,30 @@ ul { list-style: none; }
   font-size: 0.9rem;
   color: var(--am-muted);
 }
+.am-business-details {
+  margin-top: 2.5rem;
+  padding: 1.5rem;
+  border: 1px solid var(--am-border);
+  background: var(--am-surface, #faf9f7);
+}
+.am-business-details__list {
+  margin: 0.75rem 0 0;
+  display: grid;
+  gap: 0.85rem;
+}
+.am-business-details__list dt {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--am-muted);
+  margin-bottom: 0.2rem;
+}
+.am-business-details__list dd {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--am-charcoal);
+}
+.am-footer__legal-entity { font-weight: 600; }
 
 /* Shop */
 .am-shop-toolbar {

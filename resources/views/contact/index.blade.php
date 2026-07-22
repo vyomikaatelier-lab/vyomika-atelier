@@ -21,7 +21,10 @@
             <x-form-protection-fields form-key="contact" />
             <button type="submit" class="am-btn am-btn--primary am-btn--full">Send Message</button>
         </form>
-        <div style="margin-top:3rem;text-align:center">
+
+        @include('partials.am-business-details')
+
+        <div style="margin-top:2rem;text-align:center">
             <p class="am-card__label">Direct</p>
             <a href="mailto:{{ config('site.brand.email') }}" style="color:var(--am-gold-dark)">{{ config('site.brand.email') }}</a>
         </div>

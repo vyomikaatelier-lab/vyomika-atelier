@@ -183,7 +183,7 @@
         <section class="am-blog-cta" aria-labelledby="blog-cta-title">
             <div class="am-blog-cta__inner">
                 <h2 id="blog-cta-title" class="am-blog-cta__title">Discuss Your Project</h2>
-                <p class="am-blog-cta__text">Share drawings, dimensions, and finish preferences — our Mumbai studio team responds within one business day.</p>
+                <p class="am-blog-cta__text">Share drawings, dimensions, and finish preferences — our Delhi studio team responds within one business day.</p>
                 <div class="am-blog-cta__actions">
                     <button type="button" class="am-btn am-btn--primary" data-open-contact-studio data-contact-context="Re: {{ $post->title }}">Contact Studio</button>
                     <a href="{{ route('professionals.index') }}" class="am-btn am-btn--outline">Trade Programme</a>

@@ -9,17 +9,19 @@ return [
 
     'business' => [
         'brand_name' => 'Vyomika Atelier LLP',
-        'legal_name' => 'Vyomika Atelier LLP',
+        'legal_name' => 'VYOMIKA SALES',
         'country' => 'India',
         'business_type' => 'Custom-made premium interior and architectural metal products (made-to-order)',
         'email' => 'namaste@vyomikaatelier.com',
         'phone' => '+91 9205850254',
-        'address' => '[Registered business address, City, State, PIN — India]',
-        'gstin' => '[GSTIN — if applicable]',
-        'grievance_officer_name' => '[Grievance Officer Name]',
+        'address' => '467-483/1, Burgees Park, Dilshad Garden Ind. Area, G.T. Road, Shahdra, Delhi, India',
+        'gstin' => '07ASEPM3287D2ZQ',
+        'pan' => 'ASEPM3287D',
+        'state_code' => '07',
+        'grievance_officer_name' => 'Vyomika Atelier Customer Care',
         'grievance_officer_email' => 'namaste@vyomikaatelier.com',
         'grievance_officer_phone' => '+91 9205850254',
-        'registration_note' => '[Company / proprietorship registration details — placeholder]',
+        'registration_note' => 'Registered firm in Delhi, India · State: Delhi (07)',
     ],
 
     'footer_links' => [
@@ -129,7 +131,7 @@ return [
                 [
                     'heading' => 'Governing Law',
                     'paragraphs' => [
-                        'These terms are governed by the laws of {{country}}. Disputes shall be subject to the exclusive jurisdiction of courts in the city of our registered office, unless otherwise required by law.',
+                        'These terms are governed by the laws of {{country}}. Disputes shall be subject to the exclusive jurisdiction of courts in Delhi, unless otherwise required by law.',
                     ],
                 ],
             ],
@@ -257,8 +259,8 @@ return [
                 [
                     'heading' => 'Business Information',
                     'paragraphs' => [
-                        '**Brand:** {{brand_name}} · **Legal entity:** {{legal_name}} · **Country:** {{country}} · **Registration:** {{registration_note}} · **GSTIN:** {{gstin}}',
-                        '**Address:** {{address}} · **Email:** {{email}} · **Phone:** {{phone}}',
+                        '**Brand:** {{brand_name}} · **Legal entity:** {{legal_name}} · **Country:** {{country}} · **Registration:** {{registration_note}}',
+                        '**Address:** {{address}} · **GSTIN:** {{gstin}} · **PAN:** {{pan}} · **Email:** {{email}} · **Phone:** {{phone}}',
                     ],
                 ],
                 [

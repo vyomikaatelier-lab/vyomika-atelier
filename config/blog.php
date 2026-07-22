@@ -7,12 +7,12 @@ $posts = require database_path('data/blog-catalog.php');
 
 return [
     'meta_title' => 'Ideas, Materials & Projects — Blog | Vyomika Atelier LLP',
-    'meta_description' => 'Design ideas, material guides, and project stories on PVD partitions, stainless doors, Corten steel, and bespoke metalwork from Vyomika Atelier LLP, Mumbai.',
+    'meta_description' => 'Design ideas, material guides, and project stories on PVD partitions, stainless doors, Corten steel, and bespoke metalwork from Vyomika Atelier LLP, Delhi.',
 
     'index' => [
         'label' => 'Journal',
         'title' => 'Ideas, Materials & Projects',
-        'subtitle' => 'PVD finishes, partition design, Corten steel, and fabrication insights from our Mumbai studio.',
+        'subtitle' => 'PVD finishes, partition design, Corten steel, and fabrication insights from our Delhi studio.',
     ],
 
     'categories' => [

@@ -103,7 +103,7 @@ return [
     'why_partner' => [
         'title' => 'Why Partner With Us?',
         'items' => [
-            ['title' => 'Quality & Craftsmanship', 'text' => 'Mumbai studio fabrication with documented QC, secure packaging and Pan-India delivery.'],
+            ['title' => 'Quality & Craftsmanship', 'text' => 'Delhi studio fabrication with documented QC, secure packaging and Pan-India delivery.'],
             ['title' => 'Innovation', 'text' => 'CNC cutting, PVD finishes, Corten systems and bespoke engineering for complex briefs.'],
             ['title' => 'Reliable Timelines', 'text' => 'Clear production schedules — typically 3–4 weeks for made-to-order metalwork after approval.'],
             ['title' => 'End-to-end Support', 'text' => 'From drawing review and sampling through delivery and installation coordination.'],

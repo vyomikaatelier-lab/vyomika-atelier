@@ -13,7 +13,7 @@ return [
         'phone' => '+91 9205850254',
         'since' => '2009',
         'address_shop' => 'Pan-India fabrication & delivery',
-        'address_office' => 'Andheri East, Mumbai, Maharashtra 400069',
+        'address_office' => '467-483/1, Burgees Park, Dilshad Garden Ind. Area, G.T. Road, Shahdra, Delhi',
     ],
 
     'announcement' => [
@@ -73,7 +73,7 @@ return [
             [
                 'kicker' => 'METAL FURNITURE',
                 'title' => 'Bespoke Tables & Rack Systems',
-                'description' => 'Coffee tables, console tables, and PVD rack systems — custom sizes with Pan-India delivery from our Mumbai studio.',
+                'description' => 'Coffee tables, console tables, and PVD rack systems — custom sizes with Pan-India delivery from our Delhi studio.',
                 'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg',
                 'cta_label' => 'Shop Furniture',
                 'cta_href' => '/shop/coffee-tables',
@@ -285,7 +285,7 @@ return [
 
     'blog' => [
         'title' => 'Ideas, Materials & Projects',
-        'subtitle' => 'PVD finishes, partition design, Corten steel, and fabrication insights from our Mumbai studio.',
+        'subtitle' => 'PVD finishes, partition design, Corten steel, and fabrication insights from our Delhi studio.',
         'posts' => [
             [
                 'category' => 'Partitions',
@@ -316,8 +316,8 @@ return [
 
     'trust_badges' => [
         ['icon' => 'shipping', 'title' => 'Pan-India Shipping', 'text' => 'Fabrication & delivery across major cities.'],
-        ['icon' => 'delivery', 'title' => '3–4 Week Delivery', 'text' => 'Made-to-order fabrication from Mumbai studio.'],
-        ['icon' => 'support', 'title' => 'Expert Support', 'text' => 'Mumbai studio team — Mon–Sat, 10am–7pm IST.'],
+        ['icon' => 'delivery', 'title' => '3–4 Week Delivery', 'text' => 'Made-to-order fabrication from Delhi studio.'],
+        ['icon' => 'support', 'title' => 'Expert Support', 'text' => 'Delhi studio team — Mon–Sat, 10am–7pm IST.'],
         ['icon' => 'discount', 'title' => 'Trade Discounts', 'text' => 'Special pricing for architects & designers.'],
     ],
 

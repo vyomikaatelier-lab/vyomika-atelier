@@ -5,7 +5,7 @@
  */
 return [
     'meta_title' => 'About Vyomika Atelier | Architectural Metalwork & Exhibitions',
-    'meta_description' => 'Discover Vyomika Atelier, our custom metalwork expertise and exhibition journey across Mumbai and London.',
+    'meta_description' => 'Discover Vyomika Atelier, our custom metalwork expertise and exhibition journey across Delhi and London.',
 
     'hero' => [
         'label' => 'About',
@@ -17,7 +17,7 @@ return [
     'brand_story' => [
         'title' => 'Crafted Beyond Convention',
         'paragraphs' => [
-            'Vyomika Atelier LLP is a design-led metal fabrication studio based in Mumbai. We translate architectural intent into precision-built partitions, doors, furniture and feature metalwork — finished in PVD, brushed metal and Corten steel.',
+            'Vyomika Atelier LLP is a design-led metal fabrication studio based in Delhi. We translate architectural intent into precision-built partitions, doors, furniture and feature metalwork — finished in PVD, brushed metal and Corten steel.',
             'Every piece is custom-manufactured in our studio with documented QC, secure packaging and Pan-India delivery. We collaborate closely with architects, interior designers, contractors and dealers to deliver metalwork that meets exacting briefs.',
             'From concept drawings to site-ready installation, we bring material expertise and reliable execution to residential, hospitality and commercial projects.',
         ],
@@ -140,7 +140,7 @@ return [
             ],
             [
                 'title' => 'Precision Fabrication',
-                'text' => 'CNC cutting, welded assemblies and documented QC from our Mumbai studio.',
+                'text' => 'CNC cutting, welded assemblies and documented QC from our Delhi studio.',
             ],
             [
                 'title' => 'Premium Finishes',

@@ -51,6 +51,7 @@
             @endforeach
 
             <div class="am-legal-prose__cta">
+                @include('partials.am-business-details', ['business' => $business])
                 <p>Questions? <a href="{{ route('contact.index') }}">Contact us</a> or email
                     <a href="mailto:{{ $business['email'] ?? '' }}">{{ $business['email'] ?? '[email]' }}</a>.</p>
             </div>
