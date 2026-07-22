@@ -113,7 +113,7 @@ class RazorpayService
             'message' => 'Order created.',
             'data' => [
                 'order_id' => $data['id'],
-                'amount' => (int) $data['amount'],
+                'amount' => (int) ($data['amount'] ?? 0),
                 'currency' => $data['currency'] ?? 'INR',
             ],
         ];

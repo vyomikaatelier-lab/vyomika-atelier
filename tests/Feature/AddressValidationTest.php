@@ -41,7 +41,7 @@ class AddressValidationTest extends TestCase
         $payload['pincode'] = 'ABC';
 
         $this->expectException(ValidationException::class);
-        $this->addresses->validate($payload);
+        $this->addresses->validate($payload, true);
     }
 
     public function test_india_address_requires_valid_state(): void
@@ -50,7 +50,7 @@ class AddressValidationTest extends TestCase
         $payload['state'] = 'Not A Real State';
 
         $this->expectException(ValidationException::class);
-        $this->addresses->validate($payload);
+        $this->addresses->validate($payload, true);
     }
 
     public function test_international_address_does_not_force_indian_pin(): void
@@ -60,7 +60,7 @@ class AddressValidationTest extends TestCase
         $payload['state'] = 'California';
         $payload['pincode'] = '90210';
 
-        $validated = $this->addresses->validate($payload);
+        $validated = $this->addresses->validate($payload, true);
 
         $this->assertSame('90210', $validated['pincode_normalized']);
         $this->assertSame('format_valid', $validated['pin_lookup_status']);
@@ -68,7 +68,7 @@ class AddressValidationTest extends TestCase
 
     public function test_snapshot_is_immutable_structure(): void
     {
-        $validated = $this->addresses->validate($this->validIndiaPayload());
+        $validated = $this->addresses->validate($this->validIndiaPayload(), true);
         $snapshot = $this->addresses->toSnapshot($validated);
 
         $this->assertSame('Jane Doe', $snapshot['full_name']);

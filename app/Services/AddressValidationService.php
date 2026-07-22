@@ -148,7 +148,7 @@ class AddressValidationService
             $validated['house_building'] ?? null,
             $validated['street'] ?? null,
             $validated['locality'] ?? null,
-            $validated['landmark'] ? 'Near ' . $validated['landmark'] : null,
+            filled($validated['landmark'] ?? null) ? 'Near ' . $validated['landmark'] : null,
         ]);
 
         return implode(', ', $parts);

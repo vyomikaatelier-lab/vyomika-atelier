@@ -126,7 +126,11 @@ class CheckoutTest extends TestCase
         ]);
 
         \Illuminate\Support\Facades\Http::fake([
-            'api.razorpay.com/*' => \Illuminate\Support\Facades\Http::response(['id' => 'order_test_xyz'], 200),
+            'api.razorpay.com/*' => \Illuminate\Support\Facades\Http::response([
+                'id' => 'order_test_xyz',
+                'amount' => 3162300,
+                'currency' => 'INR',
+            ], 200),
         ]);
 
         [$user, $session] = $this->verifiedUserWithCart();
