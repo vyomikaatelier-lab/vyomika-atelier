@@ -63,6 +63,8 @@
         window.turnstile.render(widgetHost, {
             sitekey: widgetHost.dataset.sitekey,
             theme: 'light',
+            appearance: widgetHost.dataset.appearance || 'always',
+            size: 'normal',
         });
     }
 

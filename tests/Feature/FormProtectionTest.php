@@ -26,6 +26,7 @@ class FormProtectionTest extends TestCase
         config([
             'form_protection.turnstile.skip_verification' => false,
             'form_protection.turnstile.testing_bypass_token' => 'test-turnstile-pass',
+            'form_protection.turnstile.require_manual_confirmation' => true,
             'services.admin_email' => 'admin@vyomikaatelier.com',
         ]);
     }
@@ -43,6 +44,7 @@ class FormProtectionTest extends TestCase
             'turnstile_fallback_token' => $turnstile->fallbackToken($formKey),
             'turnstile_unavailable' => '0',
             'cf-turnstile-response' => 'test-turnstile-pass',
+            'human_confirmation' => '1',
             'enquiry_intent' => 'active_project',
         ];
     }
@@ -106,6 +108,15 @@ class FormProtectionTest extends TestCase
         $this->assertDatabaseCount('leads', 0);
     }
 
+    public function test_manual_confirmation_checkbox_is_required(): void
+    {
+        $payload = $this->contactPayload(['human_confirmation' => null]);
+        unset($payload['human_confirmation']);
+
+        $this->post(route('contact.store'), $payload)->assertSessionHasErrors('form');
+        $this->assertDatabaseCount('leads', 0);
+    }
+
     public function test_rate_limit_returns_friendly_429(): void
     {
         $payload = $this->contactPayload();
@@ -133,8 +144,15 @@ class FormProtectionTest extends TestCase
 
         $original = Lead::where('email', 'priya@example.com')->whereNull('duplicate_of_id')->first();
         $this->assertNotNull($original);
+        $this->assertFalse($original->notifications_suppressed);
         $this->assertGreaterThanOrEqual(1, $original->duplicate_count);
-        Mail::assertSentCount(1);
+
+        $duplicate = Lead::query()
+            ->where('email', 'priya@example.com')
+            ->where('protection_status', LeadProtectionStatus::DUPLICATE)
+            ->first();
+        $this->assertNotNull($duplicate);
+        $this->assertTrue($duplicate->notifications_suppressed);
     }
 
     public function test_vendor_pitch_routed_to_marketing_vendor_queue(): void
@@ -340,6 +358,7 @@ class FormProtectionTest extends TestCase
             'turnstile_fallback_token' => $turnstile->fallbackToken('vendor_proposal'),
             'turnstile_unavailable' => '0',
             'cf-turnstile-response' => 'test-turnstile-pass',
+            'human_confirmation' => '1',
         ])->assertSessionHas('success');
 
         $this->assertDatabaseHas('leads', [

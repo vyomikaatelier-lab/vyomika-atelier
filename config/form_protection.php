@@ -16,6 +16,10 @@ return [
         'secret_key' => env('TURNSTILE_SECRET_KEY'),
         'testing_bypass_token' => env('TURNSTILE_TESTING_BYPASS_TOKEN', 'test-turnstile-pass'),
         'skip_verification' => env('TURNSTILE_SKIP_VERIFICATION', false),
+        // always | execute | interaction-only — see Cloudflare Turnstile widget docs
+        'appearance' => env('TURNSTILE_APPEARANCE', 'always'),
+        // Require a manual tick on every form (in addition to Turnstile token when configured)
+        'require_manual_confirmation' => env('TURNSTILE_REQUIRE_MANUAL_CONFIRMATION', true),
     ],
 
     'enquiry_intents' => [

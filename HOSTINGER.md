@@ -232,7 +232,9 @@ If the site shows 403 or old CSS after a Git redeploy, `post-deploy.sh` re-creat
 | `MAIL_*` | Hostinger or Cloudflare SMTP credentials |
 | `ADMIN_EMAIL` | Your admin notification inbox |
 | `MARKETING_EMAIL` | Vendor/marketing proposal inbox (optional) |
-| `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile for public forms |
+| `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile (**Managed** widget mode in dashboard) |
+| `TURNSTILE_APPEARANCE` | `always` (widget visible on load) |
+| `TURNSTILE_REQUIRE_MANUAL_CONFIRMATION` | `true` (required “I'm not a robot” tick on every form) |
 | `LEAD_IP_HASH_SALT` | Random string for hashed lead IP fingerprints |
 
 Order emails implement `ShouldQueue`. With `QUEUE_CONNECTION=database` and **no queue worker**, emails are marked sent but never delivered. Use `sync` on shared hosting.

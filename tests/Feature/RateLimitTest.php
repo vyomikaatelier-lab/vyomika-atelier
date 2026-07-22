@@ -53,6 +53,7 @@ class RateLimitTest extends TestCase
             'turnstile_fallback_token' => $turnstile->fallbackToken('contact'),
             'turnstile_unavailable' => '0',
             'cf-turnstile-response' => 'test-turnstile-pass',
+            'human_confirmation' => '1',
         ];
 
         for ($i = 0; $i < 3; $i++) {

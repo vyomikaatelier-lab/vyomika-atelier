@@ -9,6 +9,8 @@
     $turnstile = app(\App\Services\TurnstileService::class);
     $honeypot = config('form_protection.honeypot_field', 'va_contact_url');
     $intents = config('form_protection.enquiry_intents', []);
+    $requireManualConfirmation = (bool) config('form_protection.turnstile.require_manual_confirmation', true);
+    $turnstileAppearance = config('form_protection.turnstile.appearance', 'always');
 @endphp
 
 <div class="va-form-protection" data-form-protection data-form-key="{{ $formKey }}">
@@ -47,8 +49,25 @@
         </div>
     @endif
 
-    <div class="va-form-protection__turnstile" data-turnstile-widget @if($turnstile->siteKey()) data-sitekey="{{ $turnstile->siteKey() }}" @endif></div>
+    <div
+        class="va-form-protection__turnstile"
+        data-turnstile-widget
+        @if($turnstile->siteKey())
+            data-sitekey="{{ $turnstile->siteKey() }}"
+            data-appearance="{{ $turnstileAppearance }}"
+        @endif
+    ></div>
 
+    @if($requireManualConfirmation)
+    <div class="va-form-protection__manual-check">
+        <label class="va-form-protection__fallback-check">
+            <input type="checkbox" name="human_confirmation" value="1" @checked(old('human_confirmation')) required>
+            <span>I'm not a robot — please tick to continue</span>
+        </label>
+    </div>
+    @endif
+
+    @if(! $requireManualConfirmation)
     <div class="va-form-protection__fallback" data-turnstile-fallback hidden>
         <p class="va-form-protection__fallback-note">Security check could not load. Please confirm you are a real person.</p>
         <label class="va-form-protection__fallback-check">
@@ -56,6 +75,7 @@
             <span>I confirm this is a genuine enquiry</span>
         </label>
     </div>
+    @endif
 </div>
 
 @once
@@ -70,6 +90,7 @@
                 overflow: hidden;
             }
             .va-form-protection__turnstile { margin: 0.75rem 0; min-height: 65px; }
+            .va-form-protection__manual-check { margin: 0.75rem 0; }
             .va-form-protection__fallback { margin: 0.75rem 0; padding: 0.75rem; border: 1px solid var(--am-border, #ddd); border-radius: 4px; }
             .va-form-protection__fallback-note { font-size: 0.875rem; margin-bottom: 0.5rem; }
             .va-form-protection__fallback-check { display: flex; gap: 0.5rem; align-items: flex-start; font-size: 0.875rem; }

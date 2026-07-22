@@ -177,6 +177,11 @@ class FormProtectionService
 
     private function validateHumanChallenge(Request $request, string $formKey): bool
     {
+        if (config('form_protection.turnstile.require_manual_confirmation', true)
+            && ! $request->boolean('human_confirmation')) {
+            return false;
+        }
+
         $token = $request->input('cf-turnstile-response');
         $ip = $request->ip();
 
@@ -186,10 +191,6 @@ class FormProtectionService
 
         $usingFallback = (bool) $request->boolean('turnstile_unavailable');
         if (! $usingFallback) {
-            return false;
-        }
-
-        if (! $request->boolean('human_confirmation')) {
             return false;
         }
 
