@@ -1,6 +1,6 @@
 @extends('layouts.store')
 
-@section('title', 'Vyomika Atelier LLP — PVD Partitions & Metal Furniture')
+@section('title', 'Vyomika Atelier — PVD Partitions & Metal Furniture')
 
 @section('content')
 

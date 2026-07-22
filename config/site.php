@@ -1,12 +1,12 @@
 <?php
 
 /**
- * Vyomika Atelier LLP storefront content — Amerce eCommerce structure.
+ * Vyomika Atelier storefront content — Amerce eCommerce structure.
  * Used as fallback when database is empty (local preview / first deploy).
  */
 return [
     'brand' => [
-        'name' => 'Vyomika Atelier LLP',
+        'name' => 'Vyomika Atelier',
         'suffix' => '',
         'tagline' => 'PVD Partitions & Metal Furniture',
         'email' => 'namaste@vyomikaatelier.com',

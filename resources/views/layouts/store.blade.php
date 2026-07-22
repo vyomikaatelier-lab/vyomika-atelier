@@ -4,8 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="description" content="Vyomika Atelier LLP — PVD partitions, metal furniture, and bespoke fabrication. Pan-India delivery from Delhi.">
-    <title>@yield('title', 'Vyomika Atelier LLP — PVD Partitions & Metal Furniture')</title>
+@php
+    $defaultPageTitle = config('site.brand.name', 'Vyomika Atelier') . ' — PVD Partitions & Metal Furniture';
+    $defaultMetaDescription = config('site.brand.name', 'Vyomika Atelier') . ' — PVD partitions, metal furniture, and bespoke fabrication. Pan-India delivery from Delhi.';
+@endphp
+    <meta name="description" content="{{ $defaultMetaDescription }}">
+    <title>@yield('title', $defaultPageTitle)</title>
     @stack('meta')
     @if(filter_var(env('APP_PREVIEW_BAR', false), FILTER_VALIDATE_BOOLEAN))
     <script>try{var t=localStorage.getItem('ssmetal-theme');document.documentElement.dataset.theme=t||'atelier';var h=localStorage.getItem('ssmetal-hero');document.documentElement.dataset.hero=h||'fullscreen'}catch(e){document.documentElement.dataset.theme='atelier';document.documentElement.dataset.hero='fullscreen'}</script>
@@ -64,7 +68,7 @@
 <header class="am-header">
     <div class="am-container am-header__inner">
         <a href="{{ $storefrontLink('home', [], '/') }}" class="am-logo">
-            <span class="am-logo__name">{{ $brand['name'] ?? 'Vyomika Atelier LLP' }}</span>
+            <span class="am-logo__name">{{ $brand['name'] ?? config('site.brand.name', 'Vyomika Atelier') }}</span>
             <span class="am-logo__tag">{{ $brand['tagline'] ?? 'PVD Partitions & Metal Furniture' }}</span>
         </a>
 

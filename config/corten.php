@@ -4,8 +4,8 @@
  * Corten Steel landing page — editable content (CMS-style).
  */
 return [
-    'meta_title' => 'Corten Steel Facades, Screens & Custom Fabrication — Vyomika Atelier LLP',
-    'meta_description' => 'Explore custom Corten steel facades, decorative screens, planters, gates and architectural metalwork designed and fabricated by Vyomika Atelier LLP.',
+    'meta_title' => 'Corten Steel Facades, Screens & Custom Fabrication — Vyomika Atelier',
+    'meta_description' => 'Explore custom Corten steel facades, decorative screens, planters, gates and architectural metalwork designed and fabricated by Vyomika Atelier.',
 
     'hero' => [
         'title' => 'Corten Steel Architectural Solutions',
@@ -166,6 +166,6 @@ return [
         'title' => 'Create a Bold Architectural Statement',
         'body' => 'Share your drawings, dimensions or design concept with our team for a custom Corten steel solution.',
         'primary' => ['label' => 'Get a Custom Quote', 'href' => '#corten-quote'],
-        'secondary' => ['label' => 'Contact Vyomika Atelier LLP', 'href' => '/contact'],
+        'secondary' => ['label' => 'Contact Vyomika Atelier', 'href' => '/contact'],
     ],
 ];

@@ -1,6 +1,6 @@
 @extends('layouts.store')
 
-@section('title', ($design['name'] ?? $product->name) . ' — Mirror Frames — Vyomika Atelier LLP')
+@section('title', ($design['name'] ?? $product->name) . ' — Mirror Frames — Vyomika Atelier')
 
 @if($product->description)
 @push('meta')

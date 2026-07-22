@@ -1,5 +1,5 @@
 @php
-    $brandName = trim(($brand['name'] ?? 'Vyomika Atelier LLP') . ' ' . ($brand['suffix'] ?? ''));
+    $brandName = trim(($brand['name'] ?? config('site.brand.name', 'Vyomika Atelier')) . ' ' . ($brand['suffix'] ?? ''));
     $business = \App\Support\LegalContent::business();
     $phoneRaw = preg_replace('/\s+/', '', $brand['phone'] ?? '');
     $phoneDisplay = $brand['phone'] ?? '';
@@ -125,7 +125,7 @@
         </div>
 
         <div class="am-footer__bottom">
-            <span>© {{ date('Y') }} {{ $brandName }}. All rights reserved.</span>
+            <span>© {{ date('Y') }} {{ $business['legal_name'] ?? $brandName }}. All rights reserved.</span>
             <div class="am-footer__contact am-footer__contact--desktop">
                 <a href="{{ route('vendor-proposal.index') }}">Vendor &amp; Service Proposals</a>
                 <a href="{{ route('catalogue.index') }}">Request Catalogue</a>

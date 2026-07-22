@@ -1,4 +1,4 @@
-ï»¿<?php
+<?php
 
 /**
  * Service landing page heroes (gallery-layout services).
@@ -8,7 +8,7 @@ return [
         'hero' => [
             'label' => 'Studio',
             'title' => 'PVD Partitions',
-            'subtitle' => 'Wave, fluted, and laser-cut stainless partitions in champagne gold, rose gold, and matte black Î“Ã‡Ã¶ engineered for offices, showrooms, and luxury residences.',
+            'subtitle' => 'Wave, fluted, and laser-cut stainless partitions in champagne gold, rose gold, and matte black GÇö engineered for offices, showrooms, and luxury residences.',
             'highlights' => [
                 'Sq ft calculator',
                 'Custom dimensions',
@@ -20,14 +20,14 @@ return [
         ],
         'intro' => [
             'title' => 'Partitions That Define Space',
-            'body' => 'Each partition is fabricated from grade 304/316 stainless with PVD coating Î“Ã‡Ã¶ precision welded, ground, and finished in our Mumbai studio for residential and commercial interiors.',
+            'body' => 'Each partition is fabricated from grade 304/316 stainless with PVD coating GÇö precision welded, ground, and finished in our Delhi studio for residential and commercial interiors.',
         ],
     ],
     'slim-profile-door-system' => [
         'hero' => [
             'label' => 'Studio',
             'title' => 'Slim Profile Door System',
-            'subtitle' => 'Minimal PVD door frames and pivot systems Î“Ã‡Ã¶ slim sightlines, concealed hardware, and premium finishes for modern entrances and interior doorways.',
+            'subtitle' => 'Minimal PVD door frames and pivot systems GÇö slim sightlines, concealed hardware, and premium finishes for modern entrances and interior doorways.',
             'highlights' => [
                 'Pivot & hinged systems',
                 'Concealed hardware',
@@ -39,14 +39,14 @@ return [
         ],
         'intro' => [
             'title' => 'Doors Engineered for Slim Profiles',
-            'body' => 'PVD-coated stainless door systems with tempered glass panels Î“Ã‡Ã¶ fabricated to architect drawings with finish-matched hardware and site-ready packaging.',
+            'body' => 'PVD-coated stainless door systems with tempered glass panels GÇö fabricated to architect drawings with finish-matched hardware and site-ready packaging.',
         ],
     ],
     'main-entrance-pvd-doors' => [
         'hero' => [
             'label' => 'Studio',
             'title' => 'Main Entrance PVD Doors',
-            'subtitle' => 'Statement entrance doors and PVD pull systems Î“Ã‡Ã¶ double-leaf, pivot, and framed configurations for lobbies, villas, and commercial frontages.',
+            'subtitle' => 'Statement entrance doors and PVD pull systems GÇö double-leaf, pivot, and framed configurations for lobbies, villas, and commercial frontages.',
             'highlights' => [
                 'Entrance-grade fabrication',
                 'PVD pull integration',
@@ -58,14 +58,14 @@ return [
         ],
         'intro' => [
             'title' => 'Entrances That Set the Tone',
-            'body' => 'Main entrance systems combining PVD frames, glass panels, and architectural pulls Î“Ã‡Ã¶ built for durability, security specs, and lasting finish depth.',
+            'body' => 'Main entrance systems combining PVD frames, glass panels, and architectural pulls GÇö built for durability, security specs, and lasting finish depth.',
         ],
     ],
     'rack-systems-metal-pvd' => [
         'hero' => [
             'label' => 'Studio',
             'title' => 'Rack Systems, Metal PVD',
-            'subtitle' => 'Wall-mounted and freestanding PVD rack systems for retail, wardrobes, and display Î“Ã‡Ã¶ modular layouts with champagne, rose gold, and matte black finishes.',
+            'subtitle' => 'Wall-mounted and freestanding PVD rack systems for retail, wardrobes, and display GÇö modular layouts with champagne, rose gold, and matte black finishes.',
             'highlights' => [
                 'Modular configurations',
                 'Retail & wardrobe',
@@ -77,7 +77,7 @@ return [
         ],
         'intro' => [
             'title' => 'Rack Systems Built for Display',
-            'body' => 'PVD-coated metal rack systems engineered for retail inventory, wardrobe storage, and commercial display Î“Ã‡Ã¶ custom widths and finish-matched to your interior palette.',
+            'body' => 'PVD-coated metal rack systems engineered for retail inventory, wardrobe storage, and commercial display GÇö custom widths and finish-matched to your interior palette.',
         ],
     ],
 ];

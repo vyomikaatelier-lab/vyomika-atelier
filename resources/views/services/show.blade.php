@@ -1,6 +1,6 @@
 @extends('layouts.store')
 
-@section('title', ($service->meta_title ?? $service->name) . ' — Vyomika Atelier LLP')
+@section('title', ($service->meta_title ?? $service->name) . ' — Vyomika Atelier')
 
 @push('meta')
 @if($studioUrl = \App\Support\StorefrontRoutes::studioUrlForService($service->slug))

@@ -5,8 +5,8 @@
  */
 return [
     'coffee-tables' => [
-        'meta_title' => 'Coffee Tables Collection | Vyomika Atelier LLP',
-        'meta_description' => 'PVD metal coffee tables with glass, marble and fluted bases — fixed prices with Pan-India delivery from Vyomika Atelier LLP.',
+        'meta_title' => 'Coffee Tables Collection | Vyomika Atelier',
+        'meta_description' => 'PVD metal coffee tables with glass, marble and fluted bases — fixed prices with Pan-India delivery from Vyomika Atelier.',
         'hero' => [
             'label' => 'Shop',
             'title' => 'Coffee Tables',
@@ -22,13 +22,13 @@ return [
         ],
         'intro' => [
             'title' => 'Metal Coffee Tables, Built to Anchor Your Space',
-            'body' => 'Each coffee table is fabricated in our Mumbai studio from grade 304/316 stainless with PVD coating — paired with toughened glass or natural stone tops for residential and commercial interiors.',
+            'body' => 'Each coffee table is fabricated in our Delhi studio from grade 304/316 stainless with PVD coating — paired with toughened glass or natural stone tops for residential and commercial interiors.',
         ],
         'gallery_title' => 'Coffee Table Designs',
     ],
     'corner-tables' => [
-        'meta_title' => 'Corner Tables Collection | Vyomika Atelier LLP',
-        'meta_description' => 'PVD corner and side tables with marble and glass tops — fixed prices with Pan-India delivery from Vyomika Atelier LLP.',
+        'meta_title' => 'Corner Tables Collection | Vyomika Atelier',
+        'meta_description' => 'PVD corner and side tables with marble and glass tops — fixed prices with Pan-India delivery from Vyomika Atelier.',
         'hero' => [
             'label' => 'Shop',
             'title' => 'Corner Tables',
@@ -49,8 +49,8 @@ return [
         'gallery_title' => 'Corner Table Designs',
     ],
     'glass-tables' => [
-        'meta_title' => 'Glass Tables Collection | Vyomika Atelier LLP',
-        'meta_description' => 'PVD-framed glass side and accent tables — fixed prices with Pan-India delivery from Vyomika Atelier LLP.',
+        'meta_title' => 'Glass Tables Collection | Vyomika Atelier',
+        'meta_description' => 'PVD-framed glass side and accent tables — fixed prices with Pan-India delivery from Vyomika Atelier.',
         'hero' => [
             'label' => 'Shop',
             'title' => 'Glass Tables',
@@ -71,8 +71,8 @@ return [
         'gallery_title' => 'Glass Table Designs',
     ],
     'door-handles' => [
-        'meta_title' => 'Door Handles Collection | Vyomika Atelier LLP',
-        'meta_description' => 'PVD door pulls and entrance handles in champagne, rose gold and matte black — Pan-India delivery from Vyomika Atelier LLP.',
+        'meta_title' => 'Door Handles Collection | Vyomika Atelier',
+        'meta_description' => 'PVD door pulls and entrance handles in champagne, rose gold and matte black — Pan-India delivery from Vyomika Atelier.',
         'hero' => [
             'label' => 'Shop',
             'title' => 'Door Handles',
@@ -93,8 +93,8 @@ return [
         'gallery_title' => 'Door Handle Designs',
     ],
     'bespoke-metal-furniture' => [
-        'meta_title' => 'Bespoke Metal Furniture | Vyomika Atelier LLP',
-        'meta_description' => 'Bespoke PVD metal furniture — coffee tables, corner tables, glass tables and consoles — fabricated to order from Vyomika Atelier LLP.',
+        'meta_title' => 'Bespoke Metal Furniture | Vyomika Atelier',
+        'meta_description' => 'Bespoke PVD metal furniture — coffee tables, corner tables, glass tables and consoles — fabricated to order from Vyomika Atelier.',
         'category_slugs' => ['bespoke-metal-furniture'],
         'hero' => [
             'label' => 'Shop',
@@ -111,7 +111,7 @@ return [
         ],
         'intro' => [
             'title' => 'Metal Furniture, Built to Your Specification',
-            'body' => 'Each piece is fabricated in our Mumbai studio from grade 304/316 stainless with PVD coating — paired with toughened glass, marble, or natural stone tops.',
+            'body' => 'Each piece is fabricated in our Delhi studio from grade 304/316 stainless with PVD coating — paired with toughened glass, marble, or natural stone tops.',
         ],
         'gallery_title' => 'Furniture Designs',
     ],

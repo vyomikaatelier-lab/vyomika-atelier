@@ -100,6 +100,7 @@ class SiteSettingAdminController extends Controller
 
             SiteSetting::setValue('business', [
                 'brand_name' => $validated['brand_name'],
+                'legal_name' => config('legal.business.legal_name', 'VYOMIKA SALES'),
                 'email' => $validated['email'] ?? null,
                 'phone' => $validated['phone'] ?? null,
                 'address' => $validated['address_office'] ?? null,

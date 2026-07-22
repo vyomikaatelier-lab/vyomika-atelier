@@ -6,7 +6,7 @@
     $mobileLoginMode = old('mobile_login_mode', session('mobile_login_mode', 'otp'));
 @endphp
 
-@section('title', ($activeTab === 'register' ? 'Create account' : 'Sign in') . ' — Vyomika Atelier LLP')
+@section('title', ($activeTab === 'register' ? 'Create account' : 'Sign in') . ' — Vyomika Atelier')
 
 @section('content')
 <x-account-auth-layout>

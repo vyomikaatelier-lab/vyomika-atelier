@@ -5,7 +5,7 @@
     $designs = $page['designs'] ?? [];
 @endphp
 
-@section('title', $page['meta_title'] ?? 'Mirror Frames — Vyomika Atelier LLP')
+@section('title', $page['meta_title'] ?? 'Mirror Frames — Vyomika Atelier')
 
 @push('meta')
 <meta name="description" content="{{ $page['meta_description'] ?? '' }}">

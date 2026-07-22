@@ -8,7 +8,7 @@ return [
     'last_updated' => '15 July 2026',
 
     'business' => [
-        'brand_name' => 'Vyomika Atelier LLP',
+        'brand_name' => 'Vyomika Atelier',
         'legal_name' => 'VYOMIKA SALES',
         'country' => 'India',
         'business_type' => 'Custom-made premium interior and architectural metal products (made-to-order)',
@@ -35,8 +35,8 @@ return [
     'pages' => [
         'privacy' => [
             'title' => 'Privacy Policy',
-            'meta_title' => 'Privacy Policy — Vyomika Atelier LLP',
-            'meta_description' => 'How Vyomika Atelier LLP collects, uses, and protects your personal information on enquiry forms, orders, and analytics.',
+            'meta_title' => 'Privacy Policy — Vyomika Atelier',
+            'meta_description' => 'How Vyomika Atelier collects, uses, and protects your personal information on enquiry forms, orders, and analytics.',
             'sections' => [
                 [
                     'heading' => 'Introduction',
@@ -93,8 +93,8 @@ return [
 
         'terms' => [
             'title' => 'Terms & Conditions',
-            'meta_title' => 'Terms & Conditions — Vyomika Atelier LLP',
-            'meta_description' => 'Website usage terms, intellectual property, and ordering conditions for Vyomika Atelier LLP custom metal products.',
+            'meta_title' => 'Terms & Conditions — Vyomika Atelier',
+            'meta_description' => 'Website usage terms, intellectual property, and ordering conditions for Vyomika Atelier custom metal products.',
             'sections' => [
                 [
                     'heading' => 'Agreement',
@@ -138,8 +138,8 @@ return [
 
         'shipping' => [
             'title' => 'Shipping & Delivery Policy',
-            'meta_title' => 'Shipping & Delivery Policy — Vyomika Atelier LLP',
-            'meta_description' => 'Delivery timelines, logistics, and installation notes for custom Vyomika Atelier LLP metal products across India.',
+            'meta_title' => 'Shipping & Delivery Policy — Vyomika Atelier',
+            'meta_description' => 'Delivery timelines, logistics, and installation notes for custom Vyomika Atelier metal products across India.',
             'sections' => [
                 [
                     'heading' => 'Made-to-Order Production',
@@ -176,8 +176,8 @@ return [
 
         'cancellation' => [
             'title' => 'Cancellation & Refund Policy',
-            'meta_title' => 'Cancellation & Refund Policy — Vyomika Atelier LLP',
-            'meta_description' => 'Cancellation rules and refund terms for custom-made Vyomika Atelier LLP orders.',
+            'meta_title' => 'Cancellation & Refund Policy — Vyomika Atelier',
+            'meta_description' => 'Cancellation rules and refund terms for custom-made Vyomika Atelier orders.',
             'sections' => [
                 [
                     'heading' => 'Custom / Made-to-Order Products',
@@ -214,8 +214,8 @@ return [
 
         'warranty' => [
             'title' => 'Warranty & Returns Policy',
-            'meta_title' => 'Warranty & Returns Policy — Vyomika Atelier LLP',
-            'meta_description' => 'Warranty coverage and returns policy for custom Vyomika Atelier LLP architectural metalwork.',
+            'meta_title' => 'Warranty & Returns Policy — Vyomika Atelier',
+            'meta_description' => 'Warranty coverage and returns policy for custom Vyomika Atelier architectural metalwork.',
             'sections' => [
                 [
                     'heading' => 'No Returns on Custom Products',
@@ -252,8 +252,8 @@ return [
 
         'grievance' => [
             'title' => 'Contact & Grievance Policy',
-            'meta_title' => 'Contact & Grievance Policy — Vyomika Atelier LLP',
-            'meta_description' => 'Official contact details and grievance redressal for Vyomika Atelier LLP customers in India.',
+            'meta_title' => 'Contact & Grievance Policy — Vyomika Atelier',
+            'meta_description' => 'Official contact details and grievance redressal for Vyomika Atelier customers in India.',
             'sections' => [
                 [
                     'heading' => 'Business Information',

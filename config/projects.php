@@ -4,8 +4,8 @@
  * Projects index page — hero, filters, footer CTA (editable).
  */
 return [
-    'meta_title' => 'Projects — Vyomika Atelier LLP',
-    'meta_description' => 'Explore residential, commercial and hospitality metalwork — PVD partitions, Corten façades, doors and bespoke furniture by Vyomika Atelier LLP.',
+    'meta_title' => 'Projects — Vyomika Atelier',
+    'meta_description' => 'Explore residential, commercial and hospitality metalwork — PVD partitions, Corten façades, doors and bespoke furniture by Vyomika Atelier.',
 
     'hero' => [
         'label' => 'Our Work',

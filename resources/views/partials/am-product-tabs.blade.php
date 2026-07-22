@@ -52,9 +52,9 @@
                     @else
                         <div><dt>Material</dt><dd>Grade 304/316 stainless steel with PVD coating</dd></div>
                         <div><dt>Finish options</dt><dd>8 PVD finishes available</dd></div>
-                        <div><dt>Fabrication</dt><dd>Custom dimensions from Mumbai studio</dd></div>
+                        <div><dt>Fabrication</dt><dd>Custom dimensions from Delhi studio</dd></div>
                     @endif
-                    <div><dt>Delivery</dt><dd>3–4 weeks — Pan-India from Mumbai studio</dd></div>
+                    <div><dt>Delivery</dt><dd>3–4 weeks — Pan-India from Delhi studio</dd></div>
                 </dl>
             </div>
         </div>
@@ -62,7 +62,7 @@
         <div class="am-pdp-tabs__panel" data-am-panel="packaging" role="tabpanel" hidden>
             <div class="am-prose am-pdp-tabs__prose">
                 <h3>Packaging &amp; Handling</h3>
-                <p>Every Vyomika Atelier LLP piece is wrapped in protective foam and corner guards, then crated in plywood for transit. PVD surfaces are film-wrapped to prevent scratches during Pan-India shipping.</p>
+                <p>Every Vyomika Atelier piece is wrapped in protective foam and corner guards, then crated in plywood for transit. PVD surfaces are film-wrapped to prevent scratches during Pan-India shipping.</p>
                 <ul class="am-pdp-tabs__care-list">
                     <li>Individual partition panels — vertical crate with foam spacers</li>
                     <li>Door systems — reinforced frame crate with glass protection</li>
@@ -76,7 +76,7 @@
         <div class="am-pdp-tabs__panel" data-am-panel="shipping" role="tabpanel" hidden>
             <div class="am-prose am-pdp-tabs__prose">
                 <h3>Shipping</h3>
-                <p>Fabrication from our Mumbai studio with secure packaging and delivery to major cities across India.</p>
+                <p>Fabrication from our Delhi studio with secure packaging and delivery to major cities across India.</p>
                 <ul class="am-pdp-tabs__care-list">
                     <li><strong>Lead time:</strong> 3–4 weeks from order confirmation</li>
                     <li><strong>Metro cities:</strong> Door delivery with installation support on request</li>

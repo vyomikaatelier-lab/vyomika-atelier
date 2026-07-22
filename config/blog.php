@@ -6,8 +6,8 @@
 $posts = require database_path('data/blog-catalog.php');
 
 return [
-    'meta_title' => 'Ideas, Materials & Projects — Blog | Vyomika Atelier LLP',
-    'meta_description' => 'Design ideas, material guides, and project stories on PVD partitions, stainless doors, Corten steel, and bespoke metalwork from Vyomika Atelier LLP, Delhi.',
+    'meta_title' => 'Ideas, Materials & Projects — Blog | Vyomika Atelier',
+    'meta_description' => 'Design ideas, material guides, and project stories on PVD partitions, stainless doors, Corten steel, and bespoke metalwork from Vyomika Atelier, Delhi.',
 
     'index' => [
         'label' => 'Journal',

@@ -26,12 +26,12 @@
         'description' => $post->seoDescription(),
         'author' => [
             '@type' => 'Organization',
-            'name' => $post->author ?? 'Vyomika Atelier LLP',
+            'name' => $post->author ?? 'Vyomika Atelier',
             'url' => url('/'),
         ],
         'publisher' => [
             '@type' => 'Organization',
-            'name' => 'Vyomika Atelier LLP',
+            'name' => 'Vyomika Atelier',
             'url' => url('/'),
         ],
         'mainEntityOfPage' => [
@@ -84,7 +84,7 @@
         @endif
         <div class="am-blog-meta am-blog-article__meta">
             <span itemprop="author" itemscope itemtype="https://schema.org/Organization">
-                <span itemprop="name">{{ $post->author ?? 'Vyomika Atelier LLP' }}</span>
+                <span itemprop="name">{{ $post->author ?? 'Vyomika Atelier' }}</span>
             </span>
             @if($post->published_at)
             <time datetime="{{ $post->published_at->toAtomString() }}" itemprop="datePublished">{{ $post->published_at->format('j F Y') }}</time>

@@ -34,7 +34,7 @@
                     <h2 class="am-blog-featured__title">{{ $featured->title }}</h2>
                     <p class="am-blog-featured__excerpt">{{ $featured->excerpt }}</p>
                     <div class="am-blog-meta">
-                        <span>{{ $featured->author ?? 'Vyomika Atelier LLP' }}</span>
+                        <span>{{ $featured->author ?? 'Vyomika Atelier' }}</span>
                         <span>{{ $featured->published_at?->format('j M Y') }}</span>
                         <span>{{ $featured->readingTime() }} min read</span>
                     </div>

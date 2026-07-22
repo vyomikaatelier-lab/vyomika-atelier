@@ -1,6 +1,6 @@
 @extends('layouts.store')
 
-@section('title', 'Forgot Access — Vyomika Atelier LLP')
+@section('title', 'Forgot Access — Vyomika Atelier')
 
 @section('content')
 <x-account-auth-layout>

@@ -9,7 +9,7 @@
     $cta = $page['cta'] ?? [];
 @endphp
 
-@section('title', $page['meta_title'] ?? 'About Vyomika Atelier LLP')
+@section('title', $page['meta_title'] ?? 'About Vyomika Atelier')
 
 @push('meta')
 <meta name="description" content="{{ $page['meta_description'] ?? '' }}">

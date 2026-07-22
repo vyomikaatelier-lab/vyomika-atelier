@@ -4,12 +4,12 @@
  * Professionals / B2B partnership page — editable content.
  */
 return [
-    'meta_title' => 'Professional B2B Partnership Registration | Vyomika Atelier LLP',
-    'meta_description' => 'Partner with Vyomika Atelier LLP for exclusive B2B pricing, priority production and dedicated support — architects, interior designers, contractors, developers and showroom partners across India.',
+    'meta_title' => 'Professional B2B Partnership Registration | Vyomika Atelier',
+    'meta_description' => 'Partner with Vyomika Atelier for exclusive B2B pricing, priority production and dedicated support — architects, interior designers, contractors, developers and showroom partners across India.',
 
     'hero' => [
         'label' => 'Professionals',
-        'title' => 'Partner with Vyomika Atelier LLP',
+        'title' => 'Partner with Vyomika Atelier',
         'subtitle' => 'Bring your creative vision to life with bespoke PVD metal partitions, Corten façades, door systems and architectural metalwork — tailored for professional practice.',
         'highlights' => [
             'Tailored for professionals',
@@ -136,7 +136,7 @@ return [
 
     'final_cta' => [
         'title' => 'Professional Account Registration',
-        'body' => 'Join architects, designers and contractors who specify Vyomika Atelier LLP for premium metalwork — fast quotes, dedicated support and professional discounts.',
+        'body' => 'Join architects, designers and contractors who specify Vyomika Atelier for premium metalwork — fast quotes, dedicated support and professional discounts.',
         'highlights' => ['Fast delivery', 'Dedicated sales support', 'Professional discounts'],
     ],
 

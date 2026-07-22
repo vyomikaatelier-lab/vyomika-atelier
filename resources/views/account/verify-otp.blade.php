@@ -1,6 +1,6 @@
 @extends('layouts.store')
 
-@section('title', 'Verify WhatsApp — Vyomika Atelier LLP')
+@section('title', 'Verify WhatsApp — Vyomika Atelier')
 
 @section('content')
 <x-account-auth-layout>

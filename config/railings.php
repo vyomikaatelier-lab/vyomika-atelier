@@ -4,8 +4,8 @@
  * Studio Railings — single-page showcase + quotation form.
  */
 return [
-    'meta_title' => 'Custom Railings & Balustrades | Vyomika Atelier LLP',
-    'meta_description' => 'Glass, fabricated, per-step baluster and wrought iron railings for indoor and exterior staircases — straight, L-shape, U-shape, curved and custom layouts. Request a quotation from Vyomika Atelier LLP.',
+    'meta_title' => 'Custom Railings & Balustrades | Vyomika Atelier',
+    'meta_description' => 'Glass, fabricated, per-step baluster and wrought iron railings for indoor and exterior staircases — straight, L-shape, U-shape, curved and custom layouts. Request a quotation from Vyomika Atelier.',
 
     'hero' => [
         'label' => 'Railings',
@@ -23,7 +23,7 @@ return [
 
     'intro' => [
         'title' => 'Metalwork That Defines the Staircase',
-        'body' => 'From frameless glass with stainless posts to forged wrought iron and CNC-fabricated balusters, Vyomika Atelier LLP designs, fabricates and delivers railing systems that meet IS safety expectations while elevating your interior or façade.',
+        'body' => 'From frameless glass with stainless posts to forged wrought iron and CNC-fabricated balusters, Vyomika Atelier designs, fabricates and delivers railing systems that meet IS safety expectations while elevating your interior or façade.',
     ],
 
     'categories' => [
@@ -37,7 +37,7 @@ return [
             ],
             [
                 'title' => 'Fabricated Railings',
-                'text' => 'Custom stainless or mild-steel sections — flat bar, tube and plate assemblies CNC-cut and welded in our Mumbai studio.',
+                'text' => 'Custom stainless or mild-steel sections — flat bar, tube and plate assemblies CNC-cut and welded in our Delhi studio.',
                 'image' => 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80',
             ],
             [
@@ -82,7 +82,7 @@ return [
             'Site measurement and shop drawings before fabrication',
             'Grade 304/316 stainless, toughened glass and IS-aligned guard heights',
             'PVD, powder-coat and brushed finishes to match doors and partitions',
-            'Mumbai studio QC with labelled crating for safe Pan-India delivery',
+            'Delhi studio QC with labelled crating for safe Pan-India delivery',
             'Coordination with your contractor or architect on site',
         ],
     ],

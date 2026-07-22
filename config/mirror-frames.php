@@ -4,8 +4,8 @@
  * Mirror Frames collection — landing grid + design PDPs with fixed-price checkout.
  */
 return [
-    'meta_title' => 'Mirror Frames Collection | Vyomika Atelier LLP',
-    'meta_description' => 'PVD-framed wall mirrors, floor mirrors, backlit bathroom mirrors and bespoke vanity designs — fixed prices with Pan-India delivery from Vyomika Atelier LLP.',
+    'meta_title' => 'Mirror Frames Collection | Vyomika Atelier',
+    'meta_description' => 'PVD-framed wall mirrors, floor mirrors, backlit bathroom mirrors and bespoke vanity designs — fixed prices with Pan-India delivery from Vyomika Atelier.',
 
     'hero' => [
         'label' => 'Shop',
@@ -23,7 +23,7 @@ return [
 
     'intro' => [
         'title' => 'Reflective Metalwork, Engineered to Frame',
-        'body' => 'Each mirror frame is fabricated in our Mumbai studio from grade 304/316 stainless with PVD coating — brushed or mirror finishes that resist tarnish in humid bathrooms and high-traffic retail environments.',
+        'body' => 'Each mirror frame is fabricated in our Delhi studio from grade 304/316 stainless with PVD coating — brushed or mirror finishes that resist tarnish in humid bathrooms and high-traffic retail environments.',
     ],
 
     'finishes' => [

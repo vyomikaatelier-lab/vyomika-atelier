@@ -1,6 +1,6 @@
 @extends('layouts.store')
 
-@section('title', 'Your Cart — Vyomika Atelier LLP')
+@section('title', 'Your Cart — Vyomika Atelier')
 
 @section('content')
 @include('partials.am-page-hero', ['label' => 'Shopping', 'title' => 'Your Cart'])

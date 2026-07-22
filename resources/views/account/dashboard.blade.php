@@ -1,6 +1,6 @@
 @extends('layouts.store')
 
-@section('title', 'My Account — Vyomika Atelier LLP')
+@section('title', 'My Account — Vyomika Atelier')
 
 @section('content')
 @include('partials.am-page-hero', [

@@ -10,7 +10,7 @@
 
 
 
-@section('title', $page['meta_title'] ?? 'Railings — Vyomika Atelier LLP')
+@section('title', $page['meta_title'] ?? 'Railings — Vyomika Atelier')
 
 
 
@@ -206,7 +206,7 @@
 
             <ul class="am-corten-bullets am-railings-quote__bullets">
 
-                <li>Site measurement available in Mumbai metro</li>
+                <li>Site measurement available in Delhi NCR</li>
 
                 <li>Shop drawings shared before fabrication</li>
 

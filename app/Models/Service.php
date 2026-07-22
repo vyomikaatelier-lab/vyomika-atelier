@@ -98,21 +98,21 @@ class Service extends Model
         return match ($this->slug) {
             'partitions' => [
                 'Material: Grade 304/316 stainless with PVD coating (champagne, rose gold, matte black)',
-                'Designed in: Mumbai, India',
-                'Fabrication: Vyomika Atelier LLP studio — custom dimensions',
+                'Designed in: Delhi, India',
+                'Fabrication: VYOMIKA SALES — custom dimensions',
                 'Care: Wipe with soft microfibre; avoid abrasives and harsh chemicals',
                 'Installation: Pan-India delivery; on-site installation available on request',
             ],
             'rack-systems-metal-pvd' => [
                 'Material: Stainless steel with PVD finish — wall or freestanding configurations',
-                'Designed in: Mumbai, India',
+                'Designed in: Delhi, India',
                 'Load rating: Specified per module during quotation',
                 'Care: Dust regularly; use non-abrasive cleaner on PVD surfaces',
                 'Mounting: Wall fixings or freestanding bases per design approval',
             ],
             default => [
                 'Material: Slim-profile stainless frame with PVD finish and premium glass',
-                'Designed in: Mumbai, India',
+                'Designed in: Delhi, India',
                 'Hardware: Concealed hinges, pivots, or slim-track sliding systems',
                 'Care: Clean glass with standard glass cleaner; wipe frames with soft cloth',
                 'Sealing: Weather and acoustic sealing per project specification',

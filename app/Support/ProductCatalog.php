@@ -464,10 +464,10 @@ class ProductCatalog
         if (! $serviceSlug) {
             return [
                 'Material: Grade 304/316 stainless with PVD coating',
-                'Designed in: Mumbai, India',
-                'Fabrication: Vyomika Atelier LLP studio — custom dimensions',
+                'Designed in: Delhi, India',
+                'Fabrication: VYOMIKA SALES — custom dimensions',
                 'Care: Wipe with soft microfibre; avoid abrasives and harsh chemicals',
-                'Delivery: Pan-India shipping from our Mumbai studio',
+                'Delivery: Pan-India shipping from our Delhi studio',
             ];
         }
 

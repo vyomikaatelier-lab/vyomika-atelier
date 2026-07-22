@@ -173,7 +173,7 @@
                     key: orderData.key,
                     amount: orderData.amount,
                     currency: orderData.currency,
-                    name: 'Vyomika Atelier LLP',
+                    name: 'Vyomika Atelier',
                     description: 'Order {{ $order->order_number }}',
                     order_id: orderData.order_id,
                     callback_url: verifyUrl,

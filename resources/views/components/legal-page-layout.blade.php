@@ -10,7 +10,7 @@
 
 @extends('layouts.store')
 
-@section('title', $metaTitle ?? ($title . ' — ' . (config('legal.business.brand_name') ?? 'Vyomika Atelier LLP')))
+@section('title', $metaTitle ?? ($title . ' — ' . (config('legal.business.brand_name') ?? 'Vyomika Atelier')))
 
 @push('meta')
 @if($metaDescription)
