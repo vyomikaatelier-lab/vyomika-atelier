@@ -36,7 +36,6 @@ class LegalContent
         $vars['phone'] = $vars['phone'] ?? '';
         $vars['address'] = $vars['address'] ?? '';
         $vars['gstin'] = $vars['gstin'] ?? '';
-        $vars['pan'] = $vars['pan'] ?? '';
         $vars['grievance_officer_name'] = $vars['grievance_officer_name'] ?? '';
         $vars['grievance_officer_email'] = $vars['grievance_officer_email'] ?? '';
         $vars['grievance_officer_phone'] = $vars['grievance_officer_phone'] ?? '';

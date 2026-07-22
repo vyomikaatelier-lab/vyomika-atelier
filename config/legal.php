@@ -16,7 +16,6 @@ return [
         'phone' => '+91 9205850254',
         'address' => '467-483/1, Burgees Park, Dilshad Garden Ind. Area, G.T. Road, Shahdra, Delhi, India',
         'gstin' => '07ASEPM3287D2ZQ',
-        'pan' => 'ASEPM3287D',
         'state_code' => '07',
         'grievance_officer_name' => 'Vyomika Atelier Customer Care',
         'grievance_officer_email' => 'namaste@vyomikaatelier.com',
@@ -260,7 +259,7 @@ return [
                     'heading' => 'Business Information',
                     'paragraphs' => [
                         '**Brand:** {{brand_name}} · **Legal entity:** {{legal_name}} · **Country:** {{country}} · **Registration:** {{registration_note}}',
-                        '**Address:** {{address}} · **GSTIN:** {{gstin}} · **PAN:** {{pan}} · **Email:** {{email}} · **Phone:** {{phone}}',
+                        '**Address:** {{address}} · **GSTIN:** {{gstin}} · **Email:** {{email}} · **Phone:** {{phone}}',
                     ],
                 ],
                 [

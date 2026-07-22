@@ -25,12 +25,6 @@
             <dd>{{ $business['gstin'] }}</dd>
         </div>
         @endif
-        @if(!empty($business['pan']))
-        <div>
-            <dt>PAN</dt>
-            <dd>{{ $business['pan'] }}</dd>
-        </div>
-        @endif
         <div>
             <dt>Phone</dt>
             <dd><a href="tel:{{ $phoneRaw }}">{{ $business['phone'] ?? '' }}</a></dd>
