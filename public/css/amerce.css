@@ -1670,6 +1670,14 @@ ul { list-style: none; }
   color: var(--am-charcoal);
 }
 .am-footer__legal-entity { font-weight: 600; }
+.am-footer__gstin,
+.am-footer__compact-business {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.82rem;
+  color: var(--am-muted);
+  line-height: 1.5;
+}
 
 /* Shop */
 .am-shop-toolbar {

@@ -1,6 +1,8 @@
 @php
     $brandName = trim(($brand['name'] ?? config('site.brand.name', 'Vyomika Atelier')) . ' ' . ($brand['suffix'] ?? ''));
     $business = \App\Support\LegalContent::business();
+    $gstin = $business['gstin'] ?? config('legal.business.gstin');
+    $legalName = $business['legal_name'] ?? config('legal.business.legal_name');
     $phoneRaw = preg_replace('/\s+/', '', $brand['phone'] ?? '');
     $phoneDisplay = $brand['phone'] ?? '';
     $whatsappSource = $social['whatsapp'] ?? $brand['phone'] ?? '';
@@ -19,11 +21,11 @@
                 <p class="am-footer__brand-address">
                     {{ $brand['address_shop'] ?? 'Pan-India fabrication & delivery' }}<br>
                     {{ $brand['address_office'] ?? ($business['address'] ?? 'Delhi, India') }}<br>
-                    @if(!empty($business['legal_name']))
-                    <span class="am-footer__legal-entity">{{ $business['legal_name'] }}</span>
+                    @if(filled($legalName))
+                    <span class="am-footer__legal-entity">{{ $legalName }}</span>
                     @endif
-                    @if(!empty($business['gstin']))
-                    · GSTIN {{ $business['gstin'] }}
+                    @if(filled($gstin))
+                    <br><span class="am-footer__gstin">GSTIN {{ $gstin }}</span>
                     @endif
                 </p>
             </div>
@@ -67,6 +69,13 @@
                     <span class="am-logo__name">{{ $brandName }}</span>
                 </a>
                 <p class="am-footer__compact-tagline">PVD partitions &amp; bespoke metal fabrication — Delhi studio, Pan-India delivery.</p>
+                @if(filled($legalName) || filled($gstin))
+                <p class="am-footer__compact-business">
+                    @if(filled($legalName)){{ $legalName }}@endif
+                    @if(filled($legalName) && filled($gstin)) · @endif
+                    @if(filled($gstin))GSTIN {{ $gstin }}@endif
+                </p>
+                @endif
                 <div class="am-footer__compact-cta">
                     @if($whatsappUrl)
                     <a href="{{ $whatsappUrl }}" class="am-btn am-btn--primary am-btn--full" target="_blank" rel="noopener noreferrer">WhatsApp</a>
@@ -125,7 +134,7 @@
         </div>
 
         <div class="am-footer__bottom">
-            <span>© {{ date('Y') }} {{ $business['legal_name'] ?? $brandName }}. All rights reserved.</span>
+            <span>© {{ date('Y') }} {{ $legalName ?? $brandName }}.@if(filled($gstin)) GSTIN {{ $gstin }}.@endif All rights reserved.</span>
             <div class="am-footer__contact am-footer__contact--desktop">
                 <a href="{{ route('vendor-proposal.index') }}">Vendor &amp; Service Proposals</a>
                 <a href="{{ route('catalogue.index') }}">Request Catalogue</a>

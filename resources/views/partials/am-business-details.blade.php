@@ -1,5 +1,6 @@
 @php
     $business = $business ?? \App\Support\LegalContent::business();
+    $gstin = $business['gstin'] ?? config('legal.business.gstin');
     $phoneRaw = preg_replace('/\s+/', '', $business['phone'] ?? '');
 @endphp
 <div class="am-business-details">
@@ -19,10 +20,10 @@
             <dt>Address</dt>
             <dd>{{ $business['address'] ?? '' }}</dd>
         </div>
-        @if(!empty($business['gstin']))
+        @if(filled($gstin))
         <div>
             <dt>GSTIN</dt>
-            <dd>{{ $business['gstin'] }}</dd>
+            <dd>{{ $gstin }}</dd>
         </div>
         @endif
         <div>

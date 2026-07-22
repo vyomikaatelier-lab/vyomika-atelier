@@ -37,6 +37,7 @@ class CmsSettings
 
         $business = SiteSetting::getValue('business');
         if (is_array($business)) {
+            $business = array_filter($business, fn ($value) => filled($value));
             config(['legal.business' => array_merge(config('legal.business', []), $business)]);
         }
 
