@@ -1482,6 +1482,17 @@ ul { list-style: none; }
 .am-page-hero__title { font-family: var(--am-display); font-size: clamp(1.75rem, 4vw, 2.5rem); }
 .am-page-body { padding: clamp(2rem, 4vw, 3.5rem) 0; }
 .am-page-body--narrow { max-width: 640px; margin-inline: auto; }
+.am-contact-form-wrap {
+  max-width: 27rem;
+  margin-inline: auto;
+}
+.am-contact-form-wrap .va-form-protection__turnstile {
+  max-width: 100%;
+  overflow: hidden;
+}
+.am-contact-form-wrap .va-form-protection__turnstile iframe {
+  max-width: 100%;
+}
 .am-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
 .am-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
 .am-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
@@ -4757,16 +4768,18 @@ ul { list-style: none; }
 }
 .am-account-consent a { color: var(--am-gold-dark); text-decoration: underline; }
 .am-account-otp {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: clamp(0.35rem, 2vw, 0.5rem);
+  width: 100%;
   margin: 1.25rem 0;
 }
 .am-account-otp__digit {
-  width: 2.75rem;
-  height: 3.25rem;
+  width: 100%;
+  min-width: 0;
+  height: clamp(2.75rem, 10vw, 3.25rem);
   text-align: center;
-  font-size: 1.35rem;
+  font-size: clamp(1.05rem, 4vw, 1.35rem);
   font-weight: 600;
   border: 1px solid var(--am-border);
   border-radius: var(--am-radius);
@@ -4872,6 +4885,5 @@ ul { list-style: none; }
 @media (max-width: 480px) {
   .am-account-phone { grid-template-columns: 1fr; }
   .am-account-card__columns { grid-template-columns: 1fr; }
-  .am-account-otp__digit { width: 2.35rem; height: 2.85rem; font-size: 1.15rem; }
 }
 

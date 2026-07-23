@@ -260,27 +260,10 @@ svg:not(.am-icon-btn svg) {
   }
 }
 
-/* OTP — fit 320px screens */
+/* OTP — tighten spacing on very narrow screens */
 @media (max-width: 360px) {
   .am-account-otp {
-    gap: 0.35rem;
-    flex-wrap: nowrap;
-    max-width: 100%;
-    overflow-x: auto;
-    justify-content: flex-start;
-    padding-bottom: 0.25rem;
-    scrollbar-width: none;
-  }
-
-  .am-account-otp::-webkit-scrollbar {
-    display: none;
-  }
-
-  .am-account-otp__digit {
-    width: 2.15rem;
-    height: 2.75rem;
-    font-size: 1.05rem;
-    flex-shrink: 0;
+    gap: 0.3rem;
   }
 }
 

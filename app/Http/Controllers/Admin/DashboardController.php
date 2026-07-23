@@ -13,6 +13,7 @@ use App\Models\Product;
 use App\Models\Project;
 use App\Models\User;
 use App\Support\LeadStatus;
+use Illuminate\Support\Facades\Schema;
 
 class DashboardController extends Controller
 {

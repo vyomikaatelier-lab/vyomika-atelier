@@ -124,16 +124,14 @@
                     <label for="register-password-confirmation">Confirm password</label>
                     <input type="password" name="password_confirmation" id="register-password-confirmation" required class="am-input" autocomplete="new-password" minlength="8">
                 </div>
-                <div class="am-account-card__columns">
-                    <div class="am-account-card__field">
-                        <label for="register-country_code">Mobile</label>
-                        @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'register', 'stacked' => true])
-                    </div>
-                    <div class="am-account-card__field">
-                        <label for="register-whatsapp">WhatsApp</label>
-                        <input type="tel" name="whatsapp" id="register-whatsapp" value="{{ old('whatsapp') }}" placeholder="Same as mobile if blank" class="am-input" inputmode="numeric" autocomplete="tel">
-                        <p class="am-account-card__hint">OTP is sent to WhatsApp for verification</p>
-                    </div>
+                <div class="am-account-card__field">
+                    <label for="register-country_code">Mobile</label>
+                    @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'register'])
+                </div>
+                <div class="am-account-card__field">
+                    <label for="register-whatsapp">WhatsApp</label>
+                    <input type="tel" name="whatsapp" id="register-whatsapp" value="{{ old('whatsapp') }}" placeholder="Same as mobile if blank" class="am-input" inputmode="numeric" autocomplete="tel">
+                    <p class="am-account-card__hint">OTP is sent to WhatsApp for verification</p>
                 </div>
                 <div class="am-account-card__field">
                     <label for="register-city">City</label>
