@@ -20,7 +20,8 @@ class EnsureCheckoutCustomer
         }
 
         if ($user->isAdmin()) {
-            return redirect()->route('admin.dashboard');
+            return redirect()->route('cart.index')
+                ->with('error', CheckoutCustomer::MSG_ADMIN);
         }
 
         if (! $user->is_active) {

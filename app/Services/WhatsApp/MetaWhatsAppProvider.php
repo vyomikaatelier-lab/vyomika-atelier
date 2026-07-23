@@ -29,17 +29,30 @@ class MetaWhatsAppProvider implements WhatsAppProvider
         $version = $config['api_version'];
         $phoneId = $config['phone_number_id'];
         $url = "https://graph.facebook.com/{$version}/{$phoneId}/messages";
+        $to = ltrim(preg_replace('/\D/', '', $mobileE164) ?? '', '+');
 
+        // Authentication templates require the OTP in both body and button params.
         $payload = [
             'messaging_product' => 'whatsapp',
-            'to' => $mobileE164,
+            'recipient_type' => 'individual',
+            'to' => $to,
             'type' => 'template',
             'template' => [
                 'name' => $config['otp_template_name'],
-                'language' => ['code' => 'en'],
+                'language' => [
+                    'code' => $config['otp_template_language'] ?? 'en_US',
+                ],
                 'components' => [
                     [
                         'type' => 'body',
+                        'parameters' => [
+                            ['type' => 'text', 'text' => $otp],
+                        ],
+                    ],
+                    [
+                        'type' => 'button',
+                        'sub_type' => 'url',
+                        'index' => '0',
                         'parameters' => [
                             ['type' => 'text', 'text' => $otp],
                         ],
@@ -54,16 +67,19 @@ class MetaWhatsAppProvider implements WhatsAppProvider
 
         if (! $response->successful()) {
             Log::warning('WhatsApp OTP delivery failed', [
-                'mobile_e164' => $mobileE164,
+                'provider' => 'meta',
+                'mobile_e164' => $to,
                 'status' => $response->status(),
                 'error' => $response->json('error.message') ?? $response->body(),
+                'error_code' => $response->json('error.code'),
             ]);
 
             throw new WhatsAppDeliveryException('Unable to deliver WhatsApp verification message.');
         }
 
         Log::info('WhatsApp OTP sent', [
-            'mobile_e164' => $mobileE164,
+            'provider' => 'meta',
+            'mobile_e164' => $to,
             'message_id' => $response->json('messages.0.id'),
         ]);
     }

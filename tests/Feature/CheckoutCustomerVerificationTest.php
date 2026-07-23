@@ -108,4 +108,27 @@ class CheckoutCustomerVerificationTest extends TestCase
 
         $response->assertRedirect(route('checkout.index'));
     }
+
+    public function test_admin_cannot_checkout_and_stays_on_storefront(): void
+    {
+        [$product, $session] = $this->shopCart();
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)->withSession($session)->get(route('checkout.index'))
+            ->assertRedirect(route('cart.index'))
+            ->assertSessionHas('error', CheckoutCustomer::MSG_ADMIN);
+
+        $this->actingAs($admin)->post(route('cart.add', $product), [
+            'quantity' => 1,
+            'buy_now' => 1,
+        ])->assertRedirect(route('checkout.index'));
+
+        $this->actingAs($admin)->followingRedirects()
+            ->post(route('cart.add', $product), [
+                'quantity' => 1,
+                'buy_now' => 1,
+            ])
+            ->assertOk()
+            ->assertSee(CheckoutCustomer::MSG_ADMIN);
+    }
 }

@@ -10,10 +10,10 @@
  * 4. Approve the template and note the namespace from MSG91.
  *
  * Meta template setup (when using driver=meta):
- * 1. Create an Authentication template named per WHATSAPP_OTP_TEMPLATE_NAME (e.g. vyomika_otp).
- * 2. Body: "Your Vyomika Atelier verification code is {{1}}. Valid for 5 minutes."
- * 3. Add a copy-code or URL button parameter if your template requires it.
- * 4. Approve the template before production use.
+ * 1. In WhatsApp Manager create an Authentication template (copy-code button) named
+ *    WHATSAPP_OTP_TEMPLATE_NAME (e.g. vyomika_otp), language en_US, and wait until Approved.
+ * 2. Send uses body + button OTP parameters (required by Meta auth templates).
+ * 3. Add a payment method on the WhatsApp account for production sends.
  */
 return [
     'driver' => env('WHATSAPP_DRIVER', 'msg91'),
@@ -30,6 +30,7 @@ return [
         'access_token' => env('WHATSAPP_ACCESS_TOKEN'),
         'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
         'otp_template_name' => env('WHATSAPP_OTP_TEMPLATE_NAME', 'vyomika_otp'),
+        'otp_template_language' => env('WHATSAPP_OTP_TEMPLATE_LANGUAGE', 'en_US'),
         'verify_token' => env('WHATSAPP_VERIFY_TOKEN'),
         'api_version' => env('WHATSAPP_API_VERSION', 'v21.0'),
     ],

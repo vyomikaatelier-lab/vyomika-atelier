@@ -12,6 +12,8 @@ class CheckoutCustomer
 {
     public const MSG_SIGN_IN = 'Please sign in to complete your purchase.';
 
+    public const MSG_ADMIN = 'Admin accounts cannot checkout. Sign out and use a customer account to buy.';
+
     public const MSG_VERIFY = 'Please verify your mobile number before checkout.';
 
     public const MSG_DISABLED = 'This account has been disabled. Contact the studio for assistance.';
@@ -28,7 +30,7 @@ class CheckoutCustomer
         }
 
         if ($user->isAdmin()) {
-            return self::MSG_SIGN_IN;
+            return self::MSG_ADMIN;
         }
 
         if (! $user->is_active) {

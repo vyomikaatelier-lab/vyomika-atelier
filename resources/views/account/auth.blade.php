@@ -124,15 +124,30 @@
                     <label for="register-password-confirmation">Confirm password</label>
                     <input type="password" name="password_confirmation" id="register-password-confirmation" required class="am-input" autocomplete="new-password" minlength="8">
                 </div>
-                <div class="am-account-card__field">
-                    <label for="register-country_code">Mobile</label>
-                    @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'register'])
+
+                <div class="am-account-verify-sequence" aria-label="WhatsApp verification steps">
+                    <ol class="am-account-verify-sequence__steps">
+                        <li class="am-account-verify-sequence__step is-active">
+                            <span class="am-account-verify-sequence__num">1</span>
+                            <span>WhatsApp number</span>
+                        </li>
+                        <li class="am-account-verify-sequence__step">
+                            <span class="am-account-verify-sequence__num">2</span>
+                            <span>Enter OTP</span>
+                        </li>
+                    </ol>
+
+                    <div class="am-account-card__field">
+                        <label for="register-country_code">Mobile</label>
+                        @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'register'])
+                    </div>
+                    <div class="am-account-card__field">
+                        <label for="register-whatsapp">WhatsApp number</label>
+                        <input type="tel" name="whatsapp" id="register-whatsapp" value="{{ old('whatsapp') }}" placeholder="Same as mobile if blank" class="am-input" inputmode="numeric" autocomplete="tel">
+                        <p class="am-account-card__hint">Next: we’ll send a 6-digit OTP to this WhatsApp number</p>
+                    </div>
                 </div>
-                <div class="am-account-card__field">
-                    <label for="register-whatsapp">WhatsApp</label>
-                    <input type="tel" name="whatsapp" id="register-whatsapp" value="{{ old('whatsapp') }}" placeholder="Same as mobile if blank" class="am-input" inputmode="numeric" autocomplete="tel">
-                    <p class="am-account-card__hint">OTP is sent to WhatsApp for verification</p>
-                </div>
+
                 <div class="am-account-card__field">
                     <label for="register-city">City</label>
                     <input type="text" name="city" id="register-city" value="{{ old('city') }}" required class="am-input" autocomplete="address-level2">
@@ -152,7 +167,7 @@
                 </label>
                 <x-form-protection-fields form-key="account_register" :show-intent="false" />
                 <button type="submit" class="am-account-card__submit" @disabled(! $providerReady)>
-                    <span>Create account</span>
+                    <span>Send OTP &amp; continue</span>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                 </button>
             </form>

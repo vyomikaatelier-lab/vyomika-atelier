@@ -5,14 +5,28 @@
 @section('content')
 <x-account-auth-layout>
     <div class="am-account-card am-account-card--verify">
-        <h1 class="am-account-card__title">Verify your number</h1>
+        <ol class="am-account-verify-sequence__steps am-account-verify-sequence__steps--compact" aria-label="WhatsApp verification steps">
+            <li class="am-account-verify-sequence__step is-done">
+                <span class="am-account-verify-sequence__num" aria-hidden="true">✓</span>
+                <span>WhatsApp number</span>
+            </li>
+            <li class="am-account-verify-sequence__step is-active">
+                <span class="am-account-verify-sequence__num">2</span>
+                <span>Enter OTP</span>
+            </li>
+        </ol>
+
+        <h1 class="am-account-card__title">Enter OTP</h1>
         <p class="am-account-verify__hint">Code sent to WhatsApp ending in <strong>{{ $maskedMobile }}</strong></p>
 
         @include('partials.am-account-alerts')
 
         <form action="{{ route('account.verify.submit') }}" method="POST" class="am-account-card__form" id="account-otp-form">
             @csrf
-            @include('partials.am-account-otp-inputs')
+            <div class="am-account-card__field">
+                <label>6-digit WhatsApp OTP</label>
+                @include('partials.am-account-otp-inputs')
+            </div>
             <input type="hidden" name="otp" id="otp-combined" value="">
 
             <x-form-protection-fields form-key="account_verify_otp" :show-intent="false" />
@@ -37,7 +51,7 @@
             @endif
 
             <a href="{{ route($purpose === 'register' ? 'account.register' : 'account.login') }}" class="am-account-verify__change">
-                Change mobile number
+                Change WhatsApp number
             </a>
         </div>
     </div>
