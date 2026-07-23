@@ -4,6 +4,7 @@
     $activeTab = $tab ?? (request()->routeIs('account.register') ? 'register' : 'login');
     $loginMethod = old('login_method', session('login_method', 'email'));
     $mobileLoginMode = old('mobile_login_mode', session('mobile_login_mode', 'otp'));
+    $pageTitle = $activeTab === 'register' ? 'Create Account' : 'Sign In';
 @endphp
 
 @section('title', ($activeTab === 'register' ? 'Create account' : 'Sign in') . ' — Vyomika Atelier')
@@ -11,18 +12,21 @@
 @section('content')
 <x-account-auth-layout>
     <div class="am-account-card am-account-theme">
-        <nav class="am-account-card__tabs" aria-label="Account">
-            <a href="{{ route('account.login') }}"
-               class="am-account-card__tab {{ $activeTab === 'login' ? 'is-active' : '' }}"
-               @if($activeTab === 'login') aria-current="page" @endif>
-                Sign in
-            </a>
-            <a href="{{ route('account.register') }}"
-               class="am-account-card__tab {{ $activeTab === 'register' ? 'is-active' : '' }}"
-               @if($activeTab === 'register') aria-current="page" @endif>
-                Create account
-            </a>
-        </nav>
+        <header class="am-account-card__header">
+            <h1 class="am-account-card__hero-title">{{ $pageTitle }}</h1>
+            <nav class="am-account-card__tabs" aria-label="Account">
+                <a href="{{ route('account.login') }}"
+                   class="am-account-card__tab {{ $activeTab === 'login' ? 'is-active' : '' }}"
+                   @if($activeTab === 'login') aria-current="page" @endif>
+                    Sign in
+                </a>
+                <a href="{{ route('account.register') }}"
+                   class="am-account-card__tab {{ $activeTab === 'register' ? 'is-active' : '' }}"
+                   @if($activeTab === 'register') aria-current="page" @endif>
+                    Create account
+                </a>
+            </nav>
+        </header>
 
         @include('partials.am-account-alerts')
 
@@ -40,15 +44,20 @@
                     <input type="hidden" name="login_method" value="email">
                     <div class="am-account-card__field">
                         <label for="login-email">Email</label>
-                        <input type="email" name="email" id="login-email" value="{{ old('email') }}" required class="am-input" autocomplete="email">
+                        <div class="am-account-field-input">
+                            @include('partials.am-account-field-icon', ['icon' => 'email'])
+                            <input type="email" name="email" id="login-email" value="{{ old('email') }}" required class="am-input" autocomplete="email" placeholder="you@email.com">
+                        </div>
                     </div>
                     <div class="am-account-card__field">
                         <label for="login-password">Password</label>
-                        <input type="password" name="password" id="login-password" required class="am-input" autocomplete="current-password">
+                        <div class="am-account-field-input">
+                            @include('partials.am-account-field-icon', ['icon' => 'password'])
+                            <input type="password" name="password" id="login-password" required class="am-input" autocomplete="current-password" placeholder="Your password">
+                        </div>
                     </div>
                     <button type="submit" class="am-account-card__submit">
-                        <span>Sign in</span>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                        <span>Continue</span>
                     </button>
                 </form>
             </div>
@@ -60,13 +69,15 @@
                     <input type="hidden" name="mobile_login_mode" value="otp">
                     <div class="am-account-card__field">
                         <label for="login-otp-mobile">Mobile number (WhatsApp)</label>
-                        @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'login-otp'])
+                        <div class="am-account-field-input am-account-field-input--phone">
+                            @include('partials.am-account-field-icon', ['icon' => 'phone'])
+                            @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'login-otp'])
+                        </div>
                         <p class="am-account-card__hint">WhatsApp verification code will be sent to this number</p>
                     </div>
                     <x-form-protection-fields form-key="account_login_otp" :show-intent="false" />
                     <button type="submit" class="am-account-card__submit" @disabled(! $providerReady)>
                         <span>Send WhatsApp OTP</span>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                     </button>
                 </form>
             </div>
@@ -78,15 +89,20 @@
                     <input type="hidden" name="mobile_login_mode" value="password">
                     <div class="am-account-card__field">
                         <label for="login-mobile-mobile">Mobile number</label>
-                        @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'login-mobile'])
+                        <div class="am-account-field-input am-account-field-input--phone">
+                            @include('partials.am-account-field-icon', ['icon' => 'phone'])
+                            @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'login-mobile'])
+                        </div>
                     </div>
                     <div class="am-account-card__field">
                         <label for="login-mobile-password">Password</label>
-                        <input type="password" name="password" id="login-mobile-password" required class="am-input" autocomplete="current-password">
+                        <div class="am-account-field-input">
+                            @include('partials.am-account-field-icon', ['icon' => 'password'])
+                            <input type="password" name="password" id="login-mobile-password" required class="am-input" autocomplete="current-password" placeholder="Your password">
+                        </div>
                     </div>
                     <button type="submit" class="am-account-card__submit">
-                        <span>Sign in</span>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                        <span>Continue</span>
                     </button>
                 </form>
             </div>
@@ -95,21 +111,18 @@
                 <a href="{{ route('account.forgot') }}">Forgot password or access?</a>
             </p>
 
-            <p class="am-account-card__switch" data-account-login-switch>
+            <div class="am-account-card__switch" data-account-login-switch>
                 @if($loginMethod === 'email')
-                <button type="button" data-login-panel-target="mobile-otp">Sign in with WhatsApp OTP</button>
-                <span aria-hidden="true">·</span>
-                <button type="button" data-login-panel-target="mobile-password">Sign in with mobile &amp; password</button>
+                <button type="button" class="am-account-card__alt-btn" data-login-panel-target="mobile-otp">Sign in with WhatsApp OTP</button>
+                <button type="button" class="am-account-card__alt-btn" data-login-panel-target="mobile-password">Sign in with mobile &amp; password</button>
                 @elseif($loginMethod === 'mobile' && $mobileLoginMode === 'otp')
-                <button type="button" data-login-panel-target="email">Sign in with email</button>
-                <span aria-hidden="true">·</span>
-                <button type="button" data-login-panel-target="mobile-password">Sign in with mobile &amp; password</button>
+                <button type="button" class="am-account-card__alt-btn" data-login-panel-target="email">Sign in with email</button>
+                <button type="button" class="am-account-card__alt-btn" data-login-panel-target="mobile-password">Sign in with mobile &amp; password</button>
                 @else
-                <button type="button" data-login-panel-target="email">Sign in with email</button>
-                <span aria-hidden="true">·</span>
-                <button type="button" data-login-panel-target="mobile-otp">Sign in with WhatsApp OTP</button>
+                <button type="button" class="am-account-card__alt-btn" data-login-panel-target="email">Sign in with email</button>
+                <button type="button" class="am-account-card__alt-btn" data-login-panel-target="mobile-otp">Sign in with WhatsApp OTP</button>
                 @endif
-            </p>
+            </div>
         </div>
         @else
         @php
@@ -125,51 +138,81 @@
                     @if($registerLocked)
                     <div class="am-account-card__field">
                         <label for="register-name-locked">Full name</label>
-                        <input type="text" id="register-name-locked" value="{{ $registerFieldValues['name'] ?? '' }}" class="am-input am-input--underline" readonly>
+                        <div class="am-account-field-input am-account-field-input--readonly">
+                            @include('partials.am-account-field-icon', ['icon' => 'user'])
+                            <input type="text" id="register-name-locked" value="{{ $registerFieldValues['name'] ?? '' }}" class="am-input" readonly>
+                        </div>
                     </div>
                     <div class="am-account-card__field">
                         <label for="register-email-locked">Email</label>
-                        <input type="email" id="register-email-locked" value="{{ $registerFieldValues['email'] ?? '' }}" class="am-input am-input--underline" readonly>
+                        <div class="am-account-field-input am-account-field-input--readonly">
+                            @include('partials.am-account-field-icon', ['icon' => 'email'])
+                            <input type="email" id="register-email-locked" value="{{ $registerFieldValues['email'] ?? '' }}" class="am-input" readonly>
+                        </div>
                     </div>
                     <div class="am-account-card__field">
                         <label for="register-city-locked">City</label>
-                        <input type="text" id="register-city-locked" value="{{ $registerFieldValues['city'] ?? '' }}" class="am-input am-input--underline" readonly>
+                        <div class="am-account-field-input am-account-field-input--readonly">
+                            @include('partials.am-account-field-icon', ['icon' => 'location'])
+                            <input type="text" id="register-city-locked" value="{{ $registerFieldValues['city'] ?? '' }}" class="am-input" readonly>
+                        </div>
                     </div>
                     <div class="am-account-card__field">
                         <label for="register-account_type-locked">Account type</label>
-                        <input type="text" id="register-account_type-locked" value="{{ $accountTypes[$registerFieldValues['account_type'] ?? ''] ?? ($registerFieldValues['account_type'] ?? '') }}" class="am-input am-input--underline" readonly>
+                        <div class="am-account-field-input am-account-field-input--readonly">
+                            @include('partials.am-account-field-icon', ['icon' => 'badge'])
+                            <input type="text" id="register-account_type-locked" value="{{ $accountTypes[$registerFieldValues['account_type'] ?? ''] ?? ($registerFieldValues['account_type'] ?? '') }}" class="am-input" readonly>
+                        </div>
                     </div>
                     <div class="am-account-card__field">
                         <label for="register-mobile-locked">Mobile number (WhatsApp)</label>
-                        <input type="text" id="register-mobile-locked" value="{{ $registerMaskedMobile }}" class="am-input am-input--underline" readonly>
+                        <div class="am-account-field-input am-account-field-input--readonly">
+                            @include('partials.am-account-field-icon', ['icon' => 'phone'])
+                            <input type="text" id="register-mobile-locked" value="{{ $registerMaskedMobile }}" class="am-input" readonly>
+                        </div>
                     </div>
                     @else
                     <form action="{{ route('account.register.send') }}" method="POST" class="am-account-card__form am-account-signup__form" id="account-register-send-form">
                         @csrf
                         <div class="am-account-card__field">
                             <label for="register-name">Full name</label>
-                            <input type="text" name="name" id="register-name" value="{{ old('name') }}" required class="am-input am-input--underline" autocomplete="name" placeholder="Your name">
+                            <div class="am-account-field-input">
+                                @include('partials.am-account-field-icon', ['icon' => 'user'])
+                                <input type="text" name="name" id="register-name" value="{{ old('name') }}" required class="am-input" autocomplete="name" placeholder="Your name">
+                            </div>
                         </div>
                         <div class="am-account-card__field">
                             <label for="register-email">Email</label>
-                            <input type="email" name="email" id="register-email" value="{{ old('email') }}" required class="am-input am-input--underline" autocomplete="email" placeholder="you@email.com">
+                            <div class="am-account-field-input">
+                                @include('partials.am-account-field-icon', ['icon' => 'email'])
+                                <input type="email" name="email" id="register-email" value="{{ old('email') }}" required class="am-input" autocomplete="email" placeholder="you@email.com">
+                            </div>
                         </div>
                         <div class="am-account-card__field">
                             <label for="register-city">City</label>
-                            <input type="text" name="city" id="register-city" value="{{ old('city') }}" required class="am-input am-input--underline" autocomplete="address-level2" placeholder="City">
+                            <div class="am-account-field-input">
+                                @include('partials.am-account-field-icon', ['icon' => 'location'])
+                                <input type="text" name="city" id="register-city" value="{{ old('city') }}" required class="am-input" autocomplete="address-level2" placeholder="City">
+                            </div>
                         </div>
                         <div class="am-account-card__field">
                             <label for="register-account_type">Account type</label>
-                            <select name="account_type" id="register-account_type" class="am-input am-input--select am-input--underline" required>
-                                <option value="">Select type</option>
-                                @foreach($accountTypes as $value => $label)
-                                <option value="{{ $value }}" @selected(old('account_type') === $value)>{{ $label }}</option>
-                                @endforeach
-                            </select>
+                            <div class="am-account-field-input am-account-field-input--select">
+                                @include('partials.am-account-field-icon', ['icon' => 'badge'])
+                                <select name="account_type" id="register-account_type" class="am-input am-input--select" required>
+                                    <option value="">Select type</option>
+                                    @foreach($accountTypes as $value => $label)
+                                    <option value="{{ $value }}" @selected(old('account_type') === $value)>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
                         <div class="am-account-card__field">
                             <label for="register-mobile">Mobile number (WhatsApp)</label>
-                            @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'register'])
+                            <div class="am-account-field-input am-account-field-input--phone">
+                                @include('partials.am-account-field-icon', ['icon' => 'phone'])
+                                @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'register'])
+                            </div>
                             <p class="am-account-card__hint">WhatsApp verification code will be sent to this number</p>
                         </div>
                         <x-form-protection-fields form-key="account_register" :show-intent="false" />
@@ -195,7 +238,6 @@
                         <x-form-protection-fields form-key="account_verify_otp" :show-intent="false" />
                         <button type="submit" class="am-account-card__submit">
                             <span>Verify OTP</span>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                         </button>
                     </form>
 
@@ -204,7 +246,7 @@
                         <form action="{{ route('account.resend') }}" method="POST">
                             @csrf
                             <x-form-protection-fields form-key="account_register" :show-intent="false" />
-                            <button type="submit" class="am-account-card__link-btn">{{ config('account.copy.resend_otp') }}</button>
+                            <button type="submit" class="am-account-card__alt-btn am-account-card__alt-btn--inline">{{ config('account.copy.resend_otp') }}</button>
                         </form>
                         @else
                         <p class="am-account-verify__countdown" id="otp-resend-countdown" data-seconds="{{ $registerResendSeconds }}">
@@ -228,7 +270,10 @@
                         <input type="hidden" name="register_step" value="complete">
                         <div class="am-account-card__field">
                             <label for="register-password">Password</label>
-                            <input type="password" name="password" id="register-password" required class="am-input am-input--underline" autocomplete="new-password" minlength="8" placeholder="Min. 8 characters">
+                            <div class="am-account-field-input">
+                                @include('partials.am-account-field-icon', ['icon' => 'password'])
+                                <input type="password" name="password" id="register-password" required class="am-input" autocomplete="new-password" minlength="8" placeholder="Min. 8 characters">
+                            </div>
                         </div>
                         <label class="am-account-consent">
                             <input type="checkbox" name="consent" value="1" @checked(old('consent')) required>
@@ -237,7 +282,6 @@
                         <x-form-protection-fields form-key="account_register" :show-intent="false" />
                         <button type="submit" class="am-account-card__submit">
                             <span>Create account</span>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                         </button>
                     </form>
                 </section>
@@ -245,6 +289,10 @@
             </div>
         </div>
         @endif
+
+        <footer class="am-account-card__legal">
+            <p>By continuing, you agree to Vyomika Atelier&rsquo;s <a href="{{ route('legal.terms') }}">Terms</a> and <a href="{{ route('legal.privacy') }}">Privacy Policy</a>.</p>
+        </footer>
     </div>
 </x-account-auth-layout>
 @endsection

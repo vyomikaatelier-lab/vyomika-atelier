@@ -12,9 +12,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const links = {
-      email: '<button type="button" data-login-panel-target="mobile-otp">Sign in with WhatsApp OTP</button><span aria-hidden="true">·</span><button type="button" data-login-panel-target="mobile-password">Sign in with mobile &amp; password</button>',
-      'mobile-otp': '<button type="button" data-login-panel-target="email">Sign in with email</button><span aria-hidden="true">·</span><button type="button" data-login-panel-target="mobile-password">Sign in with mobile &amp; password</button>',
-      'mobile-password': '<button type="button" data-login-panel-target="email">Sign in with email</button><span aria-hidden="true">·</span><button type="button" data-login-panel-target="mobile-otp">Sign in with WhatsApp OTP</button>',
+      email: '<button type="button" class="am-account-card__alt-btn" data-login-panel-target="mobile-otp">Sign in with WhatsApp OTP</button><button type="button" class="am-account-card__alt-btn" data-login-panel-target="mobile-password">Sign in with mobile &amp; password</button>',
+      'mobile-otp': '<button type="button" class="am-account-card__alt-btn" data-login-panel-target="email">Sign in with email</button><button type="button" class="am-account-card__alt-btn" data-login-panel-target="mobile-password">Sign in with mobile &amp; password</button>',
+      'mobile-password': '<button type="button" class="am-account-card__alt-btn" data-login-panel-target="email">Sign in with email</button><button type="button" class="am-account-card__alt-btn" data-login-panel-target="mobile-otp">Sign in with WhatsApp OTP</button>',
     };
 
     switcher.innerHTML = links[target] || links.email;
