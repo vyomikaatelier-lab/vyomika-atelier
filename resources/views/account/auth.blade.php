@@ -5,6 +5,9 @@
     $loginMethod = old('login_method', session('login_method', 'email'));
     $mobileLoginMode = old('mobile_login_mode', session('mobile_login_mode', 'otp'));
     $pageTitle = $activeTab === 'register' ? 'Create Account' : 'Sign In';
+    $pageSubtitle = $activeTab === 'register'
+        ? 'Join with WhatsApp verification to access orders, quotes, and studio updates.'
+        : 'Welcome back. Sign in to manage your orders and projects.';
 @endphp
 
 @section('title', ($activeTab === 'register' ? 'Create account' : 'Sign in') . ' — Vyomika Atelier')
@@ -14,18 +17,7 @@
     <div class="am-account-card am-account-theme">
         <header class="am-account-card__header">
             <h1 class="am-account-card__hero-title">{{ $pageTitle }}</h1>
-            <nav class="am-account-card__tabs" aria-label="Account">
-                <a href="{{ route('account.login') }}"
-                   class="am-account-card__tab {{ $activeTab === 'login' ? 'is-active' : '' }}"
-                   @if($activeTab === 'login') aria-current="page" @endif>
-                    Sign in
-                </a>
-                <a href="{{ route('account.register') }}"
-                   class="am-account-card__tab {{ $activeTab === 'register' ? 'is-active' : '' }}"
-                   @if($activeTab === 'register') aria-current="page" @endif>
-                    Create account
-                </a>
-            </nav>
+            <p class="am-account-card__subtitle">{{ $pageSubtitle }}</p>
         </header>
 
         @include('partials.am-account-alerts')
@@ -43,21 +35,21 @@
                     @csrf
                     <input type="hidden" name="login_method" value="email">
                     <div class="am-account-card__field">
-                        <label for="login-email">Email</label>
+                        <label for="login-email" class="am-sr-only">Email</label>
                         <div class="am-account-field-input">
                             @include('partials.am-account-field-icon', ['icon' => 'email'])
-                            <input type="email" name="email" id="login-email" value="{{ old('email') }}" required class="am-input" autocomplete="email" placeholder="you@email.com">
+                            <input type="email" name="email" id="login-email" value="{{ old('email') }}" required class="am-input" autocomplete="email" placeholder="Email address">
                         </div>
                     </div>
                     <div class="am-account-card__field">
-                        <label for="login-password">Password</label>
+                        <label for="login-password" class="am-sr-only">Password</label>
                         <div class="am-account-field-input">
                             @include('partials.am-account-field-icon', ['icon' => 'password'])
-                            <input type="password" name="password" id="login-password" required class="am-input" autocomplete="current-password" placeholder="Your password">
+                            <input type="password" name="password" id="login-password" required class="am-input" autocomplete="current-password" placeholder="Password">
                         </div>
                     </div>
                     <button type="submit" class="am-account-card__submit">
-                        <span>Continue</span>
+                        <span>Sign in</span>
                     </button>
                 </form>
             </div>
@@ -102,13 +94,13 @@
                         </div>
                     </div>
                     <button type="submit" class="am-account-card__submit">
-                        <span>Continue</span>
+                        <span>Sign in</span>
                     </button>
                 </form>
             </div>
 
             <p class="am-account-card__footer-link">
-                <a href="{{ route('account.forgot') }}">Forgot password or access?</a>
+                <a href="{{ route('account.forgot') }}">Forgot password?</a>
             </p>
 
             <div class="am-account-card__switch" data-account-login-switch>
@@ -123,6 +115,11 @@
                 <button type="button" class="am-account-card__alt-btn" data-login-panel-target="mobile-otp">Sign in with WhatsApp OTP</button>
                 @endif
             </div>
+
+            <div class="am-account-card__divider" role="presentation">
+                <span>Don&rsquo;t have an account yet?</span>
+            </div>
+            <a href="{{ route('account.register') }}" class="am-account-card__cta-secondary">Create an account</a>
         </div>
         @else
         @php
@@ -216,7 +213,7 @@
                             <p class="am-account-card__hint">WhatsApp verification code will be sent to this number</p>
                         </div>
                         <x-form-protection-fields form-key="account_register" :show-intent="false" />
-                        <button type="submit" class="am-account-card__submit am-account-card__submit--secondary" @disabled(! $providerReady)>
+                        <button type="submit" class="am-account-card__submit" @disabled(! $providerReady)>
                             <span>Send verification code</span>
                         </button>
                     </form>
@@ -287,12 +284,19 @@
                 </section>
                 @endif
             </div>
+
+            @unless($awaitingRegisterOtp ?? false)
+            <div class="am-account-card__divider" role="presentation">
+                <span>Already have an account?</span>
+            </div>
+            <a href="{{ route('account.login') }}" class="am-account-card__cta-secondary">Sign in</a>
+            @else
+            <p class="am-account-card__footer-link">
+                <a href="{{ route('account.login') }}">Back to sign in</a>
+            </p>
+            @endunless
         </div>
         @endif
-
-        <footer class="am-account-card__legal">
-            <p>By continuing, you agree to Vyomika Atelier&rsquo;s <a href="{{ route('legal.terms') }}">Terms</a> and <a href="{{ route('legal.privacy') }}">Privacy Policy</a>.</p>
-        </footer>
     </div>
 </x-account-auth-layout>
 @endsection

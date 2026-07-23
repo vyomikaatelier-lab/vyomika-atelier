@@ -4,7 +4,7 @@
 
 @section('content')
 <x-account-auth-layout>
-    <div class="am-account-card am-account-card--verify">
+    <div class="am-account-card am-account-card--verify am-account-theme">
         <ol class="am-account-verify-sequence__steps am-account-verify-sequence__steps--compact" aria-label="WhatsApp verification steps">
             <li class="am-account-verify-sequence__step is-done">
                 <span class="am-account-verify-sequence__num" aria-hidden="true">✓</span>
@@ -16,8 +16,10 @@
             </li>
         </ol>
 
-        <h1 class="am-account-card__title">Enter OTP</h1>
-        <p class="am-account-verify__hint">Code sent to WhatsApp ending in <strong>{{ $maskedMobile }}</strong></p>
+        <header class="am-account-card__header am-account-card__header--compact">
+            <h1 class="am-account-card__hero-title">Enter OTP</h1>
+            <p class="am-account-card__subtitle am-account-verify__hint">Code sent to WhatsApp ending in <strong>{{ $maskedMobile }}</strong></p>
+        </header>
 
         @include('partials.am-account-alerts')
 
@@ -33,7 +35,6 @@
 
             <button type="submit" class="am-account-card__submit">
                 <span>{{ config('account.copy.verify_otp') }}</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             </button>
         </form>
 
@@ -42,7 +43,7 @@
             <form action="{{ route('account.resend') }}" method="POST">
                 @csrf
                 <x-form-protection-fields :form-key="$purpose === 'register' ? 'account_register' : ($purpose === 'forgot' ? 'account_forgot_otp' : 'account_login_otp')" :show-intent="false" />
-                <button type="submit" class="am-account-card__link-btn">{{ config('account.copy.resend_otp') }}</button>
+                <button type="submit" class="am-account-card__alt-btn am-account-card__alt-btn--inline">{{ config('account.copy.resend_otp') }}</button>
             </form>
             @else
             <p class="am-account-verify__countdown" id="otp-resend-countdown" data-seconds="{{ $resendSeconds }}">

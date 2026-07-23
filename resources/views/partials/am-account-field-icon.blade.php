@@ -6,7 +6,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
         @break
     @case('password')
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 3a4 4 0 0 1 4 4v2H8V7a4 4 0 0 1 4-4z"/><rect x="5" y="9" width="14" height="12" rx="2"/><circle cx="12" cy="15" r="1.25" fill="currentColor" stroke="none"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 2.75l7 3.5v5.5c0 4.5-3.1 8.7-7 9.75-3.9-1.05-7-5.25-7-9.75V6.25l7-3.5z"/><path d="M9.5 12.25l1.75 1.75L14.75 10"/></svg>
         @break
     @case('user')
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="8" r="4"/><path d="M5 20c0-3.5 3.1-6 7-6s7 2.5 7 6"/></svg>

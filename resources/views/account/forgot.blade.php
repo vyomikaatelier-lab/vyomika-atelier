@@ -4,9 +4,11 @@
 
 @section('content')
 <x-account-auth-layout>
-    <div class="am-account-card">
-        <h1 class="am-account-card__title">Forgot access</h1>
-        <p class="am-account-card__lead">We will send a WhatsApp OTP to your registered mobile number.</p>
+    <div class="am-account-card am-account-theme">
+        <header class="am-account-card__header">
+            <h1 class="am-account-card__hero-title">Forgot access</h1>
+            <p class="am-account-card__subtitle">We will send a WhatsApp OTP to your registered mobile number.</p>
+        </header>
 
         @include('partials.am-account-alerts')
 
@@ -20,7 +22,10 @@
             @csrf
             <div class="am-account-card__field">
                 <label for="forgot-mobile">Mobile number (WhatsApp)</label>
-                @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'forgot'])
+                <div class="am-account-field-input am-account-field-input--phone">
+                    @include('partials.am-account-field-icon', ['icon' => 'phone'])
+                    @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'forgot'])
+                </div>
                 <p class="am-account-card__hint">WhatsApp verification code will be sent to this number</p>
             </div>
 
@@ -28,7 +33,6 @@
 
             <button type="submit" class="am-account-card__submit" @disabled(! $providerReady)>
                 <span>Send WhatsApp OTP</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             </button>
         </form>
 
