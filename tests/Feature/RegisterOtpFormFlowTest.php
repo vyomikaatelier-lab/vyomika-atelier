@@ -72,7 +72,7 @@ class RegisterOtpFormFlowTest extends TestCase
                 'Email',
                 'City',
                 'Account type',
-                'Phone number (WhatsApp)',
+                'Mobile number (WhatsApp)',
                 'Mobile verification',
                 'Verification code',
                 'Verify OTP',

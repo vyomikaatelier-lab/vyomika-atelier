@@ -58,7 +58,11 @@
                     @csrf
                     <input type="hidden" name="login_method" value="mobile">
                     <input type="hidden" name="mobile_login_mode" value="otp">
-                    @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'login-otp'])
+                    <div class="am-account-card__field">
+                        <label for="login-otp-mobile">Mobile number (WhatsApp)</label>
+                        @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'login-otp'])
+                        <p class="am-account-card__hint">WhatsApp verification code will be sent to this number</p>
+                    </div>
                     <x-form-protection-fields form-key="account_login_otp" :show-intent="false" />
                     <button type="submit" class="am-account-card__submit" @disabled(! $providerReady)>
                         <span>Send WhatsApp OTP</span>
@@ -72,7 +76,10 @@
                     @csrf
                     <input type="hidden" name="login_method" value="mobile">
                     <input type="hidden" name="mobile_login_mode" value="password">
-                    @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'login-mobile'])
+                    <div class="am-account-card__field">
+                        <label for="login-mobile-mobile">Mobile number</label>
+                        @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'login-mobile'])
+                    </div>
                     <div class="am-account-card__field">
                         <label for="login-mobile-password">Password</label>
                         <input type="password" name="password" id="login-mobile-password" required class="am-input" autocomplete="current-password">
@@ -133,7 +140,7 @@
                         <input type="text" id="register-account_type-locked" value="{{ $accountTypes[$registerFieldValues['account_type'] ?? ''] ?? ($registerFieldValues['account_type'] ?? '') }}" class="am-input am-input--underline" readonly>
                     </div>
                     <div class="am-account-card__field">
-                        <label for="register-mobile-locked">Phone number (WhatsApp)</label>
+                        <label for="register-mobile-locked">Mobile number (WhatsApp)</label>
                         <input type="text" id="register-mobile-locked" value="{{ $registerMaskedMobile }}" class="am-input am-input--underline" readonly>
                     </div>
                     @else
@@ -161,9 +168,9 @@
                             </select>
                         </div>
                         <div class="am-account-card__field">
-                            <label for="register-mobile">Phone number (WhatsApp)</label>
+                            <label for="register-mobile">Mobile number (WhatsApp)</label>
                             @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'register'])
-                            <p class="am-account-card__hint">Verification code is sent to this WhatsApp number</p>
+                            <p class="am-account-card__hint">WhatsApp verification code will be sent to this number</p>
                         </div>
                         <x-form-protection-fields form-key="account_register" :show-intent="false" />
                         <button type="submit" class="am-account-card__submit am-account-card__submit--secondary" @disabled(! $providerReady)>

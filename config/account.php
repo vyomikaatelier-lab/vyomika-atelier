@@ -10,10 +10,10 @@ return [
     ],
 
     'country_codes' => [
-        '+91' => 'India (+91)',
-        '+971' => 'UAE (+971)',
-        '+1' => 'USA (+1)',
-        '+44' => 'UK (+44)',
+        '+91' => ['name' => 'India', 'iso' => 'IN'],
+        '+971' => ['name' => 'UAE', 'iso' => 'AE'],
+        '+1' => ['name' => 'USA', 'iso' => 'US'],
+        '+44' => ['name' => 'UK', 'iso' => 'GB'],
     ],
 
     'otp' => [

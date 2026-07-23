@@ -4904,8 +4904,15 @@ ul { list-style: none; }
 .am-account-auth__links a { color: var(--am-gold-dark); text-decoration: underline; }
 .am-account-phone {
   display: grid;
-  grid-template-columns: minmax(7.5rem, 9rem) 1fr;
+  grid-template-columns: minmax(8.25rem, 10rem) 1fr;
   gap: 0.65rem;
+}
+
+.am-account-phone__select {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-variant-emoji: emoji;
+  letter-spacing: 0.01em;
+  padding-right: 1.75rem;
 }
 .am-account-consent {
   display: flex;

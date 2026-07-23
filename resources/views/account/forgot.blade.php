@@ -19,8 +19,9 @@
         <form action="{{ route('account.forgot.send') }}" method="POST" class="am-account-card__form">
             @csrf
             <div class="am-account-card__field">
-                <label>Mobile</label>
+                <label for="forgot-mobile">Mobile number (WhatsApp)</label>
                 @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'forgot'])
+                <p class="am-account-card__hint">WhatsApp verification code will be sent to this number</p>
             </div>
 
             <x-form-protection-fields form-key="account_forgot_otp" :show-intent="false" />
