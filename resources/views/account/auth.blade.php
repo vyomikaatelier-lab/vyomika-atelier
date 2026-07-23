@@ -10,7 +10,7 @@
 
 @section('content')
 <x-account-auth-layout>
-    <div class="am-account-card">
+    <div class="am-account-card am-account-theme">
         <nav class="am-account-card__tabs" aria-label="Account">
             <a href="{{ route('account.login') }}"
                class="am-account-card__tab {{ $activeTab === 'login' ? 'is-active' : '' }}"
@@ -110,71 +110,72 @@
             $registerOtpVerified = $registerOtpVerified ?? false;
             $registerDetails = $registerDetails ?? [];
             $registerLocked = $awaitingRegisterOtp;
+            $registerFieldValues = $registerLocked ? $registerDetails : [];
         @endphp
         <div class="am-account-card__panel" id="account-register-panel">
             <div class="am-account-signup">
-                @if($registerLocked)
-                <div class="am-account-signup__summary">
+                <div class="am-account-signup__details">
+                    @if($registerLocked)
                     <div class="am-account-card__field">
-                        <label>Full name</label>
-                        <p class="am-account-signup__phone">{{ $registerDetails['name'] ?? '' }}</p>
+                        <label for="register-name-locked">Full name</label>
+                        <input type="text" id="register-name-locked" value="{{ $registerFieldValues['name'] ?? '' }}" class="am-input am-input--underline" readonly>
                     </div>
                     <div class="am-account-card__field">
-                        <label>Email</label>
-                        <p class="am-account-signup__phone">{{ $registerDetails['email'] ?? '' }}</p>
+                        <label for="register-email-locked">Email</label>
+                        <input type="email" id="register-email-locked" value="{{ $registerFieldValues['email'] ?? '' }}" class="am-input am-input--underline" readonly>
                     </div>
                     <div class="am-account-card__field">
-                        <label>City</label>
-                        <p class="am-account-signup__phone">{{ $registerDetails['city'] ?? '' }}</p>
+                        <label for="register-city-locked">City</label>
+                        <input type="text" id="register-city-locked" value="{{ $registerFieldValues['city'] ?? '' }}" class="am-input am-input--underline" readonly>
                     </div>
                     <div class="am-account-card__field">
-                        <label>Account type</label>
-                        <p class="am-account-signup__phone">{{ $accountTypes[$registerDetails['account_type'] ?? ''] ?? ($registerDetails['account_type'] ?? '') }}</p>
+                        <label for="register-account_type-locked">Account type</label>
+                        <input type="text" id="register-account_type-locked" value="{{ $accountTypes[$registerFieldValues['account_type'] ?? ''] ?? ($registerFieldValues['account_type'] ?? '') }}" class="am-input am-input--underline" readonly>
                     </div>
                     <div class="am-account-card__field">
-                        <label>WhatsApp number</label>
-                        <p class="am-account-signup__phone">{{ $registerMaskedMobile }}</p>
+                        <label for="register-mobile-locked">Phone number (WhatsApp)</label>
+                        <input type="text" id="register-mobile-locked" value="{{ $registerMaskedMobile }}" class="am-input am-input--underline" readonly>
                     </div>
+                    @else
+                    <form action="{{ route('account.register.send') }}" method="POST" class="am-account-card__form am-account-signup__form" id="account-register-send-form">
+                        @csrf
+                        <div class="am-account-card__field">
+                            <label for="register-name">Full name</label>
+                            <input type="text" name="name" id="register-name" value="{{ old('name') }}" required class="am-input am-input--underline" autocomplete="name" placeholder="Your name">
+                        </div>
+                        <div class="am-account-card__field">
+                            <label for="register-email">Email</label>
+                            <input type="email" name="email" id="register-email" value="{{ old('email') }}" required class="am-input am-input--underline" autocomplete="email" placeholder="you@email.com">
+                        </div>
+                        <div class="am-account-card__field">
+                            <label for="register-city">City</label>
+                            <input type="text" name="city" id="register-city" value="{{ old('city') }}" required class="am-input am-input--underline" autocomplete="address-level2" placeholder="City">
+                        </div>
+                        <div class="am-account-card__field">
+                            <label for="register-account_type">Account type</label>
+                            <select name="account_type" id="register-account_type" class="am-input am-input--select am-input--underline" required>
+                                <option value="">Select type</option>
+                                @foreach($accountTypes as $value => $label)
+                                <option value="{{ $value }}" @selected(old('account_type') === $value)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="am-account-card__field">
+                            <label for="register-mobile">Phone number (WhatsApp)</label>
+                            @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'register'])
+                            <p class="am-account-card__hint">Verification code is sent to this WhatsApp number</p>
+                        </div>
+                        <x-form-protection-fields form-key="account_register" :show-intent="false" />
+                        <button type="submit" class="am-account-card__submit am-account-card__submit--secondary" @disabled(! $providerReady)>
+                            <span>Send verification code</span>
+                        </button>
+                    </form>
+                    @endif
                 </div>
-                @else
-                <form action="{{ route('account.register.send') }}" method="POST" class="am-account-card__form am-account-signup__form" id="account-register-send-form">
-                    @csrf
-                    <div class="am-account-card__field">
-                        <label for="register-name">Full name</label>
-                        <input type="text" name="name" id="register-name" value="{{ old('name') }}" required class="am-input am-input--underline" autocomplete="name" placeholder="Your name">
-                    </div>
-                    <div class="am-account-card__field">
-                        <label for="register-email">Email</label>
-                        <input type="email" name="email" id="register-email" value="{{ old('email') }}" required class="am-input am-input--underline" autocomplete="email" placeholder="you@email.com">
-                    </div>
-                    <div class="am-account-card__field">
-                        <label for="register-city">City</label>
-                        <input type="text" name="city" id="register-city" value="{{ old('city') }}" required class="am-input am-input--underline" autocomplete="address-level2" placeholder="City">
-                    </div>
-                    <div class="am-account-card__field">
-                        <label for="register-account_type">Account type</label>
-                        <select name="account_type" id="register-account_type" class="am-input am-input--select am-input--underline" required>
-                            <option value="">Select type</option>
-                            @foreach($accountTypes as $value => $label)
-                            <option value="{{ $value }}" @selected(old('account_type') === $value)>{{ $label }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="am-account-card__field">
-                        <label for="register-mobile">Phone number (WhatsApp)</label>
-                        @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'register'])
-                        <p class="am-account-card__hint">Verification code is sent to this WhatsApp number</p>
-                    </div>
-                    <x-form-protection-fields form-key="account_register" :show-intent="false" />
-                    <button type="submit" class="am-account-card__submit am-account-card__submit--secondary" @disabled(! $providerReady)>
-                        <span>Send verification code</span>
-                    </button>
-                </form>
-                @endif
 
-                @if($awaitingRegisterOtp)
-                <div class="am-account-signup__otp {{ $registerOtpVerified ? 'is-verified' : '' }}">
-                    @unless($registerOtpVerified)
+                @if($awaitingRegisterOtp && ! $registerOtpVerified)
+                <section class="am-account-signup__verify" aria-labelledby="register-verify-heading">
+                    <h2 class="am-account-signup__heading" id="register-verify-heading">Mobile verification</h2>
                     <p class="am-account-signup__status" role="status">Code sent to WhatsApp. Enter the verification code below.</p>
 
                     <form action="{{ route('account.verify.submit') }}" method="POST" class="am-account-card__form" id="account-otp-form">
@@ -207,7 +208,12 @@
                             Change WhatsApp number
                         </a>
                     </div>
-                    @else
+                </section>
+                @endif
+
+                @if($awaitingRegisterOtp && $registerOtpVerified)
+                <section class="am-account-signup__password" aria-labelledby="register-password-heading">
+                    <h2 class="am-account-signup__heading" id="register-password-heading">Create password</h2>
                     <p class="am-account-signup__status" role="status">WhatsApp number verified. Set your password to finish.</p>
 
                     <form action="{{ route('account.register.send') }}" method="POST" class="am-account-card__form am-account-signup__complete-form">
@@ -227,8 +233,7 @@
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                         </button>
                     </form>
-                    @endunless
-                </div>
+                </section>
                 @endif
             </div>
         </div>

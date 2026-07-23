@@ -494,7 +494,16 @@ class AccountAuthController extends Controller
             return null;
         }
 
-        return WhatsappOtpVerification::query()->find($id);
+        $record = WhatsappOtpVerification::query()->find($id);
+        if (! $record) {
+            $request->session()->forget([
+                'account_pending_verification_id',
+                'account_pending_mobile_display',
+                'account_register_password',
+            ]);
+        }
+
+        return $record;
     }
 
     private function authView(string $tab)
