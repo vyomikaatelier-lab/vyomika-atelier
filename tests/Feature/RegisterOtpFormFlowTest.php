@@ -48,13 +48,10 @@ class RegisterOtpFormFlowTest extends TestCase
         $response = $this->post(route('account.register.send'), [
             'name' => 'Hitesh',
             'email' => 'hitesh@example.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
             'country_code' => '+91',
             'mobile' => '9818891878',
             'city' => 'Delhi',
             'account_type' => 'customer',
-            'consent' => '1',
             'form_loaded_at' => Crypt::encryptString(json_encode([
                 'form' => 'account_register',
                 'loaded_at' => now()->subSeconds(10)->timestamp,
@@ -67,10 +64,56 @@ class RegisterOtpFormFlowTest extends TestCase
 
         $response->assertRedirect(route('account.register'));
 
-        $this->followRedirects($response)
-            ->assertOk()
-            ->assertSee('Verification code')
-            ->assertSee('Verify OTP')
-            ->assertDontSee('Send verification code');
+        $page = $this->followRedirects($response);
+
+        $page->assertOk()
+            ->assertSeeInOrder([
+                'Full name',
+                'Email',
+                'City',
+                'Account type',
+                'WhatsApp number',
+                'Verification code',
+                'Verify OTP',
+            ])
+            ->assertDontSee('Send verification code')
+            ->assertDontSee('id="register-password"', false);
+    }
+
+    public function test_verified_otp_shows_password_and_create_account(): void
+    {
+        $record = WhatsappOtpVerification::create([
+            'mobile_e164' => '919818891878',
+            'purpose' => 'register',
+            'otp_hash' => Hash::make('123456'),
+            'payload' => [
+                'name' => 'Hitesh',
+                'email' => 'hitesh@example.com',
+                'country_code' => '+91',
+                'mobile' => '9818891878',
+                'whatsapp' => '9818891878',
+                'city' => 'Delhi',
+                'account_type' => 'customer',
+            ],
+            'attempts' => 0,
+            'send_count' => 1,
+            'ip_address' => '127.0.0.1',
+            'expires_at' => now()->addMinutes(5),
+            'verified_at' => now(),
+        ]);
+
+        $otp = Mockery::mock(WhatsappOtpService::class);
+        $otp->shouldReceive('providerConfigured')->andReturn(true);
+        $this->app->instance(WhatsappOtpService::class, $otp);
+
+        $response = $this->withSession([
+            'account_pending_verification_id' => $record->id,
+            'account_pending_mobile_display' => '+91 98188 91878',
+        ])->get(route('account.register'));
+
+        $response->assertOk()
+            ->assertSee('Password')
+            ->assertSee('Create account')
+            ->assertDontSee('Verify OTP');
     }
 }

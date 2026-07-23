@@ -117,6 +117,10 @@ class AccountAuthController extends Controller
 
     public function sendRegisterOtp(Request $request)
     {
+        if ($request->input('register_step') === 'complete') {
+            return $this->completeRegister($request);
+        }
+
         if ($response = $this->guardOtpForm($request, 'account_register')) {
             return $response;
         }
@@ -133,10 +137,8 @@ class AccountAuthController extends Controller
             'mobile' => 'required|string|max:20',
             'whatsapp' => 'nullable|string|max:20',
             'email' => 'required|email|max:255',
-            'password' => 'required|string|min:8|confirmed',
             'city' => 'required|string|max:100',
             'account_type' => ['required', Rule::in(array_keys(config('account.account_types', [])))],
-            'consent' => 'accepted',
         ]);
 
         try {
@@ -189,11 +191,49 @@ class AccountAuthController extends Controller
 
         $this->formProtection->hitRateLimiters($request, 'account_register');
 
-        $request->session()->put('account_register_password', $validated['password']);
         $this->storePendingVerification($request, $record, $phone);
 
         return redirect()->route('account.register')
             ->with('status', config('account.copy.otp_sent_generic'));
+    }
+
+    private function completeRegister(Request $request)
+    {
+        if ($response = $this->guardOtpForm($request, 'account_register')) {
+            return $response;
+        }
+
+        $record = $this->pendingVerification($request);
+        if (! $record || $record->purpose !== 'register' || ! $record->isVerified()) {
+            return redirect()->route('account.register')
+                ->with('info', 'Verify your WhatsApp number before creating your account.');
+        }
+
+        $validated = $request->validate([
+            'password' => 'required|string|min:8',
+            'consent' => 'accepted',
+        ]);
+
+        $request->session()->put('account_register_password', $validated['password']);
+
+        try {
+            $user = $this->resolveUserAfterVerification($record);
+        } catch (\RuntimeException $e) {
+            return back()->withErrors(['password' => 'Unable to complete registration. Please try again or contact the studio.']);
+        }
+
+        if (! $user->is_active) {
+            return back()->withErrors(['password' => 'This account has been disabled. Contact the studio for assistance.']);
+        }
+
+        Auth::login($user);
+        $request->session()->regenerate();
+        $request->session()->forget('account_pending_verification_id');
+        $request->session()->forget('account_pending_mobile_display');
+        $request->session()->forget('account_register_password');
+
+        return redirect()->intended(route('account'))
+            ->with('success', config('account.copy.success'));
     }
 
     public function showForgot()
@@ -258,12 +298,15 @@ class AccountAuthController extends Controller
             return $otpFail;
         }
 
+        if ($record->purpose === 'register') {
+            return redirect()->route('account.register')
+                ->with('status', 'Code verified. Choose a password to finish creating your account.');
+        }
+
         try {
             $user = $this->resolveUserAfterVerification($record);
         } catch (\RuntimeException $e) {
-            $fail = back()->withErrors(['otp' => 'Unable to complete registration. Please try again or contact the studio.']);
-
-            return $record->purpose === 'register' ? $fail->withInput() : $fail;
+            return back()->withErrors(['otp' => 'Unable to complete sign-in. Please try again or contact the studio.']);
         }
 
         if (! $user->is_active) {
@@ -273,7 +316,7 @@ class AccountAuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
         $request->session()->forget('account_pending_verification_id');
-        $request->session()->forget('account_register_password');
+        $request->session()->forget('account_pending_mobile_display');
 
         return redirect()->intended(route('account'))
             ->with('success', config('account.copy.success'));
@@ -457,10 +500,14 @@ class AccountAuthController extends Controller
     private function authView(string $tab)
     {
         $registerPending = null;
+        $registerOtpVerified = false;
+        $registerDetails = [];
         if ($tab === 'register') {
             $pending = $this->pendingVerification(request());
-            if ($pending && $pending->purpose === 'register' && ! $pending->isVerified()) {
+            if ($pending && $pending->purpose === 'register') {
                 $registerPending = $pending;
+                $registerOtpVerified = $pending->isVerified();
+                $registerDetails = $pending->payload ?? [];
             }
         }
 
@@ -470,11 +517,13 @@ class AccountAuthController extends Controller
             'countryCodes' => config('account.country_codes', []),
             'accountTypes' => config('account.account_types', []),
             'registerPending' => $registerPending,
+            'registerOtpVerified' => $registerOtpVerified,
+            'registerDetails' => $registerDetails,
             'registerMaskedMobile' => $registerPending
                 ? $this->phones->maskE164($registerPending->mobile_e164)
                 : null,
-            'registerCanResend' => (bool) ($registerPending && $this->otp->canResend($registerPending->mobile_e164)),
-            'registerResendSeconds' => $registerPending
+            'registerCanResend' => (bool) ($registerPending && ! $registerOtpVerified && $this->otp->canResend($registerPending->mobile_e164)),
+            'registerResendSeconds' => $registerPending && ! $registerOtpVerified
                 ? $this->otp->secondsUntilResend($registerPending->mobile_e164)
                 : 0,
         ]);

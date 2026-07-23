@@ -4551,10 +4551,30 @@ ul { list-style: none; }
 }
 
 .am-account-signup__form,
-.am-account-signup__otp {
+.am-account-signup__otp,
+.am-account-signup__complete-form {
   display: flex;
   flex-direction: column;
   gap: 0.95rem;
+}
+
+.am-account-signup__summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.am-account-signup__summary .am-account-card__field label {
+  font-size: 0.78rem;
+  color: var(--am-muted);
+  margin-bottom: 0.15rem;
+}
+
+.am-account-signup__otp {
+  margin-top: 0.15rem;
+  padding-top: 0.95rem;
+  border-top: 1px solid var(--am-border);
 }
 
 .am-account-theme .am-input--underline {

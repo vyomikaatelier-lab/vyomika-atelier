@@ -107,11 +107,37 @@
         @else
         @php
             $awaitingRegisterOtp = ! empty($registerPending);
+            $registerOtpVerified = $registerOtpVerified ?? false;
+            $registerDetails = $registerDetails ?? [];
+            $registerLocked = $awaitingRegisterOtp;
         @endphp
         <div class="am-account-card__panel" id="account-register-panel">
             <div class="am-account-signup">
-                @unless($awaitingRegisterOtp)
-                <form action="{{ route('account.register.send') }}" method="POST" class="am-account-card__form am-account-signup__form">
+                @if($registerLocked)
+                <div class="am-account-signup__summary">
+                    <div class="am-account-card__field">
+                        <label>Full name</label>
+                        <p class="am-account-signup__phone">{{ $registerDetails['name'] ?? '' }}</p>
+                    </div>
+                    <div class="am-account-card__field">
+                        <label>Email</label>
+                        <p class="am-account-signup__phone">{{ $registerDetails['email'] ?? '' }}</p>
+                    </div>
+                    <div class="am-account-card__field">
+                        <label>City</label>
+                        <p class="am-account-signup__phone">{{ $registerDetails['city'] ?? '' }}</p>
+                    </div>
+                    <div class="am-account-card__field">
+                        <label>Account type</label>
+                        <p class="am-account-signup__phone">{{ $accountTypes[$registerDetails['account_type'] ?? ''] ?? ($registerDetails['account_type'] ?? '') }}</p>
+                    </div>
+                    <div class="am-account-card__field">
+                        <label>WhatsApp number</label>
+                        <p class="am-account-signup__phone">{{ $registerMaskedMobile }}</p>
+                    </div>
+                </div>
+                @else
+                <form action="{{ route('account.register.send') }}" method="POST" class="am-account-card__form am-account-signup__form" id="account-register-send-form">
                     @csrf
                     <div class="am-account-card__field">
                         <label for="register-name">Full name</label>
@@ -121,13 +147,6 @@
                         <label for="register-email">Email</label>
                         <input type="email" name="email" id="register-email" value="{{ old('email') }}" required class="am-input am-input--underline" autocomplete="email" placeholder="you@email.com">
                     </div>
-
-                    <div class="am-account-card__field">
-                        <label for="register-mobile">WhatsApp number</label>
-                        @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'register'])
-                        <p class="am-account-card__hint">OTP is sent to this WhatsApp number</p>
-                    </div>
-
                     <div class="am-account-card__field">
                         <label for="register-city">City</label>
                         <input type="text" name="city" id="register-city" value="{{ old('city') }}" required class="am-input am-input--underline" autocomplete="address-level2" placeholder="City">
@@ -141,34 +160,22 @@
                             @endforeach
                         </select>
                     </div>
-
                     <div class="am-account-card__field">
-                        <label for="register-password">Password</label>
-                        <input type="password" name="password" id="register-password" required class="am-input am-input--underline" autocomplete="new-password" minlength="8" placeholder="Min. 8 characters">
+                        <label for="register-mobile">Phone number (WhatsApp)</label>
+                        @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'register'])
+                        <p class="am-account-card__hint">Verification code is sent to this WhatsApp number</p>
                     </div>
-                    <div class="am-account-card__field">
-                        <label for="register-password-confirmation">Confirm password</label>
-                        <input type="password" name="password_confirmation" id="register-password-confirmation" required class="am-input am-input--underline" autocomplete="new-password" minlength="8">
-                    </div>
-
-                    <label class="am-account-consent">
-                        <input type="checkbox" name="consent" value="1" @checked(old('consent')) required>
-                        <span>I agree to the <a href="{{ route('legal.terms') }}" target="_blank" rel="noopener">Terms &amp; Conditions</a> and <a href="{{ route('legal.privacy') }}" target="_blank" rel="noopener">Privacy Policy</a>.</span>
-                    </label>
                     <x-form-protection-fields form-key="account_register" :show-intent="false" />
-
                     <button type="submit" class="am-account-card__submit am-account-card__submit--secondary" @disabled(! $providerReady)>
                         <span>Send verification code</span>
                     </button>
                 </form>
-                @else
-                <div class="am-account-signup__otp">
-                    <div class="am-account-card__field">
-                        <label>WhatsApp number</label>
-                        <p class="am-account-signup__phone">{{ $registerMaskedMobile }}</p>
-                    </div>
+                @endif
 
-                    <p class="am-account-signup__status" role="status">Code sent to WhatsApp. Enter OTP below.</p>
+                @if($awaitingRegisterOtp)
+                <div class="am-account-signup__otp {{ $registerOtpVerified ? 'is-verified' : '' }}">
+                    @unless($registerOtpVerified)
+                    <p class="am-account-signup__status" role="status">Code sent to WhatsApp. Enter the verification code below.</p>
 
                     <form action="{{ route('account.verify.submit') }}" method="POST" class="am-account-card__form" id="account-otp-form">
                         @csrf
@@ -179,7 +186,7 @@
                         </div>
                         <x-form-protection-fields form-key="account_verify_otp" :show-intent="false" />
                         <button type="submit" class="am-account-card__submit">
-                            <span>Verify OTP &amp; sign up</span>
+                            <span>Verify OTP</span>
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                         </button>
                     </form>
@@ -200,8 +207,29 @@
                             Change WhatsApp number
                         </a>
                     </div>
+                    @else
+                    <p class="am-account-signup__status" role="status">WhatsApp number verified. Set your password to finish.</p>
+
+                    <form action="{{ route('account.register.send') }}" method="POST" class="am-account-card__form am-account-signup__complete-form">
+                        @csrf
+                        <input type="hidden" name="register_step" value="complete">
+                        <div class="am-account-card__field">
+                            <label for="register-password">Password</label>
+                            <input type="password" name="password" id="register-password" required class="am-input am-input--underline" autocomplete="new-password" minlength="8" placeholder="Min. 8 characters">
+                        </div>
+                        <label class="am-account-consent">
+                            <input type="checkbox" name="consent" value="1" @checked(old('consent')) required>
+                            <span>I agree to the <a href="{{ route('legal.terms') }}" target="_blank" rel="noopener">Terms &amp; Conditions</a> and <a href="{{ route('legal.privacy') }}" target="_blank" rel="noopener">Privacy Policy</a>.</span>
+                        </label>
+                        <x-form-protection-fields form-key="account_register" :show-intent="false" />
+                        <button type="submit" class="am-account-card__submit">
+                            <span>Create account</span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                        </button>
+                    </form>
+                    @endunless
                 </div>
-                @endunless
+                @endif
             </div>
         </div>
         @endif
@@ -211,7 +239,7 @@
 
 @push('scripts')
 <script src="{{ asset('js/account-auth.js') }}" defer></script>
-@if(! empty($registerPending))
+@if(! empty($registerPending) && empty($registerOtpVerified))
 <script src="{{ asset('js/account-otp.js') }}" defer></script>
 @endif
 @endpush
