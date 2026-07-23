@@ -30,6 +30,8 @@ class User extends Authenticatable
         'city',
         'account_type',
         'phone_verified_at',
+        'google_id',
+        'apple_id',
         'is_active',
     ];
 

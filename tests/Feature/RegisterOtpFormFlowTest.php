@@ -15,6 +15,27 @@ class RegisterOtpFormFlowTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_register_page_shows_password_and_otp_column_upfront(): void
+    {
+        $otp = Mockery::mock(WhatsappOtpService::class);
+        $otp->shouldReceive('providerConfigured')->andReturn(true);
+        $this->app->instance(WhatsappOtpService::class, $otp);
+
+        $response = $this->get(route('account.register'));
+
+        $response->assertOk()
+            ->assertSeeInOrder([
+                'Sign up with Apple',
+                'Sign up with Google',
+                'or continue with email',
+                'Password',
+                'Confirm password',
+                'Mobile verification',
+                'Send verification code',
+            ])
+            ->assertSee('data-otp-digit', false);
+    }
+
     public function test_successful_register_otp_stays_on_create_account_form(): void
     {
         $otp = Mockery::mock(WhatsappOtpService::class);
@@ -48,6 +69,8 @@ class RegisterOtpFormFlowTest extends TestCase
         $response = $this->post(route('account.register.send'), [
             'name' => 'Hitesh',
             'email' => 'hitesh@example.com',
+            'password' => 'secret-pass',
+            'password_confirmation' => 'secret-pass',
             'country_code' => '+91',
             'mobile' => '9818891878',
             'city' => 'Delhi',
@@ -70,6 +93,7 @@ class RegisterOtpFormFlowTest extends TestCase
             ->assertSeeInOrder([
                 'Full name',
                 'Email',
+                'Password',
                 'City',
                 'Account type',
                 'Mobile number (WhatsApp)',
@@ -78,10 +102,11 @@ class RegisterOtpFormFlowTest extends TestCase
                 'Verify OTP',
             ])
             ->assertDontSee('Send verification code')
-            ->assertDontSee('id="register-password"', false);
+            ->assertDontSee('id="register-password"', false)
+            ->assertSee('id="register-password-locked"', false);
     }
 
-    public function test_verified_otp_shows_password_and_create_account(): void
+    public function test_verified_otp_shows_create_account_step(): void
     {
         $record = WhatsappOtpVerification::create([
             'mobile_e164' => '919818891878',
@@ -110,14 +135,14 @@ class RegisterOtpFormFlowTest extends TestCase
         $response = $this->withSession([
             'account_pending_verification_id' => $record->id,
             'account_pending_mobile_display' => '+91 98188 91878',
+            'account_register_password' => 'secret-pass',
         ])->get(route('account.register'));
 
         $response->assertOk()
-            ->assertSee('Create password')
-            ->assertSee('Password')
             ->assertSee('Create account')
+            ->assertSee('id="register-password-locked"', false)
             ->assertDontSee('Verify OTP')
-            ->assertDontSee('Mobile verification');
+            ->assertDontSee('id="register-password"', false);
     }
 
     public function test_stale_register_session_returns_to_initial_form(): void
@@ -133,11 +158,13 @@ class RegisterOtpFormFlowTest extends TestCase
 
         $response->assertOk()
             ->assertSee('Send verification code')
-            ->assertDontSee('Mobile verification')
-            ->assertDontSee('id="register-password"', false);
+            ->assertSee('Password')
+            ->assertSee('Confirm password')
+            ->assertSee('Mobile verification')
+            ->assertDontSee('Verify OTP');
     }
 
-    public function test_otp_verify_shows_password_step(): void
+    public function test_otp_verify_shows_create_account_step(): void
     {
         $record = WhatsappOtpVerification::create([
             'mobile_e164' => '919818891878',
@@ -172,6 +199,7 @@ class RegisterOtpFormFlowTest extends TestCase
         $response = $this->withSession([
             'account_pending_verification_id' => $record->id,
             'account_pending_mobile_display' => '+91 98188 91878',
+            'account_register_password' => 'secret-pass',
         ])->post(route('account.verify.submit'), [
             'otp' => '123456',
             'form_loaded_at' => Crypt::encryptString(json_encode([
@@ -189,9 +217,8 @@ class RegisterOtpFormFlowTest extends TestCase
         $page = $this->followRedirects($response);
 
         $page->assertOk()
-            ->assertSee('Create password')
-            ->assertSee('id="register-password"', false)
             ->assertSee('Create account')
-            ->assertDontSee('Verify OTP');
+            ->assertDontSee('Verify OTP')
+            ->assertDontSee('id="register-password"', false);
     }
 }

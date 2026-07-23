@@ -29,6 +29,7 @@ use App\Http\Controllers\MirrorFramesController;
 use App\Http\Controllers\CollectionGalleryController;
 use App\Http\Controllers\AccountAuthController;
 use App\Http\Controllers\AccountDashboardController;
+use App\Http\Controllers\SocialAuthController;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProductAdminController;
@@ -137,6 +138,8 @@ Route::prefix('account')->name('account.')->middleware('customer.guest')->group(
     Route::post('/login/mobile', [AccountAuthController::class, 'loginWithMobilePassword'])->middleware('throttle:auth')->name('login.mobile');
     Route::get('/register', [AccountAuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AccountAuthController::class, 'sendRegisterOtp'])->middleware('throttle:otp-send')->name('register.send');
+    Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])->name('social.redirect');
+    Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->name('social.callback');
     Route::get('/forgot', [AccountAuthController::class, 'showForgot'])->name('forgot');
     Route::post('/forgot', [AccountAuthController::class, 'sendForgotOtp'])->middleware('throttle:otp-send')->name('forgot.send');
 });

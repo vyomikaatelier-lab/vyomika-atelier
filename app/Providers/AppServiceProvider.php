@@ -8,8 +8,10 @@ use App\Services\WhatsApp\Msg91WhatsAppProvider;
 use App\Support\CmsSettings;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use SocialiteProviders\Manager\SocialiteWasCalled;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureRateLimiting();
+        $this->configureSocialiteProviders();
 
         try {
             CmsSettings::hydrate();
@@ -63,5 +66,12 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('vendor-proposal', fn (Request $request) => Limit::perHour(2)->by($request->ip()));
 
         RateLimiter::for('file-upload-forms', fn (Request $request) => Limit::perMinutes(30, 2)->by($request->ip()));
+    }
+
+    private function configureSocialiteProviders(): void
+    {
+        Event::listen(function (SocialiteWasCalled $event) {
+            $event->extendSocialite('apple', \SocialiteProviders\Apple\Provider::class);
+        });
     }
 }

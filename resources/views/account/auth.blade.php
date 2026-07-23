@@ -6,7 +6,7 @@
     $mobileLoginMode = old('mobile_login_mode', session('mobile_login_mode', 'otp'));
     $pageTitle = $activeTab === 'register' ? 'Create Account' : 'Sign In';
     $pageSubtitle = $activeTab === 'register'
-        ? 'Join with WhatsApp verification to access orders, quotes, and studio updates.'
+        ? 'Choose Apple, Google, or email with WhatsApp verification to join Vyomika Atelier.'
         : 'Welcome back. Sign in to manage your orders and projects.';
 @endphp
 
@@ -128,9 +128,18 @@
             $registerDetails = $registerDetails ?? [];
             $registerLocked = $awaitingRegisterOtp;
             $registerFieldValues = $registerLocked ? $registerDetails : [];
+            $socialProviders = $socialProviders ?? ['google' => false, 'apple' => false];
         @endphp
         <div class="am-account-card__panel" id="account-register-panel">
             <div class="am-account-signup">
+                @unless($registerLocked)
+                @include('partials.am-account-social-buttons')
+
+                <div class="am-account-card__divider" role="presentation">
+                    <span>or continue with email</span>
+                </div>
+                @endunless
+
                 <div class="am-account-signup__details">
                     @if($registerLocked)
                     <div class="am-account-card__field">
@@ -145,6 +154,13 @@
                         <div class="am-account-field-input am-account-field-input--readonly">
                             @include('partials.am-account-field-icon', ['icon' => 'email'])
                             <input type="email" id="register-email-locked" value="{{ $registerFieldValues['email'] ?? '' }}" class="am-input" readonly>
+                        </div>
+                    </div>
+                    <div class="am-account-card__field">
+                        <label for="register-password-locked">Password</label>
+                        <div class="am-account-field-input am-account-field-input--readonly">
+                            @include('partials.am-account-field-icon', ['icon' => 'password'])
+                            <input type="password" id="register-password-locked" value="••••••••" class="am-input" readonly>
                         </div>
                     </div>
                     <div class="am-account-card__field">
@@ -186,6 +202,20 @@
                             </div>
                         </div>
                         <div class="am-account-card__field">
+                            <label for="register-password">Password</label>
+                            <div class="am-account-field-input">
+                                @include('partials.am-account-field-icon', ['icon' => 'password'])
+                                <input type="password" name="password" id="register-password" required class="am-input" autocomplete="new-password" minlength="8" placeholder="Min. 8 characters">
+                            </div>
+                        </div>
+                        <div class="am-account-card__field">
+                            <label for="register-password-confirmation">Confirm password</label>
+                            <div class="am-account-field-input">
+                                @include('partials.am-account-field-icon', ['icon' => 'password'])
+                                <input type="password" name="password_confirmation" id="register-password-confirmation" required class="am-input" autocomplete="new-password" minlength="8" placeholder="Repeat password">
+                            </div>
+                        </div>
+                        <div class="am-account-card__field">
                             <label for="register-city">City</label>
                             <div class="am-account-field-input">
                                 @include('partials.am-account-field-icon', ['icon' => 'location'])
@@ -220,11 +250,17 @@
                     @endif
                 </div>
 
-                @if($awaitingRegisterOtp && ! $registerOtpVerified)
-                <section class="am-account-signup__verify" aria-labelledby="register-verify-heading">
+                <section class="am-account-signup__verify {{ $awaitingRegisterOtp && ! $registerOtpVerified ? 'is-active' : '' }} {{ $registerOtpVerified ? 'is-done' : '' }}" aria-labelledby="register-verify-heading">
                     <h2 class="am-account-signup__heading" id="register-verify-heading">Mobile verification</h2>
+                    @if($awaitingRegisterOtp && ! $registerOtpVerified)
                     <p class="am-account-signup__status" role="status">Code sent to WhatsApp. Enter the verification code below.</p>
+                    @elseif($registerOtpVerified)
+                    <p class="am-account-signup__status" role="status">WhatsApp number verified.</p>
+                    @else
+                    <p class="am-account-signup__status" role="status">Complete the form above, then enter your WhatsApp code here.</p>
+                    @endif
 
+                    @if($awaitingRegisterOtp && ! $registerOtpVerified)
                     <form action="{{ route('account.verify.submit') }}" method="POST" class="am-account-card__form" id="account-otp-form">
                         @csrf
                         <div class="am-account-card__field">
@@ -245,33 +281,33 @@
                             <x-form-protection-fields form-key="account_register" :show-intent="false" />
                             <button type="submit" class="am-account-card__alt-btn am-account-card__alt-btn--inline">{{ config('account.copy.resend_otp') }}</button>
                         </form>
-                        @else
+                        @elseif($awaitingRegisterOtp)
                         <p class="am-account-verify__countdown" id="otp-resend-countdown" data-seconds="{{ $registerResendSeconds }}">
                             Resend available in <span>{{ $registerResendSeconds }}</span>s
                         </p>
                         @endif
+                        @if($awaitingRegisterOtp)
                         <a href="{{ route('account.register', ['change_number' => 1]) }}" class="am-account-verify__change">
                             Change WhatsApp number
                         </a>
+                        @endif
                     </div>
+                    @else
+                    <div class="am-account-card__field">
+                        <label class="am-sr-only" for="otp-placeholder-combined">Verification code</label>
+                        @include('partials.am-account-otp-inputs', ['disabled' => true])
+                    </div>
+                    @endif
                 </section>
-                @endif
 
                 @if($awaitingRegisterOtp && $registerOtpVerified)
-                <section class="am-account-signup__password" aria-labelledby="register-password-heading">
-                    <h2 class="am-account-signup__heading" id="register-password-heading">Create password</h2>
-                    <p class="am-account-signup__status" role="status">WhatsApp number verified. Set your password to finish.</p>
+                <section class="am-account-signup__complete" aria-labelledby="register-complete-heading">
+                    <h2 class="am-account-signup__heading" id="register-complete-heading">Create account</h2>
+                    <p class="am-account-signup__status" role="status">Your details and WhatsApp number are verified. Confirm to finish.</p>
 
                     <form action="{{ route('account.register.send') }}" method="POST" class="am-account-card__form am-account-signup__complete-form">
                         @csrf
                         <input type="hidden" name="register_step" value="complete">
-                        <div class="am-account-card__field">
-                            <label for="register-password">Password</label>
-                            <div class="am-account-field-input">
-                                @include('partials.am-account-field-icon', ['icon' => 'password'])
-                                <input type="password" name="password" id="register-password" required class="am-input" autocomplete="new-password" minlength="8" placeholder="Min. 8 characters">
-                            </div>
-                        </div>
                         <label class="am-account-consent">
                             <input type="checkbox" name="consent" value="1" @checked(old('consent')) required>
                             <span>I agree to the <a href="{{ route('legal.terms') }}" target="_blank" rel="noopener">Terms &amp; Conditions</a> and <a href="{{ route('legal.privacy') }}" target="_blank" rel="noopener">Privacy Policy</a>.</span>
@@ -303,7 +339,7 @@
 
 @push('scripts')
 <script src="{{ asset('js/account-auth.js') }}" defer></script>
-@if(! empty($registerPending) && empty($registerOtpVerified))
+@if($activeTab === 'register' && ! empty($registerPending) && empty($registerOtpVerified))
 <script src="{{ asset('js/account-otp.js') }}" defer></script>
 @endif
 @endpush

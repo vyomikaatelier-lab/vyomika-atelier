@@ -107,6 +107,7 @@ class AccountAuthController extends Controller
                 'account_pending_verification_id',
                 'account_pending_mobile_display',
                 'account_register_password',
+                'account_register_password_confirmed',
             ]);
 
             return redirect()->route('account.register');
@@ -137,6 +138,7 @@ class AccountAuthController extends Controller
             'mobile' => 'required|string|max:20',
             'whatsapp' => 'nullable|string|max:20',
             'email' => 'required|email|max:255',
+            'password' => 'required|string|min:8|confirmed',
             'city' => 'required|string|max:100',
             'account_type' => ['required', Rule::in(array_keys(config('account.account_types', [])))],
         ]);
@@ -191,6 +193,8 @@ class AccountAuthController extends Controller
 
         $this->formProtection->hitRateLimiters($request, 'account_register');
 
+        $request->session()->put('account_register_password', $validated['password']);
+
         $this->storePendingVerification($request, $record, $phone);
 
         return redirect()->route('account.register')
@@ -210,11 +214,16 @@ class AccountAuthController extends Controller
         }
 
         $validated = $request->validate([
-            'password' => 'required|string|min:8',
             'consent' => 'accepted',
         ]);
 
-        $request->session()->put('account_register_password', $validated['password']);
+        $password = $request->session()->get('account_register_password');
+        if (! is_string($password) || strlen($password) < 8) {
+            return redirect()->route('account.register', ['change_number' => 1])
+                ->with('info', 'Set your password again and resend the verification code.');
+        }
+
+        $request->session()->put('account_register_password', $password);
 
         try {
             $user = $this->resolveUserAfterVerification($record);
@@ -300,7 +309,7 @@ class AccountAuthController extends Controller
 
         if ($record->purpose === 'register') {
             return redirect()->route('account.register')
-                ->with('status', 'Code verified. Choose a password to finish creating your account.');
+                ->with('status', 'Code verified. Review and create your account.');
         }
 
         try {
@@ -525,6 +534,7 @@ class AccountAuthController extends Controller
             'providerReady' => $this->otp->providerConfigured(),
             'countryCodes' => config('account.country_codes', []),
             'accountTypes' => config('account.account_types', []),
+            'socialProviders' => $this->socialProviders(),
             'registerPending' => $registerPending,
             'registerOtpVerified' => $registerOtpVerified,
             'registerDetails' => $registerDetails,
@@ -536,6 +546,17 @@ class AccountAuthController extends Controller
                 ? $this->otp->secondsUntilResend($registerPending->mobile_e164)
                 : 0,
         ]);
+    }
+
+    private function socialProviders(): array
+    {
+        return [
+            'google' => filled(config('services.google.client_id')) && filled(config('services.google.client_secret')),
+            'apple' => filled(config('services.apple.client_id'))
+                && filled(config('services.apple.client_secret'))
+                && filled(config('services.apple.key_id'))
+                && filled(config('services.apple.team_id')),
+        ];
     }
 
     private function otpErrorResponse(\Throwable $e)
