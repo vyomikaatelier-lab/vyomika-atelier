@@ -4981,6 +4981,80 @@ ul { list-style: none; }
   font-size: 0.9rem;
 }
 
+.am-account-card__footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem 1.25rem;
+  margin: 1rem 0 0;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.am-account-card__footer-links a {
+  color: var(--am-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.am-account-field__action-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.45rem;
+}
+
+.am-account-send-otp {
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: var(--am-gold-dark);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.am-account-send-otp:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.am-account-signup__otp {
+  margin-top: 0.15rem;
+}
+
+.am-account-signup__otp.is-active .am-account-card__field label {
+  color: var(--am-ink);
+}
+
+.am-account-signup__otp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.am-account-signup__status--inline {
+  margin: 0.35rem 0 0;
+  padding: 0.55rem 0.75rem;
+  text-align: left;
+}
+
+.am-account-card__submit--compact {
+  margin-top: 0;
+  padding: 0.8rem 1.1rem;
+  font-size: 0.92rem;
+}
+
+.am-account-card__panel .am-account-signup__social {
+  margin-top: 1.15rem;
+}
+
+.am-account-card__panel .am-account-card__cta-secondary {
+  margin-top: 0.85rem;
+}
+
 .am-account-card__footer-link a,
 .am-account-card__link-btn,
 .am-account-verify__change {

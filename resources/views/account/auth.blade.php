@@ -2,12 +2,10 @@
 
 @php
     $activeTab = $tab ?? (request()->routeIs('account.register') ? 'register' : 'login');
-    $loginMethod = old('login_method', session('login_method', 'email'));
-    $mobileLoginMode = old('mobile_login_mode', session('mobile_login_mode', 'otp'));
     $pageTitle = $activeTab === 'register' ? 'Create Account' : 'Sign In';
     $pageSubtitle = $activeTab === 'register'
         ? 'Choose Apple, Google, or email with WhatsApp verification to join Vyomika Atelier.'
-        : 'Welcome back. Sign in to manage your orders and projects.';
+        : 'Welcome back. Sign in with email or mobile and password.';
 @endphp
 
 @section('title', ($activeTab === 'register' ? 'Create account' : 'Sign in') . ' — Vyomika Atelier')
@@ -29,97 +27,62 @@
         @endunless
 
         @if($activeTab === 'login')
+        @php
+            $showOtpLogin = $showOtpLogin ?? request()->boolean('otp');
+            $socialProviders = $socialProviders ?? ['google' => false, 'apple' => false];
+        @endphp
         <div class="am-account-card__panel" id="account-login-panel">
-            <div class="am-account-card__method {{ $loginMethod === 'email' ? '' : 'is-hidden' }}" data-login-panel="email">
-                <form action="{{ route('account.login.email') }}" method="POST" class="am-account-card__form">
-                    @csrf
-                    <input type="hidden" name="login_method" value="email">
-                    <div class="am-account-card__field">
-                        <label for="login-email" class="am-sr-only">Email</label>
-                        <div class="am-account-field-input">
-                            @include('partials.am-account-field-icon', ['icon' => 'email'])
-                            <input type="email" name="email" id="login-email" value="{{ old('email') }}" required class="am-input" autocomplete="email" placeholder="Email address">
-                        </div>
+            @if($showOtpLogin)
+            <form action="{{ route('account.login.send') }}" method="POST" class="am-account-card__form">
+                @csrf
+                <input type="hidden" name="login_method" value="mobile">
+                <input type="hidden" name="mobile_login_mode" value="otp">
+                <div class="am-account-card__field">
+                    <label for="login-otp-mobile">Mobile number (WhatsApp)</label>
+                    <div class="am-account-field-input am-account-field-input--phone">
+                        @include('partials.am-account-field-icon', ['icon' => 'phone'])
+                        @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'login-otp'])
                     </div>
-                    <div class="am-account-card__field">
-                        <label for="login-password" class="am-sr-only">Password</label>
-                        <div class="am-account-field-input">
-                            @include('partials.am-account-field-icon', ['icon' => 'password'])
-                            <input type="password" name="password" id="login-password" required class="am-input" autocomplete="current-password" placeholder="Password">
-                        </div>
-                    </div>
-                    <button type="submit" class="am-account-card__submit">
-                        <span>Sign in</span>
-                    </button>
-                </form>
-            </div>
-
-            <div class="am-account-card__method {{ $loginMethod === 'mobile' && $mobileLoginMode === 'otp' ? '' : 'is-hidden' }}" data-login-panel="mobile-otp">
-                <form action="{{ route('account.login.send') }}" method="POST" class="am-account-card__form">
-                    @csrf
-                    <input type="hidden" name="login_method" value="mobile">
-                    <input type="hidden" name="mobile_login_mode" value="otp">
-                    <div class="am-account-card__field">
-                        <label for="login-otp-mobile">Mobile number (WhatsApp)</label>
-                        <div class="am-account-field-input am-account-field-input--phone">
-                            @include('partials.am-account-field-icon', ['icon' => 'phone'])
-                            @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'login-otp'])
-                        </div>
-                        <p class="am-account-card__hint">WhatsApp verification code will be sent to this number</p>
-                    </div>
-                    <x-form-protection-fields form-key="account_login_otp" :show-intent="false" />
-                    <button type="submit" class="am-account-card__submit" @disabled(! $providerReady)>
-                        <span>Send WhatsApp OTP</span>
-                    </button>
-                </form>
-            </div>
-
-            <div class="am-account-card__method {{ $loginMethod === 'mobile' && $mobileLoginMode === 'password' ? '' : 'is-hidden' }}" data-login-panel="mobile-password">
-                <form action="{{ route('account.login.mobile') }}" method="POST" class="am-account-card__form">
-                    @csrf
-                    <input type="hidden" name="login_method" value="mobile">
-                    <input type="hidden" name="mobile_login_mode" value="password">
-                    <div class="am-account-card__field">
-                        <label for="login-mobile-mobile">Mobile number</label>
-                        <div class="am-account-field-input am-account-field-input--phone">
-                            @include('partials.am-account-field-icon', ['icon' => 'phone'])
-                            @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'login-mobile'])
-                        </div>
-                    </div>
-                    <div class="am-account-card__field">
-                        <label for="login-mobile-password">Password</label>
-                        <div class="am-account-field-input">
-                            @include('partials.am-account-field-icon', ['icon' => 'password'])
-                            <input type="password" name="password" id="login-mobile-password" required class="am-input" autocomplete="current-password" placeholder="Your password">
-                        </div>
-                    </div>
-                    <button type="submit" class="am-account-card__submit">
-                        <span>Sign in</span>
-                    </button>
-                </form>
-            </div>
-
+                </div>
+                <x-form-protection-fields form-key="account_login_otp" :show-intent="false" />
+                <button type="submit" class="am-account-card__submit" @disabled(! $providerReady)>
+                    <span>Send OTP</span>
+                </button>
+            </form>
             <p class="am-account-card__footer-link">
-                <a href="{{ route('account.forgot') }}">Forgot password?</a>
+                <a href="{{ route('account.login') }}">Sign in with password</a>
             </p>
+            @else
+            <form action="{{ route('account.login.email') }}" method="POST" class="am-account-card__form">
+                @csrf
+                <div class="am-account-card__field">
+                    <label for="login-identifier" class="am-sr-only">Email or mobile number</label>
+                    <div class="am-account-field-input">
+                        @include('partials.am-account-field-icon', ['icon' => 'email'])
+                        <input type="text" name="login" id="login-identifier" value="{{ old('login', old('email')) }}" required class="am-input" autocomplete="username" placeholder="Email address or mobile number">
+                    </div>
+                </div>
+                <div class="am-account-card__field">
+                    <label for="login-password" class="am-sr-only">Password</label>
+                    <div class="am-account-field-input">
+                        @include('partials.am-account-field-icon', ['icon' => 'password'])
+                        <input type="password" name="password" id="login-password" required class="am-input" autocomplete="current-password" placeholder="Password">
+                    </div>
+                </div>
+                <button type="submit" class="am-account-card__submit">
+                    <span>Log in</span>
+                </button>
+            </form>
 
-            <div class="am-account-card__switch" data-account-login-switch>
-                @if($loginMethod === 'email')
-                <button type="button" class="am-account-card__alt-btn" data-login-panel-target="mobile-otp">Sign in with WhatsApp OTP</button>
-                <button type="button" class="am-account-card__alt-btn" data-login-panel-target="mobile-password">Sign in with mobile &amp; password</button>
-                @elseif($loginMethod === 'mobile' && $mobileLoginMode === 'otp')
-                <button type="button" class="am-account-card__alt-btn" data-login-panel-target="email">Sign in with email</button>
-                <button type="button" class="am-account-card__alt-btn" data-login-panel-target="mobile-password">Sign in with mobile &amp; password</button>
-                @else
-                <button type="button" class="am-account-card__alt-btn" data-login-panel-target="email">Sign in with email</button>
-                <button type="button" class="am-account-card__alt-btn" data-login-panel-target="mobile-otp">Sign in with WhatsApp OTP</button>
-                @endif
+            <div class="am-account-card__footer-links">
+                <a href="{{ route('account.forgot') }}">Forgot password?</a>
+                <a href="{{ route('account.login', ['otp' => 1]) }}">Sign in with OTP</a>
             </div>
 
-            <div class="am-account-card__divider" role="presentation">
-                <span>Don&rsquo;t have an account yet?</span>
-            </div>
+            @include('partials.am-account-social-buttons', ['mode' => 'login'])
+
             <a href="{{ route('account.register') }}" class="am-account-card__cta-secondary">Create an account</a>
+            @endif
         </div>
         @else
         @php
@@ -205,14 +168,14 @@
                             <label for="register-password">Password</label>
                             <div class="am-account-field-input">
                                 @include('partials.am-account-field-icon', ['icon' => 'password'])
-                                <input type="password" name="password" id="register-password" required class="am-input" autocomplete="new-password" minlength="8" placeholder="Min. 8 characters">
+                                <input type="password" name="password" id="register-password" required class="am-input" autocomplete="new-password" minlength="8" placeholder="Password">
                             </div>
                         </div>
                         <div class="am-account-card__field">
                             <label for="register-password-confirmation">Confirm password</label>
                             <div class="am-account-field-input">
                                 @include('partials.am-account-field-icon', ['icon' => 'password'])
-                                <input type="password" name="password_confirmation" id="register-password-confirmation" required class="am-input" autocomplete="new-password" minlength="8" placeholder="Repeat password">
+                                <input type="password" name="password_confirmation" id="register-password-confirmation" required class="am-input" autocomplete="new-password" minlength="8" placeholder="Confirm password">
                             </div>
                         </div>
                         <div class="am-account-card__field">
@@ -240,65 +203,52 @@
                                 @include('partials.am-account-field-icon', ['icon' => 'phone'])
                                 @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'register'])
                             </div>
-                            <p class="am-account-card__hint">WhatsApp verification code will be sent to this number</p>
+                            <div class="am-account-field__action-row">
+                                <button type="submit" class="am-account-send-otp" @disabled(! $providerReady)>Send OTP</button>
+                            </div>
                         </div>
                         <x-form-protection-fields form-key="account_register" :show-intent="false" />
-                        <button type="submit" class="am-account-card__submit" @disabled(! $providerReady)>
-                            <span>Send verification code</span>
-                        </button>
                     </form>
                     @endif
-                </div>
 
-                <section class="am-account-signup__verify {{ $awaitingRegisterOtp && ! $registerOtpVerified ? 'is-active' : '' }} {{ $registerOtpVerified ? 'is-done' : '' }}" aria-labelledby="register-verify-heading">
-                    <h2 class="am-account-signup__heading" id="register-verify-heading">Mobile verification</h2>
-                    @if($awaitingRegisterOtp && ! $registerOtpVerified)
-                    <p class="am-account-signup__status" role="status">Code sent to WhatsApp. Enter the verification code below.</p>
-                    @elseif($registerOtpVerified)
-                    <p class="am-account-signup__status" role="status">WhatsApp number verified.</p>
-                    @else
-                    <p class="am-account-signup__status" role="status">Complete the form above, then enter your WhatsApp code here.</p>
-                    @endif
-
-                    @if($awaitingRegisterOtp && ! $registerOtpVerified)
-                    <form action="{{ route('account.verify.submit') }}" method="POST" class="am-account-card__form" id="account-otp-form">
-                        @csrf
+                    <div class="am-account-signup__otp {{ $awaitingRegisterOtp ? 'is-active' : '' }} {{ $registerOtpVerified ? 'is-done' : '' }}">
                         <div class="am-account-card__field">
-                            <label for="otp-combined">Verification code</label>
-                            @include('partials.am-account-otp-inputs')
-                            <input type="hidden" name="otp" id="otp-combined" value="">
+                            <label for="otp-combined">OTP</label>
+                            @if($awaitingRegisterOtp && ! $registerOtpVerified)
+                            <form action="{{ route('account.verify.submit') }}" method="POST" class="am-account-signup__otp-form" id="account-otp-form">
+                                @csrf
+                                @include('partials.am-account-otp-inputs')
+                                <input type="hidden" name="otp" id="otp-combined" value="">
+                                <x-form-protection-fields form-key="account_verify_otp" :show-intent="false" />
+                                <button type="submit" class="am-account-card__submit am-account-card__submit--compact">
+                                    <span>Verify OTP</span>
+                                </button>
+                            </form>
+                            <div class="am-account-verify__actions">
+                                @if($registerCanResend && $providerReady)
+                                <form action="{{ route('account.resend') }}" method="POST">
+                                    @csrf
+                                    <x-form-protection-fields form-key="account_register" :show-intent="false" />
+                                    <button type="submit" class="am-account-card__link-btn">{{ config('account.copy.resend_otp') }}</button>
+                                </form>
+                                @elseif($awaitingRegisterOtp)
+                                <p class="am-account-verify__countdown" id="otp-resend-countdown" data-seconds="{{ $registerResendSeconds }}">
+                                    Resend available in <span>{{ $registerResendSeconds }}</span>s
+                                </p>
+                                @endif
+                                <a href="{{ route('account.register', ['change_number' => 1]) }}" class="am-account-verify__change">
+                                    Change number
+                                </a>
+                            </div>
+                            @elseif($registerOtpVerified)
+                            <p class="am-account-signup__status am-account-signup__status--inline" role="status">WhatsApp number verified.</p>
+                            @else
+                            @include('partials.am-account-otp-inputs', ['disabled' => true])
+                            <p class="am-account-card__hint">Send OTP to your mobile number to enable verification.</p>
+                            @endif
                         </div>
-                        <x-form-protection-fields form-key="account_verify_otp" :show-intent="false" />
-                        <button type="submit" class="am-account-card__submit">
-                            <span>Verify OTP</span>
-                        </button>
-                    </form>
-
-                    <div class="am-account-verify__actions">
-                        @if($registerCanResend && $providerReady)
-                        <form action="{{ route('account.resend') }}" method="POST">
-                            @csrf
-                            <x-form-protection-fields form-key="account_register" :show-intent="false" />
-                            <button type="submit" class="am-account-card__alt-btn am-account-card__alt-btn--inline">{{ config('account.copy.resend_otp') }}</button>
-                        </form>
-                        @elseif($awaitingRegisterOtp)
-                        <p class="am-account-verify__countdown" id="otp-resend-countdown" data-seconds="{{ $registerResendSeconds }}">
-                            Resend available in <span>{{ $registerResendSeconds }}</span>s
-                        </p>
-                        @endif
-                        @if($awaitingRegisterOtp)
-                        <a href="{{ route('account.register', ['change_number' => 1]) }}" class="am-account-verify__change">
-                            Change WhatsApp number
-                        </a>
-                        @endif
                     </div>
-                    @else
-                    <div class="am-account-card__field">
-                        <label class="am-sr-only" for="otp-placeholder-combined">Verification code</label>
-                        @include('partials.am-account-otp-inputs', ['disabled' => true])
-                    </div>
-                    @endif
-                </section>
+                </div>
 
                 @if($awaitingRegisterOtp && $registerOtpVerified)
                 <section class="am-account-signup__complete" aria-labelledby="register-complete-heading">
@@ -338,7 +288,6 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('js/account-auth.js') }}" defer></script>
 @if($activeTab === 'register' && ! empty($registerPending) && empty($registerOtpVerified))
 <script src="{{ asset('js/account-otp.js') }}" defer></script>
 @endif

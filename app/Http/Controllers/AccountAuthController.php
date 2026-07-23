@@ -38,21 +38,19 @@ class AccountAuthController extends Controller
     public function loginWithEmail(Request $request)
     {
         $validated = $request->validate([
-            'email' => 'required|email',
+            'login' => 'required_without:email|string|max:255',
+            'email' => 'required_without:login|nullable|string|max:255',
             'password' => 'required|string',
         ]);
 
-        $user = User::query()
-            ->where('email', $validated['email'])
-            ->where('is_admin', false)
-            ->whereNotNull('phone_verified_at')
-            ->first();
+        $identifier = trim((string) ($validated['login'] ?? $validated['email'] ?? ''));
+
+        $user = $this->findCustomerForPasswordLogin($identifier);
 
         if (! $user || ! $user->is_active || ! Hash::check($validated['password'], $user->password)) {
             return back()
-                ->withInput($request->only('email'))
-                ->withErrors(['email' => 'Invalid email or password.'])
-                ->with('login_method', 'email');
+                ->withInput($request->only('login', 'email'))
+                ->withErrors(['login' => 'Invalid email, mobile number, or password.']);
         }
 
         Auth::login($user);
@@ -531,6 +529,7 @@ class AccountAuthController extends Controller
 
         return view('account.auth', [
             'tab' => $tab,
+            'showOtpLogin' => $tab === 'login' && request()->boolean('otp'),
             'providerReady' => $this->otp->providerConfigured(),
             'countryCodes' => config('account.country_codes', []),
             'accountTypes' => config('account.account_types', []),
@@ -557,6 +556,30 @@ class AccountAuthController extends Controller
                 && filled(config('services.apple.key_id'))
                 && filled(config('services.apple.team_id')),
         ];
+    }
+
+    private function findCustomerForPasswordLogin(string $identifier): ?User
+    {
+        $query = User::query()
+            ->where('is_admin', false)
+            ->whereNotNull('phone_verified_at');
+
+        if (str_contains($identifier, '@')) {
+            return $query->where('email', $identifier)->first();
+        }
+
+        try {
+            $digits = preg_replace('/\D/', '', $identifier) ?? '';
+            $countryCode = str_starts_with($digits, '91') && strlen($digits) > 10 ? '+91' : '+91';
+            $phone = $this->phones->normalize($countryCode, $identifier);
+        } catch (InvalidArgumentException) {
+            return null;
+        }
+
+        return $query
+            ->where('mobile', $phone['national'])
+            ->where('mobile_country_code', $phone['country_code'])
+            ->first();
     }
 
     private function otpErrorResponse(\Throwable $e)

@@ -30,8 +30,8 @@ class RegisterOtpFormFlowTest extends TestCase
                 'or continue with email',
                 'Password',
                 'Confirm password',
-                'Mobile verification',
-                'Send verification code',
+                'OTP',
+                'Send OTP',
             ])
             ->assertSee('data-otp-digit', false);
     }
@@ -97,11 +97,10 @@ class RegisterOtpFormFlowTest extends TestCase
                 'City',
                 'Account type',
                 'Mobile number (WhatsApp)',
-                'Mobile verification',
-                'Verification code',
+                'OTP',
                 'Verify OTP',
             ])
-            ->assertDontSee('Send verification code')
+            ->assertDontSee('Send OTP')
             ->assertDontSee('id="register-password"', false)
             ->assertSee('id="register-password-locked"', false);
     }
@@ -157,10 +156,10 @@ class RegisterOtpFormFlowTest extends TestCase
         ])->get(route('account.register'));
 
         $response->assertOk()
-            ->assertSee('Send verification code')
+            ->assertSee('Send OTP')
             ->assertSee('Password')
             ->assertSee('Confirm password')
-            ->assertSee('Mobile verification')
+            ->assertSee('OTP')
             ->assertDontSee('Verify OTP');
     }
 
