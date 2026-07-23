@@ -4546,6 +4546,62 @@ ul { list-style: none; }
   gap: 0.85rem;
 }
 
+.am-account-signup {
+  width: 100%;
+}
+
+.am-account-signup__form,
+.am-account-signup__otp {
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+}
+
+.am-account-theme .am-input--underline {
+  border: none;
+  border-bottom: 1px solid var(--am-border);
+  border-radius: 0;
+  background: transparent;
+  padding-left: 0;
+  padding-right: 0;
+  box-shadow: none;
+}
+
+.am-account-theme .am-input--underline:focus {
+  border-bottom-color: var(--am-gold);
+  box-shadow: none;
+}
+
+.am-account-card__submit--secondary {
+  background: #efe8dc;
+  color: var(--am-ink);
+  font-weight: 600;
+}
+
+.am-account-card__submit--secondary:hover:not(:disabled) {
+  background: #e4d9c6;
+  color: var(--am-ink);
+}
+
+.am-account-signup__phone {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--am-ink);
+  letter-spacing: 0.02em;
+}
+
+.am-account-signup__status {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border-radius: 0.55rem;
+  background: #edf7f1;
+  color: #1f6b45;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+}
+
 .am-account-verify-sequence {
   display: flex;
   flex-direction: column;

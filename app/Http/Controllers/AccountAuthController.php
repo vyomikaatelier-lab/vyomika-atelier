@@ -100,8 +100,18 @@ class AccountAuthController extends Controller
         return redirect()->intended(route('account'));
     }
 
-    public function showRegister()
+    public function showRegister(Request $request)
     {
+        if ($request->boolean('change_number')) {
+            $request->session()->forget([
+                'account_pending_verification_id',
+                'account_pending_mobile_display',
+                'account_register_password',
+            ]);
+
+            return redirect()->route('account.register');
+        }
+
         return $this->authView('register');
     }
 
@@ -135,11 +145,12 @@ class AccountAuthController extends Controller
             return back()->withInput()->withErrors(['mobile' => $e->getMessage()]);
         }
 
-        $whatsappNational = $validated['whatsapp'] ?: $phone['national'];
+        $whatsappInput = $validated['whatsapp'] ?? null;
+        $whatsappNational = $whatsappInput ?: $phone['national'];
         $whatsappE164 = $phone['e164'];
-        if ($validated['whatsapp']) {
+        if ($whatsappInput) {
             try {
-                $whatsappE164 = $this->phones->normalize($validated['country_code'], $validated['whatsapp'])['e164'];
+                $whatsappE164 = $this->phones->normalize($validated['country_code'], $whatsappInput)['e164'];
             } catch (InvalidArgumentException) {
                 return back()->withInput()->withErrors(['whatsapp' => 'Enter a valid WhatsApp number.']);
             }
@@ -181,7 +192,7 @@ class AccountAuthController extends Controller
         $request->session()->put('account_register_password', $validated['password']);
         $this->storePendingVerification($request, $record, $phone);
 
-        return redirect()->route('account.verify')
+        return redirect()->route('account.register')
             ->with('status', config('account.copy.otp_sent_generic'));
     }
 
@@ -204,6 +215,11 @@ class AccountAuthController extends Controller
         if (! $record) {
             return redirect()->route('account.login')
                 ->with('info', 'Start by requesting a verification code.');
+        }
+
+        // Registration OTP stays on the create-account form (single-column flow).
+        if ($record->purpose === 'register') {
+            return redirect()->route('account.register');
         }
 
         return view('account.verify-otp', [
@@ -234,17 +250,20 @@ class AccountAuthController extends Controller
             $record->refresh();
             $this->formProtection->hitRateLimiters($request, 'account_verify_otp');
 
-            if ($record->isExpired() || ! $record->hasAttemptsRemaining()) {
-                return back()->withErrors(['otp' => config('account.copy.failure')]);
+            $otpFail = back()->withErrors(['otp' => config('account.copy.failure')]);
+            if ($record->purpose === 'register') {
+                return $otpFail->withInput();
             }
 
-            return back()->withErrors(['otp' => config('account.copy.failure')]);
+            return $otpFail;
         }
 
         try {
             $user = $this->resolveUserAfterVerification($record);
         } catch (\RuntimeException $e) {
-            return back()->withErrors(['otp' => 'Unable to complete registration. Please try again or contact the studio.']);
+            $fail = back()->withErrors(['otp' => 'Unable to complete registration. Please try again or contact the studio.']);
+
+            return $record->purpose === 'register' ? $fail->withInput() : $fail;
         }
 
         if (! $user->is_active) {
@@ -290,6 +309,11 @@ class AccountAuthController extends Controller
         $this->formProtection->hitRateLimiters($request, $formKey);
 
         $request->session()->put('account_pending_verification_id', $newRecord->id);
+
+        if ($newRecord->purpose === 'register') {
+            return redirect()->route('account.register')
+                ->with('status', config('account.copy.otp_sent_generic'));
+        }
 
         return back()->with('status', config('account.copy.otp_sent_generic'));
     }
@@ -432,11 +456,27 @@ class AccountAuthController extends Controller
 
     private function authView(string $tab)
     {
+        $registerPending = null;
+        if ($tab === 'register') {
+            $pending = $this->pendingVerification(request());
+            if ($pending && $pending->purpose === 'register' && ! $pending->isVerified()) {
+                $registerPending = $pending;
+            }
+        }
+
         return view('account.auth', [
             'tab' => $tab,
             'providerReady' => $this->otp->providerConfigured(),
             'countryCodes' => config('account.country_codes', []),
             'accountTypes' => config('account.account_types', []),
+            'registerPending' => $registerPending,
+            'registerMaskedMobile' => $registerPending
+                ? $this->phones->maskE164($registerPending->mobile_e164)
+                : null,
+            'registerCanResend' => (bool) ($registerPending && $this->otp->canResend($registerPending->mobile_e164)),
+            'registerResendSeconds' => $registerPending
+                ? $this->otp->secondsUntilResend($registerPending->mobile_e164)
+                : 0,
         ]);
     }
 
