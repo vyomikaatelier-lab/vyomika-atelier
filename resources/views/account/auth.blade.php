@@ -29,11 +29,22 @@
         @if($activeTab === 'login')
         @php
             $showOtpLogin = $showOtpLogin ?? request()->boolean('otp');
+            $loginPending = $loginPending ?? null;
+            $loginLocked = ! empty($loginPending);
             $socialProviders = $socialProviders ?? ['google' => false, 'apple' => false];
         @endphp
         <div class="am-account-card__panel" id="account-login-panel">
             @if($showOtpLogin)
-            <form action="{{ route('account.login.send') }}" method="POST" class="am-account-card__form">
+            @if($loginLocked)
+            <div class="am-account-card__field">
+                <label for="login-otp-mobile-locked">Mobile number (WhatsApp)</label>
+                <div class="am-account-field-input am-account-field-input--readonly">
+                    @include('partials.am-account-field-icon', ['icon' => 'phone'])
+                    <input type="text" id="login-otp-mobile-locked" value="{{ $loginMaskedMobile }}" class="am-input" readonly>
+                </div>
+            </div>
+            @else
+            <form action="{{ route('account.login.send') }}" method="POST" class="am-account-card__form" id="account-login-send-form">
                 @csrf
                 <input type="hidden" name="login_method" value="mobile">
                 <input type="hidden" name="mobile_login_mode" value="otp">
@@ -43,12 +54,50 @@
                         @include('partials.am-account-field-icon', ['icon' => 'phone'])
                         @include('partials.am-account-phone-fields', ['countryCodes' => $countryCodes, 'fieldPrefix' => 'login-otp'])
                     </div>
+                    <div class="am-account-field__action-row">
+                        <button type="submit" class="am-account-send-otp" @disabled(! $providerReady)>Send OTP</button>
+                    </div>
                 </div>
                 <x-form-protection-fields form-key="account_login_otp" :show-intent="false" />
-                <button type="submit" class="am-account-card__submit" @disabled(! $providerReady)>
-                    <span>Send OTP</span>
-                </button>
             </form>
+            @endif
+
+            <div class="am-account-signup__otp {{ $loginLocked ? 'is-active' : '' }}">
+                <div class="am-account-card__field">
+                    <label for="otp-combined">OTP</label>
+                    @if($loginLocked)
+                    <form action="{{ route('account.verify.submit') }}" method="POST" class="am-account-signup__otp-form" id="account-otp-form">
+                        @csrf
+                        @include('partials.am-account-otp-inputs')
+                        <input type="hidden" name="otp" id="otp-combined" value="">
+                        <x-form-protection-fields form-key="account_verify_otp" :show-intent="false" />
+                        <button type="submit" class="am-account-card__submit am-account-card__submit--compact">
+                            <span>Verify &amp; sign in</span>
+                        </button>
+                    </form>
+                    <div class="am-account-verify__actions">
+                        @if($loginCanResend && $providerReady)
+                        <form action="{{ route('account.resend') }}" method="POST">
+                            @csrf
+                            <x-form-protection-fields form-key="account_login_otp" :show-intent="false" />
+                            <button type="submit" class="am-account-card__link-btn">{{ config('account.copy.resend_otp') }}</button>
+                        </form>
+                        @elseif($loginLocked)
+                        <p class="am-account-verify__countdown" id="otp-resend-countdown" data-seconds="{{ $loginResendSeconds }}">
+                            Resend available in <span>{{ $loginResendSeconds }}</span>s
+                        </p>
+                        @endif
+                        <a href="{{ route('account.login', ['otp' => 1, 'change_number' => 1]) }}" class="am-account-verify__change">
+                            Change number
+                        </a>
+                    </div>
+                    @else
+                    @include('partials.am-account-otp-inputs', ['disabled' => true])
+                    <p class="am-account-card__hint">Send OTP to your mobile number to sign in.</p>
+                    @endif
+                </div>
+            </div>
+
             <p class="am-account-card__footer-link">
                 <a href="{{ route('account.login') }}">Sign in with password</a>
             </p>
@@ -280,6 +329,8 @@
 
 @push('scripts')
 @if($activeTab === 'register' && ! empty($registerPending) && empty($registerOtpVerified))
+<script src="{{ asset('js/account-otp.js') }}" defer></script>
+@elseif($activeTab === 'login' && ! empty($loginPending))
 <script src="{{ asset('js/account-otp.js') }}" defer></script>
 @endif
 @endpush

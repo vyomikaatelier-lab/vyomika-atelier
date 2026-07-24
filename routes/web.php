@@ -142,6 +142,7 @@ Route::prefix('account')->name('account.')->middleware('customer.guest')->group(
     Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->name('social.callback');
     Route::get('/forgot', [AccountAuthController::class, 'showForgot'])->name('forgot');
     Route::post('/forgot', [AccountAuthController::class, 'sendForgotOtp'])->middleware('throttle:otp-send')->name('forgot.send');
+    Route::post('/forgot/reset', [AccountAuthController::class, 'resetForgotPassword'])->middleware('throttle:auth')->name('forgot.reset');
 });
 
 Route::get('/account/verify-otp', [AccountAuthController::class, 'showVerifyOtp'])->name('account.verify');

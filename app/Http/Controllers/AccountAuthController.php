@@ -25,8 +25,17 @@ class AccountAuthController extends Controller
         private FormProtectionService $formProtection,
     ) {}
 
-    public function showLogin()
+    public function showLogin(Request $request)
     {
+        if ($request->boolean('change_number')) {
+            $request->session()->forget([
+                'account_pending_verification_id',
+                'account_pending_mobile_display',
+            ]);
+
+            return redirect()->route('account.login', ['otp' => 1]);
+        }
+
         return $this->authView('login');
     }
 
@@ -243,17 +252,85 @@ class AccountAuthController extends Controller
             ->with('success', config('account.copy.success'));
     }
 
-    public function showForgot()
+    public function showForgot(Request $request)
     {
+        if ($request->boolean('change_number')) {
+            $request->session()->forget([
+                'account_pending_verification_id',
+                'account_pending_mobile_display',
+            ]);
+
+            return redirect()->route('account.forgot');
+        }
+
+        $forgotPending = null;
+        $forgotOtpVerified = false;
+        $pending = $this->pendingVerification($request);
+        if ($pending && $pending->purpose === 'forgot') {
+            $forgotPending = $pending;
+            $forgotOtpVerified = $pending->isVerified();
+        }
+
         return view('account.forgot', [
             'providerReady' => $this->otp->providerConfigured(),
             'countryCodes' => config('account.country_codes', []),
+            'forgotPending' => $forgotPending,
+            'forgotOtpVerified' => $forgotOtpVerified,
+            'forgotMaskedMobile' => $forgotPending
+                ? $this->phones->maskE164($forgotPending->mobile_e164)
+                : null,
+            'forgotCanResend' => (bool) ($forgotPending && ! $forgotOtpVerified && $this->otp->canResend($forgotPending->mobile_e164)),
+            'forgotResendSeconds' => $forgotPending && ! $forgotOtpVerified
+                ? $this->otp->secondsUntilResend($forgotPending->mobile_e164)
+                : 0,
         ]);
     }
 
     public function sendForgotOtp(Request $request)
     {
         return $this->dispatchOtp($request, 'forgot');
+    }
+
+    public function resetForgotPassword(Request $request)
+    {
+        if ($response = $this->guardOtpForm($request, 'account_forgot_otp')) {
+            return $response;
+        }
+
+        $record = $this->pendingVerification($request);
+        if (! $record || $record->purpose !== 'forgot' || ! $record->isVerified()) {
+            return redirect()->route('account.forgot')
+                ->with('info', 'Verify your mobile number before setting a new password.');
+        }
+
+        $validated = $request->validate([
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = User::query()
+            ->where('is_admin', false)
+            ->whereNotNull('phone_verified_at')
+            ->get()
+            ->first(fn (User $u) => $u->mobileE164() === $record->mobile_e164);
+
+        if (! $user || ! $user->is_active) {
+            return redirect()->route('account.forgot', ['change_number' => 1])
+                ->withErrors(['password' => 'Unable to reset password for this account.']);
+        }
+
+        $user->update([
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        Auth::login($user);
+        $request->session()->regenerate();
+        $request->session()->forget([
+            'account_pending_verification_id',
+            'account_pending_mobile_display',
+        ]);
+
+        return redirect()->intended(route('account'))
+            ->with('success', 'Your password has been updated.');
     }
 
     public function showVerifyOtp(Request $request)
@@ -264,9 +341,17 @@ class AccountAuthController extends Controller
                 ->with('info', 'Start by requesting a verification code.');
         }
 
-        // Registration OTP stays on the create-account form (single-column flow).
+        // Inline OTP flows stay on login, register, or forgot pages.
         if ($record->purpose === 'register') {
             return redirect()->route('account.register');
+        }
+
+        if ($record->purpose === 'login') {
+            return redirect()->route('account.login', ['otp' => 1]);
+        }
+
+        if ($record->purpose === 'forgot') {
+            return redirect()->route('account.forgot');
         }
 
         return view('account.verify-otp', [
@@ -297,12 +382,13 @@ class AccountAuthController extends Controller
             $record->refresh();
             $this->formProtection->hitRateLimiters($request, 'account_verify_otp');
 
-            $otpFail = back()->withErrors(['otp' => config('account.copy.failure')]);
+            $message = config('account.copy.failure');
             if ($record->purpose === 'register') {
-                return $otpFail->withInput();
+                return back()->withErrors(['otp' => $message])->withInput();
             }
 
-            return $otpFail;
+            return redirect($this->otpFlowRoute($record->purpose))
+                ->withErrors(['otp' => $message]);
         }
 
         if ($record->purpose === 'register') {
@@ -310,14 +396,21 @@ class AccountAuthController extends Controller
                 ->with('status', 'Code verified. Review and create your account.');
         }
 
+        if ($record->purpose === 'forgot') {
+            return redirect()->route('account.forgot')
+                ->with('status', 'Code verified. Set your new password below.');
+        }
+
         try {
             $user = $this->resolveUserAfterVerification($record);
         } catch (\RuntimeException $e) {
-            return back()->withErrors(['otp' => 'Unable to complete sign-in. Please try again or contact the studio.']);
+            return redirect()->route('account.login', ['otp' => 1])
+                ->withErrors(['otp' => 'Unable to complete sign-in. Please try again or contact the studio.']);
         }
 
         if (! $user->is_active) {
-            return back()->withErrors(['otp' => 'This account has been disabled. Contact the studio for assistance.']);
+            return redirect($this->otpFlowRoute($record->purpose))
+                ->withErrors(['otp' => 'This account has been disabled. Contact the studio for assistance.']);
         }
 
         Auth::login($user);
@@ -362,6 +455,16 @@ class AccountAuthController extends Controller
 
         if ($newRecord->purpose === 'register') {
             return redirect()->route('account.register')
+                ->with('status', config('account.copy.otp_sent_generic'));
+        }
+
+        if ($newRecord->purpose === 'login') {
+            return redirect()->route('account.login', ['otp' => 1])
+                ->with('status', config('account.copy.otp_sent_generic'));
+        }
+
+        if ($newRecord->purpose === 'forgot') {
+            return redirect()->route('account.forgot')
                 ->with('status', config('account.copy.otp_sent_generic'));
         }
 
@@ -421,8 +524,12 @@ class AccountAuthController extends Controller
                 return $this->otpErrorResponse($e);
             }
 
-            return redirect()->route('account.verify')
-                ->with('status', config('account.copy.otp_sent_generic'));
+            return match ($purpose) {
+                'forgot' => redirect()->route('account.forgot')
+                    ->with('status', config('account.copy.otp_sent_generic')),
+                default => redirect()->route('account.login', ['otp' => 1])
+                    ->with('status', config('account.copy.otp_sent_generic')),
+            };
         }
 
         Log::info('OTP requested for unknown or unverified mobile', [
@@ -518,6 +625,8 @@ class AccountAuthController extends Controller
         $registerPending = null;
         $registerOtpVerified = false;
         $registerDetails = [];
+        $loginPending = null;
+
         if ($tab === 'register') {
             $pending = $this->pendingVerification(request());
             if ($pending && $pending->purpose === 'register') {
@@ -527,13 +636,28 @@ class AccountAuthController extends Controller
             }
         }
 
+        if ($tab === 'login') {
+            $pending = $this->pendingVerification(request());
+            if ($pending && $pending->purpose === 'login') {
+                $loginPending = $pending;
+            }
+        }
+
         return view('account.auth', [
             'tab' => $tab,
-            'showOtpLogin' => $tab === 'login' && request()->boolean('otp'),
+            'showOtpLogin' => $tab === 'login' && (request()->boolean('otp') || $loginPending),
             'providerReady' => $this->otp->providerConfigured(),
             'countryCodes' => config('account.country_codes', []),
             'accountTypes' => config('account.account_types', []),
             'socialProviders' => $this->socialProviders(),
+            'loginPending' => $loginPending,
+            'loginMaskedMobile' => $loginPending
+                ? $this->phones->maskE164($loginPending->mobile_e164)
+                : null,
+            'loginCanResend' => (bool) ($loginPending && $this->otp->canResend($loginPending->mobile_e164)),
+            'loginResendSeconds' => $loginPending
+                ? $this->otp->secondsUntilResend($loginPending->mobile_e164)
+                : 0,
             'registerPending' => $registerPending,
             'registerOtpVerified' => $registerOtpVerified,
             'registerDetails' => $registerDetails,
@@ -545,6 +669,15 @@ class AccountAuthController extends Controller
                 ? $this->otp->secondsUntilResend($registerPending->mobile_e164)
                 : 0,
         ]);
+    }
+
+    private function otpFlowRoute(string $purpose): string
+    {
+        return match ($purpose) {
+            'register' => route('account.register'),
+            'forgot' => route('account.forgot'),
+            default => route('account.login', ['otp' => 1]),
+        };
     }
 
     private function socialProviders(): array

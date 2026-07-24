@@ -59,8 +59,6 @@ class CustomerAuthTest extends TestCase
         $response->assertOk()
             ->assertSee('Email address or mobile number')
             ->assertSee('Sign in with OTP')
-            ->assertSee('Sign in with Apple')
-            ->assertSee('Sign in with Google')
             ->assertSee('Create an account')
             ->assertDontSee('Sign in with mobile &amp; password', false);
     }

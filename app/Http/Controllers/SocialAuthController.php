@@ -15,8 +15,8 @@ class SocialAuthController extends Controller
     public function redirect(string $provider)
     {
         if (! $this->providerConfigured($provider)) {
-            return redirect()->route('account.register')
-                ->with('info', $this->providerLabel($provider) . ' sign-up is not configured yet. Use email registration or contact the studio.');
+            return redirect()->route('account.login')
+                ->with('info', $this->providerLabel($provider) . ' sign-in is not configured yet. Use email or mobile sign-in.');
         }
 
         return Socialite::driver($provider)
@@ -27,22 +27,22 @@ class SocialAuthController extends Controller
     public function callback(Request $request, string $provider)
     {
         if (! $this->providerConfigured($provider)) {
-            return redirect()->route('account.register')
-                ->with('info', $this->providerLabel($provider) . ' sign-up is not configured yet.');
+            return redirect()->route('account.login')
+                ->with('info', $this->providerLabel($provider) . ' sign-in is not configured yet.');
         }
 
         try {
             $socialUser = Socialite::driver($provider)->user();
         } catch (\Throwable $e) {
-            return redirect()->route('account.register')
-                ->withErrors(['form' => 'Unable to sign in with ' . $this->providerLabel($provider) . '. Please try again or use email registration.']);
+            return redirect()->route('account.login')
+                ->withErrors(['form' => 'Unable to sign in with ' . $this->providerLabel($provider) . '. Please try again or use email sign-in.']);
         }
 
         $providerIdColumn = $provider . '_id';
         $email = $socialUser->getEmail();
 
         if (! $email) {
-            return redirect()->route('account.register')
+            return redirect()->route('account.login')
                 ->withErrors(['form' => 'We could not read an email address from your ' . $this->providerLabel($provider) . ' account.']);
         }
 

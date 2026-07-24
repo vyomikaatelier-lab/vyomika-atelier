@@ -21,13 +21,36 @@ class SocialAuthRouteTest extends TestCase
             ->assertSee('OTP');
     }
 
-    public function test_login_page_shows_social_signin_buttons(): void
+    public function test_login_page_hides_social_buttons_when_not_configured(): void
     {
+        config([
+            'services.google.client_id' => null,
+            'services.google.client_secret' => null,
+            'services.apple.client_id' => null,
+            'services.apple.client_secret' => null,
+            'services.apple.key_id' => null,
+            'services.apple.team_id' => null,
+        ]);
+
         $response = $this->get(route('account.login'));
 
         $response->assertOk()
-            ->assertSee('Sign in with Apple')
-            ->assertSee('Sign in with Google');
+            ->assertDontSee('Sign in with Apple')
+            ->assertDontSee('Sign in with Google');
+    }
+
+    public function test_login_page_shows_social_signin_buttons_when_configured(): void
+    {
+        config([
+            'services.google.client_id' => 'test-google-id',
+            'services.google.client_secret' => 'test-google-secret',
+        ]);
+
+        $response = $this->get(route('account.login'));
+
+        $response->assertOk()
+            ->assertSee('Sign in with Google')
+            ->assertDontSee('Sign in with Apple');
     }
 
     public function test_google_redirect_without_credentials_returns_info_message(): void
@@ -39,7 +62,7 @@ class SocialAuthRouteTest extends TestCase
 
         $response = $this->get(route('account.social.redirect', 'google'));
 
-        $response->assertRedirect(route('account.register'))
+        $response->assertRedirect(route('account.login'))
             ->assertSessionHas('info');
     }
 
@@ -54,7 +77,7 @@ class SocialAuthRouteTest extends TestCase
 
         $response = $this->get(route('account.social.redirect', 'apple'));
 
-        $response->assertRedirect(route('account.register'))
+        $response->assertRedirect(route('account.login'))
             ->assertSessionHas('info');
     }
 
@@ -62,7 +85,7 @@ class SocialAuthRouteTest extends TestCase
     {
         $response = $this->get(route('account.social.redirect', 'facebook'));
 
-        $response->assertRedirect(route('account.register'))
+        $response->assertRedirect(route('account.login'))
             ->assertSessionHas('info');
     }
 }
