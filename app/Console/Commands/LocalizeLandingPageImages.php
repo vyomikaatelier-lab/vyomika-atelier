@@ -124,16 +124,32 @@ class LocalizeLandingPageImages extends Command
         }
 
         try {
-            $response = Http::timeout(30)->withHeaders([
-                'User-Agent' => 'VyomikaAtelierLandingImport/1.0',
-            ])->get($url);
+            // Browser-like headers: Unsplash and CDNs often block non-browser clients.
+            $response = Http::timeout(45)
+                ->withOptions(['allow_redirects' => true])
+                ->retry(2, 500)
+                ->withHeaders([
+                    'User-Agent' => 'Mozilla/5.0 (compatible; VyomikaAtelier/1.0; +https://vyomikaatelier.com)',
+                    'Accept' => 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+                    'Accept-Language' => 'en-US,en;q=0.9',
+                    'Referer' => 'https://unsplash.com/',
+                ])
+                ->get($url);
 
             if (! $response->successful()) {
+                $this->warn("HTTP {$response->status()} for {$url}");
+
                 return null;
             }
 
             $body = $response->body();
+            $mime = strtolower((string) ($response->header('Content-Type') ?: ''));
             if ($body === '' || strlen($body) > 8 * 1024 * 1024) {
+                return null;
+            }
+            if ($mime !== '' && ! str_starts_with($mime, 'image/') && ! str_contains($mime, 'octet-stream')) {
+                $this->warn("Non-image content-type ({$mime}) for {$url}");
+
                 return null;
             }
 
@@ -143,14 +159,16 @@ class LocalizeLandingPageImages extends Command
                 [
                     'disk' => 'public',
                     'filename' => basename($path),
-                    'mime' => $response->header('Content-Type') ?: 'image/jpeg',
+                    'mime' => $mime !== '' ? explode(';', $mime)[0] : 'image/jpeg',
                     'size' => strlen($body),
                     'is_private' => false,
                 ]
             );
 
             return $path;
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            $this->warn($e->getMessage());
+
             return null;
         }
     }
