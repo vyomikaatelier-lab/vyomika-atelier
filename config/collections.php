@@ -92,28 +92,6 @@ return [
         ],
         'gallery_title' => 'Door Handle Designs',
     ],
-    'home-decor' => [
-        'meta_title' => 'Home Decor Collection | Vyomika Atelier',
-        'meta_description' => 'PVD metal home decor accents — vases, trays, wall art and statement pieces from Vyomika Atelier.',
-        'hero' => [
-            'label' => 'Shop',
-            'title' => 'Home Decor',
-            'subtitle' => 'Sculptural PVD metal accents for residential and hospitality interiors — decorative trays, wall art, vases and bespoke accent pieces.',
-            'highlights' => [
-                'PVD stainless finishes',
-                'Studio fabrication',
-                'Pan-India delivery',
-            ],
-            'cta_primary' => ['label' => 'Browse Designs', 'href' => '#collection-gallery'],
-            'cta_secondary' => ['label' => 'Browse All Shop', 'href' => '/shop'],
-            'image' => 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=1400&q=80',
-        ],
-        'intro' => [
-            'title' => 'Metal Accents That Finish the Room',
-            'body' => 'Home decor pieces fabricated in our Delhi studio with grade 304/316 stainless and PVD coating — designed to complement partitions, furniture and entrance systems.',
-        ],
-        'gallery_title' => 'Home Decor Designs',
-    ],
     'bespoke-metal-furniture' => [
         'meta_title' => 'Bespoke Metal Furniture | Vyomika Atelier',
         'meta_description' => 'Bespoke PVD metal furniture — coffee tables, corner tables, glass tables and consoles — fabricated to order from Vyomika Atelier.',

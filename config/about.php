@@ -63,8 +63,7 @@ return [
             [
                 'name' => 'Corten Steel',
                 'text' => 'Weathering steel façades, screens and landscape features with controlled patina.',
-                'route' => 'services.show',
-                'params' => ['slug' => 'corten-steel-facade'],
+                'route' => 'corten-steel.show',
                 'image' => 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80',
             ],
             [

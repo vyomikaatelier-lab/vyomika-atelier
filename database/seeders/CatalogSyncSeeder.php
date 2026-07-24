@@ -47,10 +47,15 @@ class CatalogSyncSeeder extends Seeder
         }
 
         foreach (array_values($productsBySlug) as $item) {
+            $categorySlug = ProductCatalog::categorySlugForProduct($item['slug'])
+                ?? (in_array($item['category'] ?? '', ProductCatalog::obsoleteCategorySlugs(), true)
+                    ? (in_array($item['category'], ['fluted-panels', 'room-dividers'], true) ? 'partitions' : 'bespoke-metal-furniture')
+                    : ($item['category'] ?? null));
+
             Product::query()->updateOrCreate(
                 ['slug' => $item['slug']],
                 [
-                    'category_id' => $cat($item['category'])?->id,
+                    'category_id' => $categorySlug ? $cat($categorySlug)?->id : null,
                     'name' => $item['name'],
                     'description' => $item['desc'],
                     'price' => $item['price'],

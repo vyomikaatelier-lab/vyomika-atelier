@@ -1,11 +1,11 @@
-<?php
-
-namespace App\Support;
-
-class RailingsContent
-{
-    public static function all(): array
-    {
-        return config('railings', []);
-    }
-}
+<?php
+
+namespace App\Support;
+
+class RailingsContent
+{
+    public static function all(): array
+    {
+        return LandingPageContent::page('railings');
+    }
+}

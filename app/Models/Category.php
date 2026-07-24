@@ -49,7 +49,7 @@ class Category extends Model
     {
         $section = $this->resolvedSection();
 
-        if ($section === Product::SECTION_RAILINGS) {
+        if ($section === Product::SECTION_RAILINGS || $this->slug === 'railings') {
             return route('railings.index');
         }
 
@@ -58,12 +58,26 @@ class Category extends Model
                 return StorefrontRoutes::shopCategoryUrl($this->slug);
             }
 
+            if (in_array($this->slug, ['home-decor', 'metal-furniture'], true)) {
+                return StorefrontRoutes::shopCategoryUrl('bespoke-metal-furniture');
+            }
+
             return route('shop.index');
         }
 
         if ($section === Product::SECTION_STUDIO) {
-            if (in_array($this->slug, ['partitions', 'fluted-panels', 'room-dividers'], true)) {
+            $studioUrl = StorefrontRoutes::studioUrlForService($this->slug);
+            if ($studioUrl) {
+                return route('studio.show', $studioUrl);
+            }
+
+            // Legacy archived partition taxonomy.
+            if (in_array($this->slug, ['fluted-panels', 'room-dividers'], true)) {
                 return route('studio.show', 'pvd-partitions');
+            }
+
+            if ($this->slug === 'metal-furniture') {
+                return StorefrontRoutes::shopCategoryUrl('bespoke-metal-furniture');
             }
 
             return route('studio.index');
@@ -76,15 +90,31 @@ class Category extends Model
     {
         $section = $this->resolvedSection();
 
-        return match ($section) {
-            Product::SECTION_SHOP => StorefrontRoutes::isShopCategory($this->slug)
-                ? 'Shop › '.StorefrontRoutes::shopCategoryLabel($this->slug)
-                : 'Shop',
-            Product::SECTION_STUDIO => in_array($this->slug, ['partitions', 'fluted-panels', 'room-dividers'], true)
-                ? 'Studio › PVD Partitions'
-                : 'Studio',
-            Product::SECTION_RAILINGS => 'Railings',
-            default => 'Not linked',
-        };
+        if ($section === Product::SECTION_SHOP) {
+            if (StorefrontRoutes::isShopCategory($this->slug)) {
+                return 'Shop › '.StorefrontRoutes::shopCategoryLabel($this->slug);
+            }
+
+            return 'Shop';
+        }
+
+        if ($section === Product::SECTION_STUDIO) {
+            $serviceLabel = StorefrontRoutes::studioServiceLabels()[$this->slug] ?? null;
+            if ($serviceLabel) {
+                return 'Studio › '.$serviceLabel;
+            }
+
+            if (in_array($this->slug, ['partitions', 'fluted-panels', 'room-dividers'], true)) {
+                return 'Studio › PVD Partitions';
+            }
+
+            return 'Studio';
+        }
+
+        if ($section === Product::SECTION_RAILINGS || $this->slug === 'railings') {
+            return 'Railings';
+        }
+
+        return 'Not linked';
     }
 }

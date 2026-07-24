@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\ShopCatalog;
 use App\Support\StorefrontRoutes;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -10,6 +11,10 @@ class ShopPageController extends Controller
 {
     public function show(string $slug): View|RedirectResponse
     {
+        if ($redirect = ShopCatalog::studioCategoryRedirectUrl($slug)) {
+            return redirect($redirect, 301);
+        }
+
         if (StorefrontRoutes::isStudioUrl($slug)) {
             return redirect()->route('studio.show', $slug, 301);
         }

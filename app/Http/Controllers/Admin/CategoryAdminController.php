@@ -34,8 +34,11 @@ class CategoryAdminController extends Controller
             });
         }
 
-        if ($request->filled('status')) {
-            $query->where('is_active', $request->status === 'active');
+        $status = $request->input('status', 'active');
+        if ($status === 'active') {
+            $query->where('is_active', true);
+        } elseif ($status === 'inactive') {
+            $query->where('is_active', false);
         }
 
         if ($request->filled('section')) {

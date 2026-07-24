@@ -144,7 +144,7 @@ class Product extends Model
     /** @return list<string> */
     public static function calculatorCategorySlugs(): array
     {
-        return ['partitions', 'fluted-panels', 'room-dividers'];
+        return ['partitions'];
     }
 
     /**

@@ -6,16 +6,16 @@ class CortenContent
 {
     public static function all(): array
     {
-        return config('corten', []);
+        return LandingPageContent::page('corten-steel');
     }
 
     public static function metaTitle(): string
     {
-        return config('corten.meta_title', 'Corten Steel — Vyomika Atelier LLP');
+        return (string) (self::all()['meta_title'] ?? 'Corten Steel — Vyomika Atelier LLP');
     }
 
     public static function metaDescription(): string
     {
-        return config('corten.meta_description', '');
+        return (string) (self::all()['meta_description'] ?? '');
     }
 }

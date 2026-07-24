@@ -47,6 +47,8 @@ use App\Http\Controllers\Admin\LegalPageAdminController;
 use App\Http\Controllers\Admin\MediaAdminController;
 use App\Http\Controllers\Admin\ServiceAdminController;
 use App\Http\Controllers\Admin\CollectionPageAdminController;
+use App\Http\Controllers\Admin\IndependentLandingAdminController;
+use App\Http\Controllers\CortenSteelController;
 
 // Public storefront
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -77,7 +79,8 @@ Route::middleware('checkout.customer')->group(function () {
 Route::post('/webhooks/razorpay', RazorpayWebhookController::class)->name('webhooks.razorpay');
 
 Route::get('/services', [ServiceController::class, 'index'])->name('services.index');
-Route::redirect('/corten-steel', '/services/corten-steel-facade');
+Route::get('/corten-steel', [CortenSteelController::class, 'show'])->name('corten-steel.show');
+Route::redirect('/services/corten-steel-facade', '/corten-steel', 301);
 Route::redirect('/services/bespoke-metal-furniture', '/shop/bespoke-metal-furniture');
 Route::redirect('/services/partitions', '/studio/pvd-partitions');
 Route::redirect('/services/slim-profile-door-system', '/studio/slim-profile-door-systems');
@@ -215,6 +218,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('collection-pages', [CollectionPageAdminController::class, 'index'])->name('collection-pages.index');
         Route::get('collection-pages/{slug}/edit', [CollectionPageAdminController::class, 'edit'])->name('collection-pages.edit');
         Route::put('collection-pages/{slug}', [CollectionPageAdminController::class, 'update'])->name('collection-pages.update');
+
+        Route::get('independent-pages', [IndependentLandingAdminController::class, 'index'])->name('independent-pages.index');
+        Route::get('independent-pages/{slug}/edit', [IndependentLandingAdminController::class, 'edit'])->name('independent-pages.edit');
+        Route::put('independent-pages/{slug}', [IndependentLandingAdminController::class, 'update'])->name('independent-pages.update');
 
         Route::get('professional-applications', [ProfessionalApplicationAdminController::class, 'index'])->name('professional-applications.index');
         Route::get('professional-applications/{professional_application}', [ProfessionalApplicationAdminController::class, 'show'])->name('professional-applications.show');

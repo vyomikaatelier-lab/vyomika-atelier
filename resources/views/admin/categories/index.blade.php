@@ -32,9 +32,9 @@
         @endforeach
     </select>
     <select name="status" class="border px-3 py-2 rounded">
-        <option value="">All statuses</option>
-        <option value="active" @selected(request('status') === 'active')>Active</option>
+        <option value="active" @selected(request('status', 'active') === 'active')>Active</option>
         <option value="inactive" @selected(request('status') === 'inactive')>Inactive</option>
+        <option value="all" @selected(request('status') === 'all')>All statuses</option>
     </select>
     <button class="border px-3 py-2 rounded">Filter</button>
 </form>

@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Service;
 use App\Models\ServiceDesign;
-use App\Support\CortenContent;
 use App\Support\ServiceGallery;
 
 class ServiceController extends Controller
@@ -23,6 +22,10 @@ class ServiceController extends Controller
             return redirect()->route('shop.show', 'bespoke-metal-furniture', 301);
         }
 
+        if ($slug === 'corten-steel-facade') {
+            return redirect()->route('corten-steel.show', [], 301);
+        }
+
         $service = Service::where('slug', $slug)->where('is_active', true)
             ->with(['designs' => fn ($q) => $q->where('is_active', true)])
             ->firstOrFail();
@@ -32,13 +35,6 @@ class ServiceController extends Controller
         $galleryProducts = collect();
         if ($service->usesGalleryOnlyLayout()) {
             $galleryProducts = ServiceGallery::productsFor($service);
-        }
-
-        if ($service->slug === 'corten-steel-facade') {
-            return view('services.corten-steel', [
-                'service' => $service,
-                'page' => CortenContent::all(),
-            ]);
         }
 
         return view('services.show', compact('service', 'related', 'galleryProducts'));

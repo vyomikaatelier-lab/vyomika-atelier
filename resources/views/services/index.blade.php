@@ -13,7 +13,7 @@
     <div class="am-container">
         <div class="am-grid-3">
             @foreach($services as $service)
-            <a href="{{ route('services.show', $service->slug) }}" class="am-card">
+            <a href="{{ $service->slug === 'corten-steel-facade' ? route('corten-steel.show') : route('services.show', $service->slug) }}" class="am-card">
                 <div class="am-card__thumb">
                     @if($service->image)
                         <img src="{{ $service->image }}" alt="{{ $service->name }}">

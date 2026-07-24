@@ -12,12 +12,17 @@ class ShopCatalog
         return StorefrontRoutes::shopCategorySlugs();
     }
 
-    /** Redirect legacy shop category URLs for studio-only categories. */
+    /** Redirect obsolete / studio-only category URLs away from the shop. */
     public static function studioCategoryRedirectUrl(string $slug): ?string
     {
         return match ($slug) {
             'partitions', 'fluted-panels', 'room-dividers' => route('studio.show', 'pvd-partitions'),
+            'slim-profile-door-system' => route('studio.show', 'slim-profile-door-systems'),
+            'main-entrance-pvd-doors' => route('studio.show', 'main-entrance-pvd-doors'),
+            'rack-systems-metal-pvd' => route('studio.show', 'metal-pvd-rack-systems'),
             'metal-furniture' => route('shop.show', 'bespoke-metal-furniture'),
+            'home-decor' => route('shop.index'),
+            'railings' => route('railings.index'),
             default => null,
         };
     }

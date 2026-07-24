@@ -56,6 +56,8 @@ class SitemapController extends Controller
 
             ['loc' => route('railings.index'), 'changefreq' => 'monthly', 'priority' => '0.8'],
 
+            ['loc' => route('corten-steel.show'), 'changefreq' => 'monthly', 'priority' => '0.8'],
+
             ['loc' => route('shop.mirror-frames.index'), 'changefreq' => 'weekly', 'priority' => '0.85'],
 
             ['loc' => route('contact.index'), 'changefreq' => 'monthly', 'priority' => '0.7'],
@@ -247,6 +249,10 @@ class SitemapController extends Controller
                     }
 
                     if ($service->slug === 'bespoke-metal-furniture') {
+                        return;
+                    }
+
+                    if ($service->slug === 'corten-steel-facade') {
                         return;
                     }
 

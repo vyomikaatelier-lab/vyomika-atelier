@@ -83,7 +83,7 @@ class ProductClassificationTest extends TestCase
         $this->assertTrue($product->isStudioItem());
         $this->assertTrue($product->usesEnquiryFlow());
         $this->assertFalse($product->usesCheckoutFlow());
-        $this->assertSame('metal-furniture', $product->category?->slug);
+        $this->assertSame('slim-profile-door-system', $product->category?->slug);
     }
 
     public function test_correct_catalog_classification_seeder_is_idempotent(): void

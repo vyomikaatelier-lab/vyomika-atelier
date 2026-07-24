@@ -45,7 +45,7 @@ return [
             ],
         ],
         ['label' => 'Railings', 'route' => 'railings.index'],
-        ['label' => 'Corten steel', 'route' => 'services.show', 'params' => ['slug' => 'corten-steel-facade']],
+        ['label' => 'Corten steel', 'route' => 'corten-steel.show'],
         ['label' => 'Projects', 'route' => 'projects.index'],
         ['label' => 'About', 'route' => 'about'],
         ['label' => 'Blog', 'route' => 'blog.index'],

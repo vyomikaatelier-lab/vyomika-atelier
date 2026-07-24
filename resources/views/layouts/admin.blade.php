@@ -34,6 +34,8 @@
                     <a href="{{ route('admin.exhibitions.index') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800">Exhibitions</a>
                     <a href="{{ route('admin.services.index') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800">Services</a>
                     <a href="{{ route('admin.collection-pages.index') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800">Collection Pages</a>
+                    <a href="{{ route('admin.independent-pages.edit', 'railings') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800">Railings Page</a>
+                    <a href="{{ route('admin.independent-pages.edit', 'corten-steel') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800">Corten Steel Page</a>
                     <a href="{{ route('admin.legal.index') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800">Legal Pages</a>
                     <a href="{{ route('admin.media.index') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800">Media</a>
                 </div>

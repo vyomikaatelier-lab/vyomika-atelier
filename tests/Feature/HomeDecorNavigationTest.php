@@ -12,15 +12,15 @@ class HomeDecorNavigationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_home_decor_is_canonical_shop_category_but_not_in_approved_shop_nav(): void
+    public function test_home_decor_is_not_a_canonical_or_shop_nav_category(): void
     {
         $canonicalSlugs = collect(ProductCatalog::canonicalCategories())
-            ->where('section', 'shop')
             ->pluck('slug')
             ->all();
 
-        $this->assertContains('home-decor', $canonicalSlugs);
-        $this->assertContains('home-decor', StorefrontRoutes::shopCategorySlugs());
+        $this->assertNotContains('home-decor', $canonicalSlugs);
+        $this->assertNotContains('home-decor', StorefrontRoutes::shopCategorySlugs());
+        $this->assertContains('home-decor', ProductCatalog::obsoleteCategorySlugs());
 
         $shopNavLabels = collect(config('site.nav', []))
             ->firstWhere('label', 'Shop')['children'] ?? [];
@@ -34,7 +34,7 @@ class HomeDecorNavigationTest extends TestCase
         $this->assertNotContains('home-decor', $navSlugs);
     }
 
-    public function test_home_decor_has_no_seeded_catalog_products_yet(): void
+    public function test_home_decor_has_no_seeded_catalog_products(): void
     {
         $this->assertSame(
             0,

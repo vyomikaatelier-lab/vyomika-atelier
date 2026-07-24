@@ -36,7 +36,8 @@ class ProductCatalog
                 'section' => 'studio',
                 'service_slug' => 'partitions',
                 'shop_category' => null,
-                'category' => $item['category'],
+                // Gallery source may still label fluted/room-divider rows; storefront taxonomy is partitions only.
+                'category' => 'partitions',
             ];
         }
 
@@ -56,7 +57,7 @@ class ProductCatalog
                 'section' => 'studio',
                 'service_slug' => 'slim-profile-door-system',
                 'shop_category' => null,
-                'category' => $item['category'],
+                'category' => 'slim-profile-door-system',
             ];
         }
 
@@ -73,7 +74,7 @@ class ProductCatalog
                     'section' => 'studio',
                     'service_slug' => 'main-entrance-pvd-doors',
                     'shop_category' => null,
-                    'category' => $item['category'],
+                    'category' => 'main-entrance-pvd-doors',
                 ];
             }
         }
@@ -83,7 +84,7 @@ class ProductCatalog
                 'section' => 'studio',
                 'service_slug' => 'rack-systems-metal-pvd',
                 'shop_category' => null,
-                'category' => $item['category'],
+                'category' => 'rack-systems-metal-pvd',
             ];
         }
 
@@ -104,18 +105,42 @@ class ProductCatalog
     public static function canonicalCategories(): array
     {
         return [
-            ['name' => 'PVD Partitions', 'slug' => 'partitions', 'section' => 'studio'],
-            ['name' => 'Fluted Panels', 'slug' => 'fluted-panels', 'section' => 'studio'],
-            ['name' => 'Room Dividers', 'slug' => 'room-dividers', 'section' => 'studio'],
-            ['name' => 'Metal Furniture', 'slug' => 'metal-furniture', 'section' => 'studio'],
-            ['name' => 'Coffee Tables', 'slug' => 'coffee-tables', 'section' => 'shop'],
+            // Shop
+            ['name' => 'Mirror Frames', 'slug' => 'mirror-frames', 'section' => 'shop'],
             ['name' => 'Corner Tables', 'slug' => 'corner-tables', 'section' => 'shop'],
+            ['name' => 'Coffee Tables', 'slug' => 'coffee-tables', 'section' => 'shop'],
             ['name' => 'Glass Tables', 'slug' => 'glass-tables', 'section' => 'shop'],
             ['name' => 'Door Handles', 'slug' => 'door-handles', 'section' => 'shop'],
-            ['name' => 'Mirror Frames', 'slug' => 'mirror-frames', 'section' => 'shop'],
             ['name' => 'Bespoke Metal Furniture', 'slug' => 'bespoke-metal-furniture', 'section' => 'shop'],
-            ['name' => 'Home Decor', 'slug' => 'home-decor', 'section' => 'shop'],
-            ['name' => 'Railings', 'slug' => 'railings', 'section' => 'railings'],
+            // Studio (aligned to services)
+            ['name' => 'PVD Partitions', 'slug' => 'partitions', 'section' => 'studio'],
+            ['name' => 'Slim Profile Door Systems', 'slug' => 'slim-profile-door-system', 'section' => 'studio'],
+            ['name' => 'Main Entrance PVD Doors', 'slug' => 'main-entrance-pvd-doors', 'section' => 'studio'],
+            ['name' => 'PVD Metal Rack Systems', 'slug' => 'rack-systems-metal-pvd', 'section' => 'studio'],
+        ];
+    }
+
+    /** @return list<string> Slugs kept in DB but never reactivated by sync. */
+    public static function obsoleteCategorySlugs(): array
+    {
+        return [
+            'fluted-panels',
+            'room-dividers',
+            'metal-furniture',
+            'home-decor',
+            'railings',
+        ];
+    }
+
+    /** @return array<string, array{name: string, section: string}> */
+    public static function obsoleteCategoryMeta(): array
+    {
+        return [
+            'fluted-panels' => ['name' => 'Fluted Panels', 'section' => 'studio'],
+            'room-dividers' => ['name' => 'Room Dividers', 'section' => 'studio'],
+            'metal-furniture' => ['name' => 'Metal Furniture', 'section' => 'studio'],
+            'home-decor' => ['name' => 'Home Decor', 'section' => 'shop'],
+            'railings' => ['name' => 'Railings', 'section' => 'railings'],
         ];
     }
 
@@ -135,6 +160,21 @@ class ProductCatalog
             );
             $synced++;
         }
+
+        foreach (self::obsoleteCategoryMeta() as $slug => $meta) {
+            Category::query()->updateOrCreate(
+                ['slug' => $slug],
+                [
+                    'name' => $meta['name'],
+                    'section' => $meta['section'],
+                    'is_active' => false,
+                ]
+            );
+        }
+
+        Category::query()
+            ->whereIn('slug', self::obsoleteCategorySlugs())
+            ->update(['is_active' => false]);
 
         return $synced;
     }
@@ -190,12 +230,25 @@ class ProductCatalog
         return $updated;
     }
 
-    private static function inferCategorySlugForProduct(Product $product): ?string
+    public static function inferCategorySlugForProduct(Product $product): ?string
     {
         $section = self::inferSectionFromSlug($product->slug);
+        $current = $product->category?->slug;
 
-        if ($section === 'railings') {
+        if ($section === 'railings' || $current === 'railings') {
             return 'railings';
+        }
+
+        if (in_array($current, ['fluted-panels', 'room-dividers'], true)) {
+            return 'partitions';
+        }
+
+        if ($current === 'home-decor') {
+            return 'bespoke-metal-furniture';
+        }
+
+        if ($current === 'metal-furniture') {
+            return self::categorySlugForMetalFurnitureProduct($product->slug);
         }
 
         if ($section === 'shop') {
@@ -203,30 +256,43 @@ class ProductCatalog
         }
 
         if ($section === 'studio') {
-            if (preg_match('/(partition|fluted|room-divider)/', $product->slug)) {
-                return match (true) {
-                    str_contains($product->slug, 'fluted') => 'fluted-panels',
-                    str_contains($product->slug, 'room-divider') || str_contains($product->slug, 'divider') => 'room-dividers',
-                    default => 'partitions',
-                };
+            if (preg_match('/(partition|fluted|room-divider|divider)/', $product->slug)) {
+                return 'partitions';
             }
 
-            return 'metal-furniture';
+            return self::categorySlugForMetalFurnitureProduct($product->slug);
         }
 
-        return $product->category?->slug;
+        return $current;
+    }
+
+    /**
+     * Resolve approved category for legacy metal-furniture (or keyword-matched) products.
+     */
+    public static function categorySlugForMetalFurnitureProduct(string $productSlug): string
+    {
+        if (self::isBespokeMetalFurnitureProduct($productSlug)) {
+            return 'bespoke-metal-furniture';
+        }
+
+        return self::inferMetalFurnitureService($productSlug) ?? 'bespoke-metal-furniture';
     }
 
     /** @return list<string> Category slugs recognised as belonging to Studio. */
     public static function studioCategorySlugs(): array
     {
-        return ['partitions', 'fluted-panels', 'room-dividers', 'metal-furniture'];
+        return [
+            'partitions',
+            'slim-profile-door-system',
+            'main-entrance-pvd-doors',
+            'rack-systems-metal-pvd',
+        ];
     }
 
-    /** @return list<string> Category slugs recognised as belonging to Railings. */
+    /** @return list<string> Railings is an independent page, not a product category. */
     public static function railingsCategorySlugs(): array
     {
-        return ['railings'];
+        return [];
     }
 
     /** @return list<string> */
@@ -280,6 +346,19 @@ class ProductCatalog
             }
         }
 
+        // Legacy archived category recognition.
+        if (in_array($categorySlug, ['partitions', 'fluted-panels', 'room-dividers', 'metal-furniture', 'slim-profile-door-system', 'main-entrance-pvd-doors', 'rack-systems-metal-pvd'], true)) {
+            return 'studio';
+        }
+
+        if ($categorySlug === 'railings') {
+            return 'railings';
+        }
+
+        if ($categorySlug === 'home-decor') {
+            return 'shop';
+        }
+
         return null;
     }
 
@@ -303,12 +382,21 @@ class ProductCatalog
             return 'shop';
         }
 
-        if (in_array($categorySlug, ['partitions', 'fluted-panels', 'room-dividers'], true)) {
+        if ($categorySlug === 'home-decor') {
+            return 'shop';
+        }
+
+        // Legacy + approved studio category recognition.
+        if (in_array($categorySlug, ['partitions', 'fluted-panels', 'room-dividers', 'slim-profile-door-system', 'main-entrance-pvd-doors', 'rack-systems-metal-pvd'], true)) {
             return 'studio';
         }
 
         if ($categorySlug === 'door-handles') {
             return 'shop';
+        }
+
+        if ($categorySlug === 'railings') {
+            return 'railings';
         }
 
         if ($categorySlug === 'metal-furniture' && $productSlug) {
@@ -374,11 +462,20 @@ class ProductCatalog
             return null;
         }
 
+        // Legacy archived categories still resolve to partitions service.
         if (in_array($categorySlug, ['partitions', 'fluted-panels', 'room-dividers'], true)) {
             return 'partitions';
         }
 
+        if (in_array($categorySlug, self::studioCategorySlugs(), true) && $categorySlug !== 'partitions') {
+            return $categorySlug;
+        }
+
         if ($categorySlug === 'metal-furniture' && $productSlug) {
+            return self::inferMetalFurnitureService($productSlug);
+        }
+
+        if ($productSlug) {
             return self::inferMetalFurnitureService($productSlug);
         }
 
@@ -395,7 +492,7 @@ class ProductCatalog
             return $categorySlug;
         }
 
-        if ($categorySlug === 'metal-furniture') {
+        if (in_array($categorySlug, ['metal-furniture', 'home-decor'], true)) {
             return 'bespoke-metal-furniture';
         }
 
@@ -624,7 +721,9 @@ class ProductCatalog
             return $category;
         }
 
-        return $category === 'metal-furniture' ? 'bespoke-metal-furniture' : $category;
+        return in_array($category, ['metal-furniture', 'home-decor'], true)
+            ? 'bespoke-metal-furniture'
+            : $category;
     }
 
     private static function inferMetalFurnitureSection(string $productSlug): string
@@ -632,7 +731,7 @@ class ProductCatalog
         return self::inferMetalFurnitureService($productSlug) ? 'studio' : 'shop';
     }
 
-    private static function inferMetalFurnitureService(string $productSlug): ?string
+    public static function inferMetalFurnitureService(string $productSlug): ?string
     {
         $slug = strtolower($productSlug);
 

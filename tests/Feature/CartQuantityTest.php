@@ -14,9 +14,17 @@ class CartQuantityTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function shopCategory(): Category
+    {
+        return Category::query()->firstOrCreate(
+            ['slug' => 'coffee-tables'],
+            ['name' => 'Coffee Tables', 'section' => 'shop', 'is_active' => true]
+        );
+    }
+
     public function test_first_add_to_empty_cart_sets_quantity_one(): void
     {
-        $category = Category::factory()->create(['slug' => 'coffee-tables']);
+        $category = $this->shopCategory();
         $product = Product::factory()->shop()->create(['category_id' => $category->id, 'stock' => 5]);
 
         $this->post(route('cart.add', $product), ['quantity' => 1])
@@ -28,7 +36,7 @@ class CartQuantityTest extends TestCase
 
     public function test_second_add_increments_quantity_to_two(): void
     {
-        $category = Category::factory()->create(['slug' => 'coffee-tables']);
+        $category = $this->shopCategory();
         $product = Product::factory()->shop()->create(['category_id' => $category->id, 'stock' => 5]);
 
         $this->post(route('cart.add', $product), ['quantity' => 1]);
@@ -39,7 +47,7 @@ class CartQuantityTest extends TestCase
 
     public function test_buy_now_does_not_increment_unrelated_cart_line(): void
     {
-        $category = Category::factory()->create(['slug' => 'coffee-tables']);
+        $category = $this->shopCategory();
         $productA = Product::factory()->shop()->create(['category_id' => $category->id, 'stock' => 5]);
         $productB = Product::factory()->shop()->create(['category_id' => $category->id, 'stock' => 5]);
 
@@ -54,8 +62,14 @@ class CartQuantityTest extends TestCase
 
     public function test_studio_and_railings_products_remain_blocked(): void
     {
-        $studioCategory = Category::factory()->create(['slug' => 'partitions']);
-        $railingsCategory = Category::factory()->create(['slug' => 'railings']);
+        $studioCategory = Category::query()->firstOrCreate(
+            ['slug' => 'partitions'],
+            ['name' => 'PVD Partitions', 'section' => 'studio', 'is_active' => true]
+        );
+        $railingsCategory = Category::query()->firstOrCreate(
+            ['slug' => 'railings'],
+            ['name' => 'Railings', 'section' => 'railings', 'is_active' => false]
+        );
         $studio = Product::factory()->studio()->create(['category_id' => $studioCategory->id]);
         $railings = Product::factory()->railings()->create(['category_id' => $railingsCategory->id]);
 
@@ -69,7 +83,7 @@ class CartQuantityTest extends TestCase
 
     public function test_inactive_product_cannot_be_added(): void
     {
-        $category = Category::factory()->create(['slug' => 'coffee-tables']);
+        $category = $this->shopCategory();
         $product = Product::factory()->shop()->inactive()->create(['category_id' => $category->id]);
 
         $this->post(route('cart.add', $product), ['quantity' => 1])
@@ -80,7 +94,7 @@ class CartQuantityTest extends TestCase
 
     public function test_add_rejects_non_numeric_and_clamps_excessive_quantity(): void
     {
-        $category = Category::factory()->create(['slug' => 'coffee-tables']);
+        $category = $this->shopCategory();
         $product = Product::factory()->shop()->create(['category_id' => $category->id, 'stock' => 10]);
 
         $this->post(route('cart.add', $product), ['quantity' => 'abc']);
@@ -99,7 +113,7 @@ class CartQuantityTest extends TestCase
 
     public function test_update_to_zero_removes_line(): void
     {
-        $category = Category::factory()->create(['slug' => 'coffee-tables']);
+        $category = $this->shopCategory();
         $product = Product::factory()->shop()->create(['category_id' => $category->id, 'stock' => 5]);
 
         $this->post(route('cart.add', $product), ['quantity' => 2]);
@@ -126,7 +140,7 @@ class CartQuantityTest extends TestCase
         ]);
 
         $user = User::factory()->create();
-        $category = Category::factory()->create(['slug' => 'coffee-tables']);
+        $category = $this->shopCategory();
         $product = Product::factory()->shop()->create([
             'category_id' => $category->id,
             'price' => 2500,

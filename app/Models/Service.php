@@ -84,10 +84,10 @@ class Service extends Model
     public function relatedCategorySlugs(): array
     {
         return match ($this->slug) {
-            'partitions' => ['partitions', 'fluted-panels', 'room-dividers'],
-            'slim-profile-door-system' => ['metal-furniture'],
-            'main-entrance-pvd-doors' => ['metal-furniture'],
-            'rack-systems-metal-pvd' => ['metal-furniture'],
+            'partitions' => ['partitions'],
+            'slim-profile-door-system' => ['slim-profile-door-system'],
+            'main-entrance-pvd-doors' => ['main-entrance-pvd-doors'],
+            'rack-systems-metal-pvd' => ['rack-systems-metal-pvd'],
             default => [],
         };
     }
@@ -135,6 +135,9 @@ class Service extends Model
     {
         return match ($categorySlug) {
             'partitions', 'fluted-panels', 'room-dividers' => 'partitions',
+            'slim-profile-door-system' => 'slim-profile-door-system',
+            'main-entrance-pvd-doors' => 'main-entrance-pvd-doors',
+            'rack-systems-metal-pvd' => 'rack-systems-metal-pvd',
             default => null,
         };
     }
