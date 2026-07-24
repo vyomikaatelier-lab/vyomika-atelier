@@ -2,17 +2,20 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\HandlesAdminUploads;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
 use App\Support\ProductCatalog;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class ProductAdminController extends Controller
 {
+    use HandlesAdminUploads;
+
     public function index(Request $request)
     {
         $query = Product::with('category')->latest();
@@ -37,14 +40,14 @@ class ProductAdminController extends Controller
 
     public function store(Request $request)
     {
-        $slug = Str::slug($request->input('name', ''));
+        $slug = Str::slug($request->input('slug') ?: $request->input('name', ''));
         $validated = $this->validateProduct($request, new Product(['slug' => $slug]));
         $validated['slug'] = $slug;
         $validated['is_featured'] = $request->boolean('is_featured');
         $validated['is_active'] = $request->boolean('is_active', true);
         $validated['is_gallery_visible'] = $request->boolean('is_gallery_visible', true);
-        $validated['image'] = $this->resolveImage($request, $validated['image'] ?? null);
-        $validated['gallery'] = $this->parseGallery($request);
+        $validated['image'] = $this->resolveImageField($request, 'image_file', 'image', null, 'products');
+        $validated['gallery'] = $this->resolveGalleryField($request, 'gallery_files', 'gallery_urls', null, 'products');
 
         Product::create($validated);
 
@@ -62,25 +65,26 @@ class ProductAdminController extends Controller
     public function update(Request $request, Product $product)
     {
         $validated = $this->validateProduct($request, $product);
-        $validated['slug'] = Str::slug($validated['name']);
+        $validated['slug'] = Str::slug($request->input('slug') ?: $validated['name']);
         $validated['is_featured'] = $request->boolean('is_featured');
         $validated['is_active'] = $request->boolean('is_active', true);
         $validated['is_gallery_visible'] = $request->boolean('is_gallery_visible', true);
+        $validated['image'] = $this->resolveImageField($request, 'image_file', 'image', $product->image, 'products');
+        $validated['gallery'] = $this->resolveGalleryField($request, 'gallery_files', 'gallery_urls', $product->gallery, 'products');
 
-        $newImage = $this->resolveImage($request, $validated['image'] ?? $product->image);
-        if ($newImage !== $product->image) {
-            $this->deleteStoredImage($product->image);
-            $validated['image'] = $newImage;
-        }
-
-        $product->update([...$validated, 'gallery' => $this->parseGallery($request)]);
+        $product->update($validated);
 
         return redirect()->route('admin.products.index')->with('success', 'Product updated.');
     }
 
     public function destroy(Product $product)
     {
-        $this->deleteStoredImage($product->image);
+        $this->deleteStoredPath($product->image);
+
+        foreach ($product->gallery ?? [] as $path) {
+            $this->deleteStoredPath($path);
+        }
+
         $product->delete();
 
         return redirect()->route('admin.products.index')->with('success', 'Product deleted.');
@@ -91,6 +95,7 @@ class ProductAdminController extends Controller
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
+            'slug' => ['nullable', 'string', 'max:255', Rule::unique('products', 'slug')->ignore($existing?->id)],
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'compare_price' => 'nullable|numeric|min:0',
@@ -98,13 +103,16 @@ class ProductAdminController extends Controller
             'stock' => 'required|integer|min:0',
             'image' => 'nullable|string|max:500',
             'image_file' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:4096',
+            'gallery_urls' => 'nullable|string',
+            'gallery_files' => 'nullable|array',
+            'gallery_files.*' => 'image|mimes:jpeg,jpg,png,webp|max:4096',
             'section' => ['required', 'in:'.implode(',', Product::SECTIONS)],
             'purchase_mode' => ['required', 'in:'.implode(',', Product::PURCHASE_MODES)],
             'pricing_type' => ['required', 'in:'.implode(',', Product::PRICING_TYPES)],
         ]);
 
         $category = Category::query()->find($validated['category_id']);
-        $productSlug = $existing?->slug ?? Str::slug($validated['name']);
+        $productSlug = $existing?->slug ?? Str::slug($request->input('slug') ?: $validated['name']);
         $section = $validated['section'];
 
         $expectedPurchaseMode = Product::SECTION_PURCHASE_MODE_MAP[$section] ?? null;
@@ -158,36 +166,5 @@ class ProductAdminController extends Controller
                 $category->id => ProductCatalog::sectionForCategorySlug($category->slug) ?? 'other',
             ])
             ->all();
-    }
-
-    private function resolveImage(Request $request, ?string $fallback): ?string
-    {
-        if ($request->hasFile('image_file')) {
-            return $request->file('image_file')->store('products', 'public');
-        }
-
-        $url = $request->input('image');
-
-        return filled($url) ? $url : $fallback;
-    }
-
-    private function deleteStoredImage(?string $image): void
-    {
-        if ($image && ! str_starts_with($image, 'http')) {
-            Storage::disk('public')->delete($image);
-        }
-    }
-
-    /** @return array<int, string>|null */
-    private function parseGallery(Request $request): ?array
-    {
-        $raw = $request->input('gallery_urls');
-        if (! filled($raw)) {
-            return null;
-        }
-
-        $urls = array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $raw))));
-
-        return $urls ?: null;
     }
 }

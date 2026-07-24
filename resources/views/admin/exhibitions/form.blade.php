@@ -11,9 +11,15 @@
     </div>
     <div><label class="block text-sm mb-1">Year</label><input type="number" name="year" value="{{ old('year', $exhibition->year ?? '') }}" class="w-full border px-3 py-2 rounded"></div>
     <div><label class="block text-sm mb-1">Description</label><textarea name="description" rows="4" class="w-full border px-3 py-2 rounded">{{ old('description', $exhibition->description ?? '') }}</textarea></div>
-    <div><label class="block text-sm mb-1">Cover image URL</label><input name="cover_image" value="{{ old('cover_image', $exhibition->cover_image ?? '') }}" class="w-full border px-3 py-2 rounded"></div>
-    <div><label class="block text-sm mb-1">Upload cover</label><input type="file" name="cover_file" accept="image/*"></div>
-    <div><label class="block text-sm mb-1">Gallery URLs (one per line)</label><textarea name="gallery_urls" rows="4" class="w-full border px-3 py-2 rounded">{{ old('gallery_urls', isset($exhibition) && is_array($exhibition->gallery) ? implode("\n", $exhibition->gallery) : '') }}</textarea></div>
+    <div class="space-y-3 border rounded p-4 bg-gray-50">
+        <p class="text-sm font-medium">Cover image</p>
+        @if(isset($exhibition) && $exhibition->coverImageUrl())
+            <img src="{{ $exhibition->coverImageUrl() }}" alt="" class="w-40 h-28 object-cover rounded border">
+        @endif
+        <div><label class="block text-sm mb-1">Cover image URL</label><input name="cover_image" value="{{ old('cover_image', $exhibition->cover_image ?? '') }}" class="w-full border px-3 py-2 rounded"></div>
+        <div><label class="block text-sm mb-1">Upload cover</label><input type="file" name="cover_file" accept="image/*"></div>
+    </div>
+    @include('admin.partials.gallery-upload-fields', ['gallery' => isset($exhibition) ? $exhibition->gallery : null, 'directory' => 'exhibitions'])
     <div><label class="block text-sm mb-1">Display order</label><input type="number" name="sort_order" min="0" value="{{ old('sort_order', $exhibition->sort_order ?? 0) }}" class="w-full border px-3 py-2 rounded"></div>
     <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', $exhibition->is_active ?? true))> Active</label>
     <button class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Save</button>

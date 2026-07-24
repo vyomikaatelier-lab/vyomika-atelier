@@ -1,8 +1,8 @@
 @extends('layouts.admin')
-@section('title', 'Categories')
+@section('title', 'Product Categories')
 @section('content')
 <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-semibold">Categories</h1>
+    <h1 class="text-2xl font-semibold">Product Categories</h1>
     <a href="{{ route('admin.categories.create') }}" class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Add Category</a>
 </div>
 <form method="GET" class="mb-4 flex gap-2 text-sm">

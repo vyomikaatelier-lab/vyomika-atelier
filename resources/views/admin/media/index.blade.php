@@ -25,6 +25,11 @@
         @endif
         <p class="truncate font-medium" title="{{ $file->filename }}">{{ $file->filename }}</p>
         <p class="text-xs text-gray-500">{{ number_format($file->size / 1024, 1) }} KB · refs: {{ $file->referenceCount() }}</p>
+        <form method="POST" action="{{ route('admin.media.update', $file) }}" class="mt-2 space-y-1">
+            @csrf @method('PUT')
+            <input name="alt" value="{{ $file->alt }}" placeholder="Alt text" class="w-full border px-2 py-1 rounded text-xs">
+            <button class="text-blue-600 text-xs">Save alt</button>
+        </form>
         <p class="mt-1"><a href="{{ route('admin.media.download', $file) }}" class="text-blue-600 text-xs">Download</a></p>
         @if($file->referenceCount() === 0)
         <form action="{{ route('admin.media.destroy', $file) }}" method="POST" class="mt-2" onsubmit="return confirm('Delete file?')">@csrf @method('DELETE')<button class="text-red-600 text-xs">Delete</button></form>

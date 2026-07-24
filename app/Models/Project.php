@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use App\Support\MediaUrl;
+
 class Project extends Model
 {
     protected $fillable = [
@@ -64,5 +66,16 @@ class Project extends Model
     public function hasTestimonial(): bool
     {
         return filled($this->testimonial_quote);
+    }
+
+    public function imageUrl(): ?string
+    {
+        return MediaUrl::resolve($this->image);
+    }
+
+    /** @return array<int, string> */
+    public function galleryUrls(): array
+    {
+        return MediaUrl::resolveMany($this->gallery);
     }
 }

@@ -16,9 +16,9 @@
     </div>
 </nav>
 
-@if($project->image)
+@if($project->imageUrl())
 <section class="am-project-hero">
-    <img src="{{ $project->image }}" alt="{{ $project->title }}" class="am-project-hero__img">
+    <img src="{{ $project->imageUrl() }}" alt="{{ $project->title }}" class="am-project-hero__img">
 </section>
 @endif
 
@@ -43,9 +43,23 @@
                 </div>
                 @endif
 
+                @if($project->scope)
+                <div class="am-project-block">
+                    <h2 class="am-project-block__title">Scope</h2>
+                    <div class="am-prose">{!! nl2br(e($project->scope)) !!}</div>
+                </div>
+                @endif
+
+                @if($project->challenges)
+                <div class="am-project-block">
+                    <h2 class="am-project-block__title">Challenges</h2>
+                    <div class="am-prose">{!! nl2br(e($project->challenges)) !!}</div>
+                </div>
+                @endif
+
                 @if($project->materials && count($project->materials))
                 <div class="am-project-block">
-                    <h2 class="am-project-block__title">Materials &amp; Finishes</h2>
+                    <h2 class="am-project-block__title">Materials</h2>
                     <ul class="am-corten-checklist">
                         @foreach($project->materials as $material)
                         <li>{{ $material }}</li>
@@ -54,11 +68,22 @@
                 </div>
                 @endif
 
-                @if($project->gallery && count($project->gallery))
+                @if($project->finishes && count($project->finishes))
+                <div class="am-project-block">
+                    <h2 class="am-project-block__title">Finishes</h2>
+                    <ul class="am-corten-checklist">
+                        @foreach($project->finishes as $finish)
+                        <li>{{ $finish }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+                @endif
+
+                @if(count($project->galleryUrls()))
                 <div class="am-project-block">
                     <h2 class="am-project-block__title">Gallery</h2>
                     <div class="am-project-gallery">
-                        @foreach($project->gallery as $image)
+                        @foreach($project->galleryUrls() as $image)
                         <figure class="am-project-gallery__item">
                             <img src="{{ $image }}" alt="{{ $project->title }} detail" loading="lazy">
                         </figure>
@@ -85,7 +110,7 @@
                         data-open-project-enquiry
                         data-project-slug="{{ $project->slug }}"
                         data-project-title="{{ $project->title }}"
-                        @if($project->image) data-project-image="{{ $project->image }}" @endif>
+                        @if($project->imageUrl()) data-project-image="{{ $project->imageUrl() }}" @endif>
                         Inquire About a Similar Project
                     </button>
                     <a href="{{ route('projects.index') }}" class="am-btn am-btn--outline">← All Projects</a>

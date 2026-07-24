@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\Exhibition;
 use App\Models\LegalPage;
 use App\Models\SiteSetting;
+use App\Support\MediaUrl;
 use Illuminate\Support\Facades\Schema;
 
 class CmsSettings
@@ -33,6 +34,42 @@ class CmsSettings
         $store = SiteSetting::getValue('store');
         if (is_array($store)) {
             config(['site.store' => array_merge(config('site.store', []), $store)]);
+        }
+
+        $nav = SiteSetting::getValue('nav');
+        if (is_array($nav) && $nav !== []) {
+            config(['site.nav' => $nav]);
+        }
+
+        $hero = SiteSetting::getValue('hero');
+        if (is_array($hero) && $hero !== []) {
+            $slides = config('site.hero.slides', []);
+            if ($slides !== []) {
+                $first = $slides[0];
+                if (filled($hero['title'] ?? null)) {
+                    $first['title'] = $hero['title'];
+                }
+                if (filled($hero['subtitle'] ?? null)) {
+                    $first['description'] = $hero['subtitle'];
+                }
+                if (filled($hero['image'] ?? null)) {
+                    $first['image'] = MediaUrl::resolve($hero['image']) ?? $hero['image'];
+                }
+                $slides[0] = $first;
+                config(['site.hero.slides' => $slides]);
+            }
+        }
+
+        $homepage = SiteSetting::getValue('homepage');
+        if (is_array($homepage) && $homepage !== []) {
+            if (isset($homepage['announcement']) && is_array($homepage['announcement'])) {
+                config(['site.announcement' => array_merge(config('site.announcement', []), $homepage['announcement'])]);
+            }
+        }
+
+        $collectionPages = SiteSetting::getValue('collection_pages');
+        if (is_array($collectionPages) && $collectionPages !== []) {
+            config(['collections' => array_replace_recursive(config('collections', []), $collectionPages)]);
         }
 
         $business = SiteSetting::getValue('business');

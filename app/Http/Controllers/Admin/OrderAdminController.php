@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\HandlesAdminUploads;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use Illuminate\Http\Request;
@@ -26,10 +27,11 @@ class OrderAdminController extends Controller
     {
         $validated = $request->validate([
             'status' => 'required|in:pending,paid,processing,shipped,delivered,cancelled',
+            'admin_notes' => 'nullable|string|max:5000',
         ]);
 
         $order->update($validated);
 
-        return back()->with('success', 'Order status updated.');
+        return back()->with('success', 'Order updated.');
     }
 }

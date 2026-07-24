@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\BlogContent;
+use App\Support\MediaUrl;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -107,5 +108,16 @@ class BlogPost extends Model
     public function relatedProjectSlugs(): array
     {
         return is_array($this->related_project_slugs) ? $this->related_project_slugs : [];
+    }
+
+    public function imageUrl(): ?string
+    {
+        return MediaUrl::resolve($this->image);
+    }
+
+    /** @return array<int, string> */
+    public function galleryUrls(): array
+    {
+        return MediaUrl::resolveMany($this->gallery);
     }
 }

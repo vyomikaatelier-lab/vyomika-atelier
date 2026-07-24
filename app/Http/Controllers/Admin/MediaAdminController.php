@@ -80,4 +80,15 @@ class MediaAdminController extends Controller
 
         return Storage::disk($medium->disk)->download($medium->path, $medium->filename);
     }
+
+    public function update(Request $request, MediaFile $medium)
+    {
+        $validated = $request->validate([
+            'alt' => 'nullable|string|max:255',
+        ]);
+
+        $medium->update($validated);
+
+        return back()->with('success', 'Alt text updated.');
+    }
 }

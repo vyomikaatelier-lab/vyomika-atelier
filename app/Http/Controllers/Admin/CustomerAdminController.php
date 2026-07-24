@@ -7,6 +7,7 @@ use App\Models\Lead;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class CustomerAdminController extends Controller
 {
@@ -60,7 +61,13 @@ class CustomerAdminController extends Controller
             ->limit(10)
             ->get();
 
-        return view('admin.customers.show', compact('customer', 'orders', 'leads', 'applications'));
+        return view('admin.customers.show', [
+            'customer' => $customer,
+            'orders' => $orders,
+            'leads' => $leads,
+            'applications' => $applications,
+            'accountTypes' => User::ACCOUNT_TYPES,
+        ]);
     }
 
     public function update(Request $request, User $customer)
@@ -68,10 +75,14 @@ class CustomerAdminController extends Controller
         abort_if($customer->is_admin, 404);
 
         $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($customer->id)],
+            'mobile' => ['required', 'string', 'max:20', Rule::unique('users', 'mobile')->ignore($customer->id)],
+            'account_type' => ['required', Rule::in(array_keys(User::ACCOUNT_TYPES))],
             'is_active' => 'required|boolean',
         ]);
 
-        $customer->update(['is_active' => $validated['is_active']]);
+        $customer->update($validated);
 
         return back()->with('success', 'Customer account updated.');
     }

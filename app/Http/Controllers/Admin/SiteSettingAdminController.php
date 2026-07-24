@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\HandlesAdminUploads;
 use App\Http\Controllers\Controller;
 use App\Models\SiteSetting;
 use Illuminate\Http\Request;
@@ -11,8 +12,16 @@ use Illuminate\Validation\ValidationException;
 
 class SiteSettingAdminController extends Controller
 {
+    use HandlesAdminUploads;
+
     public function edit()
     {
+        $heroOverride = SiteSetting::getValue('hero', []);
+        $homepage = SiteSetting::getValue('homepage', []);
+        $nav = SiteSetting::getValue('nav');
+        $defaultHero = config('site.hero.slides.0', []);
+        $defaultAnnouncement = config('site.announcement', []);
+
         return view('admin.settings.edit', [
             'brand' => array_merge(config('site.brand', []), SiteSetting::getValue('brand', [])),
             'social' => array_merge(config('site.social', []), SiteSetting::getValue('social', [])),
@@ -22,6 +31,13 @@ class SiteSettingAdminController extends Controller
             'legalLastUpdated' => SiteSetting::getValue('legal_last_updated', config('legal.last_updated')),
             'finishSwatches' => config('finishes.swatches', []),
             'finishSwatchImages' => \App\Support\FinishSwatches::imageOverrides(),
+            'navJson' => json_encode($nav ?? config('site.nav', []), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            'heroTitle' => $heroOverride['title'] ?? $defaultHero['title'] ?? '',
+            'heroSubtitle' => $heroOverride['subtitle'] ?? $defaultHero['description'] ?? '',
+            'heroImage' => $heroOverride['image'] ?? $defaultHero['image'] ?? '',
+            'announcementText' => data_get($homepage, 'announcement.text', $defaultAnnouncement['text'] ?? ''),
+            'announcementLinkLabel' => data_get($homepage, 'announcement.link_label', $defaultAnnouncement['link_label'] ?? ''),
+            'announcementLinkHref' => data_get($homepage, 'announcement.link_href', $defaultAnnouncement['link_href'] ?? ''),
         ]);
     }
 
@@ -65,6 +81,14 @@ class SiteSettingAdminController extends Controller
                 'grievance_officer_email' => 'nullable|email|max:255',
                 'grievance_officer_phone' => 'nullable|string|max:50',
                 'legal_last_updated' => 'nullable|string|max:50',
+                'nav_json' => 'nullable|string',
+                'hero_title' => 'nullable|string|max:255',
+                'hero_subtitle' => 'nullable|string|max:1000',
+                'hero_image' => 'nullable|string|max:500',
+                'hero_image_file' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
+                'announcement_text' => 'nullable|string|max:500',
+                'announcement_link_label' => 'nullable|string|max:120',
+                'announcement_link_href' => 'nullable|string|max:500',
             ], $finishRules));
         } catch (ValidationException $e) {
             return back()->withInput()->withErrors($e->errors());
@@ -113,6 +137,37 @@ class SiteSettingAdminController extends Controller
             if (filled($validated['legal_last_updated'] ?? null)) {
                 SiteSetting::setValue('legal_last_updated', $validated['legal_last_updated']);
             }
+
+            if ($request->filled('nav_json')) {
+                $nav = json_decode($request->input('nav_json'), true);
+                if (! is_array($nav)) {
+                    return back()->withInput()->withErrors(['nav_json' => 'Navigation must be valid JSON array.']);
+                }
+                SiteSetting::setValue('nav', $nav);
+            }
+
+            $currentHeroImage = SiteSetting::getValue('hero', [])['image'] ?? null;
+            $heroImage = $this->resolveImageField(
+                $request,
+                'hero_image_file',
+                'hero_image',
+                $currentHeroImage,
+                'hero'
+            );
+
+            SiteSetting::setValue('hero', array_filter([
+                'title' => $validated['hero_title'] ?? null,
+                'subtitle' => $validated['hero_subtitle'] ?? null,
+                'image' => $heroImage,
+            ], fn ($value) => filled($value)));
+
+            SiteSetting::setValue('homepage', [
+                'announcement' => array_filter([
+                    'text' => $validated['announcement_text'] ?? null,
+                    'link_label' => $validated['announcement_link_label'] ?? null,
+                    'link_href' => $validated['announcement_link_href'] ?? null,
+                ], fn ($value) => filled($value)),
+            ]);
 
             $finishImages = \App\Support\FinishSwatches::imageOverrides();
 

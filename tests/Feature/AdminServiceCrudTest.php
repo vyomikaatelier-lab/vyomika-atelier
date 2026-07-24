@@ -1,0 +1,79 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Service;
+use App\Models\ServiceDesign;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class AdminServiceCrudTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_admin_can_create_service_with_design(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $response = $this->actingAs($admin)->post(route('admin.services.store'), [
+            'name' => 'Test Partitions',
+            'slug' => 'test-partitions',
+            'summary' => 'Custom partitions',
+            'lead_form' => 'popup',
+            'rate_per_sqft' => 1800,
+            'is_active' => '1',
+            'has_calculator' => '1',
+            'has_designs' => '1',
+            'designs' => [
+                [
+                    'name' => 'Wave Partition',
+                    'slug' => 'wave-partition',
+                    'description' => 'Wave pattern divider',
+                    'is_active' => '1',
+                ],
+            ],
+        ]);
+
+        $response->assertRedirect(route('admin.services.index'));
+        $response->assertSessionHas('success');
+
+        $service = Service::query()->where('slug', 'test-partitions')->first();
+        $this->assertNotNull($service);
+        $this->assertSame('Test Partitions', $service->name);
+
+        $design = ServiceDesign::query()->where('service_id', $service->id)->first();
+        $this->assertNotNull($design);
+        $this->assertSame('wave-partition', $design->slug);
+    }
+
+    public function test_admin_can_update_and_delete_service(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $service = Service::query()->create([
+            'name' => 'Old Service',
+            'slug' => 'old-service',
+            'lead_form' => 'popup',
+            'rate_per_sqft' => 1500,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($admin)->put(route('admin.services.update', $service), [
+            'name' => 'Updated Service',
+            'slug' => 'updated-service',
+            'lead_form' => 'inline',
+            'rate_per_sqft' => 1600,
+            'is_active' => '1',
+        ])->assertRedirect(route('admin.services.index'));
+
+        $service->refresh();
+        $this->assertSame('Updated Service', $service->name);
+        $this->assertSame('updated-service', $service->slug);
+
+        $this->actingAs($admin)->delete(route('admin.services.destroy', $service))
+            ->assertRedirect(route('admin.services.index'));
+
+        $this->assertDatabaseMissing('services', ['id' => $service->id]);
+    }
+}

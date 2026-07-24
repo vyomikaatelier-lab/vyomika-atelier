@@ -34,7 +34,7 @@ class ExhibitionAdminController extends Controller
         $validated['is_active'] = $request->boolean('is_active', true);
         $validated['sort_order'] = $request->integer('sort_order', Exhibition::max('sort_order') + 1);
         $validated['cover_image'] = $this->resolveImageField($request, 'cover_file', 'cover_image', null, 'exhibitions');
-        $validated['gallery'] = $this->parseMultilineUrls($request->input('gallery_urls'));
+        $validated['gallery'] = $this->resolveGalleryField($request, 'gallery_files', 'gallery_urls', null, 'exhibitions');
 
         Exhibition::create($validated);
 
@@ -53,7 +53,7 @@ class ExhibitionAdminController extends Controller
         $validated['is_active'] = $request->boolean('is_active', true);
         $validated['sort_order'] = $request->integer('sort_order', $exhibition->sort_order);
         $validated['cover_image'] = $this->resolveImageField($request, 'cover_file', 'cover_image', $exhibition->cover_image, 'exhibitions');
-        $validated['gallery'] = $this->parseMultilineUrls($request->input('gallery_urls'));
+        $validated['gallery'] = $this->resolveGalleryField($request, 'gallery_files', 'gallery_urls', $exhibition->gallery, 'exhibitions');
 
         $exhibition->update($validated);
 
@@ -63,6 +63,11 @@ class ExhibitionAdminController extends Controller
     public function destroy(Exhibition $exhibition)
     {
         $this->deleteStoredPath($exhibition->cover_image);
+
+        foreach ($exhibition->gallery ?? [] as $path) {
+            $this->deleteStoredPath($path);
+        }
+
         $exhibition->delete();
 
         return redirect()->route('admin.exhibitions.index')->with('success', 'Exhibition deleted.');
@@ -116,6 +121,8 @@ class ExhibitionAdminController extends Controller
             'cover_image' => 'nullable|string|max:500',
             'cover_file' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
             'gallery_urls' => 'nullable|string',
+            'gallery_files' => 'nullable|array',
+            'gallery_files.*' => 'image|mimes:jpeg,jpg,png,webp|max:5120',
             'sort_order' => 'nullable|integer|min:0',
         ]);
     }

@@ -45,6 +45,8 @@ use App\Http\Controllers\Admin\CustomerAdminController;
 use App\Http\Controllers\Admin\SiteSettingAdminController;
 use App\Http\Controllers\Admin\LegalPageAdminController;
 use App\Http\Controllers\Admin\MediaAdminController;
+use App\Http\Controllers\Admin\ServiceAdminController;
+use App\Http\Controllers\Admin\CollectionPageAdminController;
 
 // Public storefront
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -207,6 +209,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('exhibitions/reorder', [ExhibitionAdminController::class, 'reorder'])->name('exhibitions.reorder');
         Route::post('exhibitions/{exhibition}/move/{direction}', [ExhibitionAdminController::class, 'move'])->name('exhibitions.move');
 
+        Route::resource('services', ServiceAdminController::class)->except(['show']);
+
+        Route::get('collection-pages', [CollectionPageAdminController::class, 'index'])->name('collection-pages.index');
+        Route::get('collection-pages/{slug}/edit', [CollectionPageAdminController::class, 'edit'])->name('collection-pages.edit');
+        Route::put('collection-pages/{slug}', [CollectionPageAdminController::class, 'update'])->name('collection-pages.update');
+
         Route::get('professional-applications', [ProfessionalApplicationAdminController::class, 'index'])->name('professional-applications.index');
         Route::get('professional-applications/{professional_application}', [ProfessionalApplicationAdminController::class, 'show'])->name('professional-applications.show');
         Route::put('professional-applications/{professional_application}', [ProfessionalApplicationAdminController::class, 'update'])->name('professional-applications.update');
@@ -230,6 +238,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::get('media', [MediaAdminController::class, 'index'])->name('media.index');
         Route::post('media', [MediaAdminController::class, 'store'])->name('media.store');
+        Route::put('media/{medium}', [MediaAdminController::class, 'update'])->name('media.update');
         Route::delete('media/{medium}', [MediaAdminController::class, 'destroy'])->name('media.destroy');
         Route::get('media/{medium}/download', [MediaAdminController::class, 'download'])->name('media.download');
     });

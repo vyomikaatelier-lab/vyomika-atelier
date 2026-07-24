@@ -73,4 +73,56 @@ trait HandlesAdminUploads
 
         return $urls ?: null;
     }
+
+    /** @return array<int, string>|null */
+    protected function resolveGalleryField(Request $request, string $filesField, string $urlsField, ?array $current, string $directory): ?array
+    {
+        $items = $this->parseMultilineUrls($request->input($urlsField)) ?? [];
+
+        if ($request->hasFile($filesField)) {
+            $files = $request->file($filesField);
+            if (! is_array($files)) {
+                $files = [$files];
+            }
+
+            foreach ($files as $file) {
+                if (! $file || ! $file->isValid()) {
+                    continue;
+                }
+
+                $path = $file->store($directory, 'public');
+                MediaFile::create([
+                    'disk' => 'public',
+                    'path' => $path,
+                    'filename' => $file->getClientOriginalName(),
+                    'mime' => $file->getMimeType(),
+                    'size' => $file->getSize() ?: 0,
+                    'is_private' => false,
+                ]);
+                $items[] = $path;
+            }
+        }
+
+        $remove = array_filter((array) $request->input('remove_gallery', []));
+        if ($remove !== []) {
+            $items = array_values(array_filter(
+                $items,
+                fn (string $item) => ! in_array($item, $remove, true)
+            ));
+
+            foreach ($remove as $path) {
+                if (is_string($path)) {
+                    $this->deleteStoredPath($path);
+                }
+            }
+        }
+
+        return $items !== [] ? array_values(array_unique($items)) : null;
+    }
+
+    /** @param array<int, string>|null $gallery */
+    protected function galleryLinesForForm(?array $gallery): string
+    {
+        return is_array($gallery) ? implode("\n", $gallery) : '';
+    }
 }

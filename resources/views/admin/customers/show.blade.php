@@ -5,15 +5,22 @@
 <h1 class="text-2xl font-semibold mb-6">{{ $customer->name }}</h1>
 <div class="grid lg:grid-cols-2 gap-6">
     <div class="bg-white p-6 rounded shadow text-sm space-y-2">
-        <p><strong>Email:</strong> {{ $customer->email }}</p>
-        <p><strong>Mobile:</strong> +{{ $customer->mobile_country_code }} {{ $customer->mobile }}</p>
-        <p><strong>Account type:</strong> {{ $customer->accountTypeLabel() }}</p>
         <p><strong>Mobile verified:</strong> {{ $customer->hasVerifiedPhone() ? 'Yes' : 'No' }}</p>
         <p><strong>City:</strong> {{ $customer->city ?? '—' }}</p>
         <p><strong>Joined:</strong> {{ $customer->created_at->format('d M Y') }}</p>
     </div>
     <form method="POST" action="{{ route('admin.customers.update', $customer) }}" class="bg-white p-6 rounded shadow space-y-4">
         @csrf @method('PUT')
+        <div><label class="block text-sm mb-1">Name</label><input name="name" value="{{ old('name', $customer->name) }}" required class="w-full border px-3 py-2 rounded"></div>
+        <div><label class="block text-sm mb-1">Email</label><input type="email" name="email" value="{{ old('email', $customer->email) }}" required class="w-full border px-3 py-2 rounded"></div>
+        <div><label class="block text-sm mb-1">Mobile</label><input name="mobile" value="{{ old('mobile', $customer->mobile) }}" required class="w-full border px-3 py-2 rounded"></div>
+        <div><label class="block text-sm mb-1">Account type</label>
+            <select name="account_type" class="w-full border px-3 py-2 rounded">
+                @foreach($accountTypes as $value => $label)
+                    <option value="{{ $value }}" @selected(old('account_type', $customer->account_type) === $value)>{{ $label }}</option>
+                @endforeach
+            </select>
+        </div>
         <div><label class="block text-sm mb-1">Account status</label>
             <select name="is_active" class="w-full border px-3 py-2 rounded">
                 <option value="1" @selected($customer->is_active)>Enabled</option>

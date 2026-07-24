@@ -6,6 +6,14 @@
     @csrf
     @if(isset($category)) @method('PUT') @endif
     <div><label class="block text-sm mb-1">Name</label><input name="name" value="{{ old('name', $category->name ?? '') }}" required class="w-full border px-3 py-2 rounded"></div>
+    @if(isset($category))
+    <div>
+        <label class="block text-sm mb-1">Slug</label>
+        <input value="{{ $category->slug }}" readonly class="w-full border px-3 py-2 rounded bg-gray-100 text-gray-600">
+        @php $mappedSection = \App\Support\ProductCatalog::sectionForCategorySlug($category->slug); @endphp
+        <p class="text-xs text-gray-500 mt-1">Storefront section: <strong>{{ $mappedSection ? ucfirst($mappedSection) : 'Unmapped' }}</strong> — set via slug mapping in ProductCatalog.</p>
+    </div>
+    @endif
     <div><label class="block text-sm mb-1">Description</label><textarea name="description" rows="3" class="w-full border px-3 py-2 rounded">{{ old('description', $category->description ?? '') }}</textarea></div>
     <div><label class="block text-sm mb-1">Image URL</label><input name="image" value="{{ old('image', $category->image ?? '') }}" class="w-full border px-3 py-2 rounded"></div>
     <div><label class="block text-sm mb-1">Upload image</label><input type="file" name="image_file" accept="image/*" class="w-full"></div>

@@ -28,6 +28,32 @@
         <input name="warranty_duration" value="{{ old('warranty_duration', $store['warranty_duration'] ?? '') }}" placeholder="Warranty duration" class="w-full border px-3 py-2 rounded">
     </section>
     <section class="space-y-3">
+        <h2 class="font-medium">Homepage announcement</h2>
+        <input name="announcement_text" value="{{ old('announcement_text', $announcementText) }}" placeholder="Announcement bar text" class="w-full border px-3 py-2 rounded">
+        <div class="grid md:grid-cols-2 gap-3">
+            <input name="announcement_link_label" value="{{ old('announcement_link_label', $announcementLinkLabel) }}" placeholder="Link label" class="w-full border px-3 py-2 rounded">
+            <input name="announcement_link_href" value="{{ old('announcement_link_href', $announcementLinkHref) }}" placeholder="Link URL (/shop)" class="w-full border px-3 py-2 rounded">
+        </div>
+    </section>
+
+    <section class="space-y-3">
+        <h2 class="font-medium">Homepage hero (first slide)</h2>
+        @if($heroImage)
+            <img src="{{ \App\Support\MediaUrl::resolve($heroImage) ?? $heroImage }}" alt="" class="w-full max-w-md h-40 object-cover rounded border">
+        @endif
+        <input name="hero_title" value="{{ old('hero_title', $heroTitle) }}" placeholder="Hero title" class="w-full border px-3 py-2 rounded">
+        <textarea name="hero_subtitle" rows="2" placeholder="Hero subtitle" class="w-full border px-3 py-2 rounded">{{ old('hero_subtitle', $heroSubtitle) }}</textarea>
+        <input name="hero_image" value="{{ old('hero_image', $heroImage) }}" placeholder="Hero image URL" class="w-full border px-3 py-2 rounded">
+        <div><label class="block text-sm mb-1">Upload hero image</label><input type="file" name="hero_image_file" accept="image/*"></div>
+    </section>
+
+    <section class="space-y-3">
+        <h2 class="font-medium">Navigation JSON</h2>
+        <p class="text-xs text-gray-500">Array of nav items with label, route, optional params/children.</p>
+        <textarea name="nav_json" rows="12" class="w-full border px-3 py-2 rounded font-mono text-xs">{{ old('nav_json', $navJson) }}</textarea>
+    </section>
+
+    <section class="space-y-3">
         <h2 class="font-medium">Grievance contact</h2>
         <input name="grievance_officer_name" value="{{ old('grievance_officer_name', $business['grievance_officer_name'] ?? '') }}" class="w-full border px-3 py-2 rounded" placeholder="Officer name">
         <input name="grievance_officer_email" value="{{ old('grievance_officer_email', $business['grievance_officer_email'] ?? '') }}" class="w-full border px-3 py-2 rounded" placeholder="Officer email">

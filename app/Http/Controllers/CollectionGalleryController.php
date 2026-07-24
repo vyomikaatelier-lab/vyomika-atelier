@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Support\CollectionContent;
 use App\Support\ProductCatalog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -13,7 +14,7 @@ class CollectionGalleryController extends Controller
     /** @return list<string> */
     public static function slugs(): array
     {
-        return array_keys(config('collections', []));
+        return CollectionContent::slugs();
     }
 
     public function index(string $slug): View|RedirectResponse
@@ -24,7 +25,7 @@ class CollectionGalleryController extends Controller
 
         abort_unless(in_array($slug, self::slugs(), true), 404);
 
-        $page = config("collections.{$slug}");
+        $page = CollectionContent::page($slug);
         abort_unless(is_array($page), 404);
 
         $categorySlugs = $page['category_slugs'] ?? [$slug];

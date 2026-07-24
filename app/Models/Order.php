@@ -27,6 +27,7 @@ class Order extends Model
         'payment_id',
         'razorpay_order_id',
         'notes',
+        'admin_notes',
         'shipping_snapshot',
         'billing_snapshot',
         'checkout_token',

@@ -10,6 +10,7 @@ use App\Models\Project;
 use App\Models\Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class BlogAdminController extends Controller
 {
@@ -46,10 +47,11 @@ class BlogAdminController extends Controller
         $validated['is_active'] = $request->boolean('is_active', true);
         $validated['status'] = $request->input('status', 'draft');
         $validated['image'] = $this->resolveImageField($request, 'image_file', 'image', null, 'blog');
-        $validated['gallery'] = $this->parseMultilineUrls($request->input('gallery_urls'));
-        $validated['related_product_slugs'] = $this->parseCsv($request->input('related_product_slugs'));
-        $validated['related_project_slugs'] = $this->parseCsv($request->input('related_project_slugs'));
-        $validated['related_service_slugs'] = $this->parseCsv($request->input('related_service_slugs'));
+        $validated['gallery'] = $this->resolveGalleryField($request, 'gallery_files', 'gallery_urls', null, 'blog');
+        $validated['faq'] = $this->parseFaq($request);
+        $validated['related_product_slugs'] = $this->parseRelatedSlugs($request, 'related_product_slugs');
+        $validated['related_project_slugs'] = $this->parseRelatedSlugs($request, 'related_project_slugs');
+        $validated['related_service_slugs'] = $this->parseRelatedSlugs($request, 'related_service_slugs');
 
         BlogPost::create($validated);
 
@@ -69,10 +71,11 @@ class BlogAdminController extends Controller
         $validated['is_active'] = $request->boolean('is_active', true);
         $validated['status'] = $request->input('status', 'draft');
         $validated['image'] = $this->resolveImageField($request, 'image_file', 'image', $post->image, 'blog');
-        $validated['gallery'] = $this->parseMultilineUrls($request->input('gallery_urls'));
-        $validated['related_product_slugs'] = $this->parseCsv($request->input('related_product_slugs'));
-        $validated['related_project_slugs'] = $this->parseCsv($request->input('related_project_slugs'));
-        $validated['related_service_slugs'] = $this->parseCsv($request->input('related_service_slugs'));
+        $validated['gallery'] = $this->resolveGalleryField($request, 'gallery_files', 'gallery_urls', $post->gallery, 'blog');
+        $validated['faq'] = $this->parseFaq($request);
+        $validated['related_product_slugs'] = $this->parseRelatedSlugs($request, 'related_product_slugs');
+        $validated['related_project_slugs'] = $this->parseRelatedSlugs($request, 'related_project_slugs');
+        $validated['related_service_slugs'] = $this->parseRelatedSlugs($request, 'related_service_slugs');
 
         $post->update($validated);
 
@@ -82,6 +85,11 @@ class BlogAdminController extends Controller
     public function destroy(BlogPost $post)
     {
         $this->deleteStoredPath($post->image);
+
+        foreach ($post->gallery ?? [] as $path) {
+            $this->deleteStoredPath($path);
+        }
+
         $post->delete();
 
         return redirect()->route('admin.blog.index')->with('success', 'Blog post deleted.');
@@ -114,21 +122,45 @@ class BlogAdminController extends Controller
             'image' => 'nullable|string|max:500',
             'image_file' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
             'gallery_urls' => 'nullable|string',
-            'related_product_slugs' => 'nullable|string',
-            'related_project_slugs' => 'nullable|string',
-            'related_service_slugs' => 'nullable|string',
+            'gallery_files' => 'nullable|array',
+            'gallery_files.*' => 'image|mimes:jpeg,jpg,png,webp|max:5120',
+            'faq_questions' => 'nullable|array',
+            'faq_questions.*' => 'nullable|string|max:500',
+            'faq_answers' => 'nullable|array',
+            'faq_answers.*' => 'nullable|string|max:5000',
+            'related_product_slugs' => 'nullable|array',
+            'related_product_slugs.*' => ['string', Rule::exists('products', 'slug')],
+            'related_project_slugs' => 'nullable|array',
+            'related_project_slugs.*' => ['string', Rule::exists('projects', 'slug')],
+            'related_service_slugs' => 'nullable|array',
+            'related_service_slugs.*' => ['string', Rule::exists('services', 'slug')],
         ]);
     }
 
-    /** @return array<int, string>|null */
-    private function parseCsv(?string $raw): ?array
+    /** @return array<int, array{question: string, answer: string}>|null */
+    private function parseFaq(Request $request): ?array
     {
-        if (! filled($raw)) {
-            return null;
+        $questions = (array) $request->input('faq_questions', []);
+        $answers = (array) $request->input('faq_answers', []);
+        $items = [];
+
+        foreach ($questions as $index => $question) {
+            $question = trim((string) $question);
+            $answer = trim((string) ($answers[$index] ?? ''));
+
+            if ($question !== '' && $answer !== '') {
+                $items[] = ['question' => $question, 'answer' => $answer];
+            }
         }
 
-        $items = array_values(array_filter(array_map('trim', explode(',', $raw))));
+        return $items !== [] ? $items : null;
+    }
 
-        return $items ?: null;
+    /** @return array<int, string>|null */
+    private function parseRelatedSlugs(Request $request, string $field): ?array
+    {
+        $items = array_values(array_filter((array) $request->input($field, [])));
+
+        return $items !== [] ? $items : null;
     }
 }
