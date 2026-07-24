@@ -28,7 +28,7 @@ return [
             ['name' => 'Building Facades', 'image' => 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80'],
             ['name' => 'Decorative Screens', 'image' => 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&q=80'],
             ['name' => 'Entrance Gates', 'image' => 'https://images.unsplash.com/photo-1514565131-fce0801e5785?w=800&q=80'],
-            ['name' => 'Boundary Walls', 'image' => 'https://images.unsplash.com/photo-1477959858987-67ae85e4c1c7?w=800&q=80'],
+            ['name' => 'Boundary Walls', 'image' => 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&q=80'],
             ['name' => 'Landscape Planters', 'image' => 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=80'],
             ['name' => 'Pergolas & Gazebos', 'image' => 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80'],
             ['name' => 'Signage', 'image' => 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&q=80'],
@@ -55,7 +55,7 @@ return [
         'note' => 'Final appearance depends on climate, exposure, drainage and installation conditions.',
         'stages' => [
             ['label' => 'Raw Steel', 'image' => 'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=400&q=80'],
-            ['label' => 'Initial Oxidation', 'image' => 'https://images.unsplash.com/photo-1504196606676-a8d06319b74b?w=400&q=80'],
+            ['label' => 'Initial Oxidation', 'image' => 'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=400&q=80'],
             ['label' => 'Warm Orange Patina', 'image' => 'https://images.unsplash.com/photo-1514565131-fce0801e5785?w=400&q=80'],
             ['label' => 'Mature Brown Patina', 'image' => 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&q=80'],
         ],
@@ -95,7 +95,7 @@ return [
                 'title' => 'Laser-Cut Corten Screen',
                 'category' => 'Outdoor screens',
                 'location' => 'Bangalore, India',
-                'image' => 'https://images.unsplash.com/photo-1477959858987-67ae85e4c1c7?w=800&q=80',
+                'image' => 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80',
                 'slug' => null,
             ],
             [

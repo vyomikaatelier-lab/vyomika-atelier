@@ -22,6 +22,19 @@ class LocalizeLandingPageImages extends Command
 
     protected $description = 'Download external Railings/Corten landing images into managed storage';
 
+    /**
+     * Dead Unsplash photo IDs (404) → working replacements already used elsewhere on the site.
+     *
+     * @var array<string, string>
+     */
+    private const DEAD_PHOTO_REMAP = [
+        'photo-1600607687920-4e3a09aebb82' => 'photo-1600607687644-c7171b42498f',
+        'photo-1600047509807-ba8f99d2cd7e' => 'photo-1600585154526-990dced4db0d',
+        'photo-1600210492494-03fe69c9aeda' => 'photo-1600566753190-17f0baa2a6c3',
+        'photo-1477959858987-67ae85e4c1c7' => 'photo-1449824913935-59a10b8d2000',
+        'photo-1504196606676-a8d06319b74b' => 'photo-1587293852726-70cdb56c2866',
+    ];
+
     public function handle(): int
     {
         $dry = (bool) $this->option('dry-run');
@@ -83,6 +96,7 @@ class LocalizeLandingPageImages extends Command
                 continue;
             }
 
+            $value = $this->remapDeadUnsplashUrl($value);
             $local = $this->download($value, $slug, $dry);
             if ($local === null) {
                 $this->warn("Failed: {$value}");
@@ -102,6 +116,20 @@ class LocalizeLandingPageImages extends Command
         }
 
         return $node;
+    }
+
+    private function remapDeadUnsplashUrl(string $url): string
+    {
+        foreach (self::DEAD_PHOTO_REMAP as $dead => $live) {
+            if (str_contains($url, $dead)) {
+                $remapped = str_replace($dead, $live, $url);
+                $this->line("Remapped dead Unsplash ID: {$dead} → {$live}");
+
+                return $remapped;
+            }
+        }
+
+        return $url;
     }
 
     private function download(string $url, string $slug, bool $dry): ?string

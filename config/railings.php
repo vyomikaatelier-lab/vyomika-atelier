@@ -18,7 +18,7 @@ return [
         ],
         'cta_primary' => ['label' => 'Request Quotation', 'href' => '#railing-quote'],
         'cta_secondary' => ['label' => 'View Categories', 'href' => '#railing-categories'],
-        'image' => 'https://images.unsplash.com/photo-1600607687920-4e3a09aebb82?w=1400&q=80',
+        'image' => 'https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=1400&q=80',
         'image_alt' => 'Custom staircase railings',
     ],
 
@@ -49,12 +49,12 @@ return [
             [
                 'title' => 'Wrought Iron Railings',
                 'text' => 'Scrollwork, pickets and hammered details with durable powder-coat or patina finishes for villas and boutique hotels.',
-                'image' => 'https://images.unsplash.com/photo-1600047509807-ba8f99d2cd7e?w=800&q=80',
+                'image' => 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80',
             ],
             [
                 'title' => 'Indoor Railings',
                 'text' => 'Low-profile profiles, PVD champagne or matte black finishes, and concealed fixings suited to apartments and offices.',
-                'image' => 'https://images.unsplash.com/photo-1600210492494-03fe69c9aeda?w=800&q=80',
+                'image' => 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&q=80',
             ],
             [
                 'title' => 'Exterior Railings',
@@ -86,7 +86,7 @@ return [
             'Delhi studio QC with labelled crating for safe Pan-India delivery',
             'Coordination with your contractor or architect on site',
         ],
-        'image' => 'https://images.unsplash.com/photo-1600607687920-4e3a09aebb82?w=900&q=80',
+        'image' => 'https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=900&q=80',
         'image_alt' => 'Staircase railing fabrication',
     ],
 
