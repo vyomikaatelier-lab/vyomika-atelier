@@ -25,14 +25,13 @@ class RegisterOtpFormFlowTest extends TestCase
 
         $response->assertOk()
             ->assertSeeInOrder([
-                'Sign up with Apple',
-                'Sign up with Google',
-                'or continue with email',
                 'Password',
                 'Confirm password',
                 'OTP',
                 'Send OTP',
             ])
+            ->assertDontSee('Sign up with Apple')
+            ->assertDontSee('Sign up with Google')
             ->assertSee('data-otp-digit', false);
     }
 

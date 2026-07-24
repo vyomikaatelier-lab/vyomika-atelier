@@ -9,16 +9,25 @@ class SocialAuthRouteTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_register_page_shows_social_signup_buttons(): void
+    public function test_register_page_does_not_show_social_signup_buttons(): void
     {
         $response = $this->get(route('account.register'));
 
         $response->assertOk()
-            ->assertSee('Sign up with Apple')
-            ->assertSee('Sign up with Google')
-            ->assertSee('or continue with email')
+            ->assertDontSee('Sign up with Apple')
+            ->assertDontSee('Sign up with Google')
+            ->assertDontSee('or continue with email')
             ->assertSee('Confirm password')
-            ->assertSee('Mobile verification');
+            ->assertSee('OTP');
+    }
+
+    public function test_login_page_shows_social_signin_buttons(): void
+    {
+        $response = $this->get(route('account.login'));
+
+        $response->assertOk()
+            ->assertSee('Sign in with Apple')
+            ->assertSee('Sign in with Google');
     }
 
     public function test_google_redirect_without_credentials_returns_info_message(): void

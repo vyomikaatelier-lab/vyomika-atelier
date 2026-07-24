@@ -4,7 +4,7 @@
     $activeTab = $tab ?? (request()->routeIs('account.register') ? 'register' : 'login');
     $pageTitle = $activeTab === 'register' ? 'Create Account' : 'Sign In';
     $pageSubtitle = $activeTab === 'register'
-        ? 'Choose Apple, Google, or email with WhatsApp verification to join Vyomika Atelier.'
+        ? 'Create your account with email, password, and WhatsApp verification.'
         : 'Welcome back. Sign in with email or mobile and password.';
 @endphp
 
@@ -91,18 +91,9 @@
             $registerDetails = $registerDetails ?? [];
             $registerLocked = $awaitingRegisterOtp;
             $registerFieldValues = $registerLocked ? $registerDetails : [];
-            $socialProviders = $socialProviders ?? ['google' => false, 'apple' => false];
         @endphp
         <div class="am-account-card__panel" id="account-register-panel">
             <div class="am-account-signup">
-                @unless($registerLocked)
-                @include('partials.am-account-social-buttons')
-
-                <div class="am-account-card__divider" role="presentation">
-                    <span>or continue with email</span>
-                </div>
-                @endunless
-
                 <div class="am-account-signup__details">
                     @if($registerLocked)
                     <div class="am-account-card__field">
