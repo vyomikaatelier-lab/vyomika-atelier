@@ -13,10 +13,14 @@
     <a href="{{ $previewUrl }}" target="_blank" rel="noopener" class="text-sm border px-3 py-1.5 rounded">Preview public page ↗</a>
 </div>
 <h1 class="text-2xl font-semibold mb-2">{{ $label }}</h1>
+@if(request('saved') || session('success'))
+<div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-4 text-sm">{{ session('success') ?: 'Page saved successfully.' }}</div>
+@endif
 <p class="text-sm text-gray-600 mb-6">Edit every section shown on the public page. Images accept upload or URL. Inactive cards are hidden on the storefront.</p>
 
 <form method="POST" action="{{ route('admin.independent-pages.update', $slug) }}" enctype="multipart/form-data" class="space-y-4 max-w-4xl" id="landing-page-form">
     @csrf @method('PUT')
+    <input type="hidden" name="_landing_save" value="1">
 
     <details class="bg-white rounded shadow p-4" open>
         <summary class="font-medium cursor-pointer">SEO</summary>

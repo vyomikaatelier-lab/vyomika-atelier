@@ -51,7 +51,7 @@ class IndependentLandingAdminController extends Controller
             return back()->with('error', 'Database table site_settings is missing. Run: php artisan migrate --force');
         }
 
-        if ($this->multipartPayloadFailed($request, 'hero_title')) {
+        if ($this->multipartPayloadFailed($request)) {
             return back()->with('error', 'Upload too large for the server limit. Save text changes first, then upload one image at a time (max 5 MB each).');
         }
 
@@ -198,14 +198,22 @@ class IndependentLandingAdminController extends Controller
         // Preserve quotation form option maps (not edited in this UI).
         $override['form'] = data_get($existingOverride, 'form', data_get($current, 'form', []));
 
-        LandingPageContent::storeOverride($slug, $override);
+        try {
+            LandingPageContent::storeOverride($slug, $override);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()
+                ->withInput()
+                ->with('error', 'Could not save page settings. Check storage/logs/laravel.log or database permissions. ('.$e->getMessage().')');
+        }
 
         foreach (array_unique(array_filter($pendingDeletes)) as $path) {
             $this->deleteStoredPath($path);
         }
 
         return redirect()
-            ->route('admin.independent-pages.edit', $slug)
+            ->route('admin.independent-pages.edit', ['slug' => $slug, 'saved' => 1])
             ->with('success', LandingPageContent::label($slug).' updated.');
     }
 

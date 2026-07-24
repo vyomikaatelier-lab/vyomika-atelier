@@ -36,7 +36,7 @@ class UpdateIndependentLandingPageRequest extends FormRequest
             'layouts_subtitle' => 'nullable|string|max:2000',
             'why_title' => 'nullable|string|max:255',
             'why_points' => 'nullable|string|max:8000',
-            'why_image' => 'nullable|string|max:500',
+            'why_image' => 'nullable|string|max:2048',
             'why_image_file' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
             'why_image_remove' => 'nullable|boolean',
             'why_image_alt' => 'nullable|string|max:255',
@@ -57,7 +57,7 @@ class UpdateIndependentLandingPageRequest extends FormRequest
             'projects_categories' => 'nullable|string|max:1000',
             'technical_title' => 'nullable|string|max:255',
             'technical_options' => 'nullable|string|max:8000',
-            'technical_image' => 'nullable|string|max:500',
+            'technical_image' => 'nullable|string|max:2048',
             'technical_image_file' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
             'technical_image_remove' => 'nullable|boolean',
             'technical_image_alt' => 'nullable|string|max:255',
@@ -67,7 +67,7 @@ class UpdateIndependentLandingPageRequest extends FormRequest
             'cards' => 'nullable|array',
             'cards.*.title' => 'nullable|string|max:255',
             'cards.*.text' => 'nullable|string|max:2000',
-            'cards.*.image' => 'nullable|string|max:500',
+            'cards.*.image' => 'nullable|string|max:2048',
             'cards.*.image_file' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
             'cards.*.image_alt' => 'nullable|string|max:255',
             'cards.*.cta_label' => 'nullable|string|max:120',
@@ -80,14 +80,14 @@ class UpdateIndependentLandingPageRequest extends FormRequest
             'apps' => 'nullable|array',
             'apps.*.name' => 'nullable|string|max:255',
             'apps.*.text' => 'nullable|string|max:2000',
-            'apps.*.image' => 'nullable|string|max:500',
+            'apps.*.image' => 'nullable|string|max:2048',
             'apps.*.image_file' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
             'apps.*.image_alt' => 'nullable|string|max:255',
             'apps.*.active' => 'nullable',
             'stages' => 'nullable|array',
             'stages.*.label' => 'nullable|string|max:255',
             'stages.*.text' => 'nullable|string|max:2000',
-            'stages.*.image' => 'nullable|string|max:500',
+            'stages.*.image' => 'nullable|string|max:2048',
             'stages.*.image_file' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
             'stages.*.image_alt' => 'nullable|string|max:255',
             'stages.*.active' => 'nullable',
@@ -96,7 +96,7 @@ class UpdateIndependentLandingPageRequest extends FormRequest
             'projects.*.category' => 'nullable|string|max:255',
             'projects.*.location' => 'nullable|string|max:255',
             'projects.*.slug' => 'nullable|string|max:255',
-            'projects.*.image' => 'nullable|string|max:500',
+            'projects.*.image' => 'nullable|string|max:2048',
             'projects.*.image_file' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
             'projects.*.image_alt' => 'nullable|string|max:255',
             'projects.*.active' => 'nullable',
@@ -104,6 +104,18 @@ class UpdateIndependentLandingPageRequest extends FormRequest
             'faqs.*.q' => 'nullable|string|max:500',
             'faqs.*.a' => 'nullable|string|max:5000',
             'faqs.*.active' => 'nullable',
+        ];
+    }
+
+    /** @return array<string, string> */
+    public function messages(): array
+    {
+        return [
+            'apps.*.image.max' => 'An application image URL is too long. Use a shorter URL or upload the file instead.',
+            'stages.*.image.max' => 'A finish-stage image URL is too long. Upload the file instead.',
+            'projects.*.image.max' => 'A project image URL is too long. Upload the file instead.',
+            'hero_image.max' => 'The hero image URL is too long. Upload the file instead.',
+            '*.image_file.max' => 'Each uploaded image must be 5 MB or smaller.',
         ];
     }
 }

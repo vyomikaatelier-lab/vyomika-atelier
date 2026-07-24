@@ -52,7 +52,7 @@ class IndependentLandingAdminTest extends TestCase
             ],
         ]);
 
-        $response->assertRedirect(route('admin.independent-pages.edit', 'railings'));
+        $response->assertRedirect(route('admin.independent-pages.edit', ['slug' => 'railings', 'saved' => 1]));
 
         $stored = SiteSetting::getValue('landing_pages', []);
         $this->assertSame('Updated Railings Hero', data_get($stored, 'railings.hero.title'));
@@ -109,7 +109,7 @@ class IndependentLandingAdminTest extends TestCase
                 ['q' => 'What is Corten?', 'a' => 'Weathering steel.', 'active' => '1'],
                 ['q' => 'Hidden FAQ', 'a' => 'Nope', 'active' => '0'],
             ],
-        ])->assertRedirect(route('admin.independent-pages.edit', 'corten-steel'));
+        ])->assertRedirect(route('admin.independent-pages.edit', ['slug' => 'corten-steel', 'saved' => 1]));
 
         $this->assertSame('Updated Corten Hero', data_get(CortenContent::all(), 'hero.title'));
 
@@ -319,7 +319,7 @@ class IndependentLandingAdminTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->put(route('admin.independent-pages.update', 'corten-steel'), $payload)
-            ->assertRedirect(route('admin.independent-pages.edit', 'corten-steel'))
+            ->assertRedirect(route('admin.independent-pages.edit', ['slug' => 'corten-steel', 'saved' => 1]))
             ->assertSessionHas('success');
 
         $this->assertSame('Persisted Corten Title', data_get(CortenContent::all(), 'hero.title'));

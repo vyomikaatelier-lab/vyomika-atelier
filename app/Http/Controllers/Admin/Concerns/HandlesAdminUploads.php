@@ -124,7 +124,7 @@ trait HandlesAdminUploads
         return $urls ?: null;
     }
 
-    protected function multipartPayloadFailed(Request $request, string $probeField): bool
+    protected function multipartPayloadFailed(Request $request, string $probeField = '_landing_save'): bool
     {
         if (! $request->isMethod('POST') && ! $request->isMethod('PUT')) {
             return false;

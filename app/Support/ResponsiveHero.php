@@ -24,7 +24,7 @@ class ResponsiveHero
         $rules = [];
 
         foreach (self::flatFieldKeys($prefix) as $field) {
-            $rules[$field] = 'nullable|string|max:500';
+            $rules[$field] = 'nullable|string|max:2048';
             $rules[$field.'_file'] = 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120';
             $rules[$field.'_remove'] = 'nullable|boolean';
         }
