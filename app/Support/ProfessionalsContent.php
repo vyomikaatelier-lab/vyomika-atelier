@@ -8,7 +8,10 @@ class ProfessionalsContent
 {
     public static function all(): array
     {
-        return config('professionals', []);
+        $page = config('professionals', []);
+        $page['hero'] = PageHeroContent::heroWithResolvedImages('professionals');
+
+        return $page;
     }
 
     /** @return \Illuminate\Support\Collection<int, Project> */

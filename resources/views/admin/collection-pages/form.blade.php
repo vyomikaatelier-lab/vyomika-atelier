@@ -11,15 +11,10 @@
     </div>
     <div><label class="block text-sm mb-1">Meta description</label><textarea name="meta_description" rows="2" class="w-full border px-3 py-2 rounded">{{ old('meta_description', $page['meta_description'] ?? '') }}</textarea></div>
     <div class="space-y-3 border rounded p-4 bg-gray-50">
-        <p class="text-sm font-medium">Hero</p>
-        @php $heroImage = data_get($page, 'hero.image'); @endphp
-        @if($heroImage)
-            <img src="{{ \App\Support\MediaUrl::resolve($heroImage) ?? $heroImage }}" alt="" class="w-full max-w-md h-40 object-cover rounded border">
-        @endif
+        <p class="text-sm font-medium">Cover photo (desktop, tablet &amp; mobile)</p>
         <input name="hero_title" value="{{ old('hero_title', data_get($page, 'hero.title')) }}" placeholder="Hero title" class="w-full border px-3 py-2 rounded">
         <textarea name="hero_subtitle" rows="2" placeholder="Hero subtitle" class="w-full border px-3 py-2 rounded">{{ old('hero_subtitle', data_get($page, 'hero.subtitle')) }}</textarea>
-        <input name="hero_image" value="{{ old('hero_image', $heroImage) }}" placeholder="Hero image URL" class="w-full border px-3 py-2 rounded">
-        <input type="file" name="hero_image_file" accept="image/*">
+        @include('admin.partials.responsive-hero-images', ['prefix' => 'hero', 'hero' => data_get($page, 'hero', [])])
     </div>
     <div class="space-y-3 border rounded p-4 bg-gray-50">
         <p class="text-sm font-medium">Intro</p>

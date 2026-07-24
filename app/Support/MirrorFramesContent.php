@@ -9,7 +9,10 @@ class MirrorFramesContent
 {
     public static function all(): array
     {
-        return config('mirror-frames', []);
+        $page = config('mirror-frames', []);
+        $page['hero'] = PageHeroContent::heroWithResolvedImages('mirror-frames');
+
+        return $page;
     }
 
     public static function design(string $slug): ?array

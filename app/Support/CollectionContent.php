@@ -36,4 +36,10 @@ class CollectionContent
 
         return array_replace_recursive($defaults ?? [], $overrides ?? []);
     }
+
+    /** @param  array<string, mixed>  $page */
+    public static function withResolvedImages(array $page): array
+    {
+        return LandingPageContent::withResolvedImages($page);
+    }
 }

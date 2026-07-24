@@ -3100,10 +3100,29 @@ ul { list-style: none; }
 .am-corten-apps__name {
   font-size: 0.88rem;
   font-weight: 600;
-  padding: 0.85rem 1rem;
+  padding: 0.85rem 1rem 0;
   margin: 0;
   color: var(--am-charcoal);
 }
+.am-corten-apps__desc {
+  font-size: 0.82rem;
+  line-height: 1.5;
+  padding: 0.35rem 1rem 0;
+  margin: 0;
+  color: var(--am-muted);
+}
+.am-corten-apps__actions {
+  padding: 0.85rem 1rem 1rem;
+}
+.am-corten-apps__actions .am-btn {
+  width: 100%;
+}
+
+.am-section--dark .am-design-gallery--on-dark .am-card__label,
+.am-section--dark .am-design-gallery--on-dark .am-design-gallery__title {
+  color: rgba(255, 255, 255, 0.92);
+}
+
 .am-corten-split {
   display: grid;
   grid-template-columns: 1fr;
@@ -3287,6 +3306,14 @@ ul { list-style: none; }
   .am-corten-cta__grid { grid-template-columns: 1fr 1fr; gap: 3rem; }
 }
 .am-corten-quote-card { background: var(--am-white); }
+
+#railing-quote,
+#railing-quote-form,
+#corten-quote-form,
+#corten-applications,
+#railing-categories {
+  scroll-margin-top: calc(var(--am-header-h) + var(--am-announce-h, 0px) + 1rem);
+}
 .am-corten-cta .am-corten-section__title,
 .am-corten-cta .am-corten-section__lead { color: var(--am-charcoal); }
 

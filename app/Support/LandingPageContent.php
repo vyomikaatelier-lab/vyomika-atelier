@@ -134,7 +134,7 @@ class LandingPageContent
 
             if (
                 is_string($value)
-                && in_array($key, ['image', 'mobile_image', 'og_image'], true)
+                && in_array($key, ['image', 'image_mobile', 'image_tablet', 'mobile_image', 'og_image'], true)
             ) {
                 $node[$key] = MediaUrl::resolve($value) ?? $value;
             }

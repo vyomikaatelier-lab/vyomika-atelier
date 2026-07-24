@@ -47,6 +47,7 @@ use App\Http\Controllers\Admin\LegalPageAdminController;
 use App\Http\Controllers\Admin\MediaAdminController;
 use App\Http\Controllers\Admin\ServiceAdminController;
 use App\Http\Controllers\Admin\CollectionPageAdminController;
+use App\Http\Controllers\Admin\PageHeroAdminController;
 use App\Http\Controllers\Admin\IndependentLandingAdminController;
 use App\Http\Controllers\Admin\StaticPageSeoAdminController;
 use App\Http\Controllers\Admin\UrlRedirectAdminController;
@@ -220,6 +221,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('collection-pages', [CollectionPageAdminController::class, 'index'])->name('collection-pages.index');
         Route::get('collection-pages/{slug}/edit', [CollectionPageAdminController::class, 'edit'])->name('collection-pages.edit');
         Route::put('collection-pages/{slug}', [CollectionPageAdminController::class, 'update'])->name('collection-pages.update');
+
+        Route::get('page-heroes', [PageHeroAdminController::class, 'index'])->name('page-heroes.index');
+        Route::get('page-heroes/{slug}/edit', [PageHeroAdminController::class, 'edit'])->name('page-heroes.edit');
+        Route::put('page-heroes/{slug}', [PageHeroAdminController::class, 'update'])->name('page-heroes.update');
 
         Route::get('independent-pages', [IndependentLandingAdminController::class, 'index'])->name('independent-pages.index');
         Route::get('independent-pages/{slug}/edit', [IndependentLandingAdminController::class, 'edit'])->name('independent-pages.edit');

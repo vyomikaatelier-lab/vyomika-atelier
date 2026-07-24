@@ -7,6 +7,7 @@ class AboutContent
     public static function all(): array
     {
         $about = config('about', []);
+        $about['hero'] = PageHeroContent::heroWithResolvedImages('about');
         $about['exhibitions']['events'] = CmsSettings::exhibitions();
 
         return $about;

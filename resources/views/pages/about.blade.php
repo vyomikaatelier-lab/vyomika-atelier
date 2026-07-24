@@ -18,7 +18,7 @@
 @section('content')
 
 {{-- Hero --}}
-<section class="am-about-hero" @if(!empty($hero['image'])) style="--about-hero-img: url('{{ asset(ltrim($hero['image'], '/')) }}')" @endif>
+<section class="am-about-hero am-hero-responsive" @include('partials.am-responsive-hero-style', ['hero' => $hero])>
     <div class="am-container am-about-hero__inner am-reveal">
         @if(!empty($hero['label']))
         <p class="am-page-hero__label">{{ $hero['label'] }}</p>

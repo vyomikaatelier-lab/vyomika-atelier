@@ -13,7 +13,7 @@
 @section('content')
 
 {{-- Hero --}}
-<section class="am-pro-hero" style="--pro-hero-img: url('{{ $hero['image'] ?? '' }}')">
+<section class="am-pro-hero am-hero-responsive" @include('partials.am-responsive-hero-style', ['hero' => $hero])>
     <div class="am-container am-pro-hero__inner">
         <p class="am-page-hero__label">{{ $hero['label'] ?? 'Professionals' }}</p>
         <h1 class="am-pro-hero__title">{{ $hero['title'] ?? 'Partner with Us' }}</h1>

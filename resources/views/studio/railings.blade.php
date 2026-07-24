@@ -33,7 +33,7 @@
 
 @section('content')
 
-<section class="am-railings-hero" style="--railings-hero-img: url('{{ $heroImg }}')">
+<section class="am-railings-hero am-hero-responsive" @include('partials.am-responsive-hero-style', ['hero' => $hero])>
     <div class="am-container am-railings-hero__inner">
         @if(!empty($hero['label']))
         <p class="am-page-hero__label">{{ $hero['label'] }}</p>
@@ -76,6 +76,8 @@
             'sectionLabel' => 'Design Gallery',
             'serviceSlug' => 'railings',
             'categoryLabel' => 'Railings',
+            'quoteAnchor' => '#railing-quote-form',
+            'quoteLabel' => 'Order Now',
         ])
     </div>
 </section>
@@ -167,7 +169,7 @@
             </ul>
             @endif
         </div>
-        <div class="am-card am-pro-form-card">
+        <div class="am-card am-pro-form-card" id="railing-quote-form">
             <div class="am-card__body">
                 <x-railings-quote-form :form-config="$page['form'] ?? []" />
             </div>

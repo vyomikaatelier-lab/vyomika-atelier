@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateIndependentLandingPageRequest;
 use App\Models\SiteSetting;
 use App\Support\LandingPageContent;
+use App\Support\ResponsiveHero;
 
 class IndependentLandingAdminController extends Controller
 {
@@ -48,15 +49,11 @@ class IndependentLandingAdminController extends Controller
         $pages = SiteSetting::getValue('landing_pages', []) ?? [];
         $pendingDeletes = [];
 
-        $heroImage = $this->resolveImageField(
-            $request,
-            'hero_image_file',
-            'hero_image',
-            data_get($current, 'hero.image'),
-            'landing-pages',
-            false
-        );
-        $this->queueImageDelete($pendingDeletes, data_get($current, 'hero.image'), $heroImage);
+        $storedHero = data_get($current, 'hero', []);
+        $heroImages = $this->persistResponsiveHeroFlatFields($request, 'hero', $storedHero, 'landing-pages', false);
+        foreach (ResponsiveHero::storageKeys() as $imageKey) {
+            $this->queueImageDelete($pendingDeletes, $storedHero[$imageKey] ?? null, $heroImages[$imageKey] ?? null);
+        }
 
         $whyImage = $this->resolveImageField(
             $request,
@@ -81,11 +78,10 @@ class IndependentLandingAdminController extends Controller
         $override = [
             'meta_title' => $request->input('meta_title'),
             'meta_description' => $request->input('meta_description'),
-            'hero' => [
+            'hero' => array_filter(array_merge([
                 'label' => $request->input('hero_label'),
                 'title' => $request->input('hero_title'),
                 'subtitle' => $request->input('hero_subtitle'),
-                'image' => $heroImage,
                 'image_alt' => $request->input('hero_image_alt'),
                 'highlights' => $this->linesToList($request->input('hero_highlights')),
                 'cta_primary' => [
@@ -96,7 +92,7 @@ class IndependentLandingAdminController extends Controller
                     'label' => $request->input('hero_cta_secondary_label'),
                     'href' => $request->input('hero_cta_secondary_href'),
                 ],
-            ],
+            ], $heroImages), fn ($value) => filled($value) || is_array($value)),
             'intro' => [
                 'title' => $request->input('intro_title'),
                 'body' => $request->input('intro_body'),

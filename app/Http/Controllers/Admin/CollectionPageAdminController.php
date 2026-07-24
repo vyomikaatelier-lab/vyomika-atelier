@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\Concerns\HandlesAdminUploads;
 use App\Http\Controllers\Controller;
 use App\Models\SiteSetting;
 use App\Support\CollectionContent;
+use App\Support\ResponsiveHero;
 use Illuminate\Http\Request;
 
 class CollectionPageAdminController extends Controller
@@ -41,38 +42,30 @@ class CollectionPageAdminController extends Controller
     {
         abort_unless(in_array($slug, CollectionContent::slugs(), true), 404);
 
-        $validated = $request->validate([
+        $validated = $request->validate(array_merge([
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
             'hero_title' => 'nullable|string|max:255',
             'hero_subtitle' => 'nullable|string|max:1000',
-            'hero_image' => 'nullable|string|max:500',
-            'hero_image_file' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
             'intro_title' => 'nullable|string|max:255',
             'intro_body' => 'nullable|string|max:5000',
             'gallery_title' => 'nullable|string|max:255',
-        ]);
+        ], ResponsiveHero::flatValidationRules('hero')));
 
         $pages = SiteSetting::getValue('collection_pages', []) ?? [];
-        $currentHeroImage = data_get($pages, "{$slug}.hero.image");
+        $storedHero = data_get($pages, "{$slug}.hero", data_get(CollectionContent::page($slug), 'hero', []));
+        $storedHero = is_array($storedHero) ? $storedHero : [];
 
-        $heroImage = $this->resolveImageField(
-            $request,
-            'hero_image_file',
-            'hero_image',
-            $currentHeroImage,
-            'collections'
-        );
+        $heroImages = $this->persistResponsiveHeroFlatFields($request, 'hero', $storedHero, 'collections');
 
         $override = array_filter([
             'meta_title' => $validated['meta_title'] ?? null,
             'meta_description' => $validated['meta_description'] ?? null,
             'gallery_title' => $validated['gallery_title'] ?? null,
-            'hero' => array_filter([
+            'hero' => array_filter(array_merge([
                 'title' => $validated['hero_title'] ?? null,
                 'subtitle' => $validated['hero_subtitle'] ?? null,
-                'image' => $heroImage,
-            ]),
+            ], $heroImages)),
             'intro' => array_filter([
                 'title' => $validated['intro_title'] ?? null,
                 'body' => $validated['intro_body'] ?? null,

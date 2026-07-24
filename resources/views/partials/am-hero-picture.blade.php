@@ -1,9 +1,10 @@
 @php
-    use App\Support\MediaUrl;
+    use App\Support\ResponsiveHero;
 
-    $desktop = MediaUrl::resolve($slide['image'] ?? null) ?? ($slide['image'] ?? '');
-    $tablet = MediaUrl::resolve($slide['image_tablet'] ?? null) ?? ($slide['image_tablet'] ?? '');
-    $mobile = MediaUrl::resolve($slide['image_mobile'] ?? null) ?? ($slide['image_mobile'] ?? '');
+    $urls = ResponsiveHero::urls($slide);
+    $desktop = $urls['desktop'];
+    $tablet = $urls['tablet'];
+    $mobile = $urls['mobile'];
     $alt = $slide['title'] ?? '';
 @endphp
 @if(filled($desktop) || filled($tablet) || filled($mobile))

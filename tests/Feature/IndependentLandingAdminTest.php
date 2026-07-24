@@ -65,7 +65,8 @@ class IndependentLandingAdminTest extends TestCase
             ->assertSee('Updated Railings Hero', false)
             ->assertSee('Glass Railings', false)
             ->assertSee('Straight', false)
-            ->assertSee('Request Quote', false);
+            ->assertSee('Order Now', false)
+            ->assertSee('href="#railing-quote-form"', false);
     }
 
     public function test_admin_can_update_corten_sections(): void
@@ -122,7 +123,9 @@ class IndependentLandingAdminTest extends TestCase
             ->assertDontSee('Hidden FAQ', false)
             ->assertSee('FAQPage', false)
             ->assertSee('Enquiry label', false)
-            ->assertSee('Final CTA', false);
+            ->assertSee('Final CTA', false)
+            ->assertSee('href="#corten-quote-form"', false)
+            ->assertSee('Order Now', false);
     }
 
     public function test_inactive_gallery_cards_are_hidden_on_public_page(): void
@@ -250,18 +253,48 @@ class IndependentLandingAdminTest extends TestCase
         $this->assertSame('New', $merged['categories']['items'][0]['title']);
     }
 
+    public function test_admin_can_upload_responsive_hero_images(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->admin()->create();
+        $desktop = UploadedFile::fake()->image('hero-desktop.jpg', 1600, 900);
+        $mobile = UploadedFile::fake()->image('hero-mobile.jpg', 800, 1200);
+
+        $this->actingAsAdmin($admin)->put(route('admin.independent-pages.update', 'railings'), [
+            'hero_title' => 'Responsive Hero',
+            'hero_image_file' => $desktop,
+            'hero_image_mobile_file' => $mobile,
+            'section_title' => 'Cats',
+            'cards' => [],
+            'layouts' => [],
+        ])->assertRedirect();
+
+        $stored = data_get(SiteSetting::getValue('landing_pages', []), 'railings.hero');
+        $this->assertNotEmpty($stored['image'] ?? null);
+        $this->assertNotEmpty($stored['image_mobile'] ?? null);
+        Storage::disk('public')->assertExists($stored['image']);
+        Storage::disk('public')->assertExists($stored['image_mobile']);
+
+        $this->get(route('railings.index'))
+            ->assertOk()
+            ->assertSee('--hero-bg-desktop:', false)
+            ->assertSee('--hero-bg-mobile:', false);
+    }
+
     public function test_public_defaults_render_without_site_setting_override(): void
     {
         $this->get(route('railings.index'))
             ->assertOk()
             ->assertSee('Railings', false)
             ->assertSee('Balustrades', false)
-            ->assertSee('Glass Railings', false);
+            ->assertSee('Glass Railings', false)
+            ->assertSee('href="#railing-quote-form"', false);
 
         $this->get(route('corten-steel.show'))
             ->assertOk()
             ->assertSee('Corten Steel Architectural Solutions', false)
             ->assertSee('Building Facades', false)
-            ->assertSee('Frequently Asked Questions', false);
+            ->assertSee('Frequently Asked Questions', false)
+            ->assertSee('href="#corten-quote-form"', false);
     }
 }

@@ -31,7 +31,7 @@
 
 @section('content')
 
-<section class="am-corten-hero" style="--corten-hero-img: url('{{ $heroImg }}')">
+<section class="am-corten-hero am-hero-responsive" @include('partials.am-responsive-hero-style', ['hero' => $hero, 'fallbackDesktop' => $service->image ? \App\Support\MediaUrl::resolve($service->image) : null])>
     <div class="am-corten-hero__overlay"></div>
     <div class="am-container am-corten-hero__inner">
         @if(!empty($hero['label']))
@@ -60,26 +60,28 @@
 @endif
 
 @if(!empty($apps))
+@php
+    $applicationGalleryItems = array_map(static function (array $app): array {
+        return [
+            'title' => $app['name'] ?? '',
+            'text' => $app['text'] ?? null,
+            'image' => $app['image'] ?? null,
+            'image_alt' => $app['image_alt'] ?? ($app['name'] ?? ''),
+        ];
+    }, $apps);
+@endphp
 <section class="am-section am-section--dark" id="corten-applications">
     <div class="am-container">
-        <div class="am-section-head am-section-head--left">
-            <h2>{{ $page['applications']['title'] ?? 'Applications' }}</h2>
-        </div>
-        <div class="am-corten-apps">
-            @foreach($apps as $app)
-            <article class="am-corten-apps__card">
-                @if(!empty($app['image']))
-                <div class="am-corten-apps__media">
-                    <img src="{{ $app['image'] }}" alt="{{ $app['image_alt'] ?? $app['name'] ?? '' }}" loading="lazy">
-                </div>
-                @endif
-                <h3 class="am-corten-apps__name">{{ $app['name'] ?? '' }}</h3>
-                @if(!empty($app['text']))
-                <p class="am-corten-apps__desc">{{ $app['text'] }}</p>
-                @endif
-            </article>
-            @endforeach
-        </div>
+        @include('partials.am-config-design-gallery', [
+            'items' => $applicationGalleryItems,
+            'heading' => $page['applications']['title'] ?? 'Corten Steel Applications',
+            'sectionLabel' => 'Applications',
+            'serviceSlug' => 'corten-steel-facade',
+            'categoryLabel' => 'Corten Steel',
+            'quoteAnchor' => '#corten-quote-form',
+            'quoteLabel' => 'Order Now',
+            'darkSection' => true,
+        ])
     </div>
 </section>
 @endif
@@ -247,7 +249,7 @@
                 @endif
             </div>
         </div>
-        <div class="am-card am-corten-quote-card">
+        <div class="am-card am-corten-quote-card" id="corten-quote-form">
             <div class="am-card__body">
                 <p class="am-card__label">{{ $page['cta']['form_label'] ?? 'Custom Corten enquiry' }}</p>
                 <h3 class="am-card__title" style="font-size:1.25rem;margin-bottom:1rem">{{ $page['cta']['form_title'] ?? 'Request a Quote' }}</h3>

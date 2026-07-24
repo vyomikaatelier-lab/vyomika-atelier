@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\ResponsiveHero;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateIndependentLandingPageRequest extends FormRequest
@@ -20,9 +21,7 @@ class UpdateIndependentLandingPageRequest extends FormRequest
             'hero_label' => 'nullable|string|max:120',
             'hero_title' => 'nullable|string|max:255',
             'hero_subtitle' => 'nullable|string|max:2000',
-            'hero_image' => 'nullable|string|max:500',
-            'hero_image_file' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
-            'hero_image_remove' => 'nullable|boolean',
+            ...ResponsiveHero::flatValidationRules('hero'),
             'hero_image_alt' => 'nullable|string|max:255',
             'hero_cta_primary_label' => 'nullable|string|max:120',
             'hero_cta_primary_href' => 'nullable|string|max:255',

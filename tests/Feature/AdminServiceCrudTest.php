@@ -4,8 +4,11 @@ namespace Tests\Feature;
 
 use App\Models\Service;
 use App\Models\ServiceDesign;
+use App\Models\SiteSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AdminServiceCrudTest extends TestCase
@@ -75,5 +78,41 @@ class AdminServiceCrudTest extends TestCase
             ->assertRedirect(route('admin.services.index'));
 
         $this->assertDatabaseMissing('services', ['id' => $service->id]);
+    }
+
+    public function test_admin_can_upload_responsive_service_cover_images(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->admin()->create();
+
+        $service = Service::query()->create([
+            'name' => 'Partitions',
+            'slug' => 'partitions',
+            'lead_form' => 'popup',
+            'rate_per_sqft' => 1800,
+            'is_active' => true,
+        ]);
+
+        $desktop = UploadedFile::fake()->image('service-desktop.jpg', 1600, 900);
+        $mobile = UploadedFile::fake()->image('service-mobile.jpg', 800, 1200);
+
+        $this->actingAsAdmin($admin)->put(route('admin.services.update', $service), [
+            'name' => 'Partitions',
+            'slug' => 'partitions',
+            'lead_form' => 'popup',
+            'rate_per_sqft' => 1800,
+            'is_active' => '1',
+            'hero_image_file' => $desktop,
+            'hero_image_mobile_file' => $mobile,
+        ])->assertRedirect(route('admin.services.index'));
+
+        $stored = data_get(SiteSetting::getValue('service_page_heroes', []), 'partitions');
+        $this->assertNotEmpty($stored['image'] ?? null);
+        $this->assertNotEmpty($stored['image_mobile'] ?? null);
+        Storage::disk('public')->assertExists($stored['image']);
+        Storage::disk('public')->assertExists($stored['image_mobile']);
+
+        $service->refresh();
+        $this->assertSame($stored['image'], $service->image);
     }
 }

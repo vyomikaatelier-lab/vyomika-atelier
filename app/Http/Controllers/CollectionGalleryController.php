@@ -25,7 +25,7 @@ class CollectionGalleryController extends Controller
 
         abort_unless(in_array($slug, self::slugs(), true), 404);
 
-        $page = CollectionContent::page($slug);
+        $page = CollectionContent::withResolvedImages(CollectionContent::page($slug));
         abort_unless(is_array($page), 404);
 
         $categorySlugs = $page['category_slugs'] ?? [$slug];

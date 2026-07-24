@@ -817,6 +817,71 @@ main,
   }
 }
 
+/* ── Responsive hero backgrounds (desktop / tablet / mobile) ── */
+.am-corten-hero.am-hero-responsive {
+  --corten-hero-img: var(--hero-bg-desktop);
+}
+
+.am-railings-hero.am-hero-responsive {
+  --railings-hero-img: var(--hero-bg-desktop);
+}
+
+.am-mirror-frames-hero.am-hero-responsive {
+  --mirror-frames-hero-img: var(--hero-bg-desktop);
+}
+
+.am-about-hero.am-hero-responsive {
+  --about-hero-img: var(--hero-bg-desktop);
+}
+
+.am-pro-hero.am-hero-responsive {
+  --pro-hero-img: var(--hero-bg-desktop);
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .am-corten-hero.am-hero-responsive {
+    --corten-hero-img: var(--hero-bg-tablet, var(--hero-bg-desktop));
+  }
+
+  .am-railings-hero.am-hero-responsive {
+    --railings-hero-img: var(--hero-bg-tablet, var(--hero-bg-desktop));
+  }
+
+  .am-mirror-frames-hero.am-hero-responsive {
+    --mirror-frames-hero-img: var(--hero-bg-tablet, var(--hero-bg-desktop));
+  }
+
+  .am-about-hero.am-hero-responsive {
+    --about-hero-img: var(--hero-bg-tablet, var(--hero-bg-desktop));
+  }
+
+  .am-pro-hero.am-hero-responsive {
+    --pro-hero-img: var(--hero-bg-tablet, var(--hero-bg-desktop));
+  }
+}
+
+@media (max-width: 767px) {
+  .am-corten-hero.am-hero-responsive {
+    --corten-hero-img: var(--hero-bg-mobile, var(--hero-bg-tablet, var(--hero-bg-desktop)));
+  }
+
+  .am-railings-hero.am-hero-responsive {
+    --railings-hero-img: var(--hero-bg-mobile, var(--hero-bg-tablet, var(--hero-bg-desktop)));
+  }
+
+  .am-mirror-frames-hero.am-hero-responsive {
+    --mirror-frames-hero-img: var(--hero-bg-mobile, var(--hero-bg-tablet, var(--hero-bg-desktop)));
+  }
+
+  .am-about-hero.am-hero-responsive {
+    --about-hero-img: var(--hero-bg-mobile, var(--hero-bg-tablet, var(--hero-bg-desktop)));
+  }
+
+  .am-pro-hero.am-hero-responsive {
+    --pro-hero-img: var(--hero-bg-mobile, var(--hero-bg-tablet, var(--hero-bg-desktop)));
+  }
+}
+
 @media (min-width: 768px) and (max-width: 1023px) {
   .am-footer {
     padding-top: 2rem;

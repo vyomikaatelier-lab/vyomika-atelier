@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Concerns;
 
 use App\Models\MediaFile;
+use App\Support\ResponsiveHero;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -58,6 +59,34 @@ trait HandlesAdminUploads
         $url = $request->input($urlField);
 
         return filled($url) ? $url : $current;
+    }
+
+    /**
+     * @param  array<string, mixed>  $storedHero
+     * @return array<string, string|null>
+     */
+    public function persistResponsiveHeroFlatFields(
+        Request $request,
+        string $prefix,
+        array $storedHero,
+        string $directory,
+        bool $deletePrevious = true
+    ): array {
+        $persisted = [];
+
+        foreach (ResponsiveHero::storageKeys() as $storageKey) {
+            $flatField = ResponsiveHero::flatFieldForStorageKey($prefix, $storageKey);
+            $persisted[$storageKey] = $this->resolveImageField(
+                $request,
+                $flatField.'_file',
+                $flatField,
+                $storedHero[$storageKey] ?? null,
+                $directory,
+                $deletePrevious
+            );
+        }
+
+        return array_filter($persisted, fn ($value) => filled($value));
     }
 
     protected function deleteStoredPath(?string $path): void

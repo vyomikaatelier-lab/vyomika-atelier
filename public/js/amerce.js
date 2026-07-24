@@ -164,11 +164,67 @@
     if (buyNowFormsBound) return;
     buyNowFormsBound = true;
     document.addEventListener('click', (e) => {
+      if (e.target.closest('[data-scroll-to-form], a[href^="#"]')) {
+        return;
+      }
       const inBuyForm = e.target.closest('.am-product-card__buy-form, .am-design-gallery__buy-form, .am-pdp-buy__form');
       const inCardActions = e.target.closest('.am-product-card__actions, .am-design-gallery__actions');
       if (inBuyForm || inCardActions) {
         e.stopPropagation();
       }
+    }, true);
+  }
+
+  function scrollToQuoteTarget(target) {
+    if (!target || typeof target.getBoundingClientRect !== 'function') return;
+    const styles = getComputedStyle(document.documentElement);
+    const headerH = parseFloat(styles.getPropertyValue('--am-header-h')) || 72;
+    const announceH = parseFloat(styles.getPropertyValue('--am-announce-h')) || 0;
+    const top = target.getBoundingClientRect().top + window.scrollY - headerH - announceH - 16;
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+  }
+
+  function amScrollToQuoteForm(targetId, href, event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (typeof event.stopImmediatePropagation === 'function') {
+        event.stopImmediatePropagation();
+      }
+    }
+
+    const hash = typeof href === 'string' && href.startsWith('#') ? href : '';
+    const id = targetId || (hash ? hash.slice(1) : '');
+    const target = id ? document.getElementById(id) : null;
+    if (!target) {
+      return false;
+    }
+
+    scrollToQuoteTarget(target);
+    if (hash) {
+      if (history.pushState) {
+        history.pushState(null, '', hash);
+      } else {
+        window.location.hash = hash;
+      }
+    }
+
+    return false;
+  }
+
+  window.amScrollToQuoteForm = amScrollToQuoteForm;
+
+  let quoteScrollBound = false;
+  function initQuoteFormScroll() {
+    if (quoteScrollBound) return;
+    quoteScrollBound = true;
+    document.addEventListener('click', (e) => {
+      const link = e.target.closest('[data-scroll-to-form]');
+      if (!link) return;
+      const href = link.getAttribute('href');
+      if (!href || !href.startsWith('#') || href === '#') return;
+      const targetId = link.getAttribute('data-scroll-target') || href.slice(1);
+      amScrollToQuoteForm(targetId, href, e);
     }, true);
   }
 
@@ -521,6 +577,10 @@
     }
 
     document.addEventListener('click', (e) => {
+      if (e.target.closest('[data-scroll-to-form]')) {
+        return;
+      }
+
       const orderPopupBtn = e.target.closest('[data-open-order-popup], [data-open-contact-studio][data-popup-type="order_now"]');
       if (orderPopupBtn) {
         e.preventDefault();
@@ -657,6 +717,7 @@
     initCartDrawer();
     initOrderNow();
     initBuyNowForms();
+    initQuoteFormScroll();
     initQuickView();
     initSizeOptions();
     initHeaderScroll();
@@ -674,6 +735,7 @@
     initTestimonials();
     initOrderNow();
     initBuyNowForms();
+    initQuoteFormScroll();
     initQuickView();
     initSizeOptions();
     initProductTabs();

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Support\LandingPageContent;
 use App\Support\MirrorFramesContent;
 use Illuminate\View\View;
 
@@ -10,7 +11,7 @@ class MirrorFramesController extends Controller
 {
     public function index(): View
     {
-        $page = MirrorFramesContent::all();
+        $page = LandingPageContent::withResolvedImages(MirrorFramesContent::all());
         $designs = collect($page['designs'] ?? [])
             ->map(function (array $design) {
                 $productSlug = $design['product_slug'] ?? $design['slug'];

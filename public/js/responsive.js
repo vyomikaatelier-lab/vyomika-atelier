@@ -172,6 +172,48 @@
     });
   }
 
+  function scrollToElement(el) {
+    if (!el || typeof el.getBoundingClientRect !== 'function') return;
+    var styles = window.getComputedStyle(document.documentElement);
+    var headerH = parseFloat(styles.getPropertyValue('--am-header-h')) || 72;
+    var announceH = parseFloat(styles.getPropertyValue('--am-announce-h')) || 0;
+    var offset = headerH + announceH + 16;
+    var top = el.getBoundingClientRect().top + window.scrollY - offset;
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+  }
+
+  function initInPageAnchorScroll() {
+    document.addEventListener('click', function (e) {
+      var link = e.target.closest('a[href^="#"]');
+      if (!link) return;
+      var hash = link.getAttribute('href');
+      if (!hash || hash === '#') return;
+      var id = hash.slice(1);
+      var target = document.getElementById(id);
+      if (!target) return;
+      e.preventDefault();
+      scrollToElement(target);
+      if (history.pushState) {
+        history.pushState(null, '', hash);
+      } else {
+        window.location.hash = hash;
+      }
+    });
+
+    function scrollOnLoad() {
+      if (!window.location.hash || window.location.hash.length < 2) return;
+      var target = document.getElementById(window.location.hash.slice(1));
+      if (target) {
+        setTimeout(function () {
+          scrollToElement(target);
+        }, 100);
+      }
+    }
+
+    scrollOnLoad();
+    window.addEventListener('hashchange', scrollOnLoad);
+  }
+
   function initDoubleSubmitGuard() {
     document.addEventListener(
       'submit',
@@ -203,6 +245,7 @@
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function () {
       initFocusScroll();
+      initInPageAnchorScroll();
       initAdminNav();
       initAdminTables();
       initFooterAccordion();
@@ -210,6 +253,7 @@
     });
   } else {
     initFocusScroll();
+    initInPageAnchorScroll();
     initAdminNav();
     initAdminTables();
     initFooterAccordion();

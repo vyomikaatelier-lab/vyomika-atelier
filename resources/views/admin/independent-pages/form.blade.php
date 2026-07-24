@@ -30,22 +30,13 @@
     </details>
 
     <details class="bg-white rounded shadow p-4" open>
-        <summary class="font-medium cursor-pointer">1. Hero</summary>
+        <summary class="font-medium cursor-pointer">1. Hero cover photo (desktop, tablet &amp; mobile)</summary>
         <div class="mt-4 space-y-3">
-            @php $heroImage = data_get($page, 'hero.image'); @endphp
-            @if($heroImage)
-                <img src="{{ $preview($heroImage) }}" alt="" class="w-full max-w-md h-40 object-cover rounded border">
-                <p class="text-xs text-gray-500">Source: {{ str_starts_with((string)$heroImage, 'http') ? 'External / legacy URL' : 'Uploaded storage path' }}</p>
-            @endif
             <input name="hero_label" value="{{ old('hero_label', data_get($page, 'hero.label')) }}" placeholder="Eyebrow / label" class="w-full border px-3 py-2 rounded">
             <input name="hero_title" value="{{ old('hero_title', data_get($page, 'hero.title')) }}" placeholder="Hero heading" class="w-full border px-3 py-2 rounded">
             <textarea name="hero_subtitle" rows="2" placeholder="Hero description" class="w-full border px-3 py-2 rounded">{{ old('hero_subtitle', data_get($page, 'hero.subtitle')) }}</textarea>
             <input name="hero_image_alt" value="{{ old('hero_image_alt', data_get($page, 'hero.image_alt')) }}" placeholder="Hero image alt text" class="w-full border px-3 py-2 rounded">
-            <input name="hero_image" value="{{ old('hero_image', $heroImage) }}" placeholder="Hero image URL" class="w-full border px-3 py-2 rounded">
-            <input type="file" name="hero_image_file" accept="image/jpeg,image/png,image/webp">
-            @if($heroImage)
-            <label class="inline-flex items-center gap-2 text-sm text-red-700"><input type="checkbox" name="hero_image_remove" value="1"> Remove hero image</label>
-            @endif
+            @include('admin.partials.responsive-hero-images', ['prefix' => 'hero', 'hero' => data_get($page, 'hero', [])])
             <textarea name="hero_highlights" rows="3" placeholder="Hero highlights (one per line)" class="w-full border px-3 py-2 rounded">{{ old('hero_highlights', $lines(data_get($page, 'hero.highlights'))) }}</textarea>
             <div class="grid md:grid-cols-2 gap-3">
                 <input name="hero_cta_primary_label" value="{{ old('hero_cta_primary_label', data_get($page, 'hero.cta_primary.label')) }}" placeholder="Primary CTA label" class="w-full border px-3 py-2 rounded">

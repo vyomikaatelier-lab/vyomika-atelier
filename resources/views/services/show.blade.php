@@ -16,8 +16,10 @@
 @section('content')
 
 @php
+    use App\Support\ServicePageHero;
+
     $page = config("service-pages.{$service->slug}", []);
-    $hero = $page['hero'] ?? null;
+    $hero = ServicePageHero::heroForService($service) ?? ($page['hero'] ?? null);
 @endphp
 
 @if($service->usesGalleryOnlyLayout())
@@ -54,11 +56,15 @@
 </section>
 
 @else
+@if(is_array($hero) && (!empty($hero['image']) || !empty($hero['image_tablet']) || !empty($hero['image_mobile'])))
+@include('partials.am-service-hero', ['hero' => $hero, 'class' => 'am-service-hero--compact-mobile'])
+@else
 @include('partials.am-page-hero', [
     'label' => 'Service',
     'title' => $service->name,
     'subtitle' => $service->summary,
 ])
+@endif
 
 <section class="am-page-body">
     <div class="am-container">
