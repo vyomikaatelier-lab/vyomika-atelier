@@ -37,10 +37,11 @@ class IndependentLandingAdminController extends Controller
         abort_unless(in_array($slug, LandingPageContent::slugs(), true), 404);
 
         $page = LandingPageContent::page($slug);
+        $storedOverride = LandingPageContent::storedOverride($slug);
         $label = LandingPageContent::label($slug);
         $previewUrl = LandingPageContent::publicRoute($slug);
 
-        return view('admin.independent-pages.form', compact('slug', 'page', 'label', 'previewUrl'));
+        return view('admin.independent-pages.form', compact('slug', 'page', 'storedOverride', 'label', 'previewUrl'));
     }
 
     public function update(UpdateIndependentLandingPageRequest $request, string $slug)
@@ -53,6 +54,11 @@ class IndependentLandingAdminController extends Controller
 
         if ($this->multipartPayloadFailed($request)) {
             return back()->with('error', 'Upload too large for the server limit. Save text changes first, then upload one image at a time (max 5 MB each).');
+        }
+
+        $maxInputVars = (int) ini_get('max_input_vars');
+        if ($maxInputVars > 0 && count($request->except(['_token', '_method'])) >= ($maxInputVars - 5)) {
+            return back()->with('error', 'This page has too many fields for the server PHP limit (max_input_vars='.$maxInputVars.'). Ask Hostinger to raise max_input_vars, or remove unused gallery rows before saving.');
         }
 
         $current = LandingPageContent::page($slug);
@@ -214,7 +220,7 @@ class IndependentLandingAdminController extends Controller
 
         return redirect()
             ->route('admin.independent-pages.edit', ['slug' => $slug, 'saved' => 1])
-            ->with('success', LandingPageContent::label($slug).' updated.');
+            ->with('success', LandingPageContent::label($slug).' updated. Saved hero title: "'.(data_get($override, 'hero.title') ?: '—').'"');
     }
 
     /**
@@ -226,13 +232,13 @@ class IndependentLandingAdminController extends Controller
     {
         $existingHero = is_array(data_get($existingOverride, 'hero')) ? data_get($existingOverride, 'hero') : [];
 
-        $hero = array_merge($existingHero, array_filter([
+        $hero = array_merge($existingHero, [
             'label' => $request->input('hero_label'),
             'title' => $request->input('hero_title'),
             'subtitle' => $request->input('hero_subtitle'),
             'image_alt' => $request->input('hero_image_alt'),
             'highlights' => $this->linesToList($request->input('hero_highlights')),
-        ], fn ($value) => filled($value) || is_array($value)));
+        ]);
 
         $ctaPrimary = array_filter([
             'label' => $request->input('hero_cta_primary_label'),

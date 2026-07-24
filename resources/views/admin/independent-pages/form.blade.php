@@ -16,6 +16,11 @@
 @if(request('saved') || session('success'))
 <div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-4 text-sm">{{ session('success') ?: 'Page saved successfully.' }}</div>
 @endif
+@if(data_get($storedOverride, 'hero.title'))
+<p class="text-xs text-gray-500 mb-4">Database hero title: <strong>{{ data_get($storedOverride, 'hero.title') }}</strong> (public page uses this after save)</p>
+@else
+<p class="text-xs text-amber-700 mb-4">No custom hero title saved yet — the public page is still using the default config text until you save.</p>
+@endif
 <p class="text-sm text-gray-600 mb-6">Edit every section shown on the public page. Images accept upload or URL. Inactive cards are hidden on the storefront.</p>
 
 <form method="POST" action="{{ route('admin.independent-pages.update', $slug) }}" enctype="multipart/form-data" class="space-y-4 max-w-4xl" id="landing-page-form">
@@ -259,7 +264,7 @@
     @endif
 
     <div class="sticky bottom-0 bg-gray-50 border-t py-3 flex gap-3">
-        <button class="bg-gray-900 text-white px-5 py-2 rounded text-sm">Save page</button>
+        <button type="submit" class="bg-gray-900 text-white px-5 py-2 rounded text-sm">Save page</button>
         <a href="{{ $previewUrl }}" target="_blank" rel="noopener" class="border px-4 py-2 rounded text-sm">Preview</a>
     </div>
 </form>

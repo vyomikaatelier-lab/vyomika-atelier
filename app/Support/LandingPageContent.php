@@ -62,7 +62,15 @@ class LandingPageContent
     {
         $pages = SiteSetting::getValue('landing_pages', []) ?? [];
         $existing = is_array($pages[$slug] ?? null) ? $pages[$slug] : [];
-        $pages[$slug] = self::mergePage($existing, $override);
+
+        // Keep keys that are not edited in admin forms.
+        foreach (['form', 'primary_keyword'] as $preservedKey) {
+            if (! array_key_exists($preservedKey, $override) && array_key_exists($preservedKey, $existing)) {
+                $override[$preservedKey] = $existing[$preservedKey];
+            }
+        }
+
+        $pages[$slug] = $override;
         SiteSetting::setValue('landing_pages', $pages);
     }
 
