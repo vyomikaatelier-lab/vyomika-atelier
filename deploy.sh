@@ -12,7 +12,17 @@ echo "==> Deploying VYOMIKA ATELIER to $APP_DIR"
 cd "$APP_DIR"
 
 echo "==> Installing dependencies..."
-php composer.phar install --no-dev --optimize-autoloader --no-interaction 2>/dev/null || composer install --no-dev --optimize-autoloader --no-interaction
+if ! php composer.phar install --no-dev --optimize-autoloader --no-interaction 2>/dev/null; then
+    if ! composer install --no-dev --optimize-autoloader --no-interaction 2>/dev/null; then
+        echo "!!> Composer install failed (often missing ext-sodium on Hostinger)."
+        echo "    Enable sodium in hPanel → PHP Configuration → Extensions, then re-run deploy.sh"
+        echo "    Or run: composer install --no-dev --optimize-autoloader --ignore-platform-req=ext-sodium"
+        echo "    Continuing with existing vendor/ if present..."
+        if [ ! -d vendor ]; then
+            exit 1
+        fi
+    fi
+fi
 
 if [ ! -f .env ]; then
     cp .env.example .env

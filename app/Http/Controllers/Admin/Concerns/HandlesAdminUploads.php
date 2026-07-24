@@ -124,6 +124,22 @@ trait HandlesAdminUploads
         return $urls ?: null;
     }
 
+    protected function multipartPayloadFailed(Request $request, string $probeField): bool
+    {
+        if (! $request->isMethod('POST') && ! $request->isMethod('PUT')) {
+            return false;
+        }
+
+        $contentLength = (int) $request->header('Content-Length', 0);
+        if ($contentLength <= 0) {
+            return false;
+        }
+
+        $payload = $request->except(['_token', '_method']);
+
+        return ! $request->has($probeField) && $payload === [];
+    }
+
     /** @return array<int, string>|null */
     protected function resolveGalleryField(Request $request, string $filesField, string $urlsField, ?array $current, string $directory): ?array
     {

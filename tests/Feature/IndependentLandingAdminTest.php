@@ -281,6 +281,98 @@ class IndependentLandingAdminTest extends TestCase
             ->assertSee('--hero-bg-mobile:', false);
     }
 
+    public function test_corten_changes_persist_after_reload(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $payload = [
+            'hero_title' => 'Persisted Corten Title',
+            'intro_title' => 'Persisted Intro',
+            'intro_body' => 'Persisted intro body',
+            'section_title' => 'Custom Applications',
+            'why_title' => 'Why Corten',
+            'why_points' => "Benefit A\nBenefit B",
+            'finish_title' => 'Finish',
+            'process_title' => 'Process',
+            'process_steps' => "Step A\nStep B",
+            'projects_title' => 'Projects',
+            'technical_title' => 'Technical',
+            'technical_options' => 'Option A',
+            'considerations_title' => 'Planning',
+            'considerations_points' => 'Plan well',
+            'faq_title' => 'FAQ',
+            'cta_title' => 'CTA',
+            'cta_body' => 'Body',
+            'apps' => [
+                ['name' => 'Facades', 'text' => 'Facade copy', 'active' => '1'],
+            ],
+            'stages' => [
+                ['label' => 'Raw', 'text' => 'Start', 'active' => '1'],
+            ],
+            'projects' => [
+                ['title' => 'Project One', 'location' => 'Delhi', 'active' => '1'],
+            ],
+            'faqs' => [
+                ['q' => 'Question?', 'a' => 'Answer.', 'active' => '1'],
+            ],
+        ];
+
+        $this->actingAsAdmin($admin)
+            ->put(route('admin.independent-pages.update', 'corten-steel'), $payload)
+            ->assertRedirect(route('admin.independent-pages.edit', 'corten-steel'))
+            ->assertSessionHas('success');
+
+        $this->assertSame('Persisted Corten Title', data_get(CortenContent::all(), 'hero.title'));
+        $this->assertSame('Facades', data_get(CortenContent::all(), 'applications.items.0.name'));
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.independent-pages.edit', 'corten-steel'))
+            ->assertOk()
+            ->assertSee('Persisted Corten Title', false)
+            ->assertSee('Facades', false)
+            ->assertSee('Question?', false);
+
+        $this->get(route('corten-steel.show'))
+            ->assertOk()
+            ->assertSee('Persisted Corten Title', false)
+            ->assertSee('Facades', false);
+    }
+
+    public function test_corten_second_save_does_not_wipe_first_save(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $base = [
+            'hero_title' => 'First Title',
+            'section_title' => 'Apps',
+            'why_title' => 'Why',
+            'why_points' => 'One',
+            'finish_title' => 'Finish',
+            'process_title' => 'Process',
+            'process_steps' => 'Step',
+            'projects_title' => 'Projects',
+            'technical_title' => 'Technical',
+            'technical_options' => 'Option',
+            'considerations_title' => 'Planning',
+            'considerations_points' => 'Note',
+            'faq_title' => 'FAQ',
+            'cta_title' => 'CTA',
+            'cta_body' => 'Body',
+            'apps' => [['name' => 'Keep Me', 'active' => '1']],
+            'stages' => [['label' => 'Stage', 'active' => '1']],
+            'projects' => [['title' => 'Project', 'active' => '1']],
+            'faqs' => [['q' => 'Q', 'a' => 'A', 'active' => '1']],
+        ];
+
+        $this->actingAsAdmin($admin)->put(route('admin.independent-pages.update', 'corten-steel'), $base);
+        $this->actingAsAdmin($admin)->put(route('admin.independent-pages.update', 'corten-steel'), array_merge($base, [
+            'hero_title' => 'Second Title',
+        ]));
+
+        $page = CortenContent::all();
+        $this->assertSame('Second Title', data_get($page, 'hero.title'));
+        $this->assertSame('Keep Me', data_get($page, 'applications.items.0.name'));
+    }
+
     public function test_public_defaults_render_without_site_setting_override(): void
     {
         $this->get(route('railings.index'))

@@ -46,6 +46,14 @@ class PageHeroAdminController extends Controller
     {
         abort_unless(in_array($slug, PageHeroContent::slugs(), true), 404);
 
+        if (! \Illuminate\Support\Facades\Schema::hasTable('site_settings')) {
+            return back()->with('error', 'Database table site_settings is missing. Run: php artisan migrate --force');
+        }
+
+        if ($this->multipartPayloadFailed($request, 'hero_title')) {
+            return back()->with('error', 'Upload too large for the server limit. Save text changes first, then upload one image at a time (max 5 MB each).');
+        }
+
         $validated = $request->validate(array_merge([
             'hero_label' => 'nullable|string|max:120',
             'hero_title' => 'nullable|string|max:255',
@@ -58,7 +66,7 @@ class PageHeroAdminController extends Controller
 
         $heroImages = $this->persistResponsiveHeroFlatFields($request, 'hero', $currentHero, 'page-heroes');
 
-        $pages[$slug] = array_filter(array_merge([
+        $pages[$slug] = array_filter(array_merge($stored, [
             'label' => $validated['hero_label'] ?? null,
             'title' => $validated['hero_title'] ?? null,
             'subtitle' => $validated['hero_subtitle'] ?? null,

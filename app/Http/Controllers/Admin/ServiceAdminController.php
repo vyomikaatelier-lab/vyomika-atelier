@@ -71,6 +71,14 @@ class ServiceAdminController extends Controller
 
     public function update(Request $request, Service $service)
     {
+        if (! \Illuminate\Support\Facades\Schema::hasTable('site_settings')) {
+            return back()->with('error', 'Database table site_settings is missing. Run: php artisan migrate --force');
+        }
+
+        if ($this->multipartPayloadFailed($request, 'name')) {
+            return back()->with('error', 'Upload too large for the server limit. Save text changes first, then upload one image at a time (max 5 MB each).');
+        }
+
         $validated = $this->validateService($request, $service);
         $validated['slug'] = Str::slug($request->input('slug') ?: $validated['name']);
         $validated['is_active'] = $request->boolean('is_active', true);

@@ -36,6 +36,7 @@
             <input name="hero_title" value="{{ old('hero_title', data_get($page, 'hero.title')) }}" placeholder="Hero heading" class="w-full border px-3 py-2 rounded">
             <textarea name="hero_subtitle" rows="2" placeholder="Hero description" class="w-full border px-3 py-2 rounded">{{ old('hero_subtitle', data_get($page, 'hero.subtitle')) }}</textarea>
             <input name="hero_image_alt" value="{{ old('hero_image_alt', data_get($page, 'hero.image_alt')) }}" placeholder="Hero image alt text" class="w-full border px-3 py-2 rounded">
+            <p class="text-xs text-gray-500">{{ \App\Support\ResponsiveHero::adminUploadIntro() }}</p>
             @include('admin.partials.responsive-hero-images', ['prefix' => 'hero', 'hero' => data_get($page, 'hero', [])])
             <textarea name="hero_highlights" rows="3" placeholder="Hero highlights (one per line)" class="w-full border px-3 py-2 rounded">{{ old('hero_highlights', $lines(data_get($page, 'hero.highlights'))) }}</textarea>
             <div class="grid md:grid-cols-2 gap-3">
@@ -362,7 +363,41 @@
         if (e.target && e.target.matches('[data-remove-row]')) {
             if (!confirm('Remove this item?')) return;
             var row = e.target.closest('[data-row]');
-            if (row) row.remove();
+            if (!row) return;
+            var list = row.parentElement;
+            row.remove();
+            if (list && list.id) {
+                var prefix = list.id.replace(/-list$/, '');
+                var addBtn = document.querySelector('[data-add-row="' + prefix + '"]');
+                if (addBtn) {
+                    reindex(list, prefix, addBtn.getAttribute('data-title-key') || 'title', addBtn.getAttribute('data-text-key'));
+                } else if (prefix === 'layouts') {
+                    list.querySelectorAll('[data-row]').forEach(function (item, i) {
+                        var title = item.querySelector('[name^="layouts["][name$="[title]"]');
+                        var text = item.querySelector('[name^="layouts["][name$="[text]"]');
+                        var active = item.querySelector('[name^="layouts["][name$="[active]"]');
+                        if (title) title.name = 'layouts[' + i + '][title]';
+                        if (text) text.name = 'layouts[' + i + '][text]';
+                        if (active) active.name = 'layouts[' + i + '][active]';
+                    });
+                } else if (prefix === 'faqs') {
+                    list.querySelectorAll('[data-row]').forEach(function (item, i) {
+                        var q = item.querySelector('[name^="faqs["][name$="[q]"]');
+                        var a = item.querySelector('[name^="faqs["][name$="[a]"]');
+                        var active = item.querySelector('[name^="faqs["][name$="[active]"]');
+                        if (q) q.name = 'faqs[' + i + '][q]';
+                        if (a) a.name = 'faqs[' + i + '][a]';
+                        if (active) active.name = 'faqs[' + i + '][active]';
+                    });
+                } else if (prefix === 'projects') {
+                    list.querySelectorAll('[data-row]').forEach(function (item, i) {
+                        item.querySelectorAll('input, textarea').forEach(function (field) {
+                            var match = field.name.match(/^projects\[\d+]\[(.+)]$/);
+                            if (match) field.name = 'projects[' + i + '][' + match[1] + ']';
+                        });
+                    });
+                }
+            }
         }
     });
 })();

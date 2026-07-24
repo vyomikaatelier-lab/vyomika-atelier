@@ -16,8 +16,8 @@
     </div>
     <div class="space-y-3 border rounded p-4 bg-gray-50">
         <p class="text-sm font-medium">Cover photo (desktop, tablet &amp; mobile)</p>
-        <p class="text-xs text-gray-500">Upload separate hero images for each screen size. Desktop is also saved as the service list thumbnail.</p>
-        @include('admin.partials.responsive-hero-images', ['prefix' => 'hero', 'hero' => $hero ?? []])
+        <p class="text-xs text-gray-500">{{ \App\Support\ResponsiveHero::adminUploadIntro('service') }}</p>
+        @include('admin.partials.responsive-hero-images', ['prefix' => 'hero', 'hero' => $hero ?? [], 'context' => 'service'])
     </div>
     <div class="grid md:grid-cols-2 gap-4">
         <div><label class="block text-sm mb-1">SEO title</label><input name="meta_title" value="{{ old('meta_title', $service->meta_title ?? '') }}" class="w-full border px-3 py-2 rounded"></div>

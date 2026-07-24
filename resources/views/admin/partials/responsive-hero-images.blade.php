@@ -4,11 +4,8 @@
 
     $prefix = $prefix ?? 'hero';
     $heroData = $hero ?? [];
-    $variants = [
-        'desktop' => ['label' => 'Desktop image (1024px and wider)', 'hint' => 'Main hero image for laptops and desktops.', 'key' => 'image'],
-        'tablet' => ['label' => 'Tablet / iPad image (768px–1023px)', 'hint' => 'Landscape crop for iPad. Falls back to desktop if empty.', 'key' => 'image_tablet'],
-        'mobile' => ['label' => 'Mobile image (phones, up to 767px)', 'hint' => 'Portrait or square crop for phones. Falls back to tablet/desktop if empty.', 'key' => 'image_mobile'],
-    ];
+    $context = $context ?? 'cover';
+    $variants = ResponsiveHero::adminVariants($context);
 @endphp
 <div class="grid lg:grid-cols-3 gap-3">
     @foreach($variants as $variant => $meta)
@@ -21,6 +18,7 @@
         <div class="rounded border bg-white p-3 space-y-2">
             <div>
                 <p class="text-sm font-medium">{{ $meta['label'] }}</p>
+                <p class="text-xs font-medium text-gray-700 mt-1">Recommended: {{ $meta['size'] }}</p>
                 <p class="text-xs text-gray-500">{{ $meta['hint'] }}</p>
             </div>
             @if($preview)

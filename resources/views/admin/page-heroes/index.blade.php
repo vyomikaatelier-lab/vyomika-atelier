@@ -2,7 +2,7 @@
 @section('title', 'Page Heroes')
 @section('content')
 <h1 class="text-2xl font-semibold mb-2">Page Heroes</h1>
-<p class="text-sm text-gray-600 mb-6">Upload desktop, tablet, and mobile hero images for storefront pages. Homepage slides are under <a href="{{ route('admin.settings.edit') }}" class="text-blue-600">Site Settings</a>. Railings and Corten are under <a href="{{ route('admin.independent-pages.index') }}" class="text-blue-600">Independent Pages</a>. Shop collections are under <a href="{{ route('admin.collection-pages.index') }}" class="text-blue-600">Collection Pages</a>.</p>
+<p class="text-sm text-gray-600 mb-6">{{ \App\Support\ResponsiveHero::adminUploadIntro() }} Homepage slides are under <a href="{{ route('admin.settings.edit') }}" class="text-blue-600">Site Settings</a>. Railings and Corten are under <a href="{{ route('admin.independent-pages.index') }}" class="text-blue-600">Independent Pages</a>. Shop collections are under <a href="{{ route('admin.collection-pages.index') }}" class="text-blue-600">Collection Pages</a>.</p>
 
 @php
     $groups = collect($pages)->groupBy('group');

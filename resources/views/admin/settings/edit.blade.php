@@ -46,7 +46,7 @@
     <section class="space-y-4">
         <div>
             <h2 class="font-medium">Homepage hero carousel</h2>
-            <p class="text-xs text-gray-500 mt-1">Edit all {{ count($heroSlides) }} homepage hero slides. Upload separate images for desktop, tablet/iPad, and mobile — each device shows the best-matching crop.</p>
+            <p class="text-xs text-gray-500 mt-1">{{ \App\Support\ResponsiveHero::adminUploadIntro('homepage') }}</p>
         </div>
         @foreach($heroSlides as $index => $slide)
             <div class="border rounded p-4 space-y-3 bg-gray-50">

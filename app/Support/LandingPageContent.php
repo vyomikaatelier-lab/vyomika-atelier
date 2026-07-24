@@ -45,6 +45,28 @@ class LandingPageContent
     }
 
     /** @return array<string, mixed> */
+    public static function storedOverride(string $slug): array
+    {
+        if (! Schema::hasTable('site_settings')) {
+            return [];
+        }
+
+        $pages = SiteSetting::getValue('landing_pages', []) ?? [];
+        $override = $pages[$slug] ?? null;
+
+        return is_array($override) ? $override : [];
+    }
+
+    /** @param  array<string, mixed>  $override */
+    public static function storeOverride(string $slug, array $override): void
+    {
+        $pages = SiteSetting::getValue('landing_pages', []) ?? [];
+        $existing = is_array($pages[$slug] ?? null) ? $pages[$slug] : [];
+        $pages[$slug] = self::mergePage($existing, $override);
+        SiteSetting::setValue('landing_pages', $pages);
+    }
+
+    /** @return array<string, mixed> */
     public static function page(string $slug): array
     {
         $defaults = config(self::configKey($slug), []);

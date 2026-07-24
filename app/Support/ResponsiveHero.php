@@ -62,4 +62,71 @@ class ResponsiveHero
 
         return MediaUrl::resolve($path) ?? $path;
     }
+
+    /**
+     * Admin upload guidance for responsive hero / cover images.
+     *
+     * @return array<string, array{label: string, hint: string, size: string, key: string}>
+     */
+    public static function adminVariants(string $context = 'cover'): array
+    {
+        $specs = match ($context) {
+            'homepage' => [
+                'desktop' => ['size' => '1920 × 1080 px', 'ratio' => '16:9 landscape', 'min' => '1600 × 900 px', 'crop' => 'Keep subject centered; image sits beside text on large screens.'],
+                'tablet' => ['size' => '1200 × 900 px', 'ratio' => '4:3 landscape', 'min' => '1024 × 768 px', 'crop' => 'Landscape iPad crop. Falls back to desktop if empty.'],
+                'mobile' => ['size' => '900 × 1200 px', 'ratio' => '3:4 portrait', 'min' => '800 × 1200 px', 'crop' => 'Portrait or square; image stacks above text. Falls back to tablet/desktop if empty.'],
+            ],
+            'service' => [
+                'desktop' => ['size' => '1920 × 1080 px', 'ratio' => '16:9 landscape', 'min' => '1600 × 900 px', 'crop' => 'Also used as the /services list thumbnail. Keep the subject centered.'],
+                'tablet' => ['size' => '1200 × 800 px', 'ratio' => '3:2 landscape', 'min' => '1024 × 768 px', 'crop' => 'Landscape iPad crop. Falls back to desktop if empty.'],
+                'mobile' => ['size' => '800 × 1200 px', 'ratio' => '2:3 portrait', 'min' => '800 × 1200 px', 'crop' => 'Portrait crop for phones. Falls back to tablet/desktop if empty.'],
+            ],
+            default => [
+                'desktop' => ['size' => '1920 × 1080 px', 'ratio' => '16:9 landscape', 'min' => '1600 × 900 px', 'crop' => 'Full-width hero background. Keep important detail away from edges.'],
+                'tablet' => ['size' => '1200 × 800 px', 'ratio' => '3:2 landscape', 'min' => '1024 × 768 px', 'crop' => 'Landscape iPad crop. Falls back to desktop if empty.'],
+                'mobile' => ['size' => '800 × 1200 px', 'ratio' => '2:3 portrait', 'min' => '800 × 1200 px', 'crop' => 'Portrait crop for phones. Falls back to tablet/desktop if empty.'],
+            ],
+        };
+
+        $labels = [
+            'desktop' => 'Desktop image (1024px and wider)',
+            'tablet' => 'Tablet / iPad image (768px–1023px)',
+            'mobile' => 'Mobile image (phones, up to 767px)',
+        ];
+
+        $keys = [
+            'desktop' => 'image',
+            'tablet' => 'image_tablet',
+            'mobile' => 'image_mobile',
+        ];
+
+        $variants = [];
+
+        foreach ($labels as $variant => $label) {
+            $meta = $specs[$variant];
+            $variants[$variant] = [
+                'label' => $label,
+                'size' => $meta['size'],
+                'hint' => sprintf(
+                    'Recommended %s (%s). Min %s. %s JPG, PNG, or WebP · max 5 MB.',
+                    $meta['size'],
+                    $meta['ratio'],
+                    $meta['min'],
+                    $meta['crop']
+                ),
+                'key' => $keys[$variant],
+            ];
+        }
+
+        return $variants;
+    }
+
+    public static function adminUploadIntro(string $context = 'cover'): string
+    {
+        return match ($context) {
+            'homepage' => 'Upload separate images per slide for desktop (1024px+), tablet/iPad (768–1023px), and mobile (up to 767px). Recommended: desktop 1920×1080, tablet 1200×900, mobile 900×1200.',
+            'service' => 'Upload desktop, tablet, and mobile cover images. Desktop is also used on the /services listing. Recommended: desktop 1920×1080, tablet 1200×800, mobile 800×1200.',
+            default => 'Upload desktop, tablet, and mobile cover images. Empty tablet/mobile slots fall back to the next larger size. Recommended: desktop 1920×1080, tablet 1200×800, mobile 800×1200.',
+        };
+    }
 }

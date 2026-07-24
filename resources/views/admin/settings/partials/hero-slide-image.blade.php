@@ -1,22 +1,16 @@
 @php
+    use App\Support\ResponsiveHero;
+
+    $meta = ResponsiveHero::adminVariants('homepage')[$variant] ?? ResponsiveHero::adminVariants('homepage')['desktop'];
     $field = $variant === 'desktop' ? 'image' : 'image_'.$variant;
-    $label = match ($variant) {
-        'mobile' => 'Mobile image (phones, up to 767px)',
-        'tablet' => 'Tablet / iPad image (768px–1023px)',
-        default => 'Desktop image (1024px and wider)',
-    };
-    $hint = match ($variant) {
-        'mobile' => 'Portrait or square crop works best. Falls back to desktop if empty.',
-        'tablet' => 'Landscape crop for iPad. Falls back to desktop if empty.',
-        default => 'Main hero image for laptops and desktops.',
-    };
     $value = old("hero_slides.{$index}.{$field}", $slide[$field] ?? '');
     $preview = filled($value) ? (\App\Support\MediaUrl::resolve($value) ?? $value) : null;
 @endphp
 <div class="rounded border bg-white p-3 space-y-2">
     <div>
-        <p class="text-sm font-medium">{{ $label }}</p>
-        <p class="text-xs text-gray-500">{{ $hint }}</p>
+        <p class="text-sm font-medium">{{ $meta['label'] }}</p>
+        <p class="text-xs font-medium text-gray-700 mt-1">Recommended: {{ $meta['size'] }}</p>
+        <p class="text-xs text-gray-500">{{ $meta['hint'] }}</p>
     </div>
     @if($preview)
         <img src="{{ $preview }}" alt="" class="w-full max-w-xs h-28 object-cover rounded border">

@@ -6,7 +6,7 @@
     <a href="{{ $previewUrl }}" target="_blank" rel="noopener" class="text-sm border px-3 py-1.5 rounded">Preview public page ↗</a>
 </div>
 <h1 class="text-2xl font-semibold mb-2">{{ $label }}</h1>
-<p class="text-sm text-gray-600 mb-6">Upload separate hero images for desktop (1024px+), tablet/iPad (768–1023px), and mobile (up to 767px). Empty tablet/mobile slots fall back to the next larger size.</p>
+<p class="text-sm text-gray-600 mb-6">{{ \App\Support\ResponsiveHero::adminUploadIntro() }}</p>
 
 <form method="POST" action="{{ route('admin.page-heroes.update', $slug) }}" enctype="multipart/form-data" class="bg-white p-6 rounded shadow space-y-4 max-w-4xl">
     @csrf @method('PUT')

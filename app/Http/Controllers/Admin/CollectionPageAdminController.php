@@ -42,6 +42,14 @@ class CollectionPageAdminController extends Controller
     {
         abort_unless(in_array($slug, CollectionContent::slugs(), true), 404);
 
+        if (! \Illuminate\Support\Facades\Schema::hasTable('site_settings')) {
+            return back()->with('error', 'Database table site_settings is missing. Run: php artisan migrate --force');
+        }
+
+        if ($this->multipartPayloadFailed($request, 'hero_title')) {
+            return back()->with('error', 'Upload too large for the server limit. Save text changes first, then upload one image at a time (max 5 MB each).');
+        }
+
         $validated = $request->validate(array_merge([
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
