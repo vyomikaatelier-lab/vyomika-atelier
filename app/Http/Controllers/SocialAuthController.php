@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\AdminAccess;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -87,6 +88,7 @@ class SocialAuthController extends Controller
             ]);
         }
 
+        AdminAccess::revoke($request);
         Auth::login($user);
         $request->session()->regenerate();
 

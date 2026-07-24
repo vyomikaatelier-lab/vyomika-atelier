@@ -9,6 +9,7 @@ use App\Models\WhatsappOtpVerification;
 use App\Services\FormProtectionService;
 use App\Services\PhoneNumberService;
 use App\Services\WhatsappOtpService;
+use App\Support\AdminAccess;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -62,8 +63,7 @@ class AccountAuthController extends Controller
                 ->withErrors(['login' => 'Invalid email, mobile number, or password.']);
         }
 
-        Auth::login($user);
-        $request->session()->regenerate();
+        $this->loginCustomerSession($request, $user);
 
         return redirect()->intended(route('account'));
     }
@@ -101,8 +101,7 @@ class AccountAuthController extends Controller
                 ->with('mobile_login_mode', 'password');
         }
 
-        Auth::login($user);
-        $request->session()->regenerate();
+        $this->loginCustomerSession($request, $user);
 
         return redirect()->intended(route('account'));
     }
@@ -242,8 +241,7 @@ class AccountAuthController extends Controller
             return back()->withErrors(['password' => 'This account has been disabled. Contact the studio for assistance.']);
         }
 
-        Auth::login($user);
-        $request->session()->regenerate();
+        $this->loginCustomerSession($request, $user);
         $request->session()->forget('account_pending_verification_id');
         $request->session()->forget('account_pending_mobile_display');
         $request->session()->forget('account_register_password');
@@ -322,8 +320,7 @@ class AccountAuthController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        Auth::login($user);
-        $request->session()->regenerate();
+        $this->loginCustomerSession($request, $user);
         $request->session()->forget([
             'account_pending_verification_id',
             'account_pending_mobile_display',
@@ -413,8 +410,7 @@ class AccountAuthController extends Controller
                 ->withErrors(['otp' => 'This account has been disabled. Contact the studio for assistance.']);
         }
 
-        Auth::login($user);
-        $request->session()->regenerate();
+        $this->loginCustomerSession($request, $user);
         $request->session()->forget('account_pending_verification_id');
         $request->session()->forget('account_pending_mobile_display');
 
@@ -618,6 +614,13 @@ class AccountAuthController extends Controller
         }
 
         return $record;
+    }
+
+    private function loginCustomerSession(Request $request, User $user): void
+    {
+        AdminAccess::revoke($request);
+        Auth::login($user);
+        $request->session()->regenerate();
     }
 
     private function authView(string $tab)

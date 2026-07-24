@@ -48,6 +48,10 @@
     $legalLinks = \App\Support\LegalContent::footerLinks();
     $social = \App\Support\SiteContent::social();
     $storefrontLink = fn (string $name, array $params = [], string $fallback = '#') => StorefrontUrl::to($name, $params, $fallback);
+    $accountHref = auth()->check() && ! auth()->user()->isAdmin()
+        ? $storefrontLink('account', [], '/account')
+        : $storefrontLink('account.login', [], '/account/login');
+    $accountLabel = auth()->check() && auth()->user()->isAdmin() ? 'Sign in' : 'Account';
 @endphp
 
 @if(!empty($announcement['text']))
@@ -78,7 +82,7 @@
             <button type="button" class="am-icon-btn" id="am-search-toggle" aria-label="Search">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
             </button>
-            <a href="{{ $storefrontLink('account', [], '/account/login') }}" class="am-icon-btn" aria-label="Account">
+            <a href="{{ $accountHref }}" class="am-icon-btn" aria-label="{{ $accountLabel }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
             </a>
             <a href="#" class="am-icon-btn" id="am-cart-toggle" aria-label="Cart">

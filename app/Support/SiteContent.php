@@ -17,12 +17,12 @@ class SiteContent
 
     public static function brand(): array
     {
-        return self::get('brand', []);
+        return self::arrayValue('brand');
     }
 
     public static function announcement(): array
     {
-        return self::get('announcement', []);
+        return self::arrayValue('announcement');
     }
 
     public static function heroSlides(): array
@@ -72,12 +72,28 @@ class SiteContent
 
     public static function footer(): array
     {
-        return self::get('footer', []);
+        return self::arrayValue('footer');
     }
 
     public static function social(): array
     {
-        return self::get('social', []);
+        return self::arrayValue('social');
+    }
+
+    /** @return array<string, mixed> */
+    private static function arrayValue(string $key, array $default = []): array
+    {
+        $value = self::get($key, $default);
+
+        if (is_array($value)) {
+            return $value;
+        }
+
+        if (is_object($value)) {
+            return json_decode(json_encode($value), true) ?? $default;
+        }
+
+        return $default;
     }
 
     public static function formatPrice(int|float|null $amount): string

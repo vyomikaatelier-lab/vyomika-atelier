@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\AdminAccess;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -10,7 +11,7 @@ class AuthController extends Controller
 {
     public function showLogin()
     {
-        if (auth()->check() && auth()->user()->isAdmin()) {
+        if (auth()->check() && auth()->user()->isAdmin() && AdminAccess::verified(request())) {
             return redirect()->route('admin.dashboard');
         }
 
@@ -29,8 +30,12 @@ class AuthController extends Controller
 
             if (! auth()->user()->isAdmin() || ! auth()->user()->is_active) {
                 Auth::logout();
+                AdminAccess::revoke($request);
+
                 return back()->withErrors(['email' => 'You do not have admin access.']);
             }
+
+            AdminAccess::grant($request);
 
             return redirect()->intended(route('admin.dashboard'));
         }
@@ -40,6 +45,7 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        AdminAccess::revoke($request);
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

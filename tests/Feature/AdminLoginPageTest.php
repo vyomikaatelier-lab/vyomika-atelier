@@ -28,6 +28,6 @@ class AdminLoginPageTest extends TestCase
             'password' => 'password',
         ])->assertRedirect(route('admin.dashboard'));
 
-        $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk();
+        $this->get(route('admin.dashboard'))->assertOk();
     }
 }

@@ -19,7 +19,8 @@ class CustomerAccountMiddleware
         $user = auth()->user();
 
         if ($user->isAdmin()) {
-            return redirect()->route('admin.dashboard');
+            return redirect()->route('home')
+                ->with('info', 'Customer account pages are for shoppers. Open /admin and sign in to manage the store.');
         }
 
         if (! $user->is_active) {
