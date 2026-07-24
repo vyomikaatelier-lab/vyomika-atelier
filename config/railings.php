@@ -19,6 +19,7 @@ return [
         'cta_primary' => ['label' => 'Request Quotation', 'href' => '#railing-quote'],
         'cta_secondary' => ['label' => 'View Categories', 'href' => '#railing-categories'],
         'image' => 'https://images.unsplash.com/photo-1600607687920-4e3a09aebb82?w=1400&q=80',
+        'image_alt' => 'Custom staircase railings',
     ],
 
     'intro' => [
@@ -84,6 +85,18 @@ return [
             'PVD, powder-coat and brushed finishes to match doors and partitions',
             'Delhi studio QC with labelled crating for safe Pan-India delivery',
             'Coordination with your contractor or architect on site',
+        ],
+        'image' => 'https://images.unsplash.com/photo-1600607687920-4e3a09aebb82?w=900&q=80',
+        'image_alt' => 'Staircase railing fabrication',
+    ],
+
+    'quote' => [
+        'title' => 'Request a Quotation',
+        'body' => 'Tell us about your staircase, material preferences and site location. Attach a photo or drawing if you have one — we will respond with timelines and an indicative quote.',
+        'bullets' => [
+            'Site measurement available in Delhi NCR',
+            'Shop drawings shared before fabrication',
+            'Glass, stainless, MS and wrought iron systems',
         ],
     ],
 

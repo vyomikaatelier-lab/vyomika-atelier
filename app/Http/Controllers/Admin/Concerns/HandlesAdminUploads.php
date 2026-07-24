@@ -29,13 +29,30 @@ trait HandlesAdminUploads
         return $path;
     }
 
-    protected function resolveImageField(Request $request, string $fileField, string $urlField, ?string $current, string $directory): ?string
-    {
+    protected function resolveImageField(
+        Request $request,
+        string $fileField,
+        string $urlField,
+        ?string $current,
+        string $directory,
+        bool $deletePrevious = true
+    ): ?string {
         $uploaded = $this->storeUpload($request, $fileField, $directory);
         if ($uploaded) {
-            $this->deleteStoredPath($current);
+            if ($deletePrevious) {
+                $this->deleteStoredPath($current);
+            }
 
             return $uploaded;
+        }
+
+        if ($request->boolean(str_replace('_file', '_remove', $fileField))
+            || $request->boolean($urlField.'_remove')) {
+            if ($deletePrevious) {
+                $this->deleteStoredPath($current);
+            }
+
+            return null;
         }
 
         $url = $request->input($urlField);
@@ -52,6 +69,10 @@ trait HandlesAdminUploads
         $media = MediaFile::query()->where('path', $path)->first();
 
         if ($media) {
+            if ($media->referenceCount() > 0) {
+                return;
+            }
+
             Storage::disk($media->disk)->delete($path);
             $media->delete();
 

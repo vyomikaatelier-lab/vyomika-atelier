@@ -10,12 +10,22 @@ class MediaUrl
             return null;
         }
 
+        $path = str_replace('\\', '/', trim($path));
+
+        if (preg_match('#^(javascript|data|vbscript):#i', $path)) {
+            return null;
+        }
+
         if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://') || str_starts_with($path, '//')) {
             return $path;
         }
 
-        if (str_starts_with($path, 'storage/')) {
-            return asset($path);
+        if (str_starts_with($path, '/storage/') || str_starts_with($path, 'storage/')) {
+            return asset(ltrim($path, '/'));
+        }
+
+        if (str_starts_with($path, '/')) {
+            return asset(ltrim($path, '/'));
         }
 
         return asset('storage/'.$path);

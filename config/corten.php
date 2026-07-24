@@ -8,9 +8,11 @@ return [
     'meta_description' => 'Explore custom Corten steel facades, decorative screens, planters, gates and architectural metalwork designed and fabricated by Vyomika Atelier.',
 
     'hero' => [
+        'label' => 'Corten Steel',
         'title' => 'Corten Steel Architectural Solutions',
         'subtitle' => 'Weathering steel facades, screens, planters and custom metalwork designed to develop a rich, natural rust finish over time.',
         'image' => 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1600&q=80',
+        'image_alt' => 'Corten steel architectural facade',
         'cta_primary' => ['label' => 'Explore Applications', 'href' => '#corten-applications'],
         'cta_secondary' => ['label' => 'Request a Quote', 'href' => '#corten-quote'],
     ],
@@ -44,6 +46,8 @@ return [
             'Custom fabrication options',
             'Works with modern and industrial designs',
         ],
+        'image' => 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=900&q=80',
+        'image_alt' => 'Corten steel detail',
     ],
 
     'finish_evolution' => [
@@ -115,6 +119,8 @@ return [
             'Natural weathering or controlled pre-patina finish',
             'Clear protective coating where required (indoor / sheltered use)',
         ],
+        'image' => 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=900&q=80',
+        'image_alt' => 'Corten fabrication',
     ],
 
     'considerations' => [
@@ -165,6 +171,8 @@ return [
     'cta' => [
         'title' => 'Create a Bold Architectural Statement',
         'body' => 'Share your drawings, dimensions or design concept with our team for a custom Corten steel solution.',
+        'form_label' => 'Custom Corten enquiry',
+        'form_title' => 'Request a Quote',
         'primary' => ['label' => 'Get a Custom Quote', 'href' => '#corten-quote'],
         'secondary' => ['label' => 'Contact Vyomika Atelier', 'href' => '/contact'],
     ],

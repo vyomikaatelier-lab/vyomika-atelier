@@ -44,6 +44,12 @@ class MediaFile extends Model
         $count += Project::query()->where('image', $path)->orWhere('gallery', 'like', '%' . $path . '%')->count();
         $count += BlogPost::query()->where('image', $path)->orWhere('gallery', 'like', '%' . $path . '%')->count();
         $count += Exhibition::query()->where('cover_image', $path)->orWhere('gallery', 'like', '%' . $path . '%')->count();
+        $count += Service::query()->where('image', $path)->count();
+
+        $landing = SiteSetting::getValue('landing_pages', []);
+        if (is_array($landing) && $path !== '' && str_contains(json_encode($landing), $path)) {
+            $count++;
+        }
 
         return $count;
     }

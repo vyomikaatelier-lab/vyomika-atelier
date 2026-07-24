@@ -17,12 +17,15 @@
             $slug = $item['slug'] ?? \Illuminate\Support\Str::slug($title);
             $description = $item['text'] ?? $item['description'] ?? null;
             $image = $item['image'] ?? null;
+            $imageAlt = $item['image_alt'] ?? $title;
             $category = $item['category'] ?? $categoryLabel;
+            $ctaHref = $item['cta_href'] ?? null;
+            $ctaLabel = $item['cta_label'] ?? 'Learn more';
         @endphp
         <article class="am-design-gallery__card am-design-gallery__card--split">
             @include('partials.am-gallery-media', [
                 'image' => $image,
-                'alt' => $title,
+                'alt' => $imageAlt,
             ])
             <div class="am-design-gallery__body">
                 <h3 class="am-design-gallery__name">{{ $title }}</h3>
@@ -33,6 +36,9 @@
                 <p class="am-design-gallery__desc">{{ $description }}</p>
                 @endif
                 <div class="am-design-gallery__actions am-design-gallery__actions--solo">
+                    @if(!empty($ctaHref))
+                    <a href="{{ $ctaHref }}" class="am-btn am-btn--card-primary">{{ $ctaLabel }}</a>
+                    @else
                     @include('partials.am-gallery-order-now-btn', [
                         'name' => $title,
                         'slug' => $slug,
@@ -40,6 +46,7 @@
                         'category' => $category,
                         'price' => $item['price'] ?? null,
                     ])
+                    @endif
                 </div>
             </div>
         </article>
