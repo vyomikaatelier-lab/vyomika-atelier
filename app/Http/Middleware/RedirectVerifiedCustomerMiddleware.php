@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Support\AdminAccess;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class RedirectVerifiedCustomerMiddleware
@@ -13,9 +14,14 @@ class RedirectVerifiedCustomerMiddleware
     {
         if (auth()->check()) {
             $user = auth()->user();
+
             if ($user->isAdmin()) {
-                return redirect()->route('home');
+                AdminAccess::revoke($request);
+                Auth::logout();
+
+                return $next($request);
             }
+
             if ($user->hasVerifiedPhone()) {
                 return redirect()->route('account');
             }

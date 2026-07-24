@@ -62,6 +62,21 @@ class AdminAccessIsolationTest extends TestCase
             ->assertRedirect(route('admin.login'));
     }
 
+    public function test_admin_can_open_customer_login_for_create_account(): void
+    {
+        $admin = User::factory()->admin()->create([
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('account.login'))
+            ->assertOk()
+            ->assertSee('Create an account')
+            ->assertDontSee('id="admin-sidebar"', false);
+
+        $this->assertGuest();
+    }
+
     public function test_admin_login_grants_panel_access(): void
     {
         $admin = User::factory()->create([

@@ -1285,9 +1285,10 @@ ul { list-style: none; }
   z-index: 400;
   opacity: 0;
   visibility: hidden;
+  pointer-events: none;
   transition: opacity 0.3s, visibility 0.3s;
 }
-.am-overlay.is-open { opacity: 1; visibility: visible; }
+.am-overlay.is-open { opacity: 1; visibility: visible; pointer-events: auto; }
 .am-drawer {
   position: fixed;
   top: 0;

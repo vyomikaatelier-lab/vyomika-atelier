@@ -15,6 +15,13 @@
 
         @include('partials.am-checkout-steps', ['current' => 1])
 
+        @if(session('info'))
+        <div class="am-alert am-alert--info" style="margin-bottom:1.25rem" role="status">{{ session('info') }}</div>
+        @endif
+        @if(session('error'))
+        <div class="am-alert am-alert--error" style="margin-bottom:1.25rem" role="alert">{{ session('error') }}</div>
+        @endif
+
         @if(!empty($pendingOrder))
         <div class="am-alert am-alert--info" style="margin-bottom:1.25rem">
             Order <strong>{{ $pendingOrder->order_number }}</strong> is awaiting payment.

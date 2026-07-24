@@ -48,10 +48,13 @@
     $legalLinks = \App\Support\LegalContent::footerLinks();
     $social = \App\Support\SiteContent::social();
     $storefrontLink = fn (string $name, array $params = [], string $fallback = '#') => StorefrontUrl::to($name, $params, $fallback);
-    $accountHref = auth()->check() && ! auth()->user()->isAdmin()
+    $isVerifiedCustomer = auth()->check()
+        && ! auth()->user()->isAdmin()
+        && auth()->user()->hasVerifiedPhone();
+    $accountHref = $isVerifiedCustomer
         ? $storefrontLink('account', [], '/account')
         : $storefrontLink('account.login', [], '/account/login');
-    $accountLabel = auth()->check() && auth()->user()->isAdmin() ? 'Sign in' : 'Account';
+    $accountLabel = $isVerifiedCustomer ? 'Account' : 'Sign in';
 @endphp
 
 @if(!empty($announcement['text']))
