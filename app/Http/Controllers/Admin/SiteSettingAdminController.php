@@ -19,7 +19,7 @@ class SiteSettingAdminController extends Controller
         $heroOverride = SiteSetting::getValue('hero', []);
         $homepage = SiteSetting::getValue('homepage', []);
         $nav = SiteSetting::getValue('nav');
-        $defaultHero = config('site.hero.slides.0', []);
+        $defaultSlides = config('site.hero.slides', []);
         $defaultAnnouncement = config('site.announcement', []);
 
         return view('admin.settings.edit', [
@@ -33,9 +33,7 @@ class SiteSettingAdminController extends Controller
             'finishSwatches' => config('finishes.swatches', []),
             'finishSwatchImages' => \App\Support\FinishSwatches::imageOverrides(),
             'navJson' => json_encode($nav ?? config('site.nav', []), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-            'heroTitle' => $heroOverride['title'] ?? $defaultHero['title'] ?? '',
-            'heroSubtitle' => $heroOverride['subtitle'] ?? $defaultHero['description'] ?? '',
-            'heroImage' => $heroOverride['image'] ?? $defaultHero['image'] ?? '',
+            'heroSlides' => $this->heroSlidesForForm($heroOverride, $defaultSlides),
             'announcementText' => data_get($homepage, 'announcement.text', $defaultAnnouncement['text'] ?? ''),
             'announcementLinkLabel' => data_get($homepage, 'announcement.link_label', $defaultAnnouncement['link_label'] ?? ''),
             'announcementLinkHref' => data_get($homepage, 'announcement.link_href', $defaultAnnouncement['link_href'] ?? ''),
@@ -86,14 +84,10 @@ class SiteSettingAdminController extends Controller
                 'grievance_officer_phone' => 'nullable|string|max:50',
                 'legal_last_updated' => 'nullable|string|max:50',
                 'nav_json' => 'nullable|string',
-                'hero_title' => 'nullable|string|max:255',
-                'hero_subtitle' => 'nullable|string|max:1000',
-                'hero_image' => 'nullable|string|max:500',
-                'hero_image_file' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
                 'announcement_text' => 'nullable|string|max:500',
                 'announcement_link_label' => 'nullable|string|max:120',
                 'announcement_link_href' => 'nullable|string|max:500',
-            ], $finishRules));
+            ], $finishRules, $this->heroSlideValidationRules()));
         } catch (ValidationException $e) {
             return back()->withInput()->withErrors($e->errors());
         }
@@ -156,20 +150,9 @@ class SiteSettingAdminController extends Controller
                 SiteSetting::setValue('nav', $nav);
             }
 
-            $currentHeroImage = SiteSetting::getValue('hero', [])['image'] ?? null;
-            $heroImage = $this->resolveImageField(
-                $request,
-                'hero_image_file',
-                'hero_image',
-                $currentHeroImage,
-                'hero'
-            );
-
-            SiteSetting::setValue('hero', array_filter([
-                'title' => $validated['hero_title'] ?? null,
-                'subtitle' => $validated['hero_subtitle'] ?? null,
-                'image' => $heroImage,
-            ], fn ($value) => filled($value)));
+            SiteSetting::setValue('hero', [
+                'slides' => $this->buildHeroSlidesFromRequest($request, SiteSetting::getValue('hero', [])),
+            ]);
 
             SiteSetting::setValue('homepage', [
                 'announcement' => array_filter([
@@ -209,6 +192,96 @@ class SiteSettingAdminController extends Controller
         }
 
         return back()->with('success', 'Site settings saved.');
+    }
+
+    /** @param  array<string, mixed>  $heroOverride
+     * @param  list<array<string, mixed>>  $defaultSlides
+     * @return list<array<string, mixed>>
+     */
+    private function heroSlidesForForm(array $heroOverride, array $defaultSlides): array
+    {
+        $storedSlides = is_array($heroOverride['slides'] ?? null) ? $heroOverride['slides'] : [];
+
+        return collect($defaultSlides)->map(function (array $defaults, int $index) use ($storedSlides, $heroOverride) {
+            $stored = is_array($storedSlides[$index] ?? null) ? $storedSlides[$index] : [];
+
+            if ($index === 0 && $stored === [] && isset($heroOverride['title'], $heroOverride['subtitle'], $heroOverride['image'])) {
+                $stored = [
+                    'title' => $heroOverride['title'] ?? null,
+                    'description' => $heroOverride['subtitle'] ?? null,
+                    'image' => $heroOverride['image'] ?? null,
+                ];
+            }
+
+            return [
+                'kicker' => $stored['kicker'] ?? $defaults['kicker'] ?? '',
+                'title' => $stored['title'] ?? $defaults['title'] ?? '',
+                'description' => $stored['description'] ?? $defaults['description'] ?? '',
+                'image' => $stored['image'] ?? $defaults['image'] ?? '',
+                'cta_label' => $stored['cta_label'] ?? $defaults['cta_label'] ?? '',
+                'cta_href' => $stored['cta_href'] ?? $defaults['cta_href'] ?? '',
+            ];
+        })->values()->all();
+    }
+
+    /** @return array<string, string> */
+    private function heroSlideValidationRules(): array
+    {
+        $rules = [];
+
+        foreach (array_keys(config('site.hero.slides', [])) as $index) {
+            $prefix = "hero_slides.{$index}";
+            $rules["{$prefix}.kicker"] = 'nullable|string|max:120';
+            $rules["{$prefix}.title"] = 'nullable|string|max:255';
+            $rules["{$prefix}.description"] = 'nullable|string|max:1000';
+            $rules["{$prefix}.image"] = 'nullable|string|max:500';
+            $rules["{$prefix}.image_file"] = 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120';
+            $rules["{$prefix}.image_remove"] = 'nullable|boolean';
+            $rules["{$prefix}.cta_label"] = 'nullable|string|max:120';
+            $rules["{$prefix}.cta_href"] = 'nullable|string|max:500';
+        }
+
+        return $rules;
+    }
+
+    /** @param  array<string, mixed>  $existingHero
+     * @return list<array<string, mixed>>
+     */
+    private function buildHeroSlidesFromRequest(Request $request, array $existingHero): array
+    {
+        $defaultSlides = config('site.hero.slides', []);
+        $existingSlides = is_array($existingHero['slides'] ?? null) ? $existingHero['slides'] : [];
+        $slides = [];
+
+        foreach (array_keys($defaultSlides) as $index) {
+            $prefix = "hero_slides.{$index}";
+            $defaults = $defaultSlides[$index];
+            $stored = is_array($existingSlides[$index] ?? null) ? $existingSlides[$index] : [];
+
+            if ($index === 0 && $stored === [] && filled($existingHero['image'] ?? null)) {
+                $stored['image'] = $existingHero['image'];
+            }
+
+            $currentImage = $stored['image'] ?? $defaults['image'] ?? null;
+            $image = $this->resolveImageField(
+                $request,
+                "{$prefix}.image_file",
+                "{$prefix}.image",
+                $currentImage,
+                'hero'
+            );
+
+            $slides[] = array_filter([
+                'kicker' => $request->input("{$prefix}.kicker"),
+                'title' => $request->input("{$prefix}.title"),
+                'description' => $request->input("{$prefix}.description"),
+                'image' => $image,
+                'cta_label' => $request->input("{$prefix}.cta_label"),
+                'cta_href' => $request->input("{$prefix}.cta_href"),
+            ], fn ($value) => filled($value));
+        }
+
+        return $slides;
     }
 
     private function normalizeUrl(?string $value): ?string

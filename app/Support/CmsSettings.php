@@ -45,17 +45,21 @@ class CmsSettings
         if (is_array($hero) && $hero !== []) {
             $slides = config('site.hero.slides', []);
             if ($slides !== []) {
-                $first = $slides[0];
-                if (filled($hero['title'] ?? null)) {
-                    $first['title'] = $hero['title'];
+                if (isset($hero['slides']) && is_array($hero['slides'])) {
+                    foreach ($hero['slides'] as $index => $override) {
+                        if (! is_array($override) || ! isset($slides[$index])) {
+                            continue;
+                        }
+                        $slides[$index] = self::mergeHeroSlide($slides[$index], $override);
+                    }
+                } else {
+                    $slides[0] = self::mergeHeroSlide($slides[0], [
+                        'title' => $hero['title'] ?? null,
+                        'description' => $hero['subtitle'] ?? null,
+                        'image' => $hero['image'] ?? null,
+                    ]);
                 }
-                if (filled($hero['subtitle'] ?? null)) {
-                    $first['description'] = $hero['subtitle'];
-                }
-                if (filled($hero['image'] ?? null)) {
-                    $first['image'] = MediaUrl::resolve($hero['image']) ?? $hero['image'];
-                }
-                $slides[0] = $first;
+
                 config(['site.hero.slides' => $slides]);
             }
         }
@@ -109,6 +113,25 @@ class CmsSettings
             'summary' => $event->description,
             'images' => $event->gallery ?? array_filter([$event->cover_image]),
         ])->all();
+    }
+
+    /** @param  array<string, mixed>  $slide
+     * @param  array<string, mixed>  $override
+     * @return array<string, mixed>
+     */
+    private static function mergeHeroSlide(array $slide, array $override): array
+    {
+        foreach (['kicker', 'title', 'description', 'cta_label', 'cta_href'] as $field) {
+            if (filled($override[$field] ?? null)) {
+                $slide[$field] = $override[$field];
+            }
+        }
+
+        if (filled($override['image'] ?? null)) {
+            $slide['image'] = MediaUrl::resolve($override['image']) ?? $override['image'];
+        }
+
+        return $slide;
     }
 
     public static function legalPage(string $slug): ?array
