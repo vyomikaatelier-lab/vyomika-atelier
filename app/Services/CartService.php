@@ -74,11 +74,14 @@ class CartService
     public function add(Product $product, int $quantity = 1, ?string $finishSlug = null): void
     {
         $cart = session(self::SESSION_KEY, []);
+        $existingQty = isset($cart[$product->id])
+            ? $this->normalizeLine($cart[$product->id])['quantity']
+            : 0;
         $existing = $this->normalizeLine($cart[$product->id] ?? null);
         $finish = FinishSwatches::resolve($finishSlug ?? $existing['finish_slug']);
 
         $cart[$product->id] = [
-            'quantity' => ($existing['quantity'] ?? 0) + $quantity,
+            'quantity' => $existingQty + $quantity,
             'finish_slug' => $finish['slug'],
             'finish_name' => $finish['name'],
         ];
