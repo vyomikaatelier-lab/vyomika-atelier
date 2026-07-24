@@ -9,24 +9,16 @@
 
 
     $isModel = $product instanceof \App\Models\Product;
-
-    $name = $isModel ? $product->name : ($product['name'] ?? '');
-
-    $slug = $isModel ? $product->slug : ($product['slug'] ?? '');
-
-    $categorySlug = $isModel ? $product->category?->slug : ($product['category_slug'] ?? null);
-
+    $isObject = is_object($product) && ! $isModel;
+    $name = $isModel ? $product->name : ($isObject ? ($product->name ?? '') : ($product['name'] ?? ''));
+    $slug = $isModel ? $product->slug : ($isObject ? ($product->slug ?? '') : ($product['slug'] ?? ''));
+    $categorySlug = $isModel ? $product->category?->slug : ($isObject ? ($product->category_slug ?? null) : ($product['category_slug'] ?? null));
     $sectionLabel = $isModel
-
         ? StorefrontRoutes::productSectionLabel($product)
-
-        : ($product['section_label'] ?? $product['shop_category'] ?? '');
-
-    $price = $isModel ? $product->price : ($product['price'] ?? 0);
-
-    $comparePrice = $isModel ? $product->compare_price : ($product['compare_price'] ?? null);
-
-    $badge = $isModel ? null : ($product['badge'] ?? null);
+        : ($isObject ? ($product->section_label ?? $product->shop_category ?? '') : ($product['section_label'] ?? $product['shop_category'] ?? ''));
+    $price = $isModel ? $product->price : ($isObject ? ($product->price ?? 0) : ($product['price'] ?? 0));
+    $comparePrice = $isModel ? $product->compare_price : ($isObject ? ($product->compare_price ?? null) : ($product['compare_price'] ?? null));
+    $badge = $isModel ? null : ($isObject ? ($product->badge ?? null) : ($product['badge'] ?? null));
 
     if ($isModel && ! $badge && $comparePrice && $comparePrice > $price) {
 
@@ -34,26 +26,21 @@
 
     }
 
-    $image = $isModel ? ($product->imageUrl() ?: $product->image) : ($product['image'] ?? '');
+    $image = $isModel
+        ? ($product->imageUrl() ?: $product->image)
+        : ($isObject ? ($product->image ?? '') : ($product['image'] ?? ''));
 
     $url = $slug
-
         ? ($isModel ? StorefrontRoutes::productUrl($product) : StorefrontUrl::to('shop.show', ['slug' => $slug], '/shop/'.$slug))
-
         : StorefrontUrl::to('shop.index', [], '/shop');
 
     $orderServiceSlug = $isModel
-
         ? (\App\Models\Service::serviceSlugForProduct($slug, $categorySlug) ?? '')
-
-        : ($product['service_slug'] ?? '');
+        : ($isObject ? ($product->service_slug ?? '') : ($product['service_slug'] ?? ''));
 
     $useCheckout = $isModel
-
         ? $product->usesCheckoutFlow()
-
-        : (($product['section'] ?? 'shop') === 'shop');
-
+        : (($isObject ? ($product->section ?? 'shop') : ($product['section'] ?? 'shop')) === 'shop');
 @endphp
 
 <article class="am-product-card" data-product-url="{{ $url }}">

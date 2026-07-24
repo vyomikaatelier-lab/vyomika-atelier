@@ -27,6 +27,7 @@ class SiteSettingAdminController extends Controller
             'social' => array_merge(config('site.social', []), SiteSetting::getValue('social', [])),
             'seo' => array_merge(config('site.seo', []), SiteSetting::getValue('seo', [])),
             'store' => array_merge(config('site.store', []), SiteSetting::getValue('store', [])),
+            'analytics' => SiteSetting::getValue('analytics', []) ?? [],
             'business' => array_merge(config('legal.business', []), SiteSetting::getValue('business', [])),
             'legalLastUpdated' => SiteSetting::getValue('legal_last_updated', config('legal.last_updated')),
             'finishSwatches' => config('finishes.swatches', []),
@@ -75,6 +76,9 @@ class SiteSettingAdminController extends Controller
                 'youtube' => 'nullable|string|max:500',
                 'default_meta_title' => 'nullable|string|max:255',
                 'default_meta_description' => 'nullable|string|max:500',
+                'default_og_image' => 'nullable|string|max:500',
+                'ga4_measurement_id' => 'nullable|string|max:50',
+                'gsc_verification' => 'nullable|string|max:120',
                 'shipping_note' => 'nullable|string|max:2000',
                 'warranty_duration' => 'nullable|string|max:120',
                 'grievance_officer_name' => 'nullable|string|max:255',
@@ -115,6 +119,12 @@ class SiteSettingAdminController extends Controller
             SiteSetting::setValue('seo', [
                 'default_title' => $validated['default_meta_title'] ?? null,
                 'default_description' => $validated['default_meta_description'] ?? null,
+                'default_og_image' => $validated['default_og_image'] ?? null,
+            ]);
+
+            SiteSetting::setValue('analytics', [
+                'ga4_measurement_id' => $validated['ga4_measurement_id'] ?? null,
+                'gsc_verification' => $validated['gsc_verification'] ?? null,
             ]);
 
             SiteSetting::setValue('store', [

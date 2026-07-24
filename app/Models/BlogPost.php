@@ -31,6 +31,9 @@ class BlogPost extends Model
         'published_at',
         'is_active',
         'status',
+        'seo_source',
+        'og_image',
+        'primary_keyword',
     ];
 
     protected function casts(): array

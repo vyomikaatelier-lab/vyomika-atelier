@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Support\Seo\PageSeo;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
@@ -29,6 +31,15 @@ class ProductController extends Controller
             $related = $related->concat($more);
         }
 
-        return view('shop.show', compact('product', 'related'));
+        $pageSeo = PageSeo::make([
+            'title' => $product->meta_title ?: ($product->name.' — Vyomika Atelier'),
+            'description' => $product->meta_description
+                ?: (Str::limit(strip_tags((string) $product->description), 155) ?: null),
+            'canonical' => route('shop.show', $product->slug),
+            'og_image' => $product->og_image ?: $product->image,
+            'og_type' => 'product',
+        ]);
+
+        return view('shop.show', compact('product', 'related', 'pageSeo'));
     }
 }

@@ -4,8 +4,9 @@
  * Corten Steel landing page — editable content (CMS-style).
  */
 return [
-    'meta_title' => 'Corten Steel Facades, Screens & Custom Fabrication — Vyomika Atelier',
-    'meta_description' => 'Explore custom Corten steel facades, decorative screens, planters, gates and architectural metalwork designed and fabricated by Vyomika Atelier.',
+    'meta_title' => 'Corten Steel Facade India | Screens, Gates & Fabrication',
+    'meta_description' => 'Corten Steel facades, screens, gates, planters and custom architectural fabrication for Indian projects — with practical weathering and drainage guidance from Vyomika Atelier.',
+    'primary_keyword' => 'Corten Steel facade India',
 
     'hero' => [
         'label' => 'Corten Steel',

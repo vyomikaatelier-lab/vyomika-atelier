@@ -6,10 +6,12 @@ use App\Contracts\WhatsAppProvider;
 use App\Services\WhatsApp\MetaWhatsAppProvider;
 use App\Services\WhatsApp\Msg91WhatsAppProvider;
 use App\Support\CmsSettings;
+use App\View\Composers\StorefrontSeoComposer;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use SocialiteProviders\Manager\SocialiteWasCalled;
 
@@ -35,6 +37,8 @@ class AppServiceProvider extends ServiceProvider
         } catch (\Throwable) {
             // Database may not be ready during install.
         }
+
+        View::composer('layouts.store', StorefrontSeoComposer::class);
     }
 
     private function configureRateLimiting(): void

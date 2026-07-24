@@ -48,6 +48,8 @@ use App\Http\Controllers\Admin\MediaAdminController;
 use App\Http\Controllers\Admin\ServiceAdminController;
 use App\Http\Controllers\Admin\CollectionPageAdminController;
 use App\Http\Controllers\Admin\IndependentLandingAdminController;
+use App\Http\Controllers\Admin\StaticPageSeoAdminController;
+use App\Http\Controllers\Admin\UrlRedirectAdminController;
 use App\Http\Controllers\CortenSteelController;
 
 // Public storefront
@@ -222,6 +224,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('independent-pages', [IndependentLandingAdminController::class, 'index'])->name('independent-pages.index');
         Route::get('independent-pages/{slug}/edit', [IndependentLandingAdminController::class, 'edit'])->name('independent-pages.edit');
         Route::put('independent-pages/{slug}', [IndependentLandingAdminController::class, 'update'])->name('independent-pages.update');
+
+        Route::get('static-pages', [StaticPageSeoAdminController::class, 'index'])->name('static-pages.index');
+        Route::get('static-pages/{slug}/edit', [StaticPageSeoAdminController::class, 'edit'])->name('static-pages.edit');
+        Route::put('static-pages/{slug}', [StaticPageSeoAdminController::class, 'update'])->name('static-pages.update');
+
+        Route::get('redirects', [UrlRedirectAdminController::class, 'index'])->name('redirects.index');
+        Route::post('redirects', [UrlRedirectAdminController::class, 'store'])->name('redirects.store');
+        Route::delete('redirects/{redirect}', [UrlRedirectAdminController::class, 'destroy'])->name('redirects.destroy');
 
         Route::get('professional-applications', [ProfessionalApplicationAdminController::class, 'index'])->name('professional-applications.index');
         Route::get('professional-applications/{professional_application}', [ProfessionalApplicationAdminController::class, 'show'])->name('professional-applications.show');

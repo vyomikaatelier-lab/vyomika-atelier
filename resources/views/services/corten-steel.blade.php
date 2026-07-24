@@ -2,6 +2,8 @@
 
 @php
     use App\Support\LandingPageContent;
+    use App\Support\Seo\JsonLd;
+    use App\Support\Seo\PageSeo;
 
     $page = LandingPageContent::withResolvedImages($page ?? \App\Support\CortenContent::all());
     $hero = $page['hero'] ?? [];
@@ -10,14 +12,22 @@
     $stages = LandingPageContent::activeItems($page['finish_evolution']['stages'] ?? []);
     $projects = LandingPageContent::activeItems($page['featured_projects']['items'] ?? []);
     $faqs = LandingPageContent::activeItems($page['faq']['items'] ?? []);
+    $pageSeo = PageSeo::make([
+        'title' => $page['meta_title'] ?? $service->meta_title ?? \App\Support\CortenContent::metaTitle(),
+        'description' => $page['meta_description'] ?? $service->meta_description ?? \App\Support\CortenContent::metaDescription(),
+        'canonical' => route('corten-steel.show'),
+        'og_image' => $heroImg,
+        'primary_keyword' => $page['primary_keyword'] ?? null,
+    ]);
 @endphp
 
-@section('title', $page['meta_title'] ?? $service->meta_title ?? \App\Support\CortenContent::metaTitle())
+@section('title', $pageSeo['title'])
 
-@push('meta')
-<meta name="description" content="{{ $page['meta_description'] ?? $service->meta_description ?? \App\Support\CortenContent::metaDescription() }}">
-<link rel="canonical" href="{{ route('corten-steel.show') }}">
+@if($faqs)
+@push('jsonld')
+{!! JsonLd::script(JsonLd::faqPage($faqs)) !!}
 @endpush
+@endif
 
 @section('content')
 
@@ -224,21 +234,6 @@
         </div>
     </div>
 </section>
-@php
-    $faqSchema = [
-        '@context' => 'https://schema.org',
-        '@type' => 'FAQPage',
-        'mainEntity' => collect($faqs)->map(fn ($item) => [
-            '@type' => 'Question',
-            'name' => $item['q'] ?? '',
-            'acceptedAnswer' => [
-                '@type' => 'Answer',
-                'text' => $item['a'] ?? '',
-            ],
-        ])->values()->all(),
-    ];
-@endphp
-<script type="application/ld+json">{!! json_encode($faqSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
 @endif
 
 <section class="am-section am-section--dark am-corten-cta" id="corten-quote">

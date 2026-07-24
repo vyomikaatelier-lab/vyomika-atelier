@@ -62,6 +62,9 @@ class Product extends Model
         'purchase_mode',
         'pricing_type',
         'is_gallery_visible',
+        'meta_title',
+        'meta_description',
+        'og_image',
     ];
 
     protected function casts(): array

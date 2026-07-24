@@ -40,19 +40,20 @@ class HomeController extends Controller
 
         $portfolio = $featuredProjects->isNotEmpty()
             ? $featuredProjects
-            : collect($site['portfolio'] ?? [])->map(fn (array $item) => (object) $item);
+            : collect($site['portfolio'] ?? []);
 
         $services = $featuredServices->isNotEmpty()
             ? $featuredServices
-            : collect($site['services'] ?? [])->map(fn (array $item) => (object) $item);
+            : collect($site['services'] ?? []);
 
         $shopItems = $featuredProducts->isNotEmpty()
             ? $featuredProducts
-            : collect($site['shop'] ?? [])->map(fn (array $item) => (object) $item);
+            : collect($site['shop'] ?? []);
 
         $blogItems = $latestPosts->isNotEmpty()
             ? $latestPosts
-            : collect($site['blog']['posts'] ?? [])->map(fn (array $item) => (object) $item);
+            : collect($site['blog']['posts'] ?? []);
+
 
         $trendingSlugs = collect($site['trending']['products'] ?? [])->pluck('slug')->filter();
         $trendingFromDb = ($trendingSlugs->isNotEmpty() && Schema::hasTable('products'))

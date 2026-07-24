@@ -1,10 +1,26 @@
 @extends('layouts.store')
 
-@section('title', $product->name . ' — Vyomika Atelier')
+@php
+    use App\Support\Seo\JsonLd;
+    use App\Support\Seo\PageSeo;
+    use App\Support\MediaUrl;
 
-@if($product->description)
-@push('meta')
-<meta name="description" content="{{ \Illuminate\Support\Str::limit(strip_tags($product->description), 155) }}">
+    $pageSeo = PageSeo::make([
+        'title' => $product->meta_title ?: ($product->name.' — Vyomika Atelier'),
+        'description' => $product->meta_description
+            ?: (\Illuminate\Support\Str::limit(strip_tags((string) $product->description), 155) ?: null),
+        'canonical' => route('shop.show', $product->slug),
+        'og_image' => $product->og_image ?: $product->image,
+        'og_type' => 'product',
+    ]);
+    $productLd = JsonLd::product($product);
+@endphp
+
+@section('title', $pageSeo['title'])
+
+@if($productLd)
+@push('jsonld')
+{!! JsonLd::script($productLd) !!}
 @endpush
 @endif
 

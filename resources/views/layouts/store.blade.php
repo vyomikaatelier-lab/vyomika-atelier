@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 @php
-    $defaultPageTitle = config('site.brand.name', 'Vyomika Atelier') . ' — PVD Partitions & Metal Furniture';
-    $defaultMetaDescription = config('site.brand.name', 'Vyomika Atelier') . ' — PVD partitions, metal furniture, and bespoke fabrication. Pan-India delivery from Delhi.';
+    use App\Support\Seo\PageSeo;
+    $defaultPageTitle = PageSeo::siteDefaults()['title'] ?? (config('site.brand.name', 'Vyomika Atelier') . ' — PVD Partitions & Metal Furniture');
 @endphp
-    <meta name="description" content="{{ $defaultMetaDescription }}">
     <title>@yield('title', $defaultPageTitle)</title>
+    @include('partials.seo-meta')
     @stack('meta')
     @if(filter_var(env('APP_PREVIEW_BAR', false), FILTER_VALIDATE_BOOLEAN))
     <script>try{var t=localStorage.getItem('ssmetal-theme');document.documentElement.dataset.theme=t||'atelier';var h=localStorage.getItem('ssmetal-hero');document.documentElement.dataset.hero=h||'fullscreen'}catch(e){document.documentElement.dataset.theme='atelier';document.documentElement.dataset.hero='fullscreen'}</script>

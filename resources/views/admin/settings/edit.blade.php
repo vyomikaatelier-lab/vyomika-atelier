@@ -24,8 +24,15 @@
         <h2 class="font-medium">SEO & store</h2>
         <input name="default_meta_title" value="{{ old('default_meta_title', $seo['default_title'] ?? '') }}" placeholder="Default SEO title" class="w-full border px-3 py-2 rounded">
         <textarea name="default_meta_description" rows="2" placeholder="Default meta description" class="w-full border px-3 py-2 rounded">{{ old('default_meta_description', $seo['default_description'] ?? '') }}</textarea>
+        <input name="default_og_image" value="{{ old('default_og_image', $seo['default_og_image'] ?? '') }}" placeholder="Default Open Graph image URL" class="w-full border px-3 py-2 rounded">
         <textarea name="shipping_note" rows="2" placeholder="Shipping note" class="w-full border px-3 py-2 rounded">{{ old('shipping_note', $store['shipping_note'] ?? '') }}</textarea>
         <input name="warranty_duration" value="{{ old('warranty_duration', $store['warranty_duration'] ?? '') }}" placeholder="Warranty duration" class="w-full border px-3 py-2 rounded">
+    </section>
+    <section class="space-y-3">
+        <h2 class="font-medium">Analytics & Search Console</h2>
+        <p class="text-xs text-gray-500">Leave blank until configured. Do not hardcode credentials in theme files.</p>
+        <input name="ga4_measurement_id" value="{{ old('ga4_measurement_id', $analytics['ga4_measurement_id'] ?? '') }}" placeholder="GA4 Measurement ID (G-XXXXXXXX)" class="w-full border px-3 py-2 rounded">
+        <input name="gsc_verification" value="{{ old('gsc_verification', $analytics['gsc_verification'] ?? '') }}" placeholder="Google Search Console verification token" class="w-full border px-3 py-2 rounded">
     </section>
     <section class="space-y-3">
         <h2 class="font-medium">Homepage announcement</h2>

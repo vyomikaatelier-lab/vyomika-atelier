@@ -4,8 +4,9 @@
  * Studio Railings — single-page showcase + quotation form.
  */
 return [
-    'meta_title' => 'Custom Railings & Balustrades | Vyomika Atelier',
-    'meta_description' => 'Glass, fabricated, per-step baluster and wrought iron railings for indoor and exterior staircases — straight, L-shape, U-shape, curved and custom layouts. Request a quotation from Vyomika Atelier.',
+    'meta_title' => 'Custom Stainless Steel Railings India | Vyomika Atelier',
+    'meta_description' => 'Custom stainless steel, glass and fabricated staircase railings for Indian homes and hospitality — quotation-only fabrication with layout guidance from Vyomika Atelier.',
+    'primary_keyword' => 'custom stainless steel railings India',
 
     'hero' => [
         'label' => 'Railings',
@@ -97,6 +98,29 @@ return [
             'Site measurement available in Delhi NCR',
             'Shop drawings shared before fabrication',
             'Glass, stainless, MS and wrought iron systems',
+            'Design and fabrication support for projects across India, subject to logistics',
+        ],
+    ],
+
+    'process' => [
+        'title' => 'From Measurement to Installation',
+        'steps' => [
+            'Share photos, drawings or approximate stair dimensions',
+            'Confirm railing type, materials and finish preferences',
+            'Site measurement / templates where required',
+            'Shop drawings for approval',
+            'Fabrication, QC and labelled crating',
+            'Delivery and installation coordination',
+        ],
+    ],
+
+    'faq' => [
+        'title' => 'Railings FAQs',
+        'items' => [
+            ['q' => 'Can I add railings to the shopping cart?', 'a' => 'No. Railings are quotation-only because every staircase needs measurement and specification before fabrication.'],
+            ['q' => 'Which layouts do you fabricate?', 'a' => 'Straight, L-shape, U-shape, cutout, curved and custom geometries — subject to site conditions and drawings.'],
+            ['q' => 'Do you work outside Delhi NCR?', 'a' => 'Yes. We support projects across India, with logistics and installation planned per project scope.'],
+            ['q' => 'What should I send for a quotation?', 'a' => 'Photos of the staircase, approximate floor-to-floor height, preferred materials/finishes and your city help us respond accurately.'],
         ],
     ],
 

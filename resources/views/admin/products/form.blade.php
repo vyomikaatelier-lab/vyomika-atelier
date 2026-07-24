@@ -28,6 +28,15 @@
     <input type="text" name="slug" value="{{ old('slug', $product->slug ?? '') }}" placeholder="Slug (optional — auto from name)" class="w-full border px-3 py-2 rounded">
     <textarea name="description" placeholder="Description" rows="4" class="w-full border px-3 py-2 rounded">{{ old('description', $product->description ?? '') }}</textarea>
 
+    <details class="border rounded p-3 bg-gray-50">
+        <summary class="font-medium cursor-pointer text-sm">SEO</summary>
+        <div class="mt-3 space-y-2">
+            <input name="meta_title" value="{{ old('meta_title', $product->meta_title ?? '') }}" placeholder="SEO title (blank = product name)" class="w-full border px-3 py-2 rounded">
+            <textarea name="meta_description" rows="2" placeholder="Meta description" class="w-full border px-3 py-2 rounded">{{ old('meta_description', $product->meta_description ?? '') }}</textarea>
+            <input name="og_image" value="{{ old('og_image', $product->og_image ?? '') }}" placeholder="Open Graph image URL (blank = product image)" class="w-full border px-3 py-2 rounded">
+        </div>
+    </details>
+
     <div class="grid grid-cols-2 gap-4">
         <div>
             <label class="text-sm text-gray-600 block mb-1">Section</label>

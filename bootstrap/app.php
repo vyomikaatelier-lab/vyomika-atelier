@@ -18,6 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'checkout.customer' => \App\Http\Middleware\EnsureCheckoutCustomer::class,
         ]);
 
+        $middleware->append(\App\Http\Middleware\ApplyUrlRedirects::class);
+
         $middleware->web(append: [
             \App\Http\Middleware\CaptureAttribution::class,
             \App\Http\Middleware\SecurityHeaders::class,

@@ -2,7 +2,8 @@
 
 @php
     use App\Support\LandingPageContent;
-    use App\Support\MediaUrl;
+    use App\Support\Seo\JsonLd;
+    use App\Support\Seo\PageSeo;
 
     $page = LandingPageContent::withResolvedImages($page ?? []);
     $hero = $page['hero'] ?? [];
@@ -11,14 +12,24 @@
     $layoutItems = LandingPageContent::activeItems($page['layouts']['items'] ?? []);
     $whyItems = $page['why']['items'] ?? [];
     $quote = $page['quote'] ?? [];
+    $faqs = LandingPageContent::activeItems($page['faq']['items'] ?? []);
+    $processSteps = $page['process']['steps'] ?? [];
+    $pageSeo = PageSeo::make([
+        'title' => $page['meta_title'] ?? 'Railings — Vyomika Atelier',
+        'description' => $page['meta_description'] ?? '',
+        'canonical' => route('railings.index'),
+        'og_image' => $heroImg,
+        'primary_keyword' => $page['primary_keyword'] ?? null,
+    ]);
 @endphp
 
-@section('title', $page['meta_title'] ?? 'Railings — Vyomika Atelier')
+@section('title', $pageSeo['title'])
 
-@push('meta')
-<meta name="description" content="{{ $page['meta_description'] ?? '' }}">
-<link rel="canonical" href="{{ route('railings.index') }}">
+@if($faqs)
+@push('jsonld')
+{!! JsonLd::script(JsonLd::faqPage($faqs)) !!}
 @endpush
+@endif
 
 @section('content')
 
@@ -107,6 +118,38 @@
             <img src="{{ $page['why']['image'] }}" alt="{{ $page['why']['image_alt'] ?? 'Staircase railing fabrication' }}" loading="lazy">
         </div>
         @endif
+    </div>
+</section>
+@endif
+
+@if(!empty($processSteps))
+<section class="am-section am-section--cream">
+    <div class="am-container">
+        <h2 class="am-corten-section__title am-corten-section__title--center">{{ $page['process']['title'] ?? 'From Measurement to Installation' }}</h2>
+        <ol class="am-corten-process">
+            @foreach($processSteps as $i => $step)
+            <li class="am-corten-process__step">
+                <span class="am-corten-process__num">{{ $i + 1 }}</span>
+                <span class="am-corten-process__text">{{ is_array($step) ? ($step['title'] ?? $step['text'] ?? '') : $step }}</span>
+            </li>
+            @endforeach
+        </ol>
+    </div>
+</section>
+@endif
+
+@if(!empty($faqs))
+<section class="am-section am-section--white">
+    <div class="am-container am-corten-faq-wrap">
+        <h2 class="am-corten-section__title am-corten-section__title--center">{{ $page['faq']['title'] ?? 'FAQs' }}</h2>
+        <div class="am-corten-faq">
+            @foreach($faqs as $item)
+            <details class="am-corten-faq__item">
+                <summary>{{ $item['q'] ?? '' }}</summary>
+                <p>{{ $item['a'] ?? '' }}</p>
+            </details>
+            @endforeach
+        </div>
     </div>
 </section>
 @endif
