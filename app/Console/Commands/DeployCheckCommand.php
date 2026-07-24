@@ -15,7 +15,7 @@ class DeployCheckCommand extends Command
 
     public function handle(): int
     {
-        $commit = trim((string) @shell_exec('git log -1 --oneline 2>/dev/null'));
+        $commit = trim((string) @\shell_exec('git log -1 --oneline 2>/dev/null'));
 
         $this->line('Git commit: '.($commit !== '' ? $commit : '(not a git checkout)'));
         $this->line('Landing save fix: '.(method_exists(LandingPageContent::class, 'storeOverride') ? 'yes' : 'NO'));
