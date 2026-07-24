@@ -5,6 +5,9 @@
 @section('content')
 <div class="max-w-sm mx-auto mt-20">
     <h1 class="text-2xl font-semibold mb-6">Admin Login</h1>
+    @if(session('info'))
+        <div class="bg-blue-100 text-blue-800 px-4 py-2 rounded mb-4 text-sm">{{ session('info') }}</div>
+    @endif
     @if($errors->any())
         <div class="bg-red-100 text-red-700 px-4 py-2 rounded mb-4 text-sm">{{ $errors->first() }}</div>
     @endif

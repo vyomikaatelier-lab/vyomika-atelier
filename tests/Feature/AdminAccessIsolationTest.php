@@ -23,6 +23,26 @@ class AdminAccessIsolationTest extends TestCase
             ->assertRedirect(route('admin.login'));
     }
 
+    public function test_admin_login_page_hides_sidebar_without_panel_access(): void
+    {
+        $admin = User::factory()->create([
+            'is_admin' => true,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.login'))
+            ->assertOk()
+            ->assertDontSee('id="admin-sidebar"', false);
+
+        $customer = User::factory()->create(['is_admin' => false]);
+
+        $this->actingAs($customer)
+            ->get(route('admin.login'))
+            ->assertOk()
+            ->assertDontSee('id="admin-sidebar"', false);
+    }
+
     public function test_admin_login_grants_panel_access(): void
     {
         $admin = User::factory()->create([

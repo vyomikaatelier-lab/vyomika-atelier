@@ -8,8 +8,14 @@
     <link rel="stylesheet" href="{{ asset('css/responsive.css') }}">
 </head>
 <body class="bg-gray-50 text-gray-900">
+    @php
+        $adminPanelActive = auth()->check()
+            && auth()->user()->isAdmin()
+            && auth()->user()->is_active
+            && \App\Support\AdminAccess::verified(request());
+    @endphp
     <div class="admin-shell flex min-h-screen">
-        @auth
+        @if($adminPanelActive)
         <div class="admin-sidebar-backdrop" id="admin-sidebar-backdrop" aria-hidden="true"></div>
         <aside class="admin-sidebar w-60 bg-gray-900 text-white p-4 shrink-0 overflow-y-auto" id="admin-sidebar" aria-label="Admin navigation">
             <p class="font-semibold mb-6 text-sm tracking-wider">VYOMIKA ADMIN</p>
@@ -49,11 +55,11 @@
                 </form>
             </nav>
         </aside>
-        @endauth
+        @endif
         <main class="admin-main flex-1 p-8">
-            @auth
+            @if($adminPanelActive)
             <button type="button" class="admin-menu-btn mb-4" id="admin-menu-toggle" aria-expanded="false" aria-controls="admin-sidebar">Menu</button>
-            @endauth
+            @endif
             @if(session('success'))
                 <div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-4 text-sm">{{ session('success') }}</div>
             @endif
