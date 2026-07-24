@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Category;
 use App\Models\Product;
 
 /**
@@ -99,6 +100,45 @@ class ProductCatalog
         return self::$slugMap = $map;
     }
 
+    /** @return list<array{name: string, slug: string, section: string}> */
+    public static function canonicalCategories(): array
+    {
+        return [
+            ['name' => 'PVD Partitions', 'slug' => 'partitions', 'section' => 'studio'],
+            ['name' => 'Fluted Panels', 'slug' => 'fluted-panels', 'section' => 'studio'],
+            ['name' => 'Room Dividers', 'slug' => 'room-dividers', 'section' => 'studio'],
+            ['name' => 'Metal Furniture', 'slug' => 'metal-furniture', 'section' => 'studio'],
+            ['name' => 'Coffee Tables', 'slug' => 'coffee-tables', 'section' => 'shop'],
+            ['name' => 'Corner Tables', 'slug' => 'corner-tables', 'section' => 'shop'],
+            ['name' => 'Glass Tables', 'slug' => 'glass-tables', 'section' => 'shop'],
+            ['name' => 'Door Handles', 'slug' => 'door-handles', 'section' => 'shop'],
+            ['name' => 'Mirror Frames', 'slug' => 'mirror-frames', 'section' => 'shop'],
+            ['name' => 'Bespoke Metal Furniture', 'slug' => 'bespoke-metal-furniture', 'section' => 'shop'],
+            ['name' => 'Home Decor', 'slug' => 'home-decor', 'section' => 'shop'],
+            ['name' => 'Railings', 'slug' => 'railings', 'section' => 'railings'],
+        ];
+    }
+
+    public static function syncCanonicalCategories(): int
+    {
+        $synced = 0;
+
+        foreach (self::canonicalCategories() as $index => $cat) {
+            Category::query()->updateOrCreate(
+                ['slug' => $cat['slug']],
+                [
+                    'name' => $cat['name'],
+                    'section' => $cat['section'],
+                    'sort_order' => $index + 1,
+                    'is_active' => true,
+                ]
+            );
+            $synced++;
+        }
+
+        return $synced;
+    }
+
     /** @return list<string> Category slugs recognised as belonging to Studio. */
     public static function studioCategorySlugs(): array
     {
@@ -111,13 +151,8 @@ class ProductCatalog
         return ['railings'];
     }
 
-    /**
-     * Category slugs valid as a "parent" for a given product section.
-     * Used by the admin product form to filter category options by section.
-     *
-     * @return list<string>
-     */
-    public static function categorySlugsForSection(string $section): array
+    /** @return list<string> */
+    private static function hardcodedCategorySlugsForSection(string $section): array
     {
         return match ($section) {
             'shop' => StorefrontRoutes::shopCategorySlugs(),
@@ -127,11 +162,42 @@ class ProductCatalog
         };
     }
 
-    /** Which section (shop|studio|railings|null) a category slug belongs to, if known. */
-    public static function sectionForCategorySlug(string $categorySlug): ?string
+    /**
+     * Category slugs valid as a "parent" for a given product section.
+     * Used by the admin product form to filter category options by section.
+     *
+     * @return list<string>
+     */
+    public static function categorySlugsForSection(string $section): array
     {
-        foreach (['shop', 'studio', 'railings'] as $section) {
-            if (in_array($categorySlug, self::categorySlugsForSection($section), true)) {
+        $dbSlugs = Category::query()
+            ->where('is_active', true)
+            ->where('section', $section)
+            ->orderBy('sort_order')
+            ->pluck('slug')
+            ->all();
+
+        if ($dbSlugs !== []) {
+            return $dbSlugs;
+        }
+
+        return self::hardcodedCategorySlugsForSection($section);
+    }
+
+    /** Which section (shop|studio|railings|null) a category slug belongs to, if known. */
+    public static function sectionForCategorySlug(string $categorySlug, ?Category $category = null): ?string
+    {
+        if ($category?->section !== null && in_array($category->section, Product::SECTIONS, true)) {
+            return $category->section;
+        }
+
+        $dbSection = Category::query()->where('slug', $categorySlug)->value('section');
+        if ($dbSection !== null && in_array($dbSection, Product::SECTIONS, true)) {
+            return $dbSection;
+        }
+
+        foreach (Product::SECTIONS as $section) {
+            if (in_array($categorySlug, self::hardcodedCategorySlugsForSection($section), true)) {
                 return $section;
             }
         }

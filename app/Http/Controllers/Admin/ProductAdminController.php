@@ -123,8 +123,14 @@ class ProductAdminController extends Controller
         }
 
         if ($category) {
+            $categorySection = $category->resolvedSection();
             $knownSectionSlugs = ProductCatalog::categorySlugsForSection($section);
-            $categoryKnownSection = ProductCatalog::sectionForCategorySlug($category->slug);
+
+            if ($categorySection !== null && $categorySection !== $section) {
+                throw ValidationException::withMessages([
+                    'category_id' => "The selected parent category belongs to the {$categorySection} section, not {$section}.",
+                ]);
+            }
 
             if ($knownSectionSlugs !== [] && ! in_array($category->slug, $knownSectionSlugs, true)) {
                 throw ValidationException::withMessages([
@@ -132,7 +138,7 @@ class ProductAdminController extends Controller
                 ]);
             }
 
-            if ($knownSectionSlugs === [] && $categoryKnownSection === null
+            if ($knownSectionSlugs === [] && $categorySection === null
                 && ProductCatalog::sectionFor($productSlug, $category->slug) === 'unknown') {
                 throw ValidationException::withMessages([
                     'category_id' => 'Choose a category that is recognised for the storefront (Shop, Studio, or Railings).',
@@ -163,7 +169,7 @@ class ProductAdminController extends Controller
     {
         return $categories
             ->mapWithKeys(fn (Category $category) => [
-                $category->id => ProductCatalog::sectionForCategorySlug($category->slug) ?? 'other',
+                $category->id => $category->resolvedSection() ?? 'other',
             ])
             ->all();
     }

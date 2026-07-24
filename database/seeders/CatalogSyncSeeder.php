@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Service;
 use App\Models\ServiceDesign;
 use App\Support\CatalogData;
+use App\Support\ProductCatalog;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Schema;
 
@@ -21,29 +22,7 @@ class CatalogSyncSeeder extends Seeder
 
     private function syncCategories(): void
     {
-        $categories = [
-            ['name' => 'PVD Partitions', 'slug' => 'partitions'],
-            ['name' => 'Fluted Panels', 'slug' => 'fluted-panels'],
-            ['name' => 'Room Dividers', 'slug' => 'room-dividers'],
-            ['name' => 'Coffee Tables', 'slug' => 'coffee-tables'],
-            ['name' => 'Corner Tables', 'slug' => 'corner-tables'],
-            ['name' => 'Glass Tables', 'slug' => 'glass-tables'],
-            ['name' => 'Door Handles', 'slug' => 'door-handles'],
-            ['name' => 'Mirror Frames', 'slug' => 'mirror-frames'],
-            ['name' => 'Metal Furniture', 'slug' => 'metal-furniture'],
-            ['name' => 'Bespoke Metal Furniture', 'slug' => 'bespoke-metal-furniture'],
-        ];
-
-        foreach ($categories as $index => $cat) {
-            Category::query()->firstOrCreate(
-                ['slug' => $cat['slug']],
-                [
-                    'name' => $cat['name'],
-                    'sort_order' => $index + 1,
-                    'is_active' => true,
-                ]
-            );
-        }
+        ProductCatalog::syncCanonicalCategories();
     }
 
     private function syncProducts(): void

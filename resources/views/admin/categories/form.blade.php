@@ -6,12 +6,29 @@
     @csrf
     @if(isset($category)) @method('PUT') @endif
     <div><label class="block text-sm mb-1">Name</label><input name="name" value="{{ old('name', $category->name ?? '') }}" required class="w-full border px-3 py-2 rounded"></div>
+    <div>
+        <label class="block text-sm mb-1">Storefront section <span class="text-red-600">*</span></label>
+        <select name="section" required class="w-full border px-3 py-2 rounded">
+            <option value="">Choose section…</option>
+            @foreach($sectionLabels as $value => $label)
+                <option value="{{ $value }}" @selected(old('section', $category->section ?? '') === $value)>{{ $label }}</option>
+            @endforeach
+        </select>
+        <ul class="text-xs text-gray-500 mt-2 space-y-1 list-disc list-inside">
+            <li><strong>Shop</strong> — checkout products (tables, mirror frames, door handles, home decor)</li>
+            <li><strong>Studio</strong> — enquiry/calculator products (partitions, fluted panels, metal furniture)</li>
+            <li><strong>Railings</strong> — quotation-only stair and balcony railings</li>
+        </ul>
+    </div>
     @if(isset($category))
     <div>
         <label class="block text-sm mb-1">Slug</label>
         <input value="{{ $category->slug }}" readonly class="w-full border px-3 py-2 rounded bg-gray-100 text-gray-600">
-        @php $mappedSection = \App\Support\ProductCatalog::sectionForCategorySlug($category->slug); @endphp
-        <p class="text-xs text-gray-500 mt-1">Storefront section: <strong>{{ $mappedSection ? ucfirst($mappedSection) : 'Unmapped' }}</strong> — set via slug mapping in ProductCatalog.</p>
+        @if($url = $category->storefrontUrl())
+        <p class="text-xs text-gray-500 mt-1">Storefront preview: <a href="{{ $url }}" target="_blank" rel="noopener" class="text-blue-600">{{ $category->storefrontLinkLabel() }}</a></p>
+        @else
+        <p class="text-xs text-gray-500 mt-1">Storefront: {{ $category->storefrontLinkLabel() }}</p>
+        @endif
     </div>
     @endif
     <div><label class="block text-sm mb-1">Description</label><textarea name="description" rows="3" class="w-full border px-3 py-2 rounded">{{ old('description', $category->description ?? '') }}</textarea></div>

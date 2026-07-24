@@ -17,6 +17,7 @@ class StorefrontRoutes
             'glass-tables',
             'door-handles',
             'bespoke-metal-furniture',
+            'home-decor',
         ];
     }
 
@@ -69,6 +70,7 @@ class StorefrontRoutes
             'glass-tables' => 'Glass Tables',
             'door-handles' => 'Door Handles',
             'bespoke-metal-furniture' => 'Bespoke Metal Furniture',
+            'home-decor' => 'Home Decor',
         ];
     }
 

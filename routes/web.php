@@ -193,6 +193,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('leads/{lead}/attachment', [LeadAdminController::class, 'downloadAttachment'])->name('leads.attachment');
 
         Route::resource('categories', CategoryAdminController::class)->except(['show']);
+        Route::post('categories/sync', [CategoryAdminController::class, 'sync'])->name('categories.sync');
         Route::post('categories/reorder', [CategoryAdminController::class, 'reorder'])->name('categories.reorder');
         Route::post('categories/{category}/move/{direction}', [CategoryAdminController::class, 'move'])->name('categories.move');
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\Concerns\HandlesAdminUploads;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
+use App\Support\ProductCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -13,6 +14,13 @@ use Illuminate\Validation\Rule;
 class CategoryAdminController extends Controller
 {
     use HandlesAdminUploads;
+
+    /** @var array<string, string> */
+    private const SECTION_LABELS = [
+        'shop' => 'Shop',
+        'studio' => 'Studio',
+        'railings' => 'Railings',
+    ];
 
     public function index(Request $request)
     {
@@ -30,14 +38,23 @@ class CategoryAdminController extends Controller
             $query->where('is_active', $request->status === 'active');
         }
 
+        if ($request->filled('section')) {
+            $query->where('section', $request->string('section'));
+        }
+
         $categories = $query->withCount('products')->paginate(20)->withQueryString();
 
-        return view('admin.categories.index', compact('categories'));
+        return view('admin.categories.index', [
+            'categories' => $categories,
+            'sectionLabels' => self::SECTION_LABELS,
+        ]);
     }
 
     public function create()
     {
-        return view('admin.categories.form');
+        return view('admin.categories.form', [
+            'sectionLabels' => self::SECTION_LABELS,
+        ]);
     }
 
     public function store(Request $request)
@@ -55,7 +72,10 @@ class CategoryAdminController extends Controller
 
     public function edit(Category $category)
     {
-        return view('admin.categories.form', compact('category'));
+        return view('admin.categories.form', [
+            'category' => $category,
+            'sectionLabels' => self::SECTION_LABELS,
+        ]);
     }
 
     public function update(Request $request, Category $category)
@@ -69,6 +89,15 @@ class CategoryAdminController extends Controller
         $category->update($validated);
 
         return redirect()->route('admin.categories.index')->with('success', 'Category updated.');
+    }
+
+    public function sync(Request $request)
+    {
+        $synced = ProductCatalog::syncCanonicalCategories();
+
+        return redirect()
+            ->route('admin.categories.index')
+            ->with('success', "Synced {$synced} canonical categories from catalog defaults.");
     }
 
     public function destroy(Request $request, Category $category)
@@ -133,6 +162,7 @@ class CategoryAdminController extends Controller
     {
         return $request->validate([
             'name' => 'required|string|max:255',
+            'section' => 'required|in:shop,studio,railings',
             'description' => 'nullable|string',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
