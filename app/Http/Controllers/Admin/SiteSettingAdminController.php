@@ -218,6 +218,8 @@ class SiteSettingAdminController extends Controller
                 'title' => $stored['title'] ?? $defaults['title'] ?? '',
                 'description' => $stored['description'] ?? $defaults['description'] ?? '',
                 'image' => $stored['image'] ?? $defaults['image'] ?? '',
+                'image_mobile' => $stored['image_mobile'] ?? $defaults['image_mobile'] ?? '',
+                'image_tablet' => $stored['image_tablet'] ?? $defaults['image_tablet'] ?? '',
                 'cta_label' => $stored['cta_label'] ?? $defaults['cta_label'] ?? '',
                 'cta_href' => $stored['cta_href'] ?? $defaults['cta_href'] ?? '',
             ];
@@ -237,6 +239,12 @@ class SiteSettingAdminController extends Controller
             $rules["{$prefix}.image"] = 'nullable|string|max:500';
             $rules["{$prefix}.image_file"] = 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120';
             $rules["{$prefix}.image_remove"] = 'nullable|boolean';
+            $rules["{$prefix}.image_mobile"] = 'nullable|string|max:500';
+            $rules["{$prefix}.image_mobile_file"] = 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120';
+            $rules["{$prefix}.image_mobile_remove"] = 'nullable|boolean';
+            $rules["{$prefix}.image_tablet"] = 'nullable|string|max:500';
+            $rules["{$prefix}.image_tablet_file"] = 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120';
+            $rules["{$prefix}.image_tablet_remove"] = 'nullable|boolean';
             $rules["{$prefix}.cta_label"] = 'nullable|string|max:120';
             $rules["{$prefix}.cta_href"] = 'nullable|string|max:500';
         }
@@ -263,25 +271,41 @@ class SiteSettingAdminController extends Controller
             }
 
             $currentImage = $stored['image'] ?? $defaults['image'] ?? null;
-            $image = $this->resolveImageField(
-                $request,
-                "{$prefix}.image_file",
-                "{$prefix}.image",
-                $currentImage,
-                'hero'
-            );
 
             $slides[] = array_filter([
                 'kicker' => $request->input("{$prefix}.kicker"),
                 'title' => $request->input("{$prefix}.title"),
                 'description' => $request->input("{$prefix}.description"),
-                'image' => $image,
+                'image' => $this->resolveHeroSlideImage($request, $prefix, 'image', $currentImage),
+                'image_mobile' => $this->resolveHeroSlideImage(
+                    $request,
+                    $prefix,
+                    'image_mobile',
+                    $stored['image_mobile'] ?? $defaults['image_mobile'] ?? null
+                ),
+                'image_tablet' => $this->resolveHeroSlideImage(
+                    $request,
+                    $prefix,
+                    'image_tablet',
+                    $stored['image_tablet'] ?? $defaults['image_tablet'] ?? null
+                ),
                 'cta_label' => $request->input("{$prefix}.cta_label"),
                 'cta_href' => $request->input("{$prefix}.cta_href"),
             ], fn ($value) => filled($value));
         }
 
         return $slides;
+    }
+
+    private function resolveHeroSlideImage(Request $request, string $prefix, string $field, ?string $current): ?string
+    {
+        return $this->resolveImageField(
+            $request,
+            "{$prefix}.{$field}_file",
+            "{$prefix}.{$field}",
+            $current,
+            'hero'
+        );
     }
 
     private function normalizeUrl(?string $value): ?string

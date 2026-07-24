@@ -36,7 +36,7 @@
                 <a href="{{ url($slide['cta_href'] ?? '/shop') }}" class="am-btn am-btn--primary am-btn--lg">{{ $slide['cta_label'] ?? 'Shop Now' }}</a>
             </div>
             <div class="am-hero__image">
-                <img src="{{ $slide['image'] ?? '' }}" alt="{{ $slide['title'] ?? '' }}" @if($i === 0) fetchpriority="high" @else loading="lazy" @endif>
+                @include('partials.am-hero-picture', ['slide' => $slide, 'priority' => $i === 0])
             </div>
         </div>
         @endforeach

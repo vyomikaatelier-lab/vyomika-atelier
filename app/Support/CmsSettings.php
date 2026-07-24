@@ -127,8 +127,10 @@ class CmsSettings
             }
         }
 
-        if (filled($override['image'] ?? null)) {
-            $slide['image'] = MediaUrl::resolve($override['image']) ?? $override['image'];
+        foreach (['image', 'image_mobile', 'image_tablet'] as $imageField) {
+            if (filled($override[$imageField] ?? null)) {
+                $slide[$imageField] = MediaUrl::resolve($override[$imageField]) ?? $override[$imageField];
+            }
         }
 
         return $slide;

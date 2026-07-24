@@ -46,18 +46,11 @@
     <section class="space-y-4">
         <div>
             <h2 class="font-medium">Homepage hero carousel</h2>
-            <p class="text-xs text-gray-500 mt-1">Edit all {{ count($heroSlides) }} homepage hero slides. Upload a new image or paste an image URL for each slide.</p>
+            <p class="text-xs text-gray-500 mt-1">Edit all {{ count($heroSlides) }} homepage hero slides. Upload separate images for desktop, tablet/iPad, and mobile — each device shows the best-matching crop.</p>
         </div>
         @foreach($heroSlides as $index => $slide)
-            @php
-                $slideImage = old("hero_slides.{$index}.image", $slide['image'] ?? '');
-                $slidePreview = $slideImage ? (\App\Support\MediaUrl::resolve($slideImage) ?? $slideImage) : null;
-            @endphp
             <div class="border rounded p-4 space-y-3 bg-gray-50">
                 <h3 class="font-medium text-sm">Slide {{ $index + 1 }}</h3>
-                @if($slidePreview)
-                    <img src="{{ $slidePreview }}" alt="" class="w-full max-w-md h-40 object-cover rounded border bg-white">
-                @endif
                 <input name="hero_slides[{{ $index }}][kicker]" value="{{ old("hero_slides.{$index}.kicker", $slide['kicker'] ?? '') }}" placeholder="Eyebrow / kicker (e.g. LIMITED TIME OFFER)" class="w-full border px-3 py-2 rounded bg-white">
                 <input name="hero_slides[{{ $index }}][title]" value="{{ old("hero_slides.{$index}.title", $slide['title'] ?? '') }}" placeholder="Hero title" class="w-full border px-3 py-2 rounded bg-white">
                 <textarea name="hero_slides[{{ $index }}][description]" rows="2" placeholder="Hero description" class="w-full border px-3 py-2 rounded bg-white">{{ old("hero_slides.{$index}.description", $slide['description'] ?? '') }}</textarea>
@@ -65,17 +58,11 @@
                     <input name="hero_slides[{{ $index }}][cta_label]" value="{{ old("hero_slides.{$index}.cta_label", $slide['cta_label'] ?? '') }}" placeholder="Button label" class="w-full border px-3 py-2 rounded bg-white">
                     <input name="hero_slides[{{ $index }}][cta_href]" value="{{ old("hero_slides.{$index}.cta_href", $slide['cta_href'] ?? '') }}" placeholder="Button link (/shop)" class="w-full border px-3 py-2 rounded bg-white">
                 </div>
-                <input name="hero_slides[{{ $index }}][image]" value="{{ $slideImage }}" placeholder="Hero image URL" class="w-full border px-3 py-2 rounded bg-white">
-                <div>
-                    <label class="block text-sm mb-1">Upload hero image</label>
-                    <input type="file" name="hero_slides[{{ $index }}][image_file]" accept="image/jpeg,image/png,image/webp" class="w-full border px-3 py-2 rounded bg-white">
+                <div class="grid lg:grid-cols-3 gap-3">
+                    @include('admin.settings.partials.hero-slide-image', ['index' => $index, 'slide' => $slide, 'variant' => 'desktop'])
+                    @include('admin.settings.partials.hero-slide-image', ['index' => $index, 'slide' => $slide, 'variant' => 'tablet'])
+                    @include('admin.settings.partials.hero-slide-image', ['index' => $index, 'slide' => $slide, 'variant' => 'mobile'])
                 </div>
-                @if($slidePreview)
-                    <label class="flex items-center gap-2 text-sm text-gray-600">
-                        <input type="checkbox" name="hero_slides[{{ $index }}][image_remove]" value="1" @checked(old("hero_slides.{$index}.image_remove"))>
-                        Remove current image
-                    </label>
-                @endif
             </div>
         @endforeach
     </section>
