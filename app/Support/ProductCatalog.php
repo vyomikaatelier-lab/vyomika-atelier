@@ -139,6 +139,84 @@ class ProductCatalog
         return $synced;
     }
 
+    public static function assignUnclassifiedProducts(): int
+    {
+        $updated = 0;
+
+        Product::query()
+            ->with('category')
+            ->where(function ($query) {
+                $query->whereNull('category_id')
+                    ->orWhere(fn ($q) => $q->unclassified());
+            })
+            ->orderBy('slug')
+            ->each(function (Product $product) use (&$updated): void {
+                $categorySlug = self::categorySlugForProduct($product->slug)
+                    ?? self::inferCategorySlugForProduct($product);
+
+                if ($categorySlug === null) {
+                    return;
+                }
+
+                $category = Category::query()->where('slug', $categorySlug)->first();
+                if ($category === null) {
+                    return;
+                }
+
+                $resolvedSection = $category->resolvedSection();
+                $changes = [];
+
+                if ($product->category_id !== $category->id) {
+                    $changes['category_id'] = $category->id;
+                }
+
+                if ($resolvedSection !== null && $product->section !== $resolvedSection) {
+                    $changes['section'] = $resolvedSection;
+                    $changes['purchase_mode'] = Product::SECTION_PURCHASE_MODE_MAP[$resolvedSection] ?? null;
+                    $changes['pricing_type'] = match ($resolvedSection) {
+                        Product::SECTION_SHOP => Product::PRICING_FIXED,
+                        Product::SECTION_STUDIO => Product::PRICING_SQUARE_FOOT,
+                        Product::SECTION_RAILINGS => Product::PRICING_QUOTATION_ONLY,
+                        default => null,
+                    };
+                }
+
+                if ($changes !== []) {
+                    $product->update($changes);
+                    $updated++;
+                }
+            });
+
+        return $updated;
+    }
+
+    private static function inferCategorySlugForProduct(Product $product): ?string
+    {
+        $section = self::inferSectionFromSlug($product->slug);
+
+        if ($section === 'railings') {
+            return 'railings';
+        }
+
+        if ($section === 'shop') {
+            return self::inferShopCategoryFromSlug($product->slug);
+        }
+
+        if ($section === 'studio') {
+            if (preg_match('/(partition|fluted|room-divider)/', $product->slug)) {
+                return match (true) {
+                    str_contains($product->slug, 'fluted') => 'fluted-panels',
+                    str_contains($product->slug, 'room-divider') || str_contains($product->slug, 'divider') => 'room-dividers',
+                    default => 'partitions',
+                };
+            }
+
+            return 'metal-furniture';
+        }
+
+        return $product->category?->slug;
+    }
+
     /** @return list<string> Category slugs recognised as belonging to Studio. */
     public static function studioCategorySlugs(): array
     {

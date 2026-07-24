@@ -43,6 +43,25 @@ class AdminAccessIsolationTest extends TestCase
             ->assertDontSee('id="admin-sidebar"', false);
     }
 
+    public function test_customer_login_clears_admin_panel_access_flag(): void
+    {
+        $customer = User::factory()->create([
+            'is_admin' => false,
+            'is_active' => true,
+            'password' => 'password',
+        ]);
+
+        $this->withSession([AdminAccess::SESSION_KEY => true])
+            ->post(route('account.login.email'), [
+                'email' => $customer->email,
+                'password' => 'password',
+            ])
+            ->assertRedirect(route('account'));
+
+        $this->get(route('admin.dashboard'))
+            ->assertRedirect(route('admin.login'));
+    }
+
     public function test_admin_login_grants_panel_access(): void
     {
         $admin = User::factory()->create([

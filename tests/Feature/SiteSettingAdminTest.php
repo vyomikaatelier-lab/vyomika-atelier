@@ -14,7 +14,7 @@ class SiteSettingAdminTest extends TestCase
     {
         $admin = User::factory()->admin()->create();
 
-        $response = $this->actingAs($admin)->post(route('admin.settings.update'), [
+        $response = $this->actingAsAdmin($admin)->post(route('admin.settings.update'), [
             'brand_name' => 'Vyomika Atelier LLP',
             'phone' => '+91 98188 91878',
             'email' => 'hello@vyomikaatelier.com',

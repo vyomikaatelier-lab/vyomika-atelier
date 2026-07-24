@@ -267,7 +267,7 @@ class FormProtectionTest extends TestCase
             'lead_score' => 5,
         ]);
 
-        $this->actingAs($admin)->post(route('admin.leads.false-positive', $lead));
+        $this->actingAsAdmin($admin)->post(route('admin.leads.false-positive', $lead));
         $lead->refresh();
 
         $this->assertSame(LeadProtectionStatus::VERIFIED, $lead->protection_status);
@@ -316,7 +316,7 @@ class FormProtectionTest extends TestCase
         ]);
 
         $this->get(route('admin.leads.attachment', $lead))->assertRedirect();
-        $this->actingAs(User::factory()->admin()->create())->get(route('admin.leads.attachment', $lead))->assertOk();
+        $this->actingAsAdmin()->get(route('admin.leads.attachment', $lead))->assertOk();
     }
 
     public function test_notification_failure_does_not_lose_lead(): void
@@ -341,7 +341,7 @@ class FormProtectionTest extends TestCase
             'risk_score' => 45,
         ]);
 
-        $this->actingAs(User::factory()->admin()->create())->get(route('admin.leads.show', $lead))->assertOk();
+        $this->actingAsAdmin()->get(route('admin.leads.show', $lead))->assertOk();
     }
 
     public function test_vendor_form_excluded_from_sales_queue(): void

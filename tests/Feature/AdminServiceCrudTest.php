@@ -16,7 +16,7 @@ class AdminServiceCrudTest extends TestCase
     {
         $admin = User::factory()->admin()->create();
 
-        $response = $this->actingAs($admin)->post(route('admin.services.store'), [
+        $response = $this->actingAsAdmin($admin)->post(route('admin.services.store'), [
             'name' => 'Test Partitions',
             'slug' => 'test-partitions',
             'summary' => 'Custom partitions',
@@ -59,7 +59,7 @@ class AdminServiceCrudTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->actingAs($admin)->put(route('admin.services.update', $service), [
+        $this->actingAsAdmin($admin)->put(route('admin.services.update', $service), [
             'name' => 'Updated Service',
             'slug' => 'updated-service',
             'lead_form' => 'inline',
@@ -71,7 +71,7 @@ class AdminServiceCrudTest extends TestCase
         $this->assertSame('Updated Service', $service->name);
         $this->assertSame('updated-service', $service->slug);
 
-        $this->actingAs($admin)->delete(route('admin.services.destroy', $service))
+        $this->actingAsAdmin($admin)->delete(route('admin.services.destroy', $service))
             ->assertRedirect(route('admin.services.index'));
 
         $this->assertDatabaseMissing('services', ['id' => $service->id]);

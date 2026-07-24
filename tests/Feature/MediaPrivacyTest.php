@@ -56,7 +56,7 @@ class MediaPrivacyTest extends TestCase
         $lead = $this->leadWithPrivateAttachment();
         $admin = User::factory()->admin()->create();
 
-        $response = $this->actingAs($admin)->get(route('admin.leads.attachment', $lead));
+        $response = $this->actingAsAdmin($admin)->get(route('admin.leads.attachment', $lead));
 
         $response->assertOk();
     }

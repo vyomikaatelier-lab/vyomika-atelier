@@ -6,7 +6,12 @@
     <div class="flex gap-2">
         <form action="{{ route('admin.categories.sync') }}" method="POST" class="inline">
             @csrf
-            <button type="submit" class="border px-4 py-2 rounded text-sm">Sync canonical categories</button>
+            <button type="submit" class="border px-4 py-2 rounded text-sm">Sync categories</button>
+        </form>
+        <form action="{{ route('admin.categories.sync') }}" method="POST" class="inline">
+            @csrf
+            <input type="hidden" name="assign_products" value="1">
+            <button type="submit" class="border px-4 py-2 rounded text-sm">Sync + assign products</button>
         </form>
         <a href="{{ route('admin.categories.create') }}" class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Add Category</a>
     </div>
@@ -15,7 +20,7 @@
 <div class="mb-4 p-4 bg-blue-50 border border-blue-100 rounded text-sm text-blue-900">
     <p class="font-medium mb-1">Flat taxonomy — no nested parent categories</p>
     <p>Each category is a top-level parent linked to one storefront section: <strong>Shop</strong>, <strong>Studio</strong>, or <strong>Railings</strong>. Products pick a category and section; Studio header navigation uses Services separately.</p>
-    <p class="mt-1 text-blue-800">CLI: <code class="bg-white px-1 rounded">php artisan catalog:sync-categories --assign-products</code></p>
+    <p class="mt-1 text-blue-800">Use <strong>Sync + assign products</strong> to link unclassified products to categories. CLI equivalent: <code class="bg-white px-1 rounded">php artisan catalog:sync-categories --assign-products</code></p>
 </div>
 
 <form method="GET" class="mb-4 flex flex-wrap gap-2 text-sm">

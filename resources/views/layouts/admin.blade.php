@@ -60,6 +60,9 @@
             @if($adminPanelActive)
             <button type="button" class="admin-menu-btn mb-4" id="admin-menu-toggle" aria-expanded="false" aria-controls="admin-sidebar">Menu</button>
             @endif
+            @if(session('info'))
+                <div class="bg-blue-100 text-blue-800 px-4 py-2 rounded mb-4 text-sm">{{ session('info') }}</div>
+            @endif
             @if(session('success'))
                 <div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-4 text-sm">{{ session('success') }}</div>
             @endif

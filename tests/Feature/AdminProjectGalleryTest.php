@@ -19,7 +19,7 @@ class AdminProjectGalleryTest extends TestCase
 
         $admin = User::factory()->admin()->create();
 
-        $response = $this->actingAs($admin)->post(route('admin.projects.store'), [
+        $response = $this->actingAsAdmin($admin)->post(route('admin.projects.store'), [
             'title' => 'Gallery Test Project',
             'slug' => 'gallery-test-project',
             'gallery_files' => [
@@ -56,7 +56,7 @@ class AdminProjectGalleryTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->actingAs($admin)->delete(route('admin.projects.destroy', $project))
+        $this->actingAsAdmin($admin)->delete(route('admin.projects.destroy', $project))
             ->assertRedirect(route('admin.projects.index'));
 
         Storage::disk('public')->assertMissing($path);

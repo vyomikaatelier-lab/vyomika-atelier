@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
-use App\Support\AdminAccess;
 use App\Support\ProductCatalog;
 use Database\Seeders\CatalogSyncSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -69,9 +68,7 @@ class CategorySectionTest extends TestCase
             'section' => 'shop',
         ]);
 
-        $response = $this->actingAs($admin)
-            ->withSession([AdminAccess::SESSION_KEY => true])
-            ->post(route('admin.products.store'), [
+        $response = $this->actingAsAdmin($admin)->post(route('admin.products.store'), [
             'category_id' => $category->id,
             'name' => 'Test Mirror Frame',
             'slug' => 'test-mirror-frame',
@@ -99,9 +96,7 @@ class CategorySectionTest extends TestCase
             'section' => 'studio',
         ]);
 
-        $response = $this->actingAs($admin)
-            ->withSession([AdminAccess::SESSION_KEY => true])
-            ->post(route('admin.products.store'), [
+        $response = $this->actingAsAdmin($admin)->post(route('admin.products.store'), [
             'category_id' => $category->id,
             'name' => 'Wrong Section Product',
             'slug' => 'wrong-section-product',
