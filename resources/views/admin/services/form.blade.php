@@ -2,8 +2,12 @@
 @section('title', isset($service) ? 'Edit Service' : 'Add Service')
 @section('content')
 <h1 class="text-2xl font-semibold mb-6">{{ isset($service) ? 'Edit' : 'Add' }} Service</h1>
+@if(request('saved') || session('success'))
+<div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-4 text-sm">{{ session('success') ?: 'Service saved successfully.' }}</div>
+@endif
 <form method="POST" action="{{ isset($service) ? route('admin.services.update', $service) : route('admin.services.store') }}" enctype="multipart/form-data" class="bg-white p-6 rounded shadow space-y-4 max-w-3xl">
     @csrf @if(isset($service)) @method('PUT') @endif
+    <input type="hidden" name="_page_save" value="1">
     <div class="grid md:grid-cols-2 gap-4">
         <div><label class="block text-sm mb-1">Name</label><input name="name" value="{{ old('name', $service->name ?? '') }}" required class="w-full border px-3 py-2 rounded"></div>
         <div><label class="block text-sm mb-1">Slug</label><input name="slug" value="{{ old('slug', $service->slug ?? '') }}" placeholder="Auto from name" class="w-full border px-3 py-2 rounded"></div>
@@ -85,6 +89,6 @@
         </div>
     </div>
 
-    <button class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Save</button>
+    <button type="submit" class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Save</button>
 </form>
 @endsection

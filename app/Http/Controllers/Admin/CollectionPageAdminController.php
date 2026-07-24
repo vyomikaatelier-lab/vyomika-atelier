@@ -8,6 +8,7 @@ use App\Models\SiteSetting;
 use App\Support\CollectionContent;
 use App\Support\ResponsiveHero;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class CollectionPageAdminController extends Controller
 {
@@ -34,19 +35,20 @@ class CollectionPageAdminController extends Controller
         abort_unless(in_array($slug, CollectionContent::slugs(), true), 404);
 
         $page = CollectionContent::page($slug) ?? [];
+        $stored = $this->storedPage($slug);
 
-        return view('admin.collection-pages.form', compact('slug', 'page'));
+        return view('admin.collection-pages.form', compact('slug', 'page', 'stored'));
     }
 
     public function update(Request $request, string $slug)
     {
         abort_unless(in_array($slug, CollectionContent::slugs(), true), 404);
 
-        if (! \Illuminate\Support\Facades\Schema::hasTable('site_settings')) {
+        if (! Schema::hasTable('site_settings')) {
             return back()->with('error', 'Database table site_settings is missing. Run: php artisan migrate --force');
         }
 
-        if ($this->multipartPayloadFailed($request, 'hero_title')) {
+        if ($this->multipartPayloadFailed($request)) {
             return back()->with('error', 'Upload too large for the server limit. Save text changes first, then upload one image at a time (max 5 MB each).');
         }
 
@@ -60,29 +62,56 @@ class CollectionPageAdminController extends Controller
             'gallery_title' => 'nullable|string|max:255',
         ], ResponsiveHero::flatValidationRules('hero')));
 
-        $pages = SiteSetting::getValue('collection_pages', []) ?? [];
-        $storedHero = data_get($pages, "{$slug}.hero", data_get(CollectionContent::page($slug), 'hero', []));
+        $storedHero = data_get($this->storedPage($slug), 'hero', data_get(CollectionContent::page($slug), 'hero', []));
         $storedHero = is_array($storedHero) ? $storedHero : [];
 
         $heroImages = $this->persistResponsiveHeroFlatFields($request, 'hero', $storedHero, 'collections');
 
-        $override = array_filter([
+        $hero = array_merge($storedHero, [
+            'title' => $validated['hero_title'] ?? null,
+            'subtitle' => $validated['hero_subtitle'] ?? null,
+        ], $heroImages);
+
+        foreach (ResponsiveHero::storageKeys() as $storageKey) {
+            $flatField = ResponsiveHero::flatFieldForStorageKey('hero', $storageKey);
+            if ($request->boolean($flatField.'_remove')) {
+                unset($hero[$storageKey]);
+            }
+        }
+
+        $pages = SiteSetting::getValue('collection_pages', []) ?? [];
+        $pages[$slug] = [
             'meta_title' => $validated['meta_title'] ?? null,
             'meta_description' => $validated['meta_description'] ?? null,
             'gallery_title' => $validated['gallery_title'] ?? null,
-            'hero' => array_filter(array_merge([
-                'title' => $validated['hero_title'] ?? null,
-                'subtitle' => $validated['hero_subtitle'] ?? null,
-            ], $heroImages)),
-            'intro' => array_filter([
+            'hero' => $hero,
+            'intro' => [
                 'title' => $validated['intro_title'] ?? null,
                 'body' => $validated['intro_body'] ?? null,
-            ]),
-        ], fn ($value) => $value !== null && $value !== []);
+            ],
+        ];
 
-        $pages[$slug] = array_replace_recursive($pages[$slug] ?? [], $override);
-        SiteSetting::setValue('collection_pages', $pages);
+        try {
+            SiteSetting::setValue('collection_pages', $pages);
+        } catch (\Throwable $e) {
+            report($e);
 
-        return redirect()->route('admin.collection-pages.index')->with('success', 'Collection page updated.');
+            return back()
+                ->withInput()
+                ->with('error', 'Could not save collection page. ('.$e->getMessage().')');
+        }
+
+        return redirect()
+            ->route('admin.collection-pages.edit', ['slug' => $slug, 'saved' => 1])
+            ->with('success', ucfirst(str_replace('-', ' ', $slug)).' updated. Saved hero title: "'.($hero['title'] ?: '—').'"');
+    }
+
+    /** @return array<string, mixed> */
+    private function storedPage(string $slug): array
+    {
+        $pages = SiteSetting::getValue('collection_pages', []) ?? [];
+        $stored = $pages[$slug] ?? null;
+
+        return is_array($stored) ? $stored : [];
     }
 }

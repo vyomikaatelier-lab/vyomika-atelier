@@ -124,7 +124,7 @@ trait HandlesAdminUploads
         return $urls ?: null;
     }
 
-    protected function multipartPayloadFailed(Request $request, string $probeField = '_landing_save'): bool
+    protected function multipartPayloadFailed(Request $request, ?string $probeField = null): bool
     {
         if (! $request->isMethod('POST') && ! $request->isMethod('PUT')) {
             return false;
@@ -136,8 +136,15 @@ trait HandlesAdminUploads
         }
 
         $payload = $request->except(['_token', '_method']);
+        $probes = $probeField ? [$probeField] : ['_page_save', '_landing_save'];
 
-        return ! $request->has($probeField) && $payload === [];
+        foreach ($probes as $field) {
+            if ($request->has($field)) {
+                return false;
+            }
+        }
+
+        return $payload === [];
     }
 
     /** @return array<int, string>|null */

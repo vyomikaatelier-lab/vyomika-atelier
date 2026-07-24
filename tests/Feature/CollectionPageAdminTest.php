@@ -24,7 +24,7 @@ class CollectionPageAdminTest extends TestCase
             'hero_title' => 'Coffee Tables Hero',
             'hero_image_file' => $desktop,
             'hero_image_tablet_file' => $tablet,
-        ])->assertRedirect(route('admin.collection-pages.index'));
+        ])->assertRedirect(route('admin.collection-pages.edit', ['slug' => 'coffee-tables', 'saved' => 1]));
 
         $stored = data_get(SiteSetting::getValue('collection_pages', []), 'coffee-tables.hero');
         $this->assertSame('Coffee Tables Hero', $stored['title'] ?? null);

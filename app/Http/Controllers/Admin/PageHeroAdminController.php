@@ -8,6 +8,7 @@ use App\Models\SiteSetting;
 use App\Support\PageHeroContent;
 use App\Support\ResponsiveHero;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class PageHeroAdminController extends Controller
 {
@@ -36,21 +37,22 @@ class PageHeroAdminController extends Controller
         abort_unless(in_array($slug, PageHeroContent::slugs(), true), 404);
 
         $page = PageHeroContent::hero($slug);
+        $stored = $this->storedHero($slug);
         $label = PageHeroContent::label($slug);
         $previewUrl = PageHeroContent::previewUrl($slug);
 
-        return view('admin.page-heroes.form', compact('slug', 'page', 'label', 'previewUrl'));
+        return view('admin.page-heroes.form', compact('slug', 'page', 'stored', 'label', 'previewUrl'));
     }
 
     public function update(Request $request, string $slug)
     {
         abort_unless(in_array($slug, PageHeroContent::slugs(), true), 404);
 
-        if (! \Illuminate\Support\Facades\Schema::hasTable('site_settings')) {
+        if (! Schema::hasTable('site_settings')) {
             return back()->with('error', 'Database table site_settings is missing. Run: php artisan migrate --force');
         }
 
-        if ($this->multipartPayloadFailed($request, 'hero_title')) {
+        if ($this->multipartPayloadFailed($request)) {
             return back()->with('error', 'Upload too large for the server limit. Save text changes first, then upload one image at a time (max 5 MB each).');
         }
 
@@ -60,22 +62,47 @@ class PageHeroAdminController extends Controller
             'hero_subtitle' => 'nullable|string|max:2000',
         ], ResponsiveHero::flatValidationRules('hero')));
 
-        $pages = SiteSetting::getValue('page_heroes', []) ?? [];
-        $stored = is_array($pages[$slug] ?? null) ? $pages[$slug] : [];
+        $stored = $this->storedHero($slug);
         $currentHero = array_merge(PageHeroContent::defaultHero($slug), $stored);
-
         $heroImages = $this->persistResponsiveHeroFlatFields($request, 'hero', $currentHero, 'page-heroes');
 
-        $pages[$slug] = array_filter(array_merge($stored, [
+        $hero = array_merge($stored, [
             'label' => $validated['hero_label'] ?? null,
             'title' => $validated['hero_title'] ?? null,
             'subtitle' => $validated['hero_subtitle'] ?? null,
-        ], $heroImages));
+        ], $heroImages);
 
-        SiteSetting::setValue('page_heroes', $pages);
+        foreach (ResponsiveHero::storageKeys() as $storageKey) {
+            $flatField = ResponsiveHero::flatFieldForStorageKey('hero', $storageKey);
+            if ($request->boolean($flatField.'_remove')) {
+                unset($hero[$storageKey]);
+            }
+        }
+
+        $pages = SiteSetting::getValue('page_heroes', []) ?? [];
+        $pages[$slug] = $hero;
+
+        try {
+            SiteSetting::setValue('page_heroes', $pages);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()
+                ->withInput()
+                ->with('error', 'Could not save hero settings. ('.$e->getMessage().')');
+        }
 
         return redirect()
-            ->route('admin.page-heroes.edit', $slug)
-            ->with('success', PageHeroContent::label($slug).' hero saved.');
+            ->route('admin.page-heroes.edit', ['slug' => $slug, 'saved' => 1])
+            ->with('success', PageHeroContent::label($slug).' hero saved. Title: "'.($hero['title'] ?: '—').'"');
+    }
+
+    /** @return array<string, mixed> */
+    private function storedHero(string $slug): array
+    {
+        $pages = SiteSetting::getValue('page_heroes', []) ?? [];
+        $stored = $pages[$slug] ?? null;
+
+        return is_array($stored) ? $stored : [];
     }
 }

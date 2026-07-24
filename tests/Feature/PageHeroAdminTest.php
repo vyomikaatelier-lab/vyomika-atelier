@@ -28,7 +28,7 @@ class PageHeroAdminTest extends TestCase
             'hero_title' => 'About Hero',
             'hero_image_file' => $desktop,
             'hero_image_mobile_file' => $mobile,
-        ])->assertRedirect(route('admin.page-heroes.edit', 'about'));
+        ])->assertRedirect(route('admin.page-heroes.edit', ['slug' => 'about', 'saved' => 1]));
 
         $stored = data_get(SiteSetting::getValue('page_heroes', []), 'about');
         $this->assertSame('About Hero', $stored['title'] ?? null);

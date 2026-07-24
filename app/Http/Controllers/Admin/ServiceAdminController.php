@@ -75,7 +75,7 @@ class ServiceAdminController extends Controller
             return back()->with('error', 'Database table site_settings is missing. Run: php artisan migrate --force');
         }
 
-        if ($this->multipartPayloadFailed($request, 'name')) {
+        if ($this->multipartPayloadFailed($request)) {
             return back()->with('error', 'Upload too large for the server limit. Save text changes first, then upload one image at a time (max 5 MB each).');
         }
 
@@ -89,7 +89,9 @@ class ServiceAdminController extends Controller
         $service->update($validated);
         $this->syncDesigns($request, $service);
 
-        return redirect()->route('admin.services.index')->with('success', 'Service updated.');
+        return redirect()
+            ->route('admin.services.edit', ['service' => $service, 'saved' => 1])
+            ->with('success', 'Service updated.');
     }
 
     public function destroy(Service $service)

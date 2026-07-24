@@ -68,7 +68,7 @@ class AdminServiceCrudTest extends TestCase
             'lead_form' => 'inline',
             'rate_per_sqft' => 1600,
             'is_active' => '1',
-        ])->assertRedirect(route('admin.services.index'));
+        ])->assertRedirect(route('admin.services.edit', ['service' => $service, 'saved' => 1]));
 
         $service->refresh();
         $this->assertSame('Updated Service', $service->name);
@@ -104,7 +104,7 @@ class AdminServiceCrudTest extends TestCase
             'is_active' => '1',
             'hero_image_file' => $desktop,
             'hero_image_mobile_file' => $mobile,
-        ])->assertRedirect(route('admin.services.index'));
+        ])->assertRedirect(route('admin.services.edit', ['service' => $service, 'saved' => 1]));
 
         $stored = data_get(SiteSetting::getValue('service_page_heroes', []), 'partitions');
         $this->assertNotEmpty($stored['image'] ?? null);

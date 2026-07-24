@@ -32,7 +32,6 @@
 @section('content')
 
 <section class="am-corten-hero am-hero-responsive" @include('partials.am-responsive-hero-style', ['hero' => $hero, 'fallbackDesktop' => $service->image ? \App\Support\MediaUrl::resolve($service->image) : null])>
-    <div class="am-corten-hero__overlay"></div>
     <div class="am-container am-corten-hero__inner">
         @if(!empty($hero['label']))
         <p class="am-page-hero__label">{{ $hero['label'] }}</p>

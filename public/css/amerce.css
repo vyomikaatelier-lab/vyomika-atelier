@@ -3023,11 +3023,16 @@ ul { list-style: none; }
   align-items: flex-end;
   padding: calc(var(--am-header-h) + 2rem) 0 clamp(2.5rem, 6vw, 4rem);
   background: var(--am-charcoal) center / cover no-repeat;
-  background-image: linear-gradient(180deg, rgba(20, 18, 16, 0.35) 0%, rgba(20, 18, 16, 0.82) 100%), var(--corten-hero-img);
+  background-image: var(--corten-hero-img);
   color: #fff;
 }
 .am-corten-hero__overlay { display: none; }
 .am-corten-hero__inner { position: relative; z-index: 1; max-width: 42rem; }
+.am-corten-hero .am-page-hero__label,
+.am-corten-hero__title,
+.am-corten-hero__subtitle {
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.72), 0 1px 4px rgba(0, 0, 0, 0.45);
+}
 .am-corten-hero__title {
   font-family: var(--am-display);
   font-size: clamp(2rem, 5vw, 3.25rem);
@@ -3565,10 +3570,16 @@ ul { list-style: none; }
   align-items: flex-end;
   padding: calc(var(--am-header-h) + 2rem) 0 clamp(2.5rem, 5vw, 3.5rem);
   background: var(--am-charcoal) center / cover no-repeat;
-  background-image: linear-gradient(135deg, rgba(20, 18, 16, 0.55) 0%, rgba(var(--am-ink-rgb), 0.75) 100%), var(--pro-hero-img);
+  background-image: var(--pro-hero-img);
   color: #fff;
 }
 .am-pro-hero__inner { max-width: 44rem; }
+.am-pro-hero .am-page-hero__label,
+.am-pro-hero__title,
+.am-pro-hero__subtitle,
+.am-pro-hero__highlights {
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.72), 0 1px 4px rgba(0, 0, 0, 0.45);
+}
 .am-pro-hero__title {
   font-family: var(--am-display);
   font-size: clamp(2rem, 4.5vw, 3rem);
@@ -3829,10 +3840,16 @@ ul { list-style: none; }
   align-items: flex-end;
   padding: clamp(2.5rem, 5vw, 3.5rem) 0;
   background: var(--am-charcoal) center / cover no-repeat;
-  background-image: linear-gradient(135deg, rgba(20, 18, 16, 0.55) 0%, rgba(var(--am-ink-rgb), 0.72) 100%), var(--railings-hero-img);
+  background-image: var(--railings-hero-img);
   color: #fff;
 }
 .am-railings-hero__inner { max-width: 44rem; }
+.am-railings-hero .am-page-hero__label,
+.am-railings-hero__title,
+.am-railings-hero__subtitle,
+.am-railings-hero .am-pro-hero__highlights {
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.72), 0 1px 4px rgba(0, 0, 0, 0.45);
+}
 .am-railings-hero__title {
   font-family: var(--am-display);
   font-size: clamp(2rem, 4.5vw, 3rem);
@@ -3953,9 +3970,15 @@ ul { list-style: none; }
   align-items: flex-end;
   padding: clamp(2.5rem, 5vw, 3.5rem) 0;
   color: #fff;
-  background: linear-gradient(135deg, rgba(18, 18, 18, 0.72), rgba(18, 18, 18, 0.45)), var(--mirror-frames-hero-img) center/cover no-repeat;
+  background: var(--am-charcoal) center / cover no-repeat;
+  background-image: var(--mirror-frames-hero-img);
 }
 .am-mirror-frames-hero__inner { max-width: 44rem; }
+.am-mirror-frames-hero__title,
+.am-mirror-frames-hero__subtitle,
+.am-mirror-frames-hero .am-pro-hero__highlights {
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.72), 0 1px 4px rgba(0, 0, 0, 0.45);
+}
 .am-mirror-frames-hero__title {
   font-family: var(--am-font-display);
   font-size: clamp(2rem, 4vw, 3rem);
@@ -4146,22 +4169,23 @@ ul { list-style: none; }
 /* About page */
 .am-about-hero {
   position: relative;
-  background: var(--am-cream);
+  background: var(--am-cream) center / cover no-repeat;
   color: var(--am-charcoal);
   padding: calc(var(--am-header-h) + clamp(2.5rem, 5vw, 4rem)) 0 clamp(2.5rem, 5vw, 3.5rem);
   text-align: center;
   border-bottom: 1px solid var(--am-border);
   overflow: hidden;
 }
-.am-about-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(250, 248, 245, 0.92) 0%, rgba(250, 248, 245, 0.98) 70%), var(--about-hero-img, none) center / cover no-repeat;
-  opacity: 0.35;
-  pointer-events: none;
+.am-about-hero.am-hero-responsive {
+  background-image: var(--about-hero-img);
 }
+.am-about-hero::before { display: none; }
 .am-about-hero__inner { position: relative; z-index: 1; max-width: 44rem; margin-inline: auto; }
+.am-about-hero.am-hero-responsive .am-about-hero__title,
+.am-about-hero.am-hero-responsive .am-about-hero__subtitle,
+.am-about-hero.am-hero-responsive .am-page-hero__label {
+  text-shadow: 0 1px 12px rgba(250, 248, 245, 0.95), 0 0 2px rgba(250, 248, 245, 0.85);
+}
 .am-about-hero__title {
   font-family: var(--am-display);
   font-size: clamp(2rem, 4.5vw, 3rem);

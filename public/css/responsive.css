@@ -269,11 +269,17 @@ svg:not(.am-icon-btn svg) {
   }
 
   [data-hero="fullscreen"] .am-hero__slide::before {
-    background: linear-gradient(to top, var(--am-hero-overlay) 10%, rgba(0, 0, 0, 0.22) 58%, transparent 100%);
+    display: none;
   }
 
   [data-hero="fullscreen"] .am-hero__content {
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.5) 0%, transparent 82%);
+    background: transparent;
+  }
+
+  [data-hero="fullscreen"] .am-hero__kicker,
+  [data-hero="fullscreen"] .am-hero__title,
+  [data-hero="fullscreen"] .am-hero__desc {
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.72), 0 1px 4px rgba(0, 0, 0, 0.45);
   }
 
   .am-hero__kicker {
