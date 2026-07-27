@@ -12,7 +12,7 @@ class CartService
     private const SESSION_KEY = 'cart';
 
     /**
-     * @return array{quantity: int, finish_slug: ?string, finish_name: ?string}
+     * @return array{quantity: int, finish_slug: ?string, finish_name: ?string, size_label: ?string, unit_price: ?float}
      */
     private function normalizeLine(mixed $value): array
     {
@@ -21,6 +21,8 @@ class CartService
                 'quantity' => max(1, (int) ($value['quantity'] ?? 1)),
                 'finish_slug' => filled($value['finish_slug'] ?? null) ? (string) $value['finish_slug'] : null,
                 'finish_name' => filled($value['finish_name'] ?? null) ? (string) $value['finish_name'] : null,
+                'size_label' => filled($value['size_label'] ?? null) ? (string) $value['size_label'] : null,
+                'unit_price' => filled($value['unit_price'] ?? null) ? round((float) $value['unit_price'], 2) : null,
             ];
         }
 
@@ -28,6 +30,8 @@ class CartService
             'quantity' => max(1, (int) $value),
             'finish_slug' => null,
             'finish_name' => null,
+            'size_label' => null,
+            'unit_price' => null,
         ];
     }
 
@@ -55,12 +59,16 @@ class CartService
                 return null;
             }
 
+            $unitPrice = $this->resolveUnitPrice($product, $normalized['size_label'], $normalized['unit_price']);
+
             return [
                 'product' => $product,
                 'quantity' => $normalized['quantity'],
                 'finish_slug' => $normalized['finish_slug'],
                 'finish_name' => $normalized['finish_name'],
-                'line_total' => $product->price * $normalized['quantity'],
+                'size_label' => $normalized['size_label'],
+                'unit_price' => $unitPrice,
+                'line_total' => $unitPrice * $normalized['quantity'],
             ];
         })->filter()->values();
 
@@ -71,7 +79,7 @@ class CartService
         return $items;
     }
 
-    public function add(Product $product, int $quantity = 1, ?string $finishSlug = null): void
+    public function add(Product $product, int $quantity = 1, ?string $finishSlug = null, ?string $sizeLabel = null): void
     {
         $cart = session(self::SESSION_KEY, []);
         $existingQty = isset($cart[$product->id])
@@ -79,11 +87,14 @@ class CartService
             : 0;
         $existing = $this->normalizeLine($cart[$product->id] ?? null);
         $finish = FinishSwatches::resolve($finishSlug ?? $existing['finish_slug']);
+        $size = $this->resolveSizeSelection($product, $sizeLabel ?? $existing['size_label']);
 
         $cart[$product->id] = [
             'quantity' => $existingQty + $quantity,
             'finish_slug' => $finish['slug'],
             'finish_name' => $finish['name'],
+            'size_label' => $size['label'],
+            'unit_price' => $size['unit_price'],
         ];
 
         session([self::SESSION_KEY => $cart]);
@@ -116,6 +127,8 @@ class CartService
             'quantity' => $quantity,
             'finish_slug' => $existing['finish_slug'],
             'finish_name' => $existing['finish_name'],
+            'size_label' => $existing['size_label'],
+            'unit_price' => $existing['unit_price'],
         ];
 
         session([self::SESSION_KEY => $cart]);
@@ -147,5 +160,42 @@ class CartService
     public function isEmpty(): bool
     {
         return $this->all()->isEmpty();
+    }
+
+    /**
+     * @return array{label: ?string, unit_price: float}
+     */
+    private function resolveSizeSelection(Product $product, ?string $sizeLabel): array
+    {
+        if (! $product->hasSizeOptions()) {
+            return [
+                'label' => null,
+                'unit_price' => (float) $product->price,
+            ];
+        }
+
+        $option = $product->resolveSizeOption($sizeLabel);
+
+        return [
+            'label' => $option['label'] ?? null,
+            'unit_price' => (float) ($option['price'] ?? $product->price),
+        ];
+    }
+
+    private function resolveUnitPrice(Product $product, ?string $sizeLabel, ?float $storedUnitPrice): float
+    {
+        if ($product->hasSizeOptions()) {
+            if (filled($sizeLabel)) {
+                return $product->unitPriceForSize($sizeLabel);
+            }
+
+            if ($storedUnitPrice !== null) {
+                return $storedUnitPrice;
+            }
+
+            return $product->listingPrice();
+        }
+
+        return (float) $product->price;
     }
 }

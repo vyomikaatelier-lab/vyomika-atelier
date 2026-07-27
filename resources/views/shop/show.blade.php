@@ -76,7 +76,7 @@
                     </div>
                     <p class="am-pdp__sqft-price-note" data-sqft-black-note hidden>Black finish selected — ₹{{ number_format($blackRate, 0) }}/sq ft (+30%)</p>
                     @else
-                    <span class="am-featured__price-current">{{ $product->formattedPrice() }}</span>
+                    <span class="am-featured__price-current" data-pdp-price-display>{{ $product->hasSizeOptions() ? $product->formattedListingPrice() : $product->formattedPrice() }}</span>
                     @if($product->compare_price)
                     <span class="am-featured__price-old">₹{{ number_format($product->compare_price, 0) }}</span>
                     @endif
@@ -97,6 +97,10 @@
                     'baseRate' => $calcRate,
                     'note' => $product->resolvedSwatchesNote(),
                 ])
+
+                @if($showCheckoutBuy)
+                @include('partials.am-pdp-size-options', ['product' => $product])
+                @endif
 
                 @if($product->description)
                 <div class="am-prose am-pdp__desc">{{ $product->description }}</div>

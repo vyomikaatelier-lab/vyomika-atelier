@@ -59,6 +59,23 @@
             @error('swatches_note')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
         </div>
 
+        <fieldset id="mirror-dimensions-section" class="space-y-3 border-t border-gray-200 pt-4 hidden" aria-labelledby="mirror-dimensions-heading">
+            <legend id="mirror-dimensions-heading" class="text-sm font-medium text-gray-800 px-1">Mirror dimensions</legend>
+            <p class="text-xs text-gray-500 -mt-1 mb-2">Width and height in centimetres. Shown on mirror frame product pages as feet, millimetres, and centimetres. Leave both blank to hide.</p>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="dim_width_cm" class="text-sm text-gray-700 block mb-1">Width (cm)</label>
+                    <input id="dim_width_cm" type="number" step="0.01" min="0.1" name="dim_width_cm" value="{{ old('dim_width_cm', $product->dim_width_cm ?? '') }}" placeholder="e.g. 61" class="w-full border px-3 py-2 rounded bg-white">
+                    @error('dim_width_cm')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+                </div>
+                <div>
+                    <label for="dim_height_cm" class="text-sm text-gray-700 block mb-1">Height (cm)</label>
+                    <input id="dim_height_cm" type="number" step="0.01" min="0.1" name="dim_height_cm" value="{{ old('dim_height_cm', $product->dim_height_cm ?? '') }}" placeholder="e.g. 91" class="w-full border px-3 py-2 rounded bg-white">
+                    @error('dim_height_cm')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+                </div>
+            </div>
+        </fieldset>
+
         <fieldset class="space-y-3 border-t border-gray-200 pt-4">
             <legend class="text-sm font-medium text-gray-800 px-1">Tabs below the buy area</legend>
             <p class="text-xs text-gray-500 -mt-1 mb-2">Specifications, Packaging, and Shipping tabs. Leave blank to use built-in defaults.</p>
@@ -107,6 +124,7 @@
                 @foreach($categories as $category)
                     <option value="{{ $category->id }}"
                         data-section="{{ $categorySections[$category->id] ?? 'other' }}"
+                        data-slug="{{ $category->slug }}"
                         @selected(old('category_id', $product->category_id ?? '') == $category->id)>{{ $category->name }} ({{ $category->slug }})</option>
                 @endforeach
             </select>
@@ -143,13 +161,53 @@
             <label class="text-sm text-gray-600 block mb-1">Price @if($currentPricingType === 'square_foot')<span class="text-gray-400">(₹ per sq ft)</span>@endif</label>
             <input type="number" step="0.01" name="price" value="{{ old('price', $product->price ?? '') }}" placeholder="Price" required class="w-full border px-3 py-2 rounded">
             @error('price')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
-            <p class="text-xs text-gray-500 mt-1">Shop = fixed selling price. Studio = rate per sq ft shown on the product page.</p>
+            <p class="text-xs text-gray-500 mt-1">Shop = fixed selling price. Studio = rate per sq ft shown on the product page. When size options are set, this becomes the lowest variant price.</p>
         </div>
         <div>
             <label class="text-sm text-gray-600 block mb-1">Compare price</label>
             <input type="number" step="0.01" name="compare_price" value="{{ old('compare_price', $product->compare_price ?? '') }}" placeholder="Compare Price" class="w-full border px-3 py-2 rounded">
         </div>
     </div>
+
+    @php
+        $sizeOptionRows = old('size_options', isset($product) ? ($product->size_options ?? []) : []);
+        if (! is_array($sizeOptionRows) || $sizeOptionRows === []) {
+            $sizeOptionRows = [['label' => '', 'price' => '', 'size_inches' => '', 'sku_suffix' => '']];
+        }
+    @endphp
+    <fieldset id="size-options-section" class="rounded-lg border-2 border-amber-200 bg-amber-50 p-4 space-y-3 hidden" aria-labelledby="size-options-heading">
+        <legend id="size-options-heading" class="text-sm font-semibold text-gray-900 px-1">Size &amp; price options</legend>
+        <p class="text-xs text-gray-600 -mt-1">For door handles and other shop products sold in multiple sizes. Visitors pick a size on the product page; price updates automatically. Leave all rows blank to use the single price above.</p>
+        <div id="size-options-rows" class="space-y-3">
+            @foreach($sizeOptionRows as $index => $row)
+            <div class="size-option-row grid grid-cols-12 gap-2 items-end bg-white border rounded p-3">
+                <div class="col-span-4">
+                    <label class="text-xs text-gray-600 block mb-1">Size label</label>
+                    <input type="text" name="size_options[{{ $index }}][label]" value="{{ $row['label'] ?? '' }}" placeholder='e.g. 8"' class="w-full border px-2 py-1 rounded text-sm">
+                </div>
+                <div class="col-span-3">
+                    <label class="text-xs text-gray-600 block mb-1">Price (₹)</label>
+                    <input type="number" step="0.01" min="0" name="size_options[{{ $index }}][price]" value="{{ $row['price'] ?? '' }}" placeholder="800" class="w-full border px-2 py-1 rounded text-sm">
+                </div>
+                <div class="col-span-2">
+                    <label class="text-xs text-gray-600 block mb-1">Inches</label>
+                    <input type="number" step="0.01" min="0" name="size_options[{{ $index }}][size_inches]" value="{{ $row['size_inches'] ?? '' }}" placeholder="8" class="w-full border px-2 py-1 rounded text-sm">
+                </div>
+                <div class="col-span-2">
+                    <label class="text-xs text-gray-600 block mb-1">SKU suffix</label>
+                    <input type="text" name="size_options[{{ $index }}][sku_suffix]" value="{{ $row['sku_suffix'] ?? '' }}" placeholder="8IN" class="w-full border px-2 py-1 rounded text-sm">
+                </div>
+                <div class="col-span-1">
+                    <button type="button" class="size-option-remove text-xs text-red-600 hover:underline" @if($loop->first && count($sizeOptionRows) === 1) hidden @endif>Remove</button>
+                </div>
+            </div>
+            @endforeach
+        </div>
+        <button type="button" id="size-option-add" class="text-sm text-gray-700 border border-gray-300 bg-white px-3 py-1 rounded hover:bg-gray-50">+ Add size</button>
+        @error('size_options')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+        @error('size_options.*.label')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+        @error('size_options.*.price')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+    </fieldset>
     <div class="grid grid-cols-2 gap-4">
         <input type="text" name="sku" value="{{ old('sku', $product->sku ?? '') }}" placeholder="SKU" class="border px-3 py-2 rounded">
         <input type="number" name="stock" value="{{ old('stock', $product->stock ?? 0) }}" placeholder="Stock" required class="border px-3 py-2 rounded">
@@ -179,6 +237,10 @@
     var sectionSelect = document.getElementById('product-section');
     var categorySelect = document.getElementById('product-category');
     var purchaseModeSelect = document.getElementById('product-purchase-mode');
+    var mirrorDimensionsSection = document.getElementById('mirror-dimensions-section');
+    var sizeOptionsSection = document.getElementById('size-options-section');
+    var sizeOptionsRows = document.getElementById('size-options-rows');
+    var sizeOptionAdd = document.getElementById('size-option-add');
     if (!sectionSelect || !categorySelect || !purchaseModeSelect) return;
 
     var purchaseModeForSection = { shop: 'checkout', studio: 'enquiry', railings: 'quote' };
@@ -197,12 +259,86 @@
         if (mode) purchaseModeSelect.value = mode;
     }
 
+    function syncMirrorDimensionsSection() {
+        if (!mirrorDimensionsSection) return;
+        var selected = categorySelect.selectedOptions[0];
+        var isMirrorFrames = selected && selected.dataset.slug === 'mirror-frames';
+        mirrorDimensionsSection.classList.toggle('hidden', !isMirrorFrames);
+    }
+
+    function syncSizeOptionsSection() {
+        if (!sizeOptionsSection) return;
+        var selected = categorySelect.selectedOptions[0];
+        var isDoorHandles = selected && selected.dataset.slug === 'door-handles';
+        var isShop = sectionSelect.value === 'shop';
+        var show = isShop || isDoorHandles;
+        sizeOptionsSection.classList.toggle('hidden', !show);
+        if (sizeOptionsRows) {
+            sizeOptionsRows.querySelectorAll('input').forEach(function (input) {
+                input.disabled = !show;
+            });
+        }
+        if (sizeOptionAdd) sizeOptionAdd.disabled = !show;
+    }
+
+    function bindSizeOptionRow(row) {
+        var removeBtn = row.querySelector('.size-option-remove');
+        if (!removeBtn) return;
+        removeBtn.addEventListener('click', function () {
+            if (!sizeOptionsRows) return;
+            if (sizeOptionsRows.querySelectorAll('.size-option-row').length <= 1) {
+                row.querySelectorAll('input').forEach(function (input) { input.value = ''; });
+                return;
+            }
+            row.remove();
+            sizeOptionsRows.querySelectorAll('.size-option-remove').forEach(function (btn, index, all) {
+                btn.hidden = all.length <= 1;
+            });
+        });
+    }
+
+    if (sizeOptionsRows) {
+        sizeOptionsRows.querySelectorAll('.size-option-row').forEach(bindSizeOptionRow);
+    }
+
+    if (sizeOptionAdd && sizeOptionsRows) {
+        sizeOptionAdd.addEventListener('click', function () {
+            var index = sizeOptionsRows.querySelectorAll('.size-option-row').length;
+            var row = document.createElement('div');
+            row.className = 'size-option-row grid grid-cols-12 gap-2 items-end bg-white border rounded p-3';
+            row.innerHTML = ''
+                + '<div class="col-span-4"><label class="text-xs text-gray-600 block mb-1">Size label</label>'
+                + '<input type="text" name="size_options[' + index + '][label]" placeholder=\'e.g. 8"\' class="w-full border px-2 py-1 rounded text-sm"></div>'
+                + '<div class="col-span-3"><label class="text-xs text-gray-600 block mb-1">Price (₹)</label>'
+                + '<input type="number" step="0.01" min="0" name="size_options[' + index + '][price]" placeholder="800" class="w-full border px-2 py-1 rounded text-sm"></div>'
+                + '<div class="col-span-2"><label class="text-xs text-gray-600 block mb-1">Inches</label>'
+                + '<input type="number" step="0.01" min="0" name="size_options[' + index + '][size_inches]" placeholder="8" class="w-full border px-2 py-1 rounded text-sm"></div>'
+                + '<div class="col-span-2"><label class="text-xs text-gray-600 block mb-1">SKU suffix</label>'
+                + '<input type="text" name="size_options[' + index + '][sku_suffix]" placeholder="8IN" class="w-full border px-2 py-1 rounded text-sm"></div>'
+                + '<div class="col-span-1"><button type="button" class="size-option-remove text-xs text-red-600 hover:underline">Remove</button></div>';
+            sizeOptionsRows.appendChild(row);
+            bindSizeOptionRow(row);
+            sizeOptionsRows.querySelectorAll('.size-option-remove').forEach(function (btn) {
+                btn.hidden = false;
+            });
+        });
+    }
+
     sectionSelect.addEventListener('change', function () {
         filterCategoryOptions();
         syncPurchaseMode();
+        syncMirrorDimensionsSection();
+        syncSizeOptionsSection();
+    });
+
+    categorySelect.addEventListener('change', function () {
+        syncMirrorDimensionsSection();
+        syncSizeOptionsSection();
     });
 
     filterCategoryOptions();
+    syncMirrorDimensionsSection();
+    syncSizeOptionsSection();
 })();
 </script>
 @endsection

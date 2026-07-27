@@ -13,6 +13,7 @@ class OrderItem extends Model
         'product_name',
         'finish_slug',
         'finish_name',
+        'size_label',
         'price',
         'quantity',
         'total',

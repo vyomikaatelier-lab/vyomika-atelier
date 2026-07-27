@@ -165,6 +165,8 @@ class ProductAdminController extends Controller
             'tab_specifications' => 'nullable|string',
             'tab_packaging' => 'nullable|string',
             'tab_shipping' => 'nullable|string',
+            'dim_width_cm' => 'nullable|numeric|min:0.1|max:9999|required_with:dim_height_cm',
+            'dim_height_cm' => 'nullable|numeric|min:0.1|max:9999|required_with:dim_width_cm',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
             'og_image' => 'nullable|string|max:500',
@@ -177,6 +179,11 @@ class ProductAdminController extends Controller
             'section' => ['required', 'in:'.implode(',', Product::SECTIONS)],
             'purchase_mode' => ['required', 'in:'.implode(',', Product::PURCHASE_MODES)],
             'pricing_type' => ['required', 'in:'.implode(',', Product::PRICING_TYPES)],
+            'size_options' => 'nullable|array',
+            'size_options.*.label' => 'required_with:size_options|string|max:50',
+            'size_options.*.price' => 'required_with:size_options|numeric|min:0',
+            'size_options.*.size_inches' => 'nullable|numeric|min:0',
+            'size_options.*.sku_suffix' => 'nullable|string|max:20',
         ]);
 
         $category = Category::query()->find($validated['category_id']);
@@ -226,7 +233,66 @@ class ProductAdminController extends Controller
             ]);
         }
 
+        if ($category?->slug !== 'mirror-frames') {
+            $validated['dim_width_cm'] = null;
+            $validated['dim_height_cm'] = null;
+        } else {
+            $validated['dim_width_cm'] = filled($validated['dim_width_cm'] ?? null)
+                ? round((float) $validated['dim_width_cm'], 2)
+                : null;
+            $validated['dim_height_cm'] = filled($validated['dim_height_cm'] ?? null)
+                ? round((float) $validated['dim_height_cm'], 2)
+                : null;
+        }
+
+        $validated['size_options'] = $this->normalizeSizeOptions($validated['size_options'] ?? null);
+        if ($section === Product::SECTION_SHOP || $category?->slug === 'door-handles') {
+            if ($validated['size_options'] !== null) {
+                $validated['price'] = min(array_column($validated['size_options'], 'price'));
+            }
+        } else {
+            unset($validated['size_options']);
+        }
+
         return $validated;
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>|null  $rows
+     * @return list<array{label: string, size_inches: ?float, price: float, sku_suffix: ?string}>|null
+     */
+    private function normalizeSizeOptions(?array $rows): ?array
+    {
+        if ($rows === null) {
+            return null;
+        }
+
+        $options = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $label = trim((string) ($row['label'] ?? ''));
+            $price = $row['price'] ?? null;
+
+            if ($label === '' || ! is_numeric($price)) {
+                continue;
+            }
+
+            $options[] = [
+                'label' => $label,
+                'size_inches' => filled($row['size_inches'] ?? null)
+                    ? round((float) $row['size_inches'], 2)
+                    : null,
+                'price' => round((float) $price, 2),
+                'sku_suffix' => filled($row['sku_suffix'] ?? null)
+                    ? trim((string) $row['sku_suffix'])
+                    : null,
+            ];
+        }
+
+        return $options === [] ? null : $options;
     }
 
     /** @param  array<string, mixed>  $validated */

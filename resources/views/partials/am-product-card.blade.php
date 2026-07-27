@@ -16,7 +16,12 @@
     $sectionLabel = $isModel
         ? StorefrontRoutes::productSectionLabel($product)
         : ($isObject ? ($product->section_label ?? $product->shop_category ?? '') : ($product['section_label'] ?? $product['shop_category'] ?? ''));
-    $price = $isModel ? $product->price : ($isObject ? ($product->price ?? 0) : ($product['price'] ?? 0));
+    $price = $isModel
+        ? ($product->hasSizeOptions() ? $product->listingPrice() : $product->price)
+        : ($isObject ? ($product->price ?? 0) : ($product['price'] ?? 0));
+    $priceLabel = $isModel && $product->hasSizeOptions()
+        ? 'From '.\App\Support\SiteContent::formatPrice($price)
+        : \App\Support\SiteContent::formatPrice($price);
     $comparePrice = $isModel ? $product->compare_price : ($isObject ? ($product->compare_price ?? null) : ($product['compare_price'] ?? null));
     $badge = $isModel ? null : ($isObject ? ($product->badge ?? null) : ($product['badge'] ?? null));
 
@@ -91,7 +96,7 @@
 
         <div class="am-product-card__price">
 
-            <span class="am-product-card__price-current">{{ \App\Support\SiteContent::formatPrice($price) }}</span>
+            <span class="am-product-card__price-current">{{ $priceLabel }}</span>
 
             @if($comparePrice)
 

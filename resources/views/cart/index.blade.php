@@ -62,9 +62,12 @@
                                     <h3 class="am-cart-row__name">
                                         <a href="{{ route('shop.show', $item['product']->slug) }}">{{ $item['product']->name }}</a>
                                     </h3>
-                                    <p class="am-cart-row__unit">{{ $item['product']->formattedPrice() }} each</p>
+                                    <p class="am-cart-row__unit">₹{{ number_format($item['unit_price'], 0) }} each</p>
                                     @if(!empty($item['finish_name']))
                                     <p class="am-cart-row__meta">Finish: {{ $item['finish_name'] }}</p>
+                                    @endif
+                                    @if(!empty($item['size_label']))
+                                    <p class="am-cart-row__meta">Size: {{ $item['size_label'] }}</p>
                                     @endif
                                     <form action="{{ route('cart.update', $item['product']) }}" method="POST" class="am-cart-row__qty-form">
                                         @csrf @method('PATCH')

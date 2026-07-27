@@ -745,6 +745,8 @@ ul { list-style: none; }
 .am-featured__sizes { margin-bottom: 0; }
 .am-featured__sizes label { font-size: 0.72rem; font-weight: 600; display: block; margin-bottom: 0.35rem; color: var(--am-charcoal-soft); }
 .am-size-options { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.am-pdp-size { margin: 1rem 0; }
+.am-pdp-size__label { font-size: 0.875rem; margin-bottom: 0.5rem; color: var(--am-muted, #666); }
 .am-size-opt {
   padding: 0.3rem 0.55rem;
   border: 1px solid var(--am-border);
@@ -4037,6 +4039,35 @@ ul { list-style: none; }
   margin: 0;
   font-size: 0.82rem;
   font-weight: 600;
+}
+.am-pdp__dimensions {
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem;
+  background: var(--am-cream);
+  border: 1px solid var(--am-border);
+  border-radius: 0.5rem;
+}
+.am-pdp__dimensions-label {
+  margin: 0 0 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--am-muted);
+}
+.am-pdp__dimensions-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+.am-pdp__dimensions-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--am-ink);
+  white-space: nowrap;
 }
 .am-mirror-frames-highlights {
   list-style: none;

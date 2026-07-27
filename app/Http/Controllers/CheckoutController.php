@@ -167,7 +167,8 @@ class CheckoutController extends Controller
                     'product_name' => $item['product']->name,
                     'finish_slug' => $item['finish_slug'],
                     'finish_name' => $item['finish_name'],
-                    'price' => $item['product']->price,
+                    'size_label' => $item['size_label'],
+                    'price' => $item['unit_price'],
                     'quantity' => $item['quantity'],
                     'total' => $item['line_total'],
                 ]);

@@ -45,6 +45,9 @@
                 @if($item->finish_name)
                     <span class="block text-xs text-gray-500">Finish: {{ $item->finish_name }}</span>
                 @endif
+                @if($item->size_label)
+                    <span class="block text-xs text-gray-500">Size: {{ $item->size_label }}</span>
+                @endif
             </div>
             <span>₹{{ number_format($item->total, 0) }}</span>
         </div>

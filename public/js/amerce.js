@@ -268,10 +268,44 @@
 
   /* Size selector */
   function initSizeOptions() {
-    document.querySelectorAll('.am-size-options').forEach(group => {
-      group.querySelectorAll('.am-size-opt').forEach(opt => {
+    function applySize(price, label) {
+      document.querySelectorAll('[data-pdp-price-display]').forEach((el) => {
+        el.textContent = '₹' + Number(price).toLocaleString('en-IN');
+      });
+      document.querySelectorAll('[data-size-input="label"]').forEach((input) => {
+        input.value = label || '';
+      });
+      document.querySelectorAll('[data-size-input="price"]').forEach((input) => {
+        input.value = price || '';
+      });
+    }
+
+    document.querySelectorAll('[data-pdp-size]').forEach((root) => {
+      const labelEl = root.querySelector('[data-size-label]');
+      const active = root.querySelector('[data-size-option].is-active') || root.querySelector('[data-size-option]');
+      if (active) {
+        applySize(active.dataset.sizePrice, active.dataset.sizeLabel || '');
+      }
+
+      root.querySelectorAll('[data-size-option]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          root.querySelectorAll('[data-size-option]').forEach((b) => {
+            b.classList.remove('is-active');
+            b.setAttribute('aria-selected', 'false');
+          });
+          btn.classList.add('is-active');
+          btn.setAttribute('aria-selected', 'true');
+          if (labelEl) labelEl.textContent = btn.dataset.sizeLabel || '';
+          applySize(btn.dataset.sizePrice, btn.dataset.sizeLabel || '');
+        });
+      });
+    });
+
+    document.querySelectorAll('.am-size-options').forEach((group) => {
+      if (group.closest('[data-pdp-size]')) return;
+      group.querySelectorAll('.am-size-opt').forEach((opt) => {
         opt.addEventListener('click', () => {
-          group.querySelectorAll('.am-size-opt').forEach(o => o.classList.remove('is-active'));
+          group.querySelectorAll('.am-size-opt').forEach((o) => o.classList.remove('is-active'));
           opt.classList.add('is-active');
         });
       });

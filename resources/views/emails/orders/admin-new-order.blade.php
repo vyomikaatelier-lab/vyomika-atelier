@@ -14,7 +14,7 @@ A new order has been placed on the storefront.
 | Item | Qty | Total |
 |:-----|:---:|------:|
 @foreach($order->items as $item)
-| {{ $item->product_name }}@if($item->finish_name) ({{ $item->finish_name }})@endif | {{ $item->quantity }} | ₹{{ number_format($item->total, 0) }} |
+| {{ $item->product_name }}@if($item->finish_name) ({{ $item->finish_name }})@endif@if($item->size_label) — {{ $item->size_label }}@endif | {{ $item->quantity }} | ₹{{ number_format($item->total, 0) }} |
 @endforeach
 @endcomponent
 

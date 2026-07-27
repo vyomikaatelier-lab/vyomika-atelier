@@ -55,7 +55,10 @@ class Product extends Model
         'tab_specifications',
         'tab_packaging',
         'tab_shipping',
+        'dim_width_cm',
+        'dim_height_cm',
         'price',
+        'size_options',
         'compare_price',
         'sku',
         'stock',
@@ -76,7 +79,10 @@ class Product extends Model
     {
         return [
             'price' => 'decimal:2',
+            'size_options' => 'array',
             'compare_price' => 'decimal:2',
+            'dim_width_cm' => 'decimal:2',
+            'dim_height_cm' => 'decimal:2',
             'gallery' => 'array',
             'is_featured' => 'boolean',
             'is_active' => 'boolean',
@@ -99,6 +105,100 @@ class Product extends Model
         return '₹' . number_format($this->price, 0);
     }
 
+    public function hasSizeOptions(): bool
+    {
+        return $this->normalizedSizeOptions() !== [];
+    }
+
+    /** @return list<array{label: string, size_inches: ?float, price: float, sku_suffix: ?string}> */
+    public function normalizedSizeOptions(): array
+    {
+        $raw = $this->size_options;
+        if (! is_array($raw) || $raw === []) {
+            return [];
+        }
+
+        $options = [];
+        foreach ($raw as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $label = trim((string) ($row['label'] ?? ''));
+            $price = (float) ($row['price'] ?? 0);
+
+            if ($label === '' || $price < 0) {
+                continue;
+            }
+
+            $sizeInches = filled($row['size_inches'] ?? null)
+                ? round((float) $row['size_inches'], 2)
+                : null;
+            $skuSuffix = filled($row['sku_suffix'] ?? null)
+                ? trim((string) $row['sku_suffix'])
+                : null;
+
+            $options[] = [
+                'label' => $label,
+                'size_inches' => $sizeInches,
+                'price' => round($price, 2),
+                'sku_suffix' => $skuSuffix,
+            ];
+        }
+
+        usort($options, fn (array $a, array $b) => $a['price'] <=> $b['price']);
+
+        return $options;
+    }
+
+    public function lowestSizePrice(): ?float
+    {
+        $options = $this->normalizedSizeOptions();
+
+        return $options === [] ? null : (float) $options[0]['price'];
+    }
+
+    public function listingPrice(): float
+    {
+        return $this->lowestSizePrice() ?? (float) $this->price;
+    }
+
+    public function formattedListingPrice(): string
+    {
+        if ($this->hasSizeOptions()) {
+            return 'From ₹'.number_format($this->listingPrice(), 0);
+        }
+
+        return $this->formattedPrice();
+    }
+
+    /** @return array{label: string, size_inches: ?float, price: float, sku_suffix: ?string}|null */
+    public function resolveSizeOption(?string $label): ?array
+    {
+        $options = $this->normalizedSizeOptions();
+
+        if ($options === []) {
+            return null;
+        }
+
+        if (filled($label)) {
+            foreach ($options as $option) {
+                if ($option['label'] === $label) {
+                    return $option;
+                }
+            }
+        }
+
+        return $options[0];
+    }
+
+    public function unitPriceForSize(?string $label = null): float
+    {
+        $resolved = $this->resolveSizeOption($label);
+
+        return $resolved !== null ? (float) $resolved['price'] : (float) $this->price;
+    }
+
     public function resolvedHeadlineText(): string
     {
         if (filled($this->headline_text)) {
@@ -119,6 +219,66 @@ class Product extends Model
         }
 
         return 'Black Mirror & Black Brush: +30% on sq ft rate';
+    }
+
+    public function isMirrorFrameProduct(): bool
+    {
+        return $this->category?->slug === 'mirror-frames';
+    }
+
+    public function hasMirrorDimensions(): bool
+    {
+        return $this->isMirrorFrameProduct()
+            && $this->dim_width_cm !== null
+            && $this->dim_height_cm !== null
+            && (float) $this->dim_width_cm > 0
+            && (float) $this->dim_height_cm > 0;
+    }
+
+    /** @return array{feet: string, mm: string, cm: string}|null */
+    public function mirrorDimensionDisplays(): ?array
+    {
+        if (! $this->hasMirrorDimensions()) {
+            return null;
+        }
+
+        $widthCm = (float) $this->dim_width_cm;
+        $heightCm = (float) $this->dim_height_cm;
+
+        return [
+            'feet' => self::formatMirrorDimensionPairInFeet($widthCm, $heightCm),
+            'mm' => self::formatMirrorDimensionPair((int) round($widthCm * 10), (int) round($heightCm * 10), 'mm'),
+            'cm' => self::formatMirrorDimensionPair((int) round($widthCm), (int) round($heightCm), 'cm'),
+        ];
+    }
+
+    private static function formatMirrorDimensionPair(int|float $width, int|float $height, string $unit): string
+    {
+        return self::formatMirrorDimensionNumber($width).' × '.self::formatMirrorDimensionNumber($height).' '.$unit;
+    }
+
+    private static function formatMirrorDimensionPairInFeet(float $widthCm, float $heightCm): string
+    {
+        $widthFt = self::formatFeetFromCm($widthCm);
+        $heightFt = self::formatFeetFromCm($heightCm);
+
+        return $widthFt.' × '.$heightFt.' ft';
+    }
+
+    private static function formatFeetFromCm(float $cm): string
+    {
+        $feet = (int) round($cm / 30.48);
+
+        return (string) max($feet, 1);
+    }
+
+    private static function formatMirrorDimensionNumber(int|float $value): string
+    {
+        if (is_int($value) || fmod((float) $value, 1.0) === 0.0) {
+            return (string) (int) $value;
+        }
+
+        return rtrim(rtrim(number_format((float) $value, 1, '.', ''), '0'), '.');
     }
 
     /** Per-sq-ft rate for studio products; uses this product's price when set. */

@@ -52,7 +52,13 @@ class CartController extends Controller
         $quantity = max(1, (int) $request->input('quantity', 1));
         $quantity = min($quantity, min($available, 99));
         $finishSlug = $request->input('finish_slug');
-        $this->cart->add($product, $quantity, is_string($finishSlug) ? $finishSlug : null);
+        $sizeLabel = $request->input('size_label');
+        $this->cart->add(
+            $product,
+            $quantity,
+            is_string($finishSlug) ? $finishSlug : null,
+            is_string($sizeLabel) ? $sizeLabel : null,
+        );
 
         if ($request->boolean('buy_now')) {
             return redirect()->route('checkout.index');
