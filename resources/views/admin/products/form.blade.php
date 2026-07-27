@@ -65,19 +65,57 @@
         </div>
 
         <fieldset id="mirror-dimensions-section" class="space-y-3 border-t border-gray-200 pt-4{{ $showMirrorDimensions ? '' : ' hidden' }}" aria-labelledby="mirror-dimensions-heading" @if(! $showMirrorDimensions) inert @endif>
-            <legend id="mirror-dimensions-heading" class="text-sm font-medium text-gray-800 px-1">Mirror dimensions (single size, shown as ft / mm / cm — one price above)</legend>
-            <p class="text-xs text-gray-500 -mt-1 mb-2">Enter width and height in centimetres once. The storefront shows the same size in feet, millimetres, and centimetres. Mirrors use the single Price field above — not multiple size/price variants. Leave both blank to hide dimensions.</p>
+            <legend id="mirror-dimensions-heading" class="text-sm font-medium text-gray-800 px-1">Mirror dimensions (single size — enter ft + in)</legend>
+            <p class="text-xs text-gray-500 -mt-1 mb-2">Enter size in feet and inches; website shows ft, mm, and cm. Mirrors use the single Price field above — not multiple size/price variants. Leave all blank to hide dimensions.</p>
+            @php
+                $oldWidthCm = old('dim_width_cm', $product->dim_width_cm ?? null);
+                $oldHeightCm = old('dim_height_cm', $product->dim_height_cm ?? null);
+                $widthFtIn = (old('dim_width_ft') !== null || old('dim_width_in') !== null)
+                    ? ['feet' => old('dim_width_ft', ''), 'inches' => old('dim_width_in', '')]
+                    : (is_numeric($oldWidthCm) ? Product::feetInchesFromCm((float) $oldWidthCm) : ['feet' => '', 'inches' => '']);
+                $heightFtIn = (old('dim_height_ft') !== null || old('dim_height_in') !== null)
+                    ? ['feet' => old('dim_height_ft', ''), 'inches' => old('dim_height_in', '')]
+                    : (is_numeric($oldHeightCm) ? Product::feetInchesFromCm((float) $oldHeightCm) : ['feet' => '', 'inches' => '']);
+            @endphp
             <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label for="dim_width_cm" class="text-sm text-gray-700 block mb-1">Width (cm)</label>
-                    <input id="dim_width_cm" type="number" step="0.01" min="0.1" name="dim_width_cm" value="{{ old('dim_width_cm', $product->dim_width_cm ?? '') }}" placeholder="e.g. 61" class="w-full border px-3 py-2 rounded bg-white" @disabled(! $showMirrorDimensions)>
-                    @error('dim_width_cm')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+                <div class="space-y-2">
+                    <p class="text-sm text-gray-700 font-medium">Width</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label for="dim_width_ft" class="text-xs text-gray-600 block mb-1">Feet</label>
+                            <input id="dim_width_ft" type="number" step="1" min="0" max="50" name="dim_width_ft" value="{{ $widthFtIn['feet'] === '' || $widthFtIn['feet'] === null ? '' : $widthFtIn['feet'] }}" placeholder="2" class="w-full border px-3 py-2 rounded bg-white" data-mirror-dim inputmode="numeric" @disabled(! $showMirrorDimensions)>
+                        </div>
+                        <div>
+                            <label for="dim_width_in" class="text-xs text-gray-600 block mb-1">Inches</label>
+                            <input id="dim_width_in" type="number" step="0.1" min="0" max="11.9" name="dim_width_in" value="{{ $widthFtIn['inches'] === '' || $widthFtIn['inches'] === null ? '' : $widthFtIn['inches'] }}" placeholder="0" class="w-full border px-3 py-2 rounded bg-white" data-mirror-dim inputmode="decimal" @disabled(! $showMirrorDimensions)>
+                        </div>
+                    </div>
+                    @error('dim_width_ft')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+                    @error('dim_width_in')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
                 </div>
-                <div>
-                    <label for="dim_height_cm" class="text-sm text-gray-700 block mb-1">Height (cm)</label>
-                    <input id="dim_height_cm" type="number" step="0.01" min="0.1" name="dim_height_cm" value="{{ old('dim_height_cm', $product->dim_height_cm ?? '') }}" placeholder="e.g. 91" class="w-full border px-3 py-2 rounded bg-white" @disabled(! $showMirrorDimensions)>
-                    @error('dim_height_cm')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+                <div class="space-y-2">
+                    <p class="text-sm text-gray-700 font-medium">Height</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label for="dim_height_ft" class="text-xs text-gray-600 block mb-1">Feet</label>
+                            <input id="dim_height_ft" type="number" step="1" min="0" max="50" name="dim_height_ft" value="{{ $heightFtIn['feet'] === '' || $heightFtIn['feet'] === null ? '' : $heightFtIn['feet'] }}" placeholder="4" class="w-full border px-3 py-2 rounded bg-white" data-mirror-dim inputmode="numeric" @disabled(! $showMirrorDimensions)>
+                        </div>
+                        <div>
+                            <label for="dim_height_in" class="text-xs text-gray-600 block mb-1">Inches</label>
+                            <input id="dim_height_in" type="number" step="0.1" min="0" max="11.9" name="dim_height_in" value="{{ $heightFtIn['inches'] === '' || $heightFtIn['inches'] === null ? '' : $heightFtIn['inches'] }}" placeholder="0" class="w-full border px-3 py-2 rounded bg-white" data-mirror-dim inputmode="decimal" @disabled(! $showMirrorDimensions)>
+                        </div>
+                    </div>
+                    @error('dim_height_ft')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+                    @error('dim_height_in')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
                 </div>
+            </div>
+            <div id="mirror-dim-preview" class="rounded border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 hidden" aria-live="polite">
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Storefront preview</p>
+                <ul class="space-y-0.5">
+                    <li><span class="text-gray-500 inline-block w-8">ft</span> <span data-mirror-preview="feet">—</span></li>
+                    <li><span class="text-gray-500 inline-block w-8">mm</span> <span data-mirror-preview="mm">—</span></li>
+                    <li><span class="text-gray-500 inline-block w-8">cm</span> <span data-mirror-preview="cm">—</span></li>
+                </ul>
             </div>
         </fieldset>
 
@@ -173,29 +211,32 @@
             $adminDiscountPct = (string) (int) round((1 - ((float) $adminPrice / (float) $adminCompare)) * 100);
         }
     @endphp
-    <fieldset class="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-3" aria-labelledby="pricing-discount-heading">
+    <fieldset id="pricing-discount-section" class="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-3" aria-labelledby="pricing-discount-heading">
         <legend id="pricing-discount-heading" class="text-sm font-semibold text-gray-900 px-1">Price &amp; discount (as on website)</legend>
-        <p class="text-xs text-gray-600 -mt-1">On the product page and cards: selling price, optional strikethrough original price, and a <strong>−%</strong> badge when compare price is higher than price. Use Discount % to keep price and compare in sync.</p>
-        <div class="grid grid-cols-3 gap-4">
+        <p id="pricing-discount-intro" class="text-xs text-gray-600 -mt-1">On the product page and cards: selling price, optional strikethrough original price, and a <strong>−%</strong> badge when compare price is higher than price. Use Discount % to keep price and compare in sync.</p>
+        <p id="door-handle-price-note" class="text-xs text-amber-800 bg-amber-100 border border-amber-200 rounded px-2 py-1.5{{ $showDoorHandleSizes ? '' : ' hidden' }}">Door handles: set <strong>price &amp; discount per size</strong> in the section below. This Price field syncs to the lowest size price on save.</p>
+        <div id="pricing-discount-grid" class="grid gap-4 {{ $showDoorHandleSizes ? 'grid-cols-1' : 'grid-cols-3' }}">
             <div>
                 <label for="product-price" class="text-sm font-medium text-gray-800 block mb-1">Price @if($currentPricingType === 'square_foot')<span class="font-normal text-gray-500">(₹ per sq ft)</span>@endif</label>
                 <input id="product-price" type="number" step="0.01" name="price" value="{{ old('price', $product->price ?? '') }}" placeholder="Selling price" required class="w-full border px-3 py-2 rounded bg-white">
                 @error('price')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
-                <p class="text-xs text-gray-500 mt-1">Selling price shown on the website.</p>
+                <p id="product-price-help" class="text-xs text-gray-500 mt-1">{{ $showDoorHandleSizes ? 'Lowest size price syncs here on save.' : 'Selling price shown on the website.' }}</p>
             </div>
-            <div>
-                <label for="product-compare-price" class="text-sm font-medium text-gray-800 block mb-1">Compare price <span class="font-normal text-gray-500">(original)</span></label>
-                <input id="product-compare-price" type="number" step="0.01" name="compare_price" value="{{ old('compare_price', $product->compare_price ?? '') }}" placeholder="e.g. 38999" class="w-full border px-3 py-2 rounded bg-white">
-                @error('compare_price')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
-                <p class="text-xs text-gray-500 mt-1">Strikethrough when higher than Price.</p>
-            </div>
-            <div>
-                <label for="product-discount-pct" class="text-sm font-medium text-gray-800 block mb-1">Discount %</label>
-                <input id="product-discount-pct" type="number" step="1" min="0" max="99" value="{{ $adminDiscountPct }}" placeholder="e.g. 20" class="w-full border px-3 py-2 rounded bg-white" inputmode="numeric">
-                <p class="text-xs text-gray-500 mt-1">Edits sync Price ↔ Compare. Not stored separately.</p>
+            <div id="product-level-discount-fields" class="contents{{ $showDoorHandleSizes ? ' hidden' : '' }}">
+                <div>
+                    <label for="product-compare-price" class="text-sm font-medium text-gray-800 block mb-1">Compare price <span class="font-normal text-gray-500">(original)</span></label>
+                    <input id="product-compare-price" type="number" step="0.01" name="compare_price" value="{{ old('compare_price', $product->compare_price ?? '') }}" placeholder="e.g. 38999" class="w-full border px-3 py-2 rounded bg-white">
+                    @error('compare_price')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+                    <p class="text-xs text-gray-500 mt-1">Strikethrough when higher than Price.</p>
+                </div>
+                <div>
+                    <label for="product-discount-pct" class="text-sm font-medium text-gray-800 block mb-1">Discount %</label>
+                    <input id="product-discount-pct" type="number" step="1" min="0" max="99" value="{{ $adminDiscountPct }}" placeholder="e.g. 20" class="w-full border px-3 py-2 rounded bg-white" inputmode="numeric">
+                    <p class="text-xs text-gray-500 mt-1">Edits sync Price ↔ Compare. Not stored separately.</p>
+                </div>
             </div>
         </div>
-        <p class="text-xs text-gray-500">Shop = fixed selling price. Studio = rate per sq ft. Door handles with size options sync Price to the lowest size price.</p>
+        <p id="pricing-discount-footer" class="text-xs text-gray-500{{ $showDoorHandleSizes ? ' hidden' : '' }}">Shop = fixed selling price. Studio = rate per sq ft.</p>
         <p id="discount-preview" class="text-sm text-gray-700 hidden" aria-live="polite">
             Website preview: <span class="inline-flex items-center gap-2 flex-wrap">
                 <span id="discount-preview-price" class="font-medium"></span>
@@ -213,7 +254,7 @@
     @endphp
     <fieldset id="size-options-section" class="rounded-lg border-2 border-amber-200 bg-amber-50 p-4 space-y-3{{ $showDoorHandleSizes ? '' : ' hidden' }}" aria-labelledby="size-options-heading" data-only-category="door-handles" @if(! $showDoorHandleSizes) inert @endif>
         <legend id="size-options-heading" class="text-sm font-semibold text-gray-900 px-1">Size &amp; price options (door handles — each size has its own price &amp; discount)</legend>
-        <p class="text-xs text-gray-600 -mt-1">Door handles only. Add each size with its own selling price and optional compare price (strikethrough / −% on that size line). Product-level Compare price above is cleared when size options are saved. Leave all rows blank to use the single price above. Not used for mirrors.</p>
+        <p class="text-xs text-gray-600 -mt-1">Door handles only. Each size needs a <strong>Price</strong> and either <strong>Compare (₹)</strong> or <strong>Discount %</strong> — they stay in sync. The website shows strikethrough + −% on each size line. Leave all rows blank to use the single Price above. Not used for mirrors.</p>
         <div id="size-options-rows" class="space-y-3">
             @foreach($sizeOptionRows as $index => $row)
             @php
@@ -224,34 +265,41 @@
                     $rowDiscountPct = (string) (int) round((1 - ((float) $rowPrice / (float) $rowCompare)) * 100);
                 }
             @endphp
-            <div class="size-option-row grid grid-cols-12 gap-2 items-end bg-white border rounded p-3">
-                <div class="col-span-2">
-                    <label class="text-xs text-gray-600 block mb-1">Size label</label>
-                    <input type="text" name="size_options[{{ $index }}][label]" value="{{ $row['label'] ?? '' }}" placeholder='e.g. 8"' class="w-full border px-2 py-1 rounded text-sm" @disabled(! $showDoorHandleSizes)>
+            <div class="size-option-row bg-white border rounded p-3 space-y-2">
+                <div class="grid grid-cols-12 gap-2 items-end">
+                    <div class="col-span-2">
+                        <label class="text-xs text-gray-600 block mb-1">Size label</label>
+                        <input type="text" name="size_options[{{ $index }}][label]" value="{{ $row['label'] ?? '' }}" placeholder='e.g. 8"' class="w-full border px-2 py-1 rounded text-sm" @disabled(! $showDoorHandleSizes)>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="text-xs text-gray-600 block mb-1">Price (₹)</label>
+                        <input type="number" step="0.01" min="0" name="size_options[{{ $index }}][price]" value="{{ $rowPrice }}" placeholder="800" class="size-opt-price w-full border px-2 py-1 rounded text-sm" @disabled(! $showDoorHandleSizes)>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="text-xs text-gray-600 block mb-1">Compare (₹)</label>
+                        <input type="number" step="0.01" min="0" name="size_options[{{ $index }}][compare_price]" value="{{ $rowCompare }}" placeholder="3200" class="size-opt-compare w-full border px-2 py-1 rounded text-sm" @disabled(! $showDoorHandleSizes)>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="text-xs text-gray-600 block mb-1">Discount %</label>
+                        <input type="number" step="1" min="0" max="99" name="size_options[{{ $index }}][discount_percent]" value="{{ $rowDiscountPct }}" placeholder="75" class="size-opt-discount w-full border px-2 py-1 rounded text-sm" inputmode="numeric" @disabled(! $showDoorHandleSizes)>
+                    </div>
+                    <div class="col-span-1">
+                        <label class="text-xs text-gray-600 block mb-1">Inches</label>
+                        <input type="number" step="0.01" min="0" name="size_options[{{ $index }}][size_inches]" value="{{ $row['size_inches'] ?? '' }}" placeholder="8" class="w-full border px-2 py-1 rounded text-sm" @disabled(! $showDoorHandleSizes)>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="text-xs text-gray-600 block mb-1">SKU suffix</label>
+                        <input type="text" name="size_options[{{ $index }}][sku_suffix]" value="{{ $row['sku_suffix'] ?? '' }}" placeholder="8IN" class="w-full border px-2 py-1 rounded text-sm" @disabled(! $showDoorHandleSizes)>
+                    </div>
+                    <div class="col-span-1">
+                        <button type="button" class="size-option-remove text-xs text-red-600 hover:underline" @if($loop->first && count($sizeOptionRows) === 1) hidden @endif>Remove</button>
+                    </div>
                 </div>
-                <div class="col-span-2">
-                    <label class="text-xs text-gray-600 block mb-1">Price (₹)</label>
-                    <input type="number" step="0.01" min="0" name="size_options[{{ $index }}][price]" value="{{ $rowPrice }}" placeholder="800" class="size-opt-price w-full border px-2 py-1 rounded text-sm" @disabled(! $showDoorHandleSizes)>
-                </div>
-                <div class="col-span-2">
-                    <label class="text-xs text-gray-600 block mb-1">Compare (₹)</label>
-                    <input type="number" step="0.01" min="0" name="size_options[{{ $index }}][compare_price]" value="{{ $rowCompare }}" placeholder="3200" class="size-opt-compare w-full border px-2 py-1 rounded text-sm" @disabled(! $showDoorHandleSizes)>
-                </div>
-                <div class="col-span-2">
-                    <label class="text-xs text-gray-600 block mb-1">Discount %</label>
-                    <input type="number" step="1" min="0" max="99" value="{{ $rowDiscountPct }}" placeholder="75" class="size-opt-discount w-full border px-2 py-1 rounded text-sm" inputmode="numeric" @disabled(! $showDoorHandleSizes)>
-                </div>
-                <div class="col-span-1">
-                    <label class="text-xs text-gray-600 block mb-1">Inches</label>
-                    <input type="number" step="0.01" min="0" name="size_options[{{ $index }}][size_inches]" value="{{ $row['size_inches'] ?? '' }}" placeholder="8" class="w-full border px-2 py-1 rounded text-sm" @disabled(! $showDoorHandleSizes)>
-                </div>
-                <div class="col-span-2">
-                    <label class="text-xs text-gray-600 block mb-1">SKU suffix</label>
-                    <input type="text" name="size_options[{{ $index }}][sku_suffix]" value="{{ $row['sku_suffix'] ?? '' }}" placeholder="8IN" class="w-full border px-2 py-1 rounded text-sm" @disabled(! $showDoorHandleSizes)>
-                </div>
-                <div class="col-span-1">
-                    <button type="button" class="size-option-remove text-xs text-red-600 hover:underline" @if($loop->first && count($sizeOptionRows) === 1) hidden @endif>Remove</button>
-                </div>
+                <p class="size-opt-preview text-xs text-gray-600 hidden" aria-live="polite">
+                    Website: <span class="size-opt-preview__price font-medium"></span>
+                    <span class="size-opt-preview__compare line-through text-gray-500"></span>
+                    <span class="size-opt-preview__badge inline-block bg-gray-900 text-white text-[10px] px-1.5 py-0.5 rounded"></span>
+                </p>
             </div>
             @endforeach
         </div>
@@ -298,6 +346,21 @@
 
     var purchaseModeForSection = { shop: 'checkout', studio: 'enquiry', railings: 'quote' };
 
+    function formatInr(amount) {
+        return '₹' + Math.round(amount).toLocaleString('en-IN');
+    }
+
+    function roundMoney(amount) {
+        return Math.round(amount * 100) / 100;
+    }
+
+    function calcDiscountPct(price, compare) {
+        if (isNaN(price) || isNaN(compare) || compare <= 0 || compare <= price || price < 0) {
+            return null;
+        }
+        return Math.round((1 - price / compare) * 100);
+    }
+
     function filterCategoryOptions() {
         var section = sectionSelect.value;
         var options = categorySelect.querySelectorAll('option[data-section]');
@@ -325,6 +388,77 @@
         mirrorDimensionsSection.querySelectorAll('input').forEach(function (input) {
             input.disabled = !isMirrorFrames;
         });
+        updateMirrorDimPreview();
+    }
+
+    function formatDimNumber(value) {
+        if (Math.abs(value - Math.round(value)) < 0.05) return String(Math.round(value));
+        return String(Math.round(value * 10) / 10);
+    }
+
+    function formatFeetInchesLabel(feet, inches) {
+        if (!inches || inches <= 0) return feet + ' ft';
+        return feet + ' ft ' + formatDimNumber(inches) + ' in';
+    }
+
+    function updateMirrorDimPreview() {
+        var preview = document.getElementById('mirror-dim-preview');
+        if (!preview || !mirrorDimensionsSection) return;
+        var wFt = parseFloat(document.getElementById('dim_width_ft') && document.getElementById('dim_width_ft').value);
+        var wIn = parseFloat(document.getElementById('dim_width_in') && document.getElementById('dim_width_in').value);
+        var hFt = parseFloat(document.getElementById('dim_height_ft') && document.getElementById('dim_height_ft').value);
+        var hIn = parseFloat(document.getElementById('dim_height_in') && document.getElementById('dim_height_in').value);
+        var widthInches = (isNaN(wFt) ? 0 : wFt) * 12 + (isNaN(wIn) ? 0 : wIn);
+        var heightInches = (isNaN(hFt) ? 0 : hFt) * 12 + (isNaN(hIn) ? 0 : hIn);
+        var show = widthInches > 0 && heightInches > 0 && !mirrorDimensionsSection.classList.contains('hidden');
+        preview.classList.toggle('hidden', !show);
+        if (!show) return;
+
+        var widthCm = Math.round(widthInches * 2.54 * 100) / 100;
+        var heightCm = Math.round(heightInches * 2.54 * 100) / 100;
+        var widthFeet = Math.floor(widthInches / 12);
+        var widthRemIn = Math.round((widthInches - widthFeet * 12) * 10) / 10;
+        var heightFeet = Math.floor(heightInches / 12);
+        var heightRemIn = Math.round((heightInches - heightFeet * 12) * 10) / 10;
+        var feetLabel = (!widthRemIn && !heightRemIn)
+            ? (widthFeet + ' × ' + heightFeet + ' ft')
+            : (formatFeetInchesLabel(widthFeet, widthRemIn) + ' × ' + formatFeetInchesLabel(heightFeet, heightRemIn));
+
+        var feetEl = preview.querySelector('[data-mirror-preview="feet"]');
+        var mmEl = preview.querySelector('[data-mirror-preview="mm"]');
+        var cmEl = preview.querySelector('[data-mirror-preview="cm"]');
+        if (feetEl) feetEl.textContent = feetLabel;
+        if (mmEl) mmEl.textContent = Math.round(widthCm * 10) + ' × ' + Math.round(heightCm * 10) + ' mm';
+        if (cmEl) cmEl.textContent = formatDimNumber(widthCm) + ' × ' + formatDimNumber(heightCm) + ' cm';
+    }
+
+    if (mirrorDimensionsSection) {
+        mirrorDimensionsSection.querySelectorAll('[data-mirror-dim]').forEach(function (input) {
+            input.addEventListener('input', updateMirrorDimPreview);
+        });
+    }
+
+    function syncProductLevelPricing() {
+        var selected = categorySelect.selectedOptions[0];
+        var isDoorHandles = selected && selected.dataset.slug === 'door-handles';
+        var pricingGrid = document.getElementById('pricing-discount-grid');
+        var productDiscountFields = document.getElementById('product-level-discount-fields');
+        var doorHandleNote = document.getElementById('door-handle-price-note');
+        var pricingIntro = document.getElementById('pricing-discount-intro');
+        var pricingFooter = document.getElementById('pricing-discount-footer');
+        var priceHelp = document.getElementById('product-price-help');
+        var discountPreview = document.getElementById('discount-preview');
+
+        if (pricingGrid) pricingGrid.classList.toggle('grid-cols-1', isDoorHandles);
+        if (pricingGrid) pricingGrid.classList.toggle('grid-cols-3', !isDoorHandles);
+        if (productDiscountFields) productDiscountFields.classList.toggle('hidden', isDoorHandles);
+        if (doorHandleNote) doorHandleNote.classList.toggle('hidden', !isDoorHandles);
+        if (pricingIntro) pricingIntro.classList.toggle('hidden', isDoorHandles);
+        if (pricingFooter) pricingFooter.classList.toggle('hidden', isDoorHandles);
+        if (priceHelp) priceHelp.textContent = isDoorHandles
+            ? 'Lowest size price syncs here on save.'
+            : 'Selling price shown on the website.';
+        if (discountPreview && isDoorHandles) discountPreview.classList.add('hidden');
     }
 
     function syncSizeOptionsSection() {
@@ -343,6 +477,26 @@
             });
         }
         if (sizeOptionAdd) sizeOptionAdd.disabled = !isDoorHandles;
+        syncProductLevelPricing();
+    }
+
+    function updateSizeRowPreview(row) {
+        var preview = row.querySelector('.size-opt-preview');
+        if (!preview) return;
+        var priceEl = row.querySelector('.size-opt-price');
+        var compareEl = row.querySelector('.size-opt-compare');
+        var price = parseFloat(priceEl && priceEl.value);
+        var compare = parseFloat(compareEl && compareEl.value);
+        var pct = calcDiscountPct(price, compare);
+        var show = pct !== null;
+        preview.classList.toggle('hidden', !show);
+        if (!show) return;
+        var priceSpan = preview.querySelector('.size-opt-preview__price');
+        var compareSpan = preview.querySelector('.size-opt-preview__compare');
+        var badgeSpan = preview.querySelector('.size-opt-preview__badge');
+        if (priceSpan) priceSpan.textContent = formatInr(price);
+        if (compareSpan) compareSpan.textContent = formatInr(compare);
+        if (badgeSpan) badgeSpan.textContent = '-' + pct + '%';
     }
 
     function bindSizeOptionRow(row) {
@@ -371,6 +525,7 @@
             rowSyncing = true;
             var pct = calcDiscountPct(parseFloat(priceEl && priceEl.value), parseFloat(compareEl && compareEl.value));
             discountEl.value = pct !== null ? String(pct) : '';
+            updateSizeRowPreview(row);
             rowSyncing = false;
         }
 
@@ -388,12 +543,16 @@
                     priceEl.value = String(roundMoney(compare * (1 - pct / 100)));
                 }
             }
+            updateSizeRowPreview(row);
             rowSyncing = false;
         }
+
+        row.syncRowPricesFromPct = syncRowPricesFromPct;
 
         if (priceEl) priceEl.addEventListener('input', syncRowPctFromPrices);
         if (compareEl) compareEl.addEventListener('input', syncRowPctFromPrices);
         if (discountEl) discountEl.addEventListener('input', syncRowPricesFromPct);
+        updateSizeRowPreview(row);
     }
 
     if (sizeOptionsRows) {
@@ -404,8 +563,9 @@
         sizeOptionAdd.addEventListener('click', function () {
             var index = sizeOptionsRows.querySelectorAll('.size-option-row').length;
             var row = document.createElement('div');
-            row.className = 'size-option-row grid grid-cols-12 gap-2 items-end bg-white border rounded p-3';
+            row.className = 'size-option-row bg-white border rounded p-3 space-y-2';
             row.innerHTML = ''
+                + '<div class="grid grid-cols-12 gap-2 items-end">'
                 + '<div class="col-span-2"><label class="text-xs text-gray-600 block mb-1">Size label</label>'
                 + '<input type="text" name="size_options[' + index + '][label]" placeholder=\'e.g. 8"\' class="w-full border px-2 py-1 rounded text-sm"></div>'
                 + '<div class="col-span-2"><label class="text-xs text-gray-600 block mb-1">Price (₹)</label>'
@@ -413,12 +573,18 @@
                 + '<div class="col-span-2"><label class="text-xs text-gray-600 block mb-1">Compare (₹)</label>'
                 + '<input type="number" step="0.01" min="0" name="size_options[' + index + '][compare_price]" placeholder="3200" class="size-opt-compare w-full border px-2 py-1 rounded text-sm"></div>'
                 + '<div class="col-span-2"><label class="text-xs text-gray-600 block mb-1">Discount %</label>'
-                + '<input type="number" step="1" min="0" max="99" placeholder="75" class="size-opt-discount w-full border px-2 py-1 rounded text-sm" inputmode="numeric"></div>'
+                + '<input type="number" step="1" min="0" max="99" name="size_options[' + index + '][discount_percent]" placeholder="75" class="size-opt-discount w-full border px-2 py-1 rounded text-sm" inputmode="numeric"></div>'
                 + '<div class="col-span-1"><label class="text-xs text-gray-600 block mb-1">Inches</label>'
                 + '<input type="number" step="0.01" min="0" name="size_options[' + index + '][size_inches]" placeholder="8" class="w-full border px-2 py-1 rounded text-sm"></div>'
                 + '<div class="col-span-2"><label class="text-xs text-gray-600 block mb-1">SKU suffix</label>'
                 + '<input type="text" name="size_options[' + index + '][sku_suffix]" placeholder="8IN" class="w-full border px-2 py-1 rounded text-sm"></div>'
-                + '<div class="col-span-1"><button type="button" class="size-option-remove text-xs text-red-600 hover:underline">Remove</button></div>';
+                + '<div class="col-span-1"><button type="button" class="size-option-remove text-xs text-red-600 hover:underline">Remove</button></div>'
+                + '</div>'
+                + '<p class="size-opt-preview text-xs text-gray-600 hidden" aria-live="polite">'
+                + 'Website: <span class="size-opt-preview__price font-medium"></span> '
+                + '<span class="size-opt-preview__compare line-through text-gray-500"></span> '
+                + '<span class="size-opt-preview__badge inline-block bg-gray-900 text-white text-[10px] px-1.5 py-0.5 rounded"></span>'
+                + '</p>';
             sizeOptionsRows.appendChild(row);
             bindSizeOptionRow(row);
             sizeOptionsRows.querySelectorAll('.size-option-remove').forEach(function (btn) {
@@ -451,21 +617,6 @@
     var discountPreviewOld = document.getElementById('discount-preview-old');
     var discountPreviewBadge = document.getElementById('discount-preview-badge');
     var discountSyncing = false;
-
-    function formatInr(amount) {
-        return '₹' + Math.round(amount).toLocaleString('en-IN');
-    }
-
-    function roundMoney(amount) {
-        return Math.round(amount * 100) / 100;
-    }
-
-    function calcDiscountPct(price, compare) {
-        if (isNaN(price) || isNaN(compare) || compare <= 0 || compare <= price || price < 0) {
-            return null;
-        }
-        return Math.round((1 - price / compare) * 100);
-    }
 
     function syncDiscountPreview() {
         if (!priceInput || !compareInput || !discountPreview) return;
@@ -512,6 +663,19 @@
     if (compareInput) compareInput.addEventListener('input', syncPctFromPrices);
     if (discountPctInput) discountPctInput.addEventListener('input', syncPricesFromPct);
     syncPctFromPrices();
+
+    var productForm = document.querySelector('form[action*="products"]');
+    if (productForm) {
+        productForm.addEventListener('submit', function () {
+            if (sizeOptionsRows) {
+                sizeOptionsRows.querySelectorAll('.size-option-row').forEach(function (row) {
+                    if (typeof row.syncRowPricesFromPct === 'function') {
+                        row.syncRowPricesFromPct();
+                    }
+                });
+            }
+        });
+    }
 })();
 </script>
 @endsection

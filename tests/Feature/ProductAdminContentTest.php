@@ -203,24 +203,60 @@ class ProductAdminContentTest extends TestCase
         ]);
 
         $this->actingAsAdmin($admin)->put(route('admin.products.update', $product), $this->productPayload($category, $product, [
-            'dim_width_cm' => '61',
-            'dim_height_cm' => '91',
+            'dim_width_ft' => '2',
+            'dim_width_in' => '0',
+            'dim_height_ft' => '3',
+            'dim_height_in' => '0',
         ]))->assertRedirect(route('admin.products.edit', ['product' => $product, 'saved' => 1]));
 
         $product->refresh();
 
-        $this->assertSame('61.00', $product->dim_width_cm);
-        $this->assertSame('91.00', $product->dim_height_cm);
+        $this->assertSame('60.96', $product->dim_width_cm);
+        $this->assertSame('91.44', $product->dim_height_cm);
         $this->assertTrue($product->hasMirrorDimensions());
 
         $this->get(route('shop.mirror-frames.show', 'arched-wall-mirror'))
             ->assertOk()
             ->assertSee('am-pdp__dimensions', false)
             ->assertSee('am-pdp__dimensions-item', false)
+            ->assertSee('>Feet</span>', false)
             ->assertSee('2 × 3 ft', false)
-            ->assertSee('610 × 910 mm', false)
-            ->assertSee('61 × 91 cm', false)
+            ->assertSee('610 × 914 mm', false)
+            ->assertSee('61 × 91.4 cm', false)
             ->assertDontSee('900 × 1200 mm standard', false);
+    }
+
+    public function test_mirror_dimensions_show_feet_and_inches_when_not_whole_feet(): void
+    {
+        $category = Category::query()->firstOrCreate(
+            ['slug' => 'mirror-frames'],
+            ['name' => 'Mirror Frames', 'section' => 'shop', 'is_active' => true]
+        );
+
+        $product = Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Inch Mirror',
+            'slug' => 'inch-detail-mirror',
+            'price' => 15000,
+            'stock' => 2,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+            'dim_width_cm' => Product::cmFromFeetInches(2, 6),
+            'dim_height_cm' => Product::cmFromFeetInches(4, 0),
+        ]);
+
+        $displays = $product->mirrorDimensionDisplays();
+        $this->assertSame('2 ft 6 in × 4 ft', $displays['feet']);
+        $this->assertSame('762 × 1219 mm', $displays['mm']);
+        $this->assertSame('76.2 × 121.9 cm', $displays['cm']);
+
+        $this->get(route('shop.show', $product->slug))
+            ->assertOk()
+            ->assertSee('2 ft 6 in × 4 ft', false)
+            ->assertSee('762 × 1219 mm', false)
+            ->assertSee('76.2 × 121.9 cm', false);
     }
 
     public function test_mirror_dimensions_hidden_when_not_set(): void
@@ -308,8 +344,8 @@ class ProductAdminContentTest extends TestCase
             'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
             'pricing_type' => Product::PRICING_FIXED,
             'is_active' => true,
-            'dim_width_cm' => 60,
-            'dim_height_cm' => 120,
+            'dim_width_cm' => 60.96,
+            'dim_height_cm' => 121.92,
         ]);
 
         $this->assertNull($product->discountPercent());
@@ -321,8 +357,8 @@ class ProductAdminContentTest extends TestCase
             ->assertDontSee('am-featured__price-old', false)
             ->assertSee('am-pdp__dimensions', false)
             ->assertSee('2 × 4 ft', false)
-            ->assertSee('600 × 1200 mm', false)
-            ->assertSee('60 × 120 cm', false);
+            ->assertSee('610 × 1219 mm', false)
+            ->assertSee('61 × 121.9 cm', false);
     }
 
     public function test_admin_form_shows_discount_percent_control_for_non_handle_products(): void
@@ -419,8 +455,10 @@ class ProductAdminContentTest extends TestCase
             'name' => 'Mirror Then Handle',
             'slug' => 'mirror-then-handle',
             'price' => '800',
-            'dim_width_cm' => '61',
-            'dim_height_cm' => '91',
+            'dim_width_ft' => '2',
+            'dim_width_in' => '0',
+            'dim_height_ft' => '3',
+            'dim_height_in' => '0',
             'size_options' => [
                 ['label' => '8"', 'price' => 800, 'size_inches' => 8],
             ],

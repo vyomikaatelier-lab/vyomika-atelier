@@ -261,28 +261,82 @@ class Product extends Model
         return [
             'feet' => self::formatMirrorDimensionPairInFeet($widthCm, $heightCm),
             'mm' => self::formatMirrorDimensionPair((int) round($widthCm * 10), (int) round($heightCm * 10), 'mm'),
-            'cm' => self::formatMirrorDimensionPair((int) round($widthCm), (int) round($heightCm), 'cm'),
+            'cm' => self::formatMirrorDimensionPair(
+                self::formatMirrorDimensionNumber($widthCm),
+                self::formatMirrorDimensionNumber($heightCm),
+                'cm'
+            ),
         ];
     }
 
-    private static function formatMirrorDimensionPair(int|float $width, int|float $height, string $unit): string
+    /**
+     * Convert feet + inches to centimetres (canonical storage).
+     * 1 in = 2.54 cm; 1 ft = 12 in.
+     */
+    public static function cmFromFeetInches(float|int $feet, float|int $inches): float
     {
-        return self::formatMirrorDimensionNumber($width).' × '.self::formatMirrorDimensionNumber($height).' '.$unit;
+        $totalInches = ((float) $feet * 12.0) + (float) $inches;
+
+        return round(max(0, $totalInches) * 2.54, 2);
+    }
+
+    /**
+     * Convert centimetres to feet + inches for admin form / display.
+     *
+     * @return array{feet: int, inches: float}
+     */
+    public static function feetInchesFromCm(float $cm, int $inchPrecision = 1): array
+    {
+        if ($cm <= 0) {
+            return ['feet' => 0, 'inches' => 0.0];
+        }
+
+        $totalInches = round($cm / 2.54, $inchPrecision);
+        $feet = (int) floor($totalInches / 12);
+        $inches = round($totalInches - ($feet * 12), $inchPrecision);
+
+        if ($inches >= 12) {
+            $feet++;
+            $inches = 0.0;
+        }
+
+        return ['feet' => max(0, $feet), 'inches' => $inches];
+    }
+
+    private static function formatMirrorDimensionPair(int|float|string $width, int|float|string $height, string $unit): string
+    {
+        $w = is_string($width) ? $width : self::formatMirrorDimensionNumber($width);
+        $h = is_string($height) ? $height : self::formatMirrorDimensionNumber($height);
+
+        return $w.' × '.$h.' '.$unit;
     }
 
     private static function formatMirrorDimensionPairInFeet(float $widthCm, float $heightCm): string
     {
-        $widthFt = self::formatFeetFromCm($widthCm);
-        $heightFt = self::formatFeetFromCm($heightCm);
+        $widthParts = self::feetInchesFromCm($widthCm, 1);
+        $heightParts = self::feetInchesFromCm($heightCm, 1);
+        $widthHasInches = $widthParts['inches'] > 0;
+        $heightHasInches = $heightParts['inches'] > 0;
 
-        return $widthFt.' × '.$heightFt.' ft';
+        // Compact whole-feet form when both axes have zero inches: "2 × 4 ft"
+        if (! $widthHasInches && ! $heightHasInches) {
+            return $widthParts['feet'].' × '.$heightParts['feet'].' ft';
+        }
+
+        return self::formatFeetInchesLabel($widthParts).' × '.self::formatFeetInchesLabel($heightParts);
     }
 
-    private static function formatFeetFromCm(float $cm): string
+    /** @param array{feet: int, inches: float} $parts */
+    private static function formatFeetInchesLabel(array $parts): string
     {
-        $feet = (int) round($cm / 30.48);
+        $feet = $parts['feet'];
+        $inches = $parts['inches'];
 
-        return (string) max($feet, 1);
+        if ($inches <= 0) {
+            return $feet.' ft';
+        }
+
+        return $feet.' ft '.self::formatMirrorDimensionNumber($inches).' in';
     }
 
     private static function formatMirrorDimensionNumber(int|float $value): string

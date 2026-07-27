@@ -71,6 +71,7 @@
                 @include('partials.am-mirror-dimensions', ['product' => $product])
 
                 @php $hasSizeOptions = $product->hasSizeOptions(); @endphp
+                @php $selectedSize = $hasSizeOptions ? $product->resolveSizeOption(null) : null; @endphp
 
                 {{-- Door handles: size rows carry per-size price/discount; show selector before the price line --}}
                 @if($hasSizeOptions)
@@ -85,7 +86,7 @@
                     </div>
                     <p class="am-pdp__sqft-price-note" data-sqft-black-note hidden>Black finish selected — ₹{{ number_format($blackRate, 0) }}/sq ft (+30%)</p>
                     @else
-                    <span class="am-featured__price-current" data-pdp-price-display>{{ $product->formattedPrice() }}</span>
+                    <span class="am-featured__price-current" data-pdp-price-display>@if($selectedSize)₹{{ number_format($selectedSize['price'], 0) }}@else{{ $product->formattedPrice() }}@endif</span>
                     @if(! $hasSizeOptions && $product->hasDisplayComparePrice())
                     <span class="am-featured__price-old">₹{{ number_format($product->compare_price, 0) }}</span>
                     <span class="am-featured__badge">-{{ $discount }}%</span>

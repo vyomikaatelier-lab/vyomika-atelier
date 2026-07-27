@@ -52,23 +52,36 @@ class CatalogSyncSeeder extends Seeder
                     ? (in_array($item['category'], ['fluted-panels', 'room-dividers'], true) ? 'partitions' : 'bespoke-metal-furniture')
                     : ($item['category'] ?? null));
 
+            $payload = [
+                'category_id' => $categorySlug ? $cat($categorySlug)?->id : null,
+                'name' => $item['name'],
+                'description' => $item['desc'],
+                'price' => $item['price'],
+                'compare_price' => $item['compare_price'] ?? null,
+                'sku' => $item['sku'],
+                'stock' => 25,
+                'image' => $item['image'],
+                'gallery' => $item['gallery'] ?? null,
+                'is_featured' => $item['featured'] ?? false,
+                'is_active' => true,
+                'dim_width_cm' => $item['dim_width_cm'] ?? null,
+                'dim_height_cm' => $item['dim_height_cm'] ?? null,
+            ];
+
+            if (array_key_exists('size_options', $item)) {
+                $sizeOptions = is_array($item['size_options']) && $item['size_options'] !== []
+                    ? array_values($item['size_options'])
+                    : null;
+                $payload['size_options'] = $sizeOptions;
+                if ($sizeOptions !== null) {
+                    $payload['price'] = min(array_column($sizeOptions, 'price'));
+                    $payload['compare_price'] = null;
+                }
+            }
+
             Product::query()->updateOrCreate(
                 ['slug' => $item['slug']],
-                [
-                    'category_id' => $categorySlug ? $cat($categorySlug)?->id : null,
-                    'name' => $item['name'],
-                    'description' => $item['desc'],
-                    'price' => $item['price'],
-                    'compare_price' => $item['compare_price'],
-                    'sku' => $item['sku'],
-                    'stock' => 25,
-                    'image' => $item['image'],
-                    'gallery' => $item['gallery'] ?? null,
-                    'is_featured' => $item['featured'] ?? false,
-                    'is_active' => true,
-                    'dim_width_cm' => $item['dim_width_cm'] ?? null,
-                    'dim_height_cm' => $item['dim_height_cm'] ?? null,
-                ]
+                $payload
             );
         }
     }

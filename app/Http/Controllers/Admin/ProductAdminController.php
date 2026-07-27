@@ -168,6 +168,10 @@ class ProductAdminController extends Controller
             'tab_specifications' => 'nullable|string',
             'tab_packaging' => 'nullable|string',
             'tab_shipping' => 'nullable|string',
+            'dim_width_ft' => 'nullable|integer|min:0|max:50',
+            'dim_width_in' => 'nullable|numeric|min:0|max:11.99',
+            'dim_height_ft' => 'nullable|integer|min:0|max:50',
+            'dim_height_in' => 'nullable|numeric|min:0|max:11.99',
             'dim_width_cm' => 'nullable|numeric|min:0.1|max:9999|required_with:dim_height_cm',
             'dim_height_cm' => 'nullable|numeric|min:0.1|max:9999|required_with:dim_width_cm',
             'meta_title' => 'nullable|string|max:255',
@@ -186,6 +190,7 @@ class ProductAdminController extends Controller
             'size_options.*.label' => 'required|string|max:50',
             'size_options.*.price' => 'required|numeric|min:0',
             'size_options.*.compare_price' => 'nullable|numeric|min:0',
+            'size_options.*.discount_percent' => 'nullable|integer|min:0|max:99',
             'size_options.*.size_inches' => 'nullable|numeric|min:0',
             'size_options.*.sku_suffix' => 'nullable|string|max:20',
         ]);
@@ -241,13 +246,15 @@ class ProductAdminController extends Controller
             $validated['dim_width_cm'] = null;
             $validated['dim_height_cm'] = null;
         } else {
-            $validated['dim_width_cm'] = filled($validated['dim_width_cm'] ?? null)
-                ? round((float) $validated['dim_width_cm'], 2)
-                : null;
-            $validated['dim_height_cm'] = filled($validated['dim_height_cm'] ?? null)
-                ? round((float) $validated['dim_height_cm'], 2)
-                : null;
+            $validated = array_merge($validated, $this->normalizeMirrorDimensionsFromRequest($validated));
         }
+
+        unset(
+            $validated['dim_width_ft'],
+            $validated['dim_width_in'],
+            $validated['dim_height_ft'],
+            $validated['dim_height_in'],
+        );
 
         $validated['size_options'] = $this->normalizeSizeOptions($validated['size_options'] ?? null);
         if ($category?->slug === 'door-handles') {
@@ -264,6 +271,52 @@ class ProductAdminController extends Controller
         $validated['tab_specifications'] = Product::normalizeTabLines($validated['tab_specifications'] ?? null);
 
         return $validated;
+    }
+
+    /**
+     * Prefer feet+inches admin inputs; fall back to legacy cm fields.
+     *
+     * @param  array<string, mixed>  $validated
+     * @return array{dim_width_cm: float|null, dim_height_cm: float|null}
+     */
+    private function normalizeMirrorDimensionsFromRequest(array $validated): array
+    {
+        $hasFtIn = filled($validated['dim_width_ft'] ?? null)
+            || filled($validated['dim_width_in'] ?? null)
+            || filled($validated['dim_height_ft'] ?? null)
+            || filled($validated['dim_height_in'] ?? null);
+
+        if ($hasFtIn) {
+            $widthCm = Product::cmFromFeetInches(
+                (float) ($validated['dim_width_ft'] ?? 0),
+                (float) ($validated['dim_width_in'] ?? 0)
+            );
+            $heightCm = Product::cmFromFeetInches(
+                (float) ($validated['dim_height_ft'] ?? 0),
+                (float) ($validated['dim_height_in'] ?? 0)
+            );
+
+            if ($widthCm < 0.1 || $heightCm < 0.1) {
+                throw ValidationException::withMessages([
+                    'dim_width_ft' => 'Enter both width and height in feet and inches (at least 0.1 cm equivalent).',
+                    'dim_height_ft' => 'Enter both width and height in feet and inches (at least 0.1 cm equivalent).',
+                ]);
+            }
+
+            return [
+                'dim_width_cm' => $widthCm,
+                'dim_height_cm' => $heightCm,
+            ];
+        }
+
+        return [
+            'dim_width_cm' => filled($validated['dim_width_cm'] ?? null)
+                ? round((float) $validated['dim_width_cm'], 2)
+                : null,
+            'dim_height_cm' => filled($validated['dim_height_cm'] ?? null)
+                ? round((float) $validated['dim_height_cm'], 2)
+                : null,
+        ];
     }
 
     /**
@@ -289,13 +342,15 @@ class ProductAdminController extends Controller
             $comparePrice = $row['compare_price'] ?? null;
             $sizeInches = $row['size_inches'] ?? null;
             $skuSuffix = $row['sku_suffix'] ?? null;
+            $discountPercent = $row['discount_percent'] ?? null;
 
             $priceBlank = $price === null || $price === '';
             $compareBlank = $comparePrice === null || $comparePrice === '';
             $inchesBlank = $sizeInches === null || $sizeInches === '';
             $skuBlank = $skuSuffix === null || trim((string) $skuSuffix) === '';
+            $discountBlank = $discountPercent === null || $discountPercent === '';
 
-            if ($label === '' && $priceBlank && $compareBlank && $inchesBlank && $skuBlank) {
+            if ($label === '' && $priceBlank && $compareBlank && $inchesBlank && $skuBlank && $discountBlank) {
                 continue;
             }
 
@@ -334,6 +389,17 @@ class ProductAdminController extends Controller
             $comparePrice = filled($compareRaw) && is_numeric($compareRaw)
                 ? round((float) $compareRaw, 2)
                 : null;
+
+            if ($comparePrice === null) {
+                $discountRaw = $row['discount_percent'] ?? null;
+                if (filled($discountRaw) && is_numeric($discountRaw)) {
+                    $discountPct = (int) $discountRaw;
+                    $salePrice = round((float) $price, 2);
+                    if ($discountPct > 0 && $discountPct < 100 && $salePrice >= 0) {
+                        $comparePrice = round($salePrice / (1 - $discountPct / 100), 2);
+                    }
+                }
+            }
 
             $options[] = [
                 'label' => $label,

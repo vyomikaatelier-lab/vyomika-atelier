@@ -64,6 +64,50 @@ class ProductSizeOptionsTest extends TestCase
         $this->assertSame(67, $product->normalizedSizeOptions()[1]['discount_percent']);
     }
 
+    public function test_admin_can_save_size_option_discount_percent_without_compare_price(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $category = Category::query()->firstOrCreate(
+            ['slug' => 'door-handles'],
+            ['name' => 'Door Handles', 'section' => 'shop', 'is_active' => true]
+        );
+
+        $product = Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Discount Pct Handle',
+            'slug' => 'discount-pct-handle',
+            'price' => 1500,
+            'stock' => 10,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+        ]);
+
+        $this->actingAsAdmin($admin)->put(route('admin.products.update', $product), [
+            'category_id' => $category->id,
+            'name' => 'Discount Pct Handle',
+            'slug' => 'discount-pct-handle',
+            'price' => 1500,
+            'stock' => 10,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => '1',
+            'size_options' => [
+                ['label' => '8"', 'price' => 800, 'discount_percent' => 75, 'size_inches' => 8],
+                ['label' => '12"', 'price' => 1500, 'discount_percent' => 67, 'size_inches' => 12],
+            ],
+        ])->assertRedirect(route('admin.products.edit', ['product' => $product, 'saved' => 1]));
+
+        $product->refresh()->load('category');
+        $options = $product->normalizedSizeOptions();
+        $this->assertSame(3200.0, $options[0]['compare_price']);
+        $this->assertSame(75, $options[0]['discount_percent']);
+        $this->assertSame(4500.0, $options[1]['compare_price']);
+        $this->assertSame(67, $options[1]['discount_percent']);
+    }
+
     public function test_admin_ignores_blank_size_option_rows_and_still_saves_filled_ones(): void
     {
         $admin = User::factory()->admin()->create();
@@ -441,8 +485,8 @@ class ProductSizeOptionsTest extends TestCase
             'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
             'pricing_type' => Product::PRICING_FIXED,
             'is_active' => true,
-            'dim_width_cm' => 61,
-            'dim_height_cm' => 91,
+            'dim_width_cm' => 60.96,
+            'dim_height_cm' => 91.44,
             // Stale leaked size_options must not affect storefront.
             'size_options' => [
                 ['label' => '8"', 'price' => 800],
@@ -490,7 +534,7 @@ class ProductSizeOptionsTest extends TestCase
             ->assertSee('Size &amp; price options (door handles — each size has its own price &amp; discount)', false)
             ->assertSee('id="size-options-section"', false)
             ->assertDontSee('id="size-options-section" class="rounded-lg border-2 border-amber-200 bg-amber-50 p-4 space-y-3 hidden"', false)
-            ->assertSee('Mirror dimensions (single size, shown as ft / mm / cm — one price above)', false)
+            ->assertSee('Mirror dimensions (single size — enter ft + in)', false)
             ->assertSee("selected && selected.dataset.slug === 'door-handles'", false)
             ->assertSee("selected && selected.dataset.slug === 'mirror-frames'", false);
     }
@@ -523,7 +567,7 @@ class ProductSizeOptionsTest extends TestCase
             ->assertOk()
             ->assertSee('id="size-options-section"', false)
             ->assertSee('hidden', false)
-            ->assertSee('Mirror dimensions (single size, shown as ft / mm / cm — one price above)', false)
+            ->assertSee('Mirror dimensions (single size — enter ft + in)', false)
             ->getContent();
 
         $this->assertMatchesRegularExpression(
