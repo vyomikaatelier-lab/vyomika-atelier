@@ -18,7 +18,7 @@
         @endif
         <div class="am-pdp-buy__row{{ $hasSizeOptions ? ' am-pdp-buy__row--with-size' : '' }}">
             @if($hasSizeOptions)
-            @include('partials.am-pdp-size-options', ['product' => $product])
+            @include('partials.am-pdp-size-options', ['product' => $product, 'compact' => true])
             @endif
             <div class="am-pdp-buy__qty">
                 <label for="pdp-qty" class="am-pdp-buy__qty-label">Quantity</label>
