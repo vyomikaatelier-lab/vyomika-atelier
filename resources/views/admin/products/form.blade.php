@@ -60,8 +60,8 @@
         </div>
 
         <fieldset id="mirror-dimensions-section" class="space-y-3 border-t border-gray-200 pt-4 hidden" aria-labelledby="mirror-dimensions-heading">
-            <legend id="mirror-dimensions-heading" class="text-sm font-medium text-gray-800 px-1">Mirror dimensions</legend>
-            <p class="text-xs text-gray-500 -mt-1 mb-2">Width and height in centimetres. Shown on mirror frame product pages as feet, millimetres, and centimetres. Leave both blank to hide.</p>
+            <legend id="mirror-dimensions-heading" class="text-sm font-medium text-gray-800 px-1">Mirror dimensions (single size, shown as ft / mm / cm — one price above)</legend>
+            <p class="text-xs text-gray-500 -mt-1 mb-2">Enter width and height in centimetres once. The storefront shows the same size in feet, millimetres, and centimetres. Mirrors use the single Price field above — not multiple size/price variants. Leave both blank to hide dimensions.</p>
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label for="dim_width_cm" class="text-sm text-gray-700 block mb-1">Width (cm)</label>
@@ -168,7 +168,7 @@
                 <label for="product-price" class="text-sm font-medium text-gray-800 block mb-1">Price @if($currentPricingType === 'square_foot')<span class="font-normal text-gray-500">(₹ per sq ft)</span>@endif</label>
                 <input id="product-price" type="number" step="0.01" name="price" value="{{ old('price', $product->price ?? '') }}" placeholder="Selling price" required class="w-full border px-3 py-2 rounded bg-white">
                 @error('price')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
-                <p class="text-xs text-gray-500 mt-1">Shop = fixed selling price. Studio = rate per sq ft. When size options are set, this becomes the lowest variant price.</p>
+                <p class="text-xs text-gray-500 mt-1">Shop = fixed selling price. Studio = rate per sq ft. For door handles with size options, this syncs to the lowest size price.</p>
             </div>
             <div>
                 <label for="product-compare-price" class="text-sm font-medium text-gray-800 block mb-1">Compare price <span class="font-normal text-gray-500">(original / before discount)</span></label>
@@ -193,8 +193,8 @@
         }
     @endphp
     <fieldset id="size-options-section" class="rounded-lg border-2 border-amber-200 bg-amber-50 p-4 space-y-3 hidden" aria-labelledby="size-options-heading">
-        <legend id="size-options-heading" class="text-sm font-semibold text-gray-900 px-1">Size &amp; price options</legend>
-        <p class="text-xs text-gray-600 -mt-1">For door handles and other shop products sold in multiple sizes. Visitors pick a size on the product page; price updates automatically. Leave all rows blank to use the single price above.</p>
+        <legend id="size-options-heading" class="text-sm font-semibold text-gray-900 px-1">Size &amp; price options (door handles — each size has its own price)</legend>
+        <p class="text-xs text-gray-600 -mt-1">Door handles only. Add each size with its own price (e.g. 8&quot; → ₹800, 12&quot; → ₹1500). Visitors pick a size on the product page; price updates automatically. Leave all rows blank to use the single price above. Not used for mirrors.</p>
         <div id="size-options-rows" class="space-y-3">
             @foreach($sizeOptionRows as $index => $row)
             <div class="size-option-row grid grid-cols-12 gap-2 items-end bg-white border rounded p-3">
@@ -281,21 +281,22 @@
         var selected = categorySelect.selectedOptions[0];
         var isMirrorFrames = selected && selected.dataset.slug === 'mirror-frames';
         mirrorDimensionsSection.classList.toggle('hidden', !isMirrorFrames);
+        mirrorDimensionsSection.querySelectorAll('input').forEach(function (input) {
+            input.disabled = !isMirrorFrames;
+        });
     }
 
     function syncSizeOptionsSection() {
         if (!sizeOptionsSection) return;
         var selected = categorySelect.selectedOptions[0];
         var isDoorHandles = selected && selected.dataset.slug === 'door-handles';
-        var isShop = sectionSelect.value === 'shop';
-        var show = isShop || isDoorHandles;
-        sizeOptionsSection.classList.toggle('hidden', !show);
+        sizeOptionsSection.classList.toggle('hidden', !isDoorHandles);
         if (sizeOptionsRows) {
             sizeOptionsRows.querySelectorAll('input').forEach(function (input) {
-                input.disabled = !show;
+                input.disabled = !isDoorHandles;
             });
         }
-        if (sizeOptionAdd) sizeOptionAdd.disabled = !show;
+        if (sizeOptionAdd) sizeOptionAdd.disabled = !isDoorHandles;
     }
 
     function bindSizeOptionRow(row) {

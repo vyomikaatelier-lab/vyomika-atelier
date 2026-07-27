@@ -105,9 +105,14 @@ class Product extends Model
         return '₹' . number_format($this->price, 0);
     }
 
+    public function isDoorHandleProduct(): bool
+    {
+        return $this->category?->slug === 'door-handles';
+    }
+
     public function hasSizeOptions(): bool
     {
-        return $this->normalizedSizeOptions() !== [];
+        return $this->isDoorHandleProduct() && $this->normalizedSizeOptions() !== [];
     }
 
     /** @return list<array{label: string, size_inches: ?float, price: float, sku_suffix: ?string}> */

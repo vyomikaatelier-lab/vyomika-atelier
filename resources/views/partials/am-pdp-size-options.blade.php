@@ -1,7 +1,7 @@
 @props(['product'])
 
 @php
-    $options = $product->normalizedSizeOptions();
+    $options = $product->hasSizeOptions() ? $product->normalizedSizeOptions() : [];
 @endphp
 
 @if($options !== [])

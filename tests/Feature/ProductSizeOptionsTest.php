@@ -182,4 +182,170 @@ class ProductSizeOptionsTest extends TestCase
         $html = view('partials.am-product-card', ['product' => $product])->render();
         $this->assertStringContainsString('From ₹800', $html);
     }
+
+    public function test_admin_rejects_size_options_for_non_door_handle_shop_products(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $category = Category::query()->firstOrCreate(
+            ['slug' => 'mirror-frames'],
+            ['name' => 'Mirror Frames', 'section' => 'shop', 'is_active' => true]
+        );
+
+        $product = Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Wall Mirror',
+            'slug' => 'wall-mirror-no-sizes',
+            'price' => 18500,
+            'stock' => 5,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+            'size_options' => [
+                ['label' => '8"', 'price' => 800],
+                ['label' => '12"', 'price' => 1500],
+            ],
+        ]);
+
+        $this->actingAsAdmin($admin)->put(route('admin.products.update', $product), [
+            'category_id' => $category->id,
+            'name' => 'Wall Mirror',
+            'slug' => 'wall-mirror-no-sizes',
+            'price' => 18500,
+            'stock' => 5,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => '1',
+            'size_options' => [
+                ['label' => '8"', 'price' => 800],
+                ['label' => '12"', 'price' => 1500],
+            ],
+        ])->assertRedirect(route('admin.products.edit', ['product' => $product, 'saved' => 1]));
+
+        $product->refresh();
+        $this->assertNull($product->size_options);
+        $this->assertFalse($product->hasSizeOptions());
+        $this->assertSame('18500.00', (string) $product->price);
+        $this->assertSame('₹18,500', $product->formattedListingPrice());
+    }
+
+    public function test_admin_clears_size_options_when_category_leaves_door_handles(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $handles = Category::query()->firstOrCreate(
+            ['slug' => 'door-handles'],
+            ['name' => 'Door Handles', 'section' => 'shop', 'is_active' => true]
+        );
+        $mirrors = Category::query()->firstOrCreate(
+            ['slug' => 'mirror-frames'],
+            ['name' => 'Mirror Frames', 'section' => 'shop', 'is_active' => true]
+        );
+
+        $product = Product::query()->create([
+            'category_id' => $handles->id,
+            'name' => 'Pull Then Mirror',
+            'slug' => 'pull-then-mirror',
+            'price' => 800,
+            'stock' => 5,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+            'size_options' => [
+                ['label' => '8"', 'price' => 800],
+                ['label' => '12"', 'price' => 1500],
+            ],
+        ]);
+
+        $this->actingAsAdmin($admin)->put(route('admin.products.update', $product), [
+            'category_id' => $mirrors->id,
+            'name' => 'Pull Then Mirror',
+            'slug' => 'pull-then-mirror',
+            'price' => 18500,
+            'stock' => 5,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => '1',
+            'dim_width_cm' => '61',
+            'dim_height_cm' => '91',
+            'size_options' => [
+                ['label' => '8"', 'price' => 800],
+            ],
+        ])->assertRedirect(route('admin.products.edit', ['product' => $product, 'saved' => 1]));
+
+        $product->refresh()->load('category');
+        $this->assertNull($product->size_options);
+        $this->assertFalse($product->hasSizeOptions());
+        $this->assertSame('61.00', $product->dim_width_cm);
+        $this->assertTrue($product->hasMirrorDimensions());
+    }
+
+    public function test_mirror_pdp_shows_single_price_not_from_or_size_selector(): void
+    {
+        $category = Category::query()->firstOrCreate(
+            ['slug' => 'mirror-frames'],
+            ['name' => 'Mirror Frames', 'section' => 'shop', 'is_active' => true]
+        );
+
+        $product = Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Single Price Mirror',
+            'slug' => 'arched-wall-mirror',
+            'price' => 18500,
+            'stock' => 5,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+            'dim_width_cm' => 61,
+            'dim_height_cm' => 91,
+            // Stale leaked size_options must not affect storefront.
+            'size_options' => [
+                ['label' => '8"', 'price' => 800],
+                ['label' => '12"', 'price' => 1500],
+            ],
+        ]);
+
+        $this->assertFalse($product->fresh()->load('category')->hasSizeOptions());
+        $this->assertSame('₹18,500', $product->formattedListingPrice());
+
+        $this->get(route('shop.mirror-frames.show', 'arched-wall-mirror'))
+            ->assertOk()
+            ->assertSee('₹18,500', false)
+            ->assertDontSee('From ₹', false)
+            ->assertDontSee('data-pdp-size', false)
+            ->assertSee('2 × 3 ft', false);
+    }
+
+    public function test_admin_form_shows_handle_and_mirror_labels(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $handles = Category::query()->firstOrCreate(
+            ['slug' => 'door-handles'],
+            ['name' => 'Door Handles', 'section' => 'shop', 'is_active' => true]
+        );
+
+        $product = Product::query()->create([
+            'category_id' => $handles->id,
+            'name' => 'Label Check Handle',
+            'slug' => 'label-check-handle',
+            'price' => 800,
+            'stock' => 1,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+        ]);
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.products.edit', $product))
+            ->assertOk()
+            ->assertSee('Size &amp; price options (door handles — each size has its own price)', false)
+            ->assertSee('Mirror dimensions (single size, shown as ft / mm / cm — one price above)', false)
+            ->assertSee("selected && selected.dataset.slug === 'door-handles'", false)
+            ->assertSee("selected && selected.dataset.slug === 'mirror-frames'", false)
+            ->assertDontSee('var isShop = sectionSelect.value === \'shop\'', false);
+    }
 }

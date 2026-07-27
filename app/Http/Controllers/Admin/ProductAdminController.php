@@ -246,12 +246,13 @@ class ProductAdminController extends Controller
         }
 
         $validated['size_options'] = $this->normalizeSizeOptions($validated['size_options'] ?? null);
-        if ($section === Product::SECTION_SHOP || $category?->slug === 'door-handles') {
+        if ($category?->slug === 'door-handles') {
             if ($validated['size_options'] !== null) {
                 $validated['price'] = min(array_column($validated['size_options'], 'price'));
             }
         } else {
-            unset($validated['size_options']);
+            // Clear so size/price variants never leak onto mirrors or other categories.
+            $validated['size_options'] = null;
         }
 
         $validated['tab_specifications'] = Product::normalizeTabLines($validated['tab_specifications'] ?? null);

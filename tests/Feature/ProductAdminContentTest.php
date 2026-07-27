@@ -319,4 +319,49 @@ class ProductAdminContentTest extends TestCase
             ->assertSee('Mounting: Wall & ceiling')
             ->assertDontSee('<ul><li>Thickness: 1.2mm</li><li>Mounting:', false);
     }
+
+    public function test_admin_clears_mirror_dimensions_when_not_mirror_frames(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $mirrors = Category::query()->firstOrCreate(
+            ['slug' => 'mirror-frames'],
+            ['name' => 'Mirror Frames', 'section' => 'shop', 'is_active' => true]
+        );
+        $handles = Category::query()->firstOrCreate(
+            ['slug' => 'door-handles'],
+            ['name' => 'Door Handles', 'section' => 'shop', 'is_active' => true]
+        );
+
+        $product = Product::query()->create([
+            'category_id' => $mirrors->id,
+            'name' => 'Mirror Then Handle',
+            'slug' => 'mirror-then-handle',
+            'price' => 18500,
+            'stock' => 5,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+            'dim_width_cm' => 61,
+            'dim_height_cm' => 91,
+        ]);
+
+        $this->actingAsAdmin($admin)->put(route('admin.products.update', $product), $this->productPayload($handles, $product, [
+            'name' => 'Mirror Then Handle',
+            'slug' => 'mirror-then-handle',
+            'price' => '800',
+            'dim_width_cm' => '61',
+            'dim_height_cm' => '91',
+            'size_options' => [
+                ['label' => '8"', 'price' => 800, 'size_inches' => 8],
+            ],
+        ]))->assertRedirect(route('admin.products.edit', ['product' => $product, 'saved' => 1]));
+
+        $product->refresh()->load('category');
+        $this->assertNull($product->dim_width_cm);
+        $this->assertNull($product->dim_height_cm);
+        $this->assertFalse($product->hasMirrorDimensions());
+        $this->assertCount(1, $product->normalizedSizeOptions());
+        $this->assertTrue($product->hasSizeOptions());
+    }
 }
