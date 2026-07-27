@@ -14,6 +14,11 @@
     $sectionLabels = ['shop' => 'Shop', 'studio' => 'Studio', 'railings' => 'Railings'];
     $purchaseModeLabels = ['checkout' => 'Checkout', 'enquiry' => 'Enquiry', 'quote' => 'Quote'];
     $pricingTypeLabels = ['fixed' => 'Fixed price', 'square_foot' => 'Per sq ft', 'quotation_only' => 'Quotation only'];
+    $selectedCategoryId = old('category_id', isset($product) ? $product->category_id : null);
+    $selectedCategorySlug = $categories->firstWhere('id', (int) $selectedCategoryId)?->slug
+        ?? (isset($product) ? $product->category?->slug : null);
+    $showDoorHandleSizes = $selectedCategorySlug === 'door-handles';
+    $showMirrorDimensions = $selectedCategorySlug === 'mirror-frames';
 @endphp
 
 @if(request('saved') || session('success'))
@@ -59,18 +64,18 @@
             @error('swatches_note')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
         </div>
 
-        <fieldset id="mirror-dimensions-section" class="space-y-3 border-t border-gray-200 pt-4 hidden" aria-labelledby="mirror-dimensions-heading">
+        <fieldset id="mirror-dimensions-section" class="space-y-3 border-t border-gray-200 pt-4{{ $showMirrorDimensions ? '' : ' hidden' }}" aria-labelledby="mirror-dimensions-heading" @if(! $showMirrorDimensions) inert @endif>
             <legend id="mirror-dimensions-heading" class="text-sm font-medium text-gray-800 px-1">Mirror dimensions (single size, shown as ft / mm / cm — one price above)</legend>
             <p class="text-xs text-gray-500 -mt-1 mb-2">Enter width and height in centimetres once. The storefront shows the same size in feet, millimetres, and centimetres. Mirrors use the single Price field above — not multiple size/price variants. Leave both blank to hide dimensions.</p>
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label for="dim_width_cm" class="text-sm text-gray-700 block mb-1">Width (cm)</label>
-                    <input id="dim_width_cm" type="number" step="0.01" min="0.1" name="dim_width_cm" value="{{ old('dim_width_cm', $product->dim_width_cm ?? '') }}" placeholder="e.g. 61" class="w-full border px-3 py-2 rounded bg-white">
+                    <input id="dim_width_cm" type="number" step="0.01" min="0.1" name="dim_width_cm" value="{{ old('dim_width_cm', $product->dim_width_cm ?? '') }}" placeholder="e.g. 61" class="w-full border px-3 py-2 rounded bg-white" @disabled(! $showMirrorDimensions)>
                     @error('dim_width_cm')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
                 </div>
                 <div>
                     <label for="dim_height_cm" class="text-sm text-gray-700 block mb-1">Height (cm)</label>
-                    <input id="dim_height_cm" type="number" step="0.01" min="0.1" name="dim_height_cm" value="{{ old('dim_height_cm', $product->dim_height_cm ?? '') }}" placeholder="e.g. 91" class="w-full border px-3 py-2 rounded bg-white">
+                    <input id="dim_height_cm" type="number" step="0.01" min="0.1" name="dim_height_cm" value="{{ old('dim_height_cm', $product->dim_height_cm ?? '') }}" placeholder="e.g. 91" class="w-full border px-3 py-2 rounded bg-white" @disabled(! $showMirrorDimensions)>
                     @error('dim_height_cm')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
                 </div>
             </div>
@@ -187,12 +192,12 @@
     </fieldset>
 
     @php
-        $sizeOptionRows = old('size_options', isset($product) ? ($product->size_options ?? []) : []);
+        $sizeOptionRows = old('size_options', ($showDoorHandleSizes && isset($product)) ? ($product->size_options ?? []) : []);
         if (! is_array($sizeOptionRows) || $sizeOptionRows === []) {
             $sizeOptionRows = [['label' => '', 'price' => '', 'size_inches' => '', 'sku_suffix' => '']];
         }
     @endphp
-    <fieldset id="size-options-section" class="rounded-lg border-2 border-amber-200 bg-amber-50 p-4 space-y-3 hidden" aria-labelledby="size-options-heading">
+    <fieldset id="size-options-section" class="rounded-lg border-2 border-amber-200 bg-amber-50 p-4 space-y-3{{ $showDoorHandleSizes ? '' : ' hidden' }}" aria-labelledby="size-options-heading" data-only-category="door-handles" @if(! $showDoorHandleSizes) inert @endif>
         <legend id="size-options-heading" class="text-sm font-semibold text-gray-900 px-1">Size &amp; price options (door handles — each size has its own price)</legend>
         <p class="text-xs text-gray-600 -mt-1">Door handles only. Add each size with its own price (e.g. 8&quot; → ₹800, 12&quot; → ₹1500). Visitors pick a size on the product page; price updates automatically. Leave all rows blank to use the single price above. Not used for mirrors.</p>
         <div id="size-options-rows" class="space-y-3">
@@ -200,19 +205,19 @@
             <div class="size-option-row grid grid-cols-12 gap-2 items-end bg-white border rounded p-3">
                 <div class="col-span-4">
                     <label class="text-xs text-gray-600 block mb-1">Size label</label>
-                    <input type="text" name="size_options[{{ $index }}][label]" value="{{ $row['label'] ?? '' }}" placeholder='e.g. 8"' class="w-full border px-2 py-1 rounded text-sm">
+                    <input type="text" name="size_options[{{ $index }}][label]" value="{{ $row['label'] ?? '' }}" placeholder='e.g. 8"' class="w-full border px-2 py-1 rounded text-sm" @disabled(! $showDoorHandleSizes)>
                 </div>
                 <div class="col-span-3">
                     <label class="text-xs text-gray-600 block mb-1">Price (₹)</label>
-                    <input type="number" step="0.01" min="0" name="size_options[{{ $index }}][price]" value="{{ $row['price'] ?? '' }}" placeholder="800" class="w-full border px-2 py-1 rounded text-sm">
+                    <input type="number" step="0.01" min="0" name="size_options[{{ $index }}][price]" value="{{ $row['price'] ?? '' }}" placeholder="800" class="w-full border px-2 py-1 rounded text-sm" @disabled(! $showDoorHandleSizes)>
                 </div>
                 <div class="col-span-2">
                     <label class="text-xs text-gray-600 block mb-1">Inches</label>
-                    <input type="number" step="0.01" min="0" name="size_options[{{ $index }}][size_inches]" value="{{ $row['size_inches'] ?? '' }}" placeholder="8" class="w-full border px-2 py-1 rounded text-sm">
+                    <input type="number" step="0.01" min="0" name="size_options[{{ $index }}][size_inches]" value="{{ $row['size_inches'] ?? '' }}" placeholder="8" class="w-full border px-2 py-1 rounded text-sm" @disabled(! $showDoorHandleSizes)>
                 </div>
                 <div class="col-span-2">
                     <label class="text-xs text-gray-600 block mb-1">SKU suffix</label>
-                    <input type="text" name="size_options[{{ $index }}][sku_suffix]" value="{{ $row['sku_suffix'] ?? '' }}" placeholder="8IN" class="w-full border px-2 py-1 rounded text-sm">
+                    <input type="text" name="size_options[{{ $index }}][sku_suffix]" value="{{ $row['sku_suffix'] ?? '' }}" placeholder="8IN" class="w-full border px-2 py-1 rounded text-sm" @disabled(! $showDoorHandleSizes)>
                 </div>
                 <div class="col-span-1">
                     <button type="button" class="size-option-remove text-xs text-red-600 hover:underline" @if($loop->first && count($sizeOptionRows) === 1) hidden @endif>Remove</button>
@@ -220,7 +225,7 @@
             </div>
             @endforeach
         </div>
-        <button type="button" id="size-option-add" class="text-sm text-gray-700 border border-gray-300 bg-white px-3 py-1 rounded hover:bg-gray-50">+ Add size</button>
+        <button type="button" id="size-option-add" class="text-sm text-gray-700 border border-gray-300 bg-white px-3 py-1 rounded hover:bg-gray-50" @disabled(! $showDoorHandleSizes)>+ Add size</button>
         @error('size_options')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
         @error('size_options.*.label')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
         @error('size_options.*.price')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
@@ -281,6 +286,11 @@
         var selected = categorySelect.selectedOptions[0];
         var isMirrorFrames = selected && selected.dataset.slug === 'mirror-frames';
         mirrorDimensionsSection.classList.toggle('hidden', !isMirrorFrames);
+        if (isMirrorFrames) {
+            mirrorDimensionsSection.removeAttribute('inert');
+        } else {
+            mirrorDimensionsSection.setAttribute('inert', '');
+        }
         mirrorDimensionsSection.querySelectorAll('input').forEach(function (input) {
             input.disabled = !isMirrorFrames;
         });
@@ -291,6 +301,11 @@
         var selected = categorySelect.selectedOptions[0];
         var isDoorHandles = selected && selected.dataset.slug === 'door-handles';
         sizeOptionsSection.classList.toggle('hidden', !isDoorHandles);
+        if (isDoorHandles) {
+            sizeOptionsSection.removeAttribute('inert');
+        } else {
+            sizeOptionsSection.setAttribute('inert', '');
+        }
         if (sizeOptionsRows) {
             sizeOptionsRows.querySelectorAll('input').forEach(function (input) {
                 input.disabled = !isDoorHandles;

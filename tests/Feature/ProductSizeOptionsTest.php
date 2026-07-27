@@ -343,9 +343,51 @@ class ProductSizeOptionsTest extends TestCase
             ->get(route('admin.products.edit', $product))
             ->assertOk()
             ->assertSee('Size &amp; price options (door handles — each size has its own price)', false)
+            ->assertSee('id="size-options-section"', false)
+            ->assertDontSee('id="size-options-section" class="rounded-lg border-2 border-amber-200 bg-amber-50 p-4 space-y-3 hidden"', false)
             ->assertSee('Mirror dimensions (single size, shown as ft / mm / cm — one price above)', false)
             ->assertSee("selected && selected.dataset.slug === 'door-handles'", false)
-            ->assertSee("selected && selected.dataset.slug === 'mirror-frames'", false)
-            ->assertDontSee('var isShop = sectionSelect.value === \'shop\'', false);
+            ->assertSee("selected && selected.dataset.slug === 'mirror-frames'", false);
+    }
+
+    public function test_admin_mirror_product_form_hides_door_handle_size_editor(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $mirrors = Category::query()->firstOrCreate(
+            ['slug' => 'mirror-frames'],
+            ['name' => 'Mirror Frames', 'section' => 'shop', 'is_active' => true]
+        );
+
+        $product = Product::query()->create([
+            'category_id' => $mirrors->id,
+            'name' => 'Arched Wall Mirror',
+            'slug' => 'arched-wall-mirror-admin',
+            'price' => 18500,
+            'stock' => 2,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+            'size_options' => [
+                ['label' => '8"', 'price' => 800],
+            ],
+        ]);
+
+        $html = $this->actingAsAdmin($admin)
+            ->get(route('admin.products.edit', $product))
+            ->assertOk()
+            ->assertSee('id="size-options-section"', false)
+            ->assertSee('hidden', false)
+            ->assertSee('Mirror dimensions (single size, shown as ft / mm / cm — one price above)', false)
+            ->getContent();
+
+        $this->assertMatchesRegularExpression(
+            '/id="size-options-section"[^>]*\bhidden\b/',
+            $html
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/id="mirror-dimensions-section"[^>]*\bhidden\b/',
+            $html
+        );
     }
 }
