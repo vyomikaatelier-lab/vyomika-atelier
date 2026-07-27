@@ -50,6 +50,11 @@ class Product extends Model
         'name',
         'slug',
         'description',
+        'headline_text',
+        'swatches_note',
+        'tab_specifications',
+        'tab_packaging',
+        'tab_shipping',
         'price',
         'compare_price',
         'sku',
@@ -92,6 +97,30 @@ class Product extends Model
     public function formattedPrice(): string
     {
         return '₹' . number_format($this->price, 0);
+    }
+
+    public function resolvedHeadlineText(): string
+    {
+        if (filled($this->headline_text)) {
+            return trim((string) $this->headline_text);
+        }
+
+        $parts = [];
+        if ($this->sku) {
+            $parts[] = 'SKU: '.$this->sku;
+        }
+        $parts[] = 'Pan-India shipping';
+
+        return implode(' · ', $parts);
+    }
+
+    public function resolvedSwatchesNote(): string
+    {
+        if (filled($this->swatches_note)) {
+            return trim((string) $this->swatches_note);
+        }
+
+        return 'Black Mirror & Black Brush: +30% on sq ft rate';
     }
 
     /** Per-sq-ft rate for studio products; uses this product's price when set. */

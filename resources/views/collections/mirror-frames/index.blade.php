@@ -35,16 +35,17 @@
         <div class="am-design-gallery__grid am-design-gallery__grid--dense am-mirror-frames-grid">
             @foreach($designs as $design)
             @php
+                $card = \App\Support\MirrorFramesContent::galleryCardFromDesign($design);
                 $showUrl = route('shop.mirror-frames.show', $design['slug']);
             @endphp
             @include('partials.am-design-gallery-card', [
                 'showUrl' => $showUrl,
-                'title' => $design['name'],
-                'description' => $design['description'] ?? null,
-                'image' => $design['image'] ?? null,
+                'title' => $card['title'],
+                'description' => $card['description'],
+                'image' => $card['image'],
                 'badge' => $design['badge'] ?? null,
-                'product' => $design['product'] ?? null,
-                'useCheckout' => ($design['product'] ?? null)?->usesCheckoutFlow() ?? false,
+                'product' => $card['product'],
+                'useCheckout' => ($card['product'] ?? null)?->usesCheckoutFlow() ?? false,
             ])
             @endforeach
         </div>

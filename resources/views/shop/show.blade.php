@@ -73,10 +73,7 @@
                     <p class="am-featured__cat">{{ $sectionLabel }}</p>
                 @endif
                 <h1 class="am-pdp__title">{{ $product->name }}</h1>
-                <p class="am-featured__meta">
-                    @if($product->sku) SKU: {{ $product->sku }} · @endif
-                    Pan-India shipping
-                </p>
+                <p class="am-featured__meta">{{ $product->resolvedHeadlineText() }}</p>
 
                 <div class="am-featured__price {{ $showCalculator ? 'am-featured__price--sqft' : '' }}">
                     @if($showCalculator)
@@ -105,6 +102,7 @@
                 @include('partials.am-pdp-finish-swatches', [
                     'swatches' => \App\Support\FinishSwatches::forRates($calcRate, $blackRate),
                     'baseRate' => $calcRate,
+                    'note' => $product->resolvedSwatchesNote(),
                 ])
 
                 @if($product->description)
@@ -145,6 +143,9 @@
         @include('partials.am-product-tabs', [
             'title' => $product->name,
             'descriptionHtml' => $product->description ? '<div>' . $product->description . '</div>' : '',
+            'specificationsHtml' => $product->tab_specifications,
+            'packagingHtml' => $product->tab_packaging,
+            'shippingHtml' => $product->tab_shipping,
             'careItems' => ProductCatalog::careGuidelinesForProduct($product->slug, $categorySlug),
             'related' => $related,
             'product' => $product,

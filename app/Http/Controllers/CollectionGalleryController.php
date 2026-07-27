@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Support\CollectionContent;
 use App\Support\ProductCatalog;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class CollectionGalleryController extends Controller
@@ -33,14 +34,6 @@ class CollectionGalleryController extends Controller
         $catalogSlugs = ProductCatalog::productSlugsForShopPage($slug);
 
         if ($catalogSlugs !== []) {
-            $products = Product::query()
-                ->whereIn('slug', $catalogSlugs)
-                ->where('is_active', true)
-                ->with('category')
-                ->orderByDesc('is_featured')
-                ->orderBy('name')
-                ->get();
-
             $category = Category::query()->where('slug', $slug)->where('is_active', true)->first();
 
             if (! $category && \App\Support\StorefrontRoutes::isShopCategory($slug)) {
@@ -52,11 +45,14 @@ class CollectionGalleryController extends Controller
             }
 
             if (! $category) {
+                $categorySlugs = $page['category_slugs'] ?? [$slug];
                 $fallbackSlug = $categorySlugs[0] ?? $slug;
                 $category = Category::query()->where('slug', $fallbackSlug)->where('is_active', true)->first();
             }
 
             abort_unless($category, 404);
+
+            $products = self::galleryProductsForCategory($category, $catalogSlugs);
 
             $pageCategoryLabel = \App\Support\StorefrontRoutes::isShopCategory($slug)
                 ? \App\Support\StorefrontRoutes::shopCategoryLabel($slug)
@@ -80,13 +76,7 @@ class CollectionGalleryController extends Controller
 
         $category = $categories->firstWhere('slug', $slug) ?? $categories->first();
 
-        $products = Product::query()
-            ->whereIn('category_id', $categories->pluck('id'))
-            ->where('is_active', true)
-            ->with('category')
-            ->orderByDesc('is_featured')
-            ->orderBy('name')
-            ->get();
+        $products = self::galleryProductsForCategory($category);
 
         return view('collections.gallery.index', [
             'page' => $page,
@@ -97,5 +87,33 @@ class CollectionGalleryController extends Controller
                 : $category->name,
             'products' => $products,
         ]);
+    }
+
+    /** @param  list<string>  $catalogSlugs */
+    public static function galleryProductsForCategory(Category $category, array $catalogSlugs = []): Collection
+    {
+        if ($catalogSlugs !== []) {
+            $products = Product::query()
+                ->with('category')
+                ->where('is_active', true)
+                ->where('is_gallery_visible', true)
+                ->whereIn('slug', $catalogSlugs)
+                ->get()
+                ->keyBy('slug');
+
+            return collect($catalogSlugs)
+                ->map(fn (string $slug) => $products->get($slug))
+                ->filter()
+                ->values();
+        }
+
+        return Product::query()
+            ->with('category')
+            ->where('is_active', true)
+            ->where('is_gallery_visible', true)
+            ->where('category_id', $category->id)
+            ->orderByDesc('is_featured')
+            ->orderBy('name')
+            ->get();
     }
 }

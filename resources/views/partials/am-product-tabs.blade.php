@@ -1,6 +1,9 @@
 @props([
     'title',
     'descriptionHtml' => '',
+    'specificationsHtml' => null,
+    'packagingHtml' => null,
+    'shippingHtml' => null,
     'careItems' => [],
     'careHeading' => 'Composition, Material & Care Guidelines',
     'related' => null,
@@ -40,6 +43,9 @@
 
         <div class="am-pdp-tabs__panel" data-am-panel="specifications" role="tabpanel" hidden>
             <div class="am-prose am-pdp-tabs__prose">
+                @if(filled($specificationsHtml))
+                    {!! $specificationsHtml !!}
+                @else
                 <h3>Product Specifications</h3>
                 <dl class="am-pdp-spec-table">
                     @if($product)
@@ -56,11 +62,15 @@
                     @endif
                     <div><dt>Delivery</dt><dd>3–4 weeks — Pan-India from Delhi studio</dd></div>
                 </dl>
+                @endif
             </div>
         </div>
 
         <div class="am-pdp-tabs__panel" data-am-panel="packaging" role="tabpanel" hidden>
             <div class="am-prose am-pdp-tabs__prose">
+                @if(filled($packagingHtml))
+                    {!! $packagingHtml !!}
+                @else
                 <h3>Packaging &amp; Handling</h3>
                 <p>Every Vyomika Atelier piece is wrapped in protective foam and corner guards, then crated in plywood for transit. PVD surfaces are film-wrapped to prevent scratches during Pan-India shipping.</p>
                 <ul class="am-pdp-tabs__care-list">
@@ -70,11 +80,15 @@
                     <li>Hardware kits — sealed boxes with installation guide</li>
                 </ul>
                 <p>Unpack within 48 hours of delivery and inspect for transit damage. Report issues with photos for prompt resolution.</p>
+                @endif
             </div>
         </div>
 
         <div class="am-pdp-tabs__panel" data-am-panel="shipping" role="tabpanel" hidden>
             <div class="am-prose am-pdp-tabs__prose">
+                @if(filled($shippingHtml))
+                    {!! $shippingHtml !!}
+                @else
                 <h3>Shipping</h3>
                 <p>Fabrication from our Delhi studio with secure packaging and delivery to major cities across India.</p>
                 <ul class="am-pdp-tabs__care-list">
@@ -84,6 +98,7 @@
                     <li><strong>Made to order:</strong> All items are custom fabricated — no returns on bespoke metalwork</li>
                 </ul>
                 <p><a href="{{ route('legal.shipping') }}">Full shipping policy →</a></p>
+                @endif
             </div>
         </div>
     </div>

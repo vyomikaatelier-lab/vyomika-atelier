@@ -46,6 +46,7 @@ class ServiceGallery
             $products = Product::query()
                 ->with('category')
                 ->where('is_active', true)
+                ->where('is_gallery_visible', true)
                 ->whereIn('slug', $slugs)
                 ->get()
                 ->keyBy('slug');
@@ -67,12 +68,14 @@ class ServiceGallery
             return Product::query()
                 ->with('category')
                 ->where('is_active', true)
+                ->where('is_gallery_visible', true)
                 ->whereIn('slug', $slugs);
         }
 
         return Product::query()
             ->with('category')
             ->where('is_active', true)
+            ->where('is_gallery_visible', true)
             ->whereHas('category', fn ($q) => $q->whereIn('slug', $service->relatedCategorySlugs()));
     }
 

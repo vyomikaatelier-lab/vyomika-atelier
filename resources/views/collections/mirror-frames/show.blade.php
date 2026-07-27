@@ -49,11 +49,8 @@
 
             <div class="am-pdp__info">
                 <p class="am-featured__cat">Mirror Frames</p>
-                <h1 class="am-pdp__title">{{ $design['name'] ?? $product->name }}</h1>
-                <p class="am-featured__meta">
-                    @if($product->sku) SKU: {{ $product->sku }} · @endif
-                    Pan-India shipping
-                </p>
+                <h1 class="am-pdp__title">{{ $product->name }}</h1>
+                <p class="am-featured__meta">{{ $product->resolvedHeadlineText() }}</p>
 
                 <div class="am-featured__price">
                     <span class="am-featured__price-current">{{ $product->formattedPrice() }}</span>
@@ -81,10 +78,10 @@
                 </ul>
                 @endif
 
-                @include('partials.am-pdp-finish-swatches')
+                @include('partials.am-pdp-finish-swatches', ['note' => $product->resolvedSwatchesNote()])
 
-                @if(!empty($design['description']) || $product->description)
-                <div class="am-prose am-pdp__desc">{{ $design['description'] ?? $product->description }}</div>
+                @if($product->description)
+                <div class="am-prose am-pdp__desc">{{ $product->description }}</div>
                 @endif
 
                 <div class="am-pdp__buy-inline" id="buy">
@@ -106,8 +103,11 @@
         </div>
 
         @include('partials.am-product-tabs', [
-            'title' => $design['name'] ?? $product->name,
+            'title' => $product->name,
             'descriptionHtml' => $product->description ? '<div>' . $product->description . '</div>' : '',
+            'specificationsHtml' => $product->tab_specifications,
+            'packagingHtml' => $product->tab_packaging,
+            'shippingHtml' => $product->tab_shipping,
             'careItems' => Service::careGuidelinesForCategory($product->category?->slug),
             'related' => $related,
             'product' => $product,

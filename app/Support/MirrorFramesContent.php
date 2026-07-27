@@ -28,11 +28,33 @@ class MirrorFramesContent
 
     public static function resolveProduct(string $productSlug): ?Product
     {
-        $product = Product::query()
+        return Product::query()
             ->where('slug', $productSlug)
             ->where('is_active', true)
             ->with('category')
             ->first();
+    }
+
+    /** @return array{title: string, description: ?string, image: ?string, product: ?Product} */
+    public static function galleryCardFromDesign(array $design): array
+    {
+        $product = $design['product'] ?? null;
+        if (! $product instanceof Product) {
+            $productSlug = $design['product_slug'] ?? $design['slug'] ?? null;
+            $product = is_string($productSlug) ? self::resolveProduct($productSlug) : null;
+        }
+
+        return [
+            'title' => $product?->name ?? ($design['name'] ?? ''),
+            'description' => $product?->description ?? ($design['description'] ?? null),
+            'image' => $product?->imageUrl() ?? ($design['image'] ?? null),
+            'product' => $product,
+        ];
+    }
+
+    public static function resolveProductOrSeed(string $productSlug): ?Product
+    {
+        $product = self::resolveProduct($productSlug);
 
         if ($product) {
             return $product;

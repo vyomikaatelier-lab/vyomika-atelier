@@ -34,6 +34,37 @@
     <textarea name="description" placeholder="Description" rows="4" class="w-full border px-3 py-2 rounded">{{ old('description', $product->description ?? '') }}</textarea>
 
     <details class="border rounded p-3 bg-gray-50">
+        <summary class="font-medium cursor-pointer text-sm">Product page content</summary>
+        <div class="mt-3 space-y-3">
+            <div>
+                <label class="text-sm text-gray-600 block mb-1">Under headline text</label>
+                <input type="text" name="headline_text" value="{{ old('headline_text', $product->headline_text ?? '') }}" placeholder="e.g. SKU: MF-001 · Pan-India shipping (blank = auto from SKU)" class="w-full border px-3 py-2 rounded">
+                @error('headline_text')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+            </div>
+            <div>
+                <label class="text-sm text-gray-600 block mb-1">Under swatches text</label>
+                <input type="text" name="swatches_note" value="{{ old('swatches_note', $product->swatches_note ?? '') }}" placeholder="Note below PVD finish swatches (blank = default +30% black note)" class="w-full border px-3 py-2 rounded">
+                @error('swatches_note')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+            </div>
+            <div>
+                <label class="text-sm text-gray-600 block mb-1">Specifications tab (HTML)</label>
+                <textarea name="tab_specifications" rows="5" placeholder="Leave blank to use the default specifications layout." class="w-full border px-3 py-2 rounded font-mono text-sm">{{ old('tab_specifications', $product->tab_specifications ?? '') }}</textarea>
+                @error('tab_specifications')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+            </div>
+            <div>
+                <label class="text-sm text-gray-600 block mb-1">Packaging tab (HTML)</label>
+                <textarea name="tab_packaging" rows="5" placeholder="Leave blank to use the default packaging copy." class="w-full border px-3 py-2 rounded font-mono text-sm">{{ old('tab_packaging', $product->tab_packaging ?? '') }}</textarea>
+                @error('tab_packaging')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+            </div>
+            <div>
+                <label class="text-sm text-gray-600 block mb-1">Shipping tab (HTML)</label>
+                <textarea name="tab_shipping" rows="5" placeholder="Leave blank to use the default shipping copy." class="w-full border px-3 py-2 rounded font-mono text-sm">{{ old('tab_shipping', $product->tab_shipping ?? '') }}</textarea>
+                @error('tab_shipping')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+            </div>
+        </div>
+    </details>
+
+    <details class="border rounded p-3 bg-gray-50">
         <summary class="font-medium cursor-pointer text-sm">SEO</summary>
         <div class="mt-3 space-y-2">
             <input name="meta_title" value="{{ old('meta_title', $product->meta_title ?? '') }}" placeholder="SEO title (blank = product name)" class="w-full border px-3 py-2 rounded">

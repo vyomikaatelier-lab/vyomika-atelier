@@ -34,7 +34,7 @@ class MirrorFramesController extends Controller
         abort_unless($design, 404);
 
         $productSlug = $design['product_slug'] ?? $designSlug;
-        $product = MirrorFramesContent::resolveProduct($productSlug);
+        $product = MirrorFramesContent::resolveProductOrSeed($productSlug);
 
         abort_unless($product, 404);
 

@@ -2,6 +2,7 @@
     'swatches' => null,
     'defaultSlug' => 'champagne-mirror',
     'baseRate' => null,
+    'note' => null,
 ])
 
 @php
@@ -32,5 +33,5 @@
             @endforeach
         </div>
     </div>
-    <p class="am-pdp-finish__note">Black Mirror &amp; Black Brush: +30% on sq ft rate</p>
+    <p class="am-pdp-finish__note">{{ $note ?? 'Black Mirror &amp; Black Brush: +30% on sq ft rate' }}</p>
 </div>
