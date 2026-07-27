@@ -16,7 +16,8 @@
             data-size-option
             data-size-label="{{ $option['label'] }}"
             data-size-price="{{ $option['price'] }}">
-            {{ $option['label'] }}
+            <span class="am-size-opt__label">{{ $option['label'] }}</span>
+            <span class="am-size-opt__price">₹{{ number_format($option['price'], 0) }}</span>
         </button>
         @endforeach
     </div>

@@ -100,9 +100,8 @@
                     'note' => $product->resolvedSwatchesNote(),
                 ])
 
-                @if($showCheckoutBuy)
+                {{-- Size options must show whenever saved, not only when checkout buy is gated --}}
                 @include('partials.am-pdp-size-options', ['product' => $product])
-                @endif
 
                 @if($product->description)
                 <div class="am-prose am-pdp__desc">{{ $product->description }}</div>

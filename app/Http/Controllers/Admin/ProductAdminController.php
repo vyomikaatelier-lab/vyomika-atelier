@@ -155,6 +155,9 @@ class ProductAdminController extends Controller
 
     private function validateProduct(Request $request, ?Product $existing = null): array
     {
+        // Blank template rows from the admin form must not trip required_with.
+        $this->stripEmptySizeOptionRows($request);
+
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
@@ -180,8 +183,8 @@ class ProductAdminController extends Controller
             'purchase_mode' => ['required', 'in:'.implode(',', Product::PURCHASE_MODES)],
             'pricing_type' => ['required', 'in:'.implode(',', Product::PRICING_TYPES)],
             'size_options' => 'nullable|array',
-            'size_options.*.label' => 'required_with:size_options|string|max:50',
-            'size_options.*.price' => 'required_with:size_options|numeric|min:0',
+            'size_options.*.label' => 'required|string|max:50',
+            'size_options.*.price' => 'required|numeric|min:0',
             'size_options.*.size_inches' => 'nullable|numeric|min:0',
             'size_options.*.sku_suffix' => 'nullable|string|max:20',
         ]);
@@ -258,6 +261,45 @@ class ProductAdminController extends Controller
         $validated['tab_specifications'] = Product::normalizeTabLines($validated['tab_specifications'] ?? null);
 
         return $validated;
+    }
+
+    /**
+     * Drop completely blank size-option rows before validation so the admin
+     * form's empty template row does not fail required field rules.
+     * Partially filled rows are kept so validation can still reject them.
+     */
+    private function stripEmptySizeOptionRows(Request $request): void
+    {
+        $rows = $request->input('size_options');
+        if (! is_array($rows)) {
+            return;
+        }
+
+        $filtered = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $label = trim((string) ($row['label'] ?? ''));
+            $price = $row['price'] ?? null;
+            $sizeInches = $row['size_inches'] ?? null;
+            $skuSuffix = $row['sku_suffix'] ?? null;
+
+            $priceBlank = $price === null || $price === '';
+            $inchesBlank = $sizeInches === null || $sizeInches === '';
+            $skuBlank = $skuSuffix === null || trim((string) $skuSuffix) === '';
+
+            if ($label === '' && $priceBlank && $inchesBlank && $skuBlank) {
+                continue;
+            }
+
+            $filtered[] = $row;
+        }
+
+        $request->merge([
+            'size_options' => $filtered === [] ? null : array_values($filtered),
+        ]);
     }
 
     /**

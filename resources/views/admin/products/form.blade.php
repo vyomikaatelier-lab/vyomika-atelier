@@ -165,23 +165,37 @@
         </div>
     </div>
 
+    @php
+        $adminPrice = old('price', $product->price ?? null);
+        $adminCompare = old('compare_price', $product->compare_price ?? null);
+        $adminDiscountPct = '';
+        if (is_numeric($adminPrice) && is_numeric($adminCompare) && (float) $adminCompare > (float) $adminPrice && (float) $adminCompare > 0) {
+            $adminDiscountPct = (string) (int) round((1 - ((float) $adminPrice / (float) $adminCompare)) * 100);
+        }
+    @endphp
     <fieldset class="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-3" aria-labelledby="pricing-discount-heading">
         <legend id="pricing-discount-heading" class="text-sm font-semibold text-gray-900 px-1">Price &amp; discount (as on website)</legend>
-        <p class="text-xs text-gray-600 -mt-1">On the product page and cards: selling price, optional strikethrough original price, and a <strong>−%</strong> badge when compare price is higher than price.</p>
-        <div class="grid grid-cols-2 gap-4">
+        <p class="text-xs text-gray-600 -mt-1">On the product page and cards: selling price, optional strikethrough original price, and a <strong>−%</strong> badge when compare price is higher than price. Use Discount % to keep price and compare in sync.</p>
+        <div class="grid grid-cols-3 gap-4">
             <div>
                 <label for="product-price" class="text-sm font-medium text-gray-800 block mb-1">Price @if($currentPricingType === 'square_foot')<span class="font-normal text-gray-500">(₹ per sq ft)</span>@endif</label>
                 <input id="product-price" type="number" step="0.01" name="price" value="{{ old('price', $product->price ?? '') }}" placeholder="Selling price" required class="w-full border px-3 py-2 rounded bg-white">
                 @error('price')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
-                <p class="text-xs text-gray-500 mt-1">Shop = fixed selling price. Studio = rate per sq ft. For door handles with size options, this syncs to the lowest size price.</p>
+                <p class="text-xs text-gray-500 mt-1">Selling price shown on the website.</p>
             </div>
             <div>
-                <label for="product-compare-price" class="text-sm font-medium text-gray-800 block mb-1">Compare price <span class="font-normal text-gray-500">(original / before discount)</span></label>
+                <label for="product-compare-price" class="text-sm font-medium text-gray-800 block mb-1">Compare price <span class="font-normal text-gray-500">(original)</span></label>
                 <input id="product-compare-price" type="number" step="0.01" name="compare_price" value="{{ old('compare_price', $product->compare_price ?? '') }}" placeholder="e.g. 38999" class="w-full border px-3 py-2 rounded bg-white">
                 @error('compare_price')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
-                <p class="text-xs text-gray-500 mt-1">Shows strikethrough + % off badge when higher than Price. Leave blank for no discount.</p>
+                <p class="text-xs text-gray-500 mt-1">Strikethrough when higher than Price.</p>
+            </div>
+            <div>
+                <label for="product-discount-pct" class="text-sm font-medium text-gray-800 block mb-1">Discount %</label>
+                <input id="product-discount-pct" type="number" step="1" min="0" max="99" value="{{ $adminDiscountPct }}" placeholder="e.g. 20" class="w-full border px-3 py-2 rounded bg-white" inputmode="numeric">
+                <p class="text-xs text-gray-500 mt-1">Edits sync Price ↔ Compare. Not stored separately.</p>
             </div>
         </div>
+        <p class="text-xs text-gray-500">Shop = fixed selling price. Studio = rate per sq ft. Door handles with size options sync Price to the lowest size price.</p>
         <p id="discount-preview" class="text-sm text-gray-700 hidden" aria-live="polite">
             Website preview: <span class="inline-flex items-center gap-2 flex-wrap">
                 <span id="discount-preview-price" class="font-medium"></span>
@@ -375,31 +389,73 @@
 
     var priceInput = document.getElementById('product-price');
     var compareInput = document.getElementById('product-compare-price');
+    var discountPctInput = document.getElementById('product-discount-pct');
     var discountPreview = document.getElementById('discount-preview');
     var discountPreviewPrice = document.getElementById('discount-preview-price');
     var discountPreviewOld = document.getElementById('discount-preview-old');
     var discountPreviewBadge = document.getElementById('discount-preview-badge');
+    var discountSyncing = false;
 
     function formatInr(amount) {
         return '₹' + Math.round(amount).toLocaleString('en-IN');
+    }
+
+    function roundMoney(amount) {
+        return Math.round(amount * 100) / 100;
+    }
+
+    function calcDiscountPct(price, compare) {
+        if (isNaN(price) || isNaN(compare) || compare <= 0 || compare <= price || price < 0) {
+            return null;
+        }
+        return Math.round((1 - price / compare) * 100);
     }
 
     function syncDiscountPreview() {
         if (!priceInput || !compareInput || !discountPreview) return;
         var price = parseFloat(priceInput.value);
         var compare = parseFloat(compareInput.value);
-        var show = !isNaN(price) && !isNaN(compare) && compare > price && price >= 0;
+        var pct = calcDiscountPct(price, compare);
+        var show = pct !== null;
         discountPreview.classList.toggle('hidden', !show);
         if (!show) return;
-        var pct = Math.round((1 - price / compare) * 100);
         if (discountPreviewPrice) discountPreviewPrice.textContent = formatInr(price);
         if (discountPreviewOld) discountPreviewOld.textContent = formatInr(compare);
         if (discountPreviewBadge) discountPreviewBadge.textContent = '-' + pct + '%';
     }
 
-    if (priceInput) priceInput.addEventListener('input', syncDiscountPreview);
-    if (compareInput) compareInput.addEventListener('input', syncDiscountPreview);
-    syncDiscountPreview();
+    function syncPctFromPrices() {
+        if (discountSyncing || !discountPctInput) return;
+        discountSyncing = true;
+        var pct = calcDiscountPct(parseFloat(priceInput && priceInput.value), parseFloat(compareInput && compareInput.value));
+        discountPctInput.value = pct !== null ? String(pct) : '';
+        syncDiscountPreview();
+        discountSyncing = false;
+    }
+
+    function syncPricesFromPct() {
+        if (discountSyncing || !discountPctInput || !priceInput || !compareInput) return;
+        discountSyncing = true;
+        var pct = parseFloat(discountPctInput.value);
+        var price = parseFloat(priceInput.value);
+        var compare = parseFloat(compareInput.value);
+
+        if (!isNaN(pct) && pct > 0 && pct < 100) {
+            if (!isNaN(price) && price >= 0) {
+                compareInput.value = String(roundMoney(price / (1 - pct / 100)));
+            } else if (!isNaN(compare) && compare > 0) {
+                priceInput.value = String(roundMoney(compare * (1 - pct / 100)));
+            }
+        }
+
+        syncDiscountPreview();
+        discountSyncing = false;
+    }
+
+    if (priceInput) priceInput.addEventListener('input', syncPctFromPrices);
+    if (compareInput) compareInput.addEventListener('input', syncPctFromPrices);
+    if (discountPctInput) discountPctInput.addEventListener('input', syncPricesFromPct);
+    syncPctFromPrices();
 })();
 </script>
 @endsection

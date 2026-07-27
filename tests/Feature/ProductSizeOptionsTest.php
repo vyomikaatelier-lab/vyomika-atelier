@@ -57,6 +57,132 @@ class ProductSizeOptionsTest extends TestCase
         $this->assertSame(1500.0, $product->normalizedSizeOptions()[1]['price']);
     }
 
+    public function test_admin_ignores_blank_size_option_rows_and_still_saves_filled_ones(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $category = Category::query()->firstOrCreate(
+            ['slug' => 'door-handles'],
+            ['name' => 'Door Handles', 'section' => 'shop', 'is_active' => true]
+        );
+
+        $product = Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Blank Row Handle',
+            'slug' => 'blank-row-handle',
+            'price' => 1000,
+            'stock' => 10,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+        ]);
+
+        // Admin form always posts at least one empty size_options[0] template row.
+        $this->actingAsAdmin($admin)->put(route('admin.products.update', $product), [
+            'category_id' => $category->id,
+            'name' => 'Blank Row Handle',
+            'slug' => 'blank-row-handle',
+            'price' => 1000,
+            'stock' => 10,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => '1',
+            'size_options' => [
+                ['label' => '', 'price' => '', 'size_inches' => '', 'sku_suffix' => ''],
+                ['label' => '8"', 'price' => 800, 'size_inches' => 8, 'sku_suffix' => '8IN'],
+                ['label' => '12"', 'price' => 1500, 'size_inches' => 12, 'sku_suffix' => '12IN'],
+            ],
+        ])->assertRedirect(route('admin.products.edit', ['product' => $product, 'saved' => 1]));
+
+        $product->refresh()->load('category');
+        $this->assertTrue($product->hasSizeOptions());
+        $this->assertCount(2, $product->normalizedSizeOptions());
+        $this->assertSame('800.00', (string) $product->price);
+    }
+
+    public function test_admin_can_save_door_handle_when_only_blank_size_row_is_posted(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $category = Category::query()->firstOrCreate(
+            ['slug' => 'door-handles'],
+            ['name' => 'Door Handles', 'section' => 'shop', 'is_active' => true]
+        );
+
+        $product = Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'No Sizes Handle',
+            'slug' => 'no-sizes-handle',
+            'price' => 1200,
+            'stock' => 4,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+            'size_options' => [
+                ['label' => '8"', 'price' => 800],
+            ],
+        ]);
+
+        $this->actingAsAdmin($admin)->put(route('admin.products.update', $product), [
+            'category_id' => $category->id,
+            'name' => 'No Sizes Handle',
+            'slug' => 'no-sizes-handle',
+            'price' => 1200,
+            'stock' => 4,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => '1',
+            'size_options' => [
+                ['label' => '', 'price' => '', 'size_inches' => '', 'sku_suffix' => ''],
+            ],
+        ])->assertRedirect(route('admin.products.edit', ['product' => $product, 'saved' => 1]));
+
+        $product->refresh()->load('category');
+        $this->assertNull($product->size_options);
+        $this->assertFalse($product->hasSizeOptions());
+        $this->assertSame('1200.00', (string) $product->price);
+    }
+
+    public function test_admin_rejects_partially_filled_size_option_rows(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $category = Category::query()->firstOrCreate(
+            ['slug' => 'door-handles'],
+            ['name' => 'Door Handles', 'section' => 'shop', 'is_active' => true]
+        );
+
+        $product = Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Partial Size Handle',
+            'slug' => 'partial-size-handle',
+            'price' => 1000,
+            'stock' => 2,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+        ]);
+
+        $this->actingAsAdmin($admin)->from(route('admin.products.edit', $product))
+            ->put(route('admin.products.update', $product), [
+                'category_id' => $category->id,
+                'name' => 'Partial Size Handle',
+                'slug' => 'partial-size-handle',
+                'price' => 1000,
+                'stock' => 2,
+                'section' => Product::SECTION_SHOP,
+                'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+                'pricing_type' => Product::PRICING_FIXED,
+                'is_active' => '1',
+                'size_options' => [
+                    ['label' => '8"', 'price' => '', 'size_inches' => 8, 'sku_suffix' => ''],
+                ],
+            ])->assertRedirect(route('admin.products.edit', $product))
+            ->assertSessionHasErrors('size_options.0.price');
+    }
+
     public function test_pdp_shows_size_selector_and_from_price(): void
     {
         $category = Category::factory()->create(['slug' => 'door-handles']);
@@ -75,7 +201,9 @@ class ProductSizeOptionsTest extends TestCase
             ->assertSee('data-size-option', false)
             ->assertSee('data-pdp-price-display', false)
             ->assertSee('From ₹800', false)
-            ->assertSee('data-size-price="1500"', false);
+            ->assertSee('data-size-price="1500"', false)
+            ->assertSee('₹1,500', false)
+            ->assertSee('am-size-opt__price', false);
     }
 
     public function test_add_to_cart_preserves_selected_size_and_price(): void

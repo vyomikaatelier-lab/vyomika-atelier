@@ -176,7 +176,9 @@ class ProductAdminContentTest extends TestCase
             ->assertSee('One specification per line', false)
             ->assertSee('Price &amp; discount (as on website)', false)
             ->assertSee('Compare price', false)
-            ->assertSee('original / before discount', false);
+            ->assertSee('Discount %', false)
+            ->assertSee('product-discount-pct', false)
+            ->assertSee('original', false);
     }
 
     public function test_admin_can_save_mirror_dimensions_and_pdp_shows_all_units(): void
@@ -213,6 +215,8 @@ class ProductAdminContentTest extends TestCase
 
         $this->get(route('shop.mirror-frames.show', 'arched-wall-mirror'))
             ->assertOk()
+            ->assertSee('am-pdp__dimensions', false)
+            ->assertSee('am-pdp__dimensions-item', false)
             ->assertSee('2 × 3 ft', false)
             ->assertSee('610 × 910 mm', false)
             ->assertSee('61 × 91 cm', false);
@@ -283,6 +287,35 @@ class ProductAdminContentTest extends TestCase
             ->assertSee('am-featured__price-old', false)
             ->assertSee('am-featured__badge', false)
             ->assertSee('-26%', false);
+    }
+
+    public function test_admin_form_shows_discount_percent_control_for_non_handle_products(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $category = Category::query()->firstOrCreate(
+            ['slug' => 'partitions'],
+            ['name' => 'Partitions', 'section' => 'studio', 'is_active' => true]
+        );
+
+        $product = Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Discount Pct Product',
+            'slug' => 'discount-pct-product',
+            'price' => 1800,
+            'compare_price' => 2400,
+            'stock' => 1,
+            'section' => Product::SECTION_STUDIO,
+            'purchase_mode' => Product::PURCHASE_MODE_ENQUIRY,
+            'pricing_type' => Product::PRICING_SQUARE_FOOT,
+            'is_active' => true,
+        ]);
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.products.edit', $product))
+            ->assertOk()
+            ->assertSee('id="product-discount-pct"', false)
+            ->assertSee('Discount %', false)
+            ->assertSee('value="25"', false);
     }
 
     public function test_admin_normalizes_legacy_html_specifications_to_lines(): void
