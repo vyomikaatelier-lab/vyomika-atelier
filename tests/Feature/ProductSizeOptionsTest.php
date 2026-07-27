@@ -255,8 +255,9 @@ class ProductSizeOptionsTest extends TestCase
             ->assertSee('am-pdp-buy__row--with-size', false)
             ->assertSee('am-size-options--compact', false)
             ->assertSee('am-size-opt--pill', false)
+            ->assertSee('data-size-price="800"', false)
             ->assertSee('data-size-price="1500"', false)
-            ->assertSee('₹1,500', false)
+            ->assertSee('₹800', false)
             ->assertDontSee('am-featured__price-old', false)
             ->assertDontSee('From ₹800', false)
             ->assertSeeInOrder([
