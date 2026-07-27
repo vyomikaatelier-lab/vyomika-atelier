@@ -24,10 +24,55 @@ class ProductAdminController extends Controller
             $query->unclassified();
         }
 
+        $section = $request->query('section');
+        if (filled($section) && in_array($section, Product::SECTIONS, true)) {
+            $query->where('section', $section);
+        }
+
+        $categoryFilter = null;
+        if ($request->filled('category_id')) {
+            $categoryFilter = Category::query()->find($request->integer('category_id'));
+        } elseif ($request->filled('category')) {
+            $categoryFilter = Category::query()->where('slug', $request->query('category'))->first();
+        }
+
+        if ($categoryFilter) {
+            $query->where('category_id', $categoryFilter->id);
+        }
+
         $products = $query->paginate(15)->withQueryString();
         $unclassifiedCount = Product::query()->unclassified()->count();
 
-        return view('admin.products.index', compact('products', 'unclassifiedCount'));
+        $categories = Category::query()
+            ->withCount('products')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get()
+            ->groupBy(fn (Category $category) => $category->resolvedSection() ?? 'other');
+
+        $sectionLabels = [
+            Product::SECTION_SHOP => 'Shop',
+            Product::SECTION_STUDIO => 'Studio',
+            Product::SECTION_RAILINGS => 'Railings',
+        ];
+
+        $sectionOrder = [
+            Product::SECTION_SHOP,
+            Product::SECTION_STUDIO,
+            Product::SECTION_RAILINGS,
+            'other',
+        ];
+
+        return view('admin.products.index', [
+            'products' => $products,
+            'unclassifiedCount' => $unclassifiedCount,
+            'categories' => $categories,
+            'categoryFilter' => $categoryFilter,
+            'activeSection' => in_array($section, Product::SECTIONS, true) ? $section : null,
+            'sectionLabels' => $sectionLabels,
+            'sectionOrder' => $sectionOrder,
+            'totalProductCount' => Product::query()->count(),
+        ]);
     }
 
     public function create()
