@@ -68,6 +68,8 @@
                 <p class="am-featured__meta">{{ $headlineMeta }}</p>
                 @endif
 
+                @include('partials.am-mirror-dimensions', ['product' => $product])
+
                 <div class="am-featured__price {{ $showCalculator ? 'am-featured__price--sqft' : '' }}">
                     @if($showCalculator)
                     <div class="am-pdp__sqft-price">

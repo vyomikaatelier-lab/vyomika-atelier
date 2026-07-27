@@ -45,6 +45,8 @@
                 <p class="am-featured__meta">{{ $headlineMeta }}</p>
                 @endif
 
+                @include('partials.am-mirror-dimensions', ['product' => $product])
+
                 <div class="am-featured__price">
                     <span class="am-featured__price-current">{{ $product->formattedPrice() }}</span>
                     @if($product->compare_price)

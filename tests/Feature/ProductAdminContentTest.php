@@ -166,4 +166,69 @@ class ProductAdminContentTest extends TestCase
             ->assertSee('Note below PVD finish swatches', false)
             ->assertSee('Specifications tab', false);
     }
+
+    public function test_admin_can_save_mirror_dimensions_and_pdp_shows_all_units(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $category = Category::query()->firstOrCreate(
+            ['slug' => 'mirror-frames'],
+            ['name' => 'Mirror Frames', 'section' => 'shop', 'is_active' => true]
+        );
+
+        $product = Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Sized Mirror',
+            'slug' => 'arched-wall-mirror',
+            'description' => 'Mirror with dimensions',
+            'price' => 18500,
+            'stock' => 5,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+        ]);
+
+        $this->actingAsAdmin($admin)->put(route('admin.products.update', $product), $this->productPayload($category, $product, [
+            'dim_width_cm' => '61',
+            'dim_height_cm' => '91',
+        ]))->assertRedirect(route('admin.products.edit', ['product' => $product, 'saved' => 1]));
+
+        $product->refresh();
+
+        $this->assertSame('61.00', $product->dim_width_cm);
+        $this->assertSame('91.00', $product->dim_height_cm);
+        $this->assertTrue($product->hasMirrorDimensions());
+
+        $this->get(route('shop.mirror-frames.show', 'arched-wall-mirror'))
+            ->assertOk()
+            ->assertSee('2 × 3 ft', false)
+            ->assertSee('610 × 910 mm', false)
+            ->assertSee('61 × 91 cm', false);
+    }
+
+    public function test_mirror_dimensions_hidden_when_not_set(): void
+    {
+        $category = Category::query()->firstOrCreate(
+            ['slug' => 'mirror-frames'],
+            ['name' => 'Mirror Frames', 'section' => 'shop', 'is_active' => true]
+        );
+
+        Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'No Size Mirror',
+            'slug' => 'full-length-floor-mirror',
+            'description' => 'Mirror without dimensions',
+            'price' => 28900,
+            'stock' => 5,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+        ]);
+
+        $this->get(route('shop.mirror-frames.show', 'full-length-floor-mirror'))
+            ->assertOk()
+            ->assertDontSee('am-pdp__dimensions', false)
+            ->assertDontSee('610 × 914 mm', false);
+    }
 }
