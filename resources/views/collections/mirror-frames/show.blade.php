@@ -54,8 +54,6 @@
                     @endif
                 </div>
 
-                @include('partials.am-mirror-dimensions', ['product' => $product])
-
                 <ul class="am-pdp__trust">
                     <li>✓ PVD stainless frame fabrication</li>
                     <li>✓ Secure crated packaging</li>
@@ -72,6 +70,8 @@
                     @endforeach
                 </ul>
                 @endif
+
+                @include('partials.am-mirror-dimensions', ['product' => $product])
 
                 @include('partials.am-pdp-finish-swatches', ['note' => $product->resolvedSwatchesNote()])
 

@@ -252,17 +252,28 @@ class ProductSizeOptionsTest extends TestCase
             ->assertSee('data-pdp-size', false)
             ->assertSee('data-size-option', false)
             ->assertSee('data-pdp-price-display', false)
+            ->assertSee('data-pdp-compare-display', false)
+            ->assertSee('data-pdp-discount-display', false)
+            ->assertSee('data-size-compare="3200"', false)
+            ->assertSee('data-size-compare="4500"', false)
+            ->assertSee('data-size-discount="75"', false)
+            ->assertSee('data-size-discount="67"', false)
             ->assertSee('am-pdp-buy__row--with-size', false)
+            ->assertSee('am-pdp-buy__price', false)
             ->assertSee('am-size-options--compact', false)
             ->assertSee('am-size-opt--pill', false)
             ->assertSee('data-size-price="800"', false)
             ->assertSee('data-size-price="1500"', false)
             ->assertSee('₹800', false)
-            ->assertDontSee('am-featured__price-old', false)
+            ->assertSee('₹3,200', false)
+            ->assertSee('-75%', false)
+            ->assertSee('am-featured__price-old', false)
             ->assertDontSee('From ₹800', false)
             ->assertSeeInOrder([
-                'am-featured__price',
+                'data-pdp-buy-form',
                 'data-pdp-size',
+                'data-pdp-price-display',
+                'Add to Bag',
             ], false);
     }
 

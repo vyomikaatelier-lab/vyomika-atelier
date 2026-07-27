@@ -4103,47 +4103,68 @@ ul { list-style: none; }
   font-weight: 600;
 }
 .am-pdp__dimensions {
-  margin: 0.75rem 0 1rem;
-  padding: 0.9rem 1rem;
-  background: var(--am-cream);
+  margin: 0.85rem 0 1.15rem;
+  padding: 1rem 1.1rem;
+  background: linear-gradient(180deg, var(--am-cream) 0%, color-mix(in srgb, var(--am-cream) 70%, white) 100%);
   border: 1px solid var(--am-border);
   border-radius: var(--am-radius);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--am-ink) 4%, transparent);
 }
 .am-pdp__dimensions-label {
-  margin: 0 0 0.45rem;
-  font-size: 0.72rem;
+  margin: 0 0 0.65rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--am-muted);
+}
+.am-pdp__dimensions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem 1rem;
+  margin: 0;
+}
+.am-pdp__dimensions-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.am-pdp__dimensions-unit {
+  margin: 0;
+  font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--am-muted);
 }
-.am-pdp__dimensions-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-.am-pdp__dimensions-item {
-  display: flex;
-  align-items: baseline;
-  gap: 0.65rem;
-  margin: 0;
-}
-.am-pdp__dimensions-unit {
-  flex: 0 0 2.5rem;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--am-muted);
-}
 .am-pdp__dimensions-value {
-  font-size: 0.95rem;
+  margin: 0;
+  font-size: 0.92rem;
   font-weight: 600;
+  line-height: 1.35;
   color: var(--am-ink);
-  white-space: nowrap;
+}
+@media (max-width: 560px) {
+  .am-pdp__dimensions-grid {
+    grid-template-columns: 1fr;
+    gap: 0.55rem;
+  }
+  .am-pdp__dimensions-row {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-bottom: 0.45rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--am-border) 65%, transparent);
+  }
+  .am-pdp__dimensions-row:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+}
+.am-pdp-buy__price {
+  margin: -0.15rem 0 0.85rem;
 }
 .am-mirror-frames-highlights {
   list-style: none;

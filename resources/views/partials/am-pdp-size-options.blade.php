@@ -26,7 +26,9 @@
             aria-selected="{{ $index === 0 ? 'true' : 'false' }}"
             data-size-option
             data-size-label="{{ $option['label'] }}"
-            data-size-price="{{ $option['price'] }}">
+            data-size-price="{{ $option['price'] }}"
+            @if($optCompare) data-size-compare="{{ $optCompare }}" @endif
+            @if($optDiscount) data-size-discount="{{ $optDiscount }}" @endif>
             <span class="am-size-opt__label">{{ $option['label'] }}</span>
             @unless($compact)
             <span class="am-size-opt__pricing">

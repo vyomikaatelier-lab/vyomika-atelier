@@ -2,19 +2,19 @@
 @php $dims = $product->mirrorDimensionDisplays(); @endphp
 <div class="am-pdp__dimensions" aria-label="Product dimensions">
     <p class="am-pdp__dimensions-label">Dimensions</p>
-    <ul class="am-pdp__dimensions-list">
-        <li class="am-pdp__dimensions-item">
-            <span class="am-pdp__dimensions-unit">Feet</span>
-            <span class="am-pdp__dimensions-value">{{ $dims['feet'] }}</span>
-        </li>
-        <li class="am-pdp__dimensions-item">
-            <span class="am-pdp__dimensions-unit">mm</span>
-            <span class="am-pdp__dimensions-value">{{ $dims['mm'] }}</span>
-        </li>
-        <li class="am-pdp__dimensions-item">
-            <span class="am-pdp__dimensions-unit">cm</span>
-            <span class="am-pdp__dimensions-value">{{ $dims['cm'] }}</span>
-        </li>
-    </ul>
+    <dl class="am-pdp__dimensions-grid">
+        <div class="am-pdp__dimensions-row">
+            <dt class="am-pdp__dimensions-unit">Feet</dt>
+            <dd class="am-pdp__dimensions-value">{{ $dims['feet'] }}</dd>
+        </div>
+        <div class="am-pdp__dimensions-row">
+            <dt class="am-pdp__dimensions-unit">mm</dt>
+            <dd class="am-pdp__dimensions-value">{{ $dims['mm'] }}</dd>
+        </div>
+        <div class="am-pdp__dimensions-row">
+            <dt class="am-pdp__dimensions-unit">cm</dt>
+            <dd class="am-pdp__dimensions-value">{{ $dims['cm'] }}</dd>
+        </div>
+    </dl>
 </div>
 @endif

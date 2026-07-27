@@ -268,9 +268,33 @@
 
   /* Size selector */
   function initSizeOptions() {
-    function applySize(price, label) {
+    function formatInr(amount) {
+      return '₹' + Number(amount).toLocaleString('en-IN');
+    }
+
+    function applySize(price, label, comparePrice, discountPercent) {
       document.querySelectorAll('[data-pdp-price-display]').forEach((el) => {
-        el.textContent = '₹' + Number(price).toLocaleString('en-IN');
+        el.textContent = formatInr(price);
+      });
+      document.querySelectorAll('[data-pdp-compare-display]').forEach((el) => {
+        const compare = Number(comparePrice);
+        const current = Number(price);
+        if (comparePrice && compare > current) {
+          el.textContent = formatInr(compare);
+          el.hidden = false;
+        } else {
+          el.hidden = true;
+        }
+      });
+      document.querySelectorAll('[data-pdp-discount-display]').forEach((el) => {
+        const compare = Number(comparePrice);
+        const current = Number(price);
+        if (comparePrice && compare > current && discountPercent) {
+          el.textContent = '-' + discountPercent + '%';
+          el.hidden = false;
+        } else {
+          el.hidden = true;
+        }
       });
       document.querySelectorAll('[data-size-input="label"]').forEach((input) => {
         input.value = label || '';
@@ -280,11 +304,23 @@
       });
     }
 
+    function readSizeFromButton(btn) {
+      applySize(
+        btn.dataset.sizePrice,
+        btn.dataset.sizeLabel || '',
+        btn.dataset.sizeCompare || '',
+        btn.dataset.sizeDiscount || ''
+      );
+    }
+
     document.querySelectorAll('[data-pdp-size]').forEach((root) => {
+      if (root.dataset.sizeInit === '1') return;
+      root.dataset.sizeInit = '1';
+
       const labelEl = root.querySelector('[data-size-label]');
       const active = root.querySelector('[data-size-option].is-active') || root.querySelector('[data-size-option]');
       if (active) {
-        applySize(active.dataset.sizePrice, active.dataset.sizeLabel || '');
+        readSizeFromButton(active);
       }
 
       root.querySelectorAll('[data-size-option]').forEach((btn) => {
@@ -296,7 +332,7 @@
           btn.classList.add('is-active');
           btn.setAttribute('aria-selected', 'true');
           if (labelEl) labelEl.textContent = btn.dataset.sizeLabel || '';
-          applySize(btn.dataset.sizePrice, btn.dataset.sizeLabel || '');
+          readSizeFromButton(btn);
         });
       });
     });

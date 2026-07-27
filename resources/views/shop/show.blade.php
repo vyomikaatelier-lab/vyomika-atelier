@@ -69,9 +69,9 @@
                 @endif
 
                 @php $hasSizeOptions = $product->hasSizeOptions(); @endphp
-                @php $selectedSize = $hasSizeOptions ? $product->resolveSizeOption(null) : null; @endphp
 
-                <div class="am-featured__price {{ $showCalculator ? 'am-featured__price--sqft' : '' }}{{ $hasSizeOptions ? ' am-featured__price--size-selected' : '' }}">
+                @if($showCalculator || ! $hasSizeOptions)
+                <div class="am-featured__price {{ $showCalculator ? 'am-featured__price--sqft' : '' }}">
                     @if($showCalculator)
                     <div class="am-pdp__sqft-price">
                         <span class="am-pdp__sqft-price-current" data-sqft-rate-display>₹{{ number_format($calcRate, 0) }}</span>
@@ -79,13 +79,14 @@
                     </div>
                     <p class="am-pdp__sqft-price-note" data-sqft-black-note hidden>Black finish selected — ₹{{ number_format($blackRate, 0) }}/sq ft (+30%)</p>
                     @else
-                    <span class="am-featured__price-current" data-pdp-price-display>@if($selectedSize)₹{{ number_format($selectedSize['price'], 0) }}@else{{ $product->formattedPrice() }}@endif</span>
-                    @if(! $hasSizeOptions && $product->hasDisplayComparePrice())
+                    <span class="am-featured__price-current">{{ $product->formattedPrice() }}</span>
+                    @if($product->hasDisplayComparePrice())
                     <span class="am-featured__price-old">₹{{ number_format($product->compare_price, 0) }}</span>
                     <span class="am-featured__badge">-{{ $discount }}%</span>
                     @endif
                     @endif
                 </div>
+                @endif
 
                 <ul class="am-pdp__trust">
                     <li>✓ PVD stainless fabrication</li>
