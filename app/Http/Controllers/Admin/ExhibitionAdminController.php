@@ -29,6 +29,10 @@ class ExhibitionAdminController extends Controller
 
     public function store(Request $request)
     {
+        if ($this->multipartPayloadFailed($request)) {
+            return back()->withInput()->with('error', 'Upload too large for the server limit. Save text changes first, then upload images in smaller batches (max 5 MB each).');
+        }
+
         $validated = $this->validateExhibition($request);
         $validated['slug'] = Str::slug($validated['name']);
         $validated['is_active'] = $request->boolean('is_active', true);
@@ -48,6 +52,10 @@ class ExhibitionAdminController extends Controller
 
     public function update(Request $request, Exhibition $exhibition)
     {
+        if ($this->multipartPayloadFailed($request)) {
+            return back()->withInput()->with('error', 'Upload too large for the server limit. Save text changes first, then upload images in smaller batches (max 5 MB each).');
+        }
+
         $validated = $this->validateExhibition($request);
         $validated['slug'] = Str::slug($validated['name']);
         $validated['is_active'] = $request->boolean('is_active', true);
@@ -123,6 +131,10 @@ class ExhibitionAdminController extends Controller
             'gallery_urls' => 'nullable|string',
             'gallery_files' => 'nullable|array',
             'gallery_files.*' => 'image|mimes:jpeg,jpg,png,webp|max:5120',
+            'gallery_replace' => 'nullable|array',
+            'gallery_replace.*' => 'image|mimes:jpeg,jpg,png,webp|max:5120',
+            'gallery_existing' => 'nullable|array',
+            'gallery_existing.*' => 'string|max:500',
             'sort_order' => 'nullable|integer|min:0',
         ]);
     }

@@ -150,7 +150,32 @@ trait HandlesAdminUploads
     /** @return array<int, string>|null */
     protected function resolveGalleryField(Request $request, string $filesField, string $urlsField, ?array $current, string $directory): ?array
     {
-        $items = $this->parseMultilineUrls($request->input($urlsField)) ?? [];
+        if ($request->boolean('gallery_managed')) {
+            $items = array_values(array_filter((array) $request->input('gallery_existing', []), fn ($item) => filled($item)));
+        } elseif ($request->has($urlsField)) {
+            $items = $this->parseMultilineUrls($request->input($urlsField)) ?? [];
+        } else {
+            $items = $current ?? [];
+        }
+
+        $replacements = $request->file('gallery_replace', []);
+        if (is_array($replacements)) {
+            foreach ($replacements as $index => $file) {
+                if (! $file || ! $file->isValid()) {
+                    continue;
+                }
+
+                $path = $this->storeGalleryUpload($file, $directory);
+                $slot = (int) $index;
+
+                if (isset($items[$slot])) {
+                    $this->deleteStoredPath($items[$slot]);
+                    $items[$slot] = $path;
+                } else {
+                    $items[] = $path;
+                }
+            }
+        }
 
         if ($request->hasFile($filesField)) {
             $files = $request->file($filesField);
@@ -163,16 +188,14 @@ trait HandlesAdminUploads
                     continue;
                 }
 
-                $path = $file->store($directory, 'public');
-                MediaFile::create([
-                    'disk' => 'public',
-                    'path' => $path,
-                    'filename' => $file->getClientOriginalName(),
-                    'mime' => $file->getMimeType(),
-                    'size' => $file->getSize() ?: 0,
-                    'is_private' => false,
-                ]);
-                $items[] = $path;
+                $items[] = $this->storeGalleryUpload($file, $directory);
+            }
+        }
+
+        if ($request->filled($urlsField)) {
+            $urlItems = $this->parseMultilineUrls($request->input($urlsField)) ?? [];
+            if ($urlItems !== []) {
+                $items = array_merge($items, $urlItems);
             }
         }
 
@@ -191,6 +214,22 @@ trait HandlesAdminUploads
         }
 
         return $items !== [] ? array_values(array_unique($items)) : null;
+    }
+
+    protected function storeGalleryUpload(\Illuminate\Http\UploadedFile $file, string $directory): string
+    {
+        $path = $file->store($directory, 'public');
+
+        MediaFile::create([
+            'disk' => 'public',
+            'path' => $path,
+            'filename' => $file->getClientOriginalName(),
+            'mime' => $file->getMimeType(),
+            'size' => $file->getSize() ?: 0,
+            'is_private' => false,
+        ]);
+
+        return $path;
     }
 
     /** @param array<int, string>|null $gallery */

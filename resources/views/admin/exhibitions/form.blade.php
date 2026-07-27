@@ -2,8 +2,15 @@
 @section('title', isset($exhibition) ? 'Edit Exhibition' : 'Add Exhibition')
 @section('content')
 <h1 class="text-2xl font-semibold mb-6">{{ isset($exhibition) ? 'Edit' : 'Add' }} Exhibition</h1>
+@if(session('error'))
+<div class="bg-red-100 text-red-800 px-4 py-2 rounded mb-4 text-sm max-w-2xl">{{ session('error') }}</div>
+@endif
+@if(session('success'))
+<div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-4 text-sm max-w-2xl">{{ session('success') }}</div>
+@endif
 <form method="POST" action="{{ isset($exhibition) ? route('admin.exhibitions.update', $exhibition) : route('admin.exhibitions.store') }}" enctype="multipart/form-data" class="bg-white p-6 rounded shadow space-y-4 max-w-2xl">
     @csrf @if(isset($exhibition)) @method('PUT') @endif
+    <input type="hidden" name="_page_save" value="1">
     <div><label class="block text-sm mb-1">Event name</label><input name="name" value="{{ old('name', $exhibition->name ?? '') }}" required class="w-full border px-3 py-2 rounded"></div>
     <div class="grid grid-cols-2 gap-4">
         <div><label class="block text-sm mb-1">City</label><input name="city" value="{{ old('city', $exhibition->city ?? '') }}" class="w-full border px-3 py-2 rounded"></div>

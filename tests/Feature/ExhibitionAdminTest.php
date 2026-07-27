@@ -1,0 +1,92 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Exhibition;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Tests\TestCase;
+
+class ExhibitionAdminTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_admin_can_update_exhibition_without_losing_existing_gallery(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->admin()->create();
+
+        $exhibition = Exhibition::query()->create([
+            'slug' => 'design-week',
+            'name' => 'Design Week',
+            'city' => 'Delhi',
+            'country' => 'India',
+            'year' => 2024,
+            'gallery' => ['exhibitions/photo-a.jpg', 'exhibitions/photo-b.jpg'],
+            'sort_order' => 1,
+            'is_active' => true,
+        ]);
+
+        $this->actingAsAdmin($admin)->put(route('admin.exhibitions.update', $exhibition), [
+            '_page_save' => '1',
+            'name' => 'Design Week Updated',
+            'city' => 'Delhi',
+            'country' => 'India',
+            'year' => 2024,
+            'description' => 'Updated copy',
+            'gallery_managed' => '1',
+            'gallery_existing' => ['exhibitions/photo-a.jpg', 'exhibitions/photo-b.jpg'],
+            'sort_order' => 1,
+            'is_active' => '1',
+        ])->assertRedirect(route('admin.exhibitions.index'));
+
+        $exhibition->refresh();
+        $this->assertSame('Design Week Updated', $exhibition->name);
+        $this->assertSame(['exhibitions/photo-a.jpg', 'exhibitions/photo-b.jpg'], $exhibition->gallery);
+    }
+
+    public function test_admin_can_add_gallery_images_with_separate_upload_fields(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->admin()->create();
+
+        $exhibition = Exhibition::query()->create([
+            'slug' => 'material-fair',
+            'name' => 'Material Fair',
+            'sort_order' => 2,
+            'is_active' => true,
+        ]);
+
+        $this->actingAsAdmin($admin)->put(route('admin.exhibitions.update', $exhibition), [
+            '_page_save' => '1',
+            'name' => 'Material Fair',
+            'country' => 'India',
+            'gallery_managed' => '1',
+            'gallery_files' => [
+                UploadedFile::fake()->image('booth-one.jpg'),
+                UploadedFile::fake()->image('booth-two.jpg'),
+            ],
+            'sort_order' => 2,
+            'is_active' => '1',
+        ])->assertRedirect(route('admin.exhibitions.index'));
+
+        $exhibition->refresh();
+        $this->assertCount(2, $exhibition->gallery ?? []);
+        Storage::disk('public')->assertExists($exhibition->gallery[0]);
+        Storage::disk('public')->assertExists($exhibition->gallery[1]);
+    }
+
+    public function test_admin_form_shows_per_image_gallery_upload_rows(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.exhibitions.create'))
+            ->assertOk()
+            ->assertSee('data-gallery-upload', false)
+            ->assertSee('name="gallery_files[]"', false)
+            ->assertSee('+ Add another image');
+    }
+}
