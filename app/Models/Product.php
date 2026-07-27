@@ -151,20 +151,12 @@ class Product extends Model
         return asset('storage/'.$this->image);
     }
 
-    /** @return array<int, string> */
+    /** @return array<int, string> Main product image only (legacy gallery column is unused on PDP). */
     public function galleryUrls(): array
     {
-        $urls = [];
-        if ($main = $this->imageUrl()) {
-            $urls[] = $main;
-        }
-        foreach ($this->gallery ?? [] as $item) {
-            if (is_string($item) && $item !== '') {
-                $urls[] = str_starts_with($item, 'http') ? $item : asset('storage/'.$item);
-            }
-        }
+        $main = $this->imageUrl();
 
-        return array_values(array_unique($urls));
+        return $main ? [$main] : [];
     }
 
     public function discountPercent(): ?int

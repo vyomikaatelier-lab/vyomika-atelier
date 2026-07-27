@@ -29,7 +29,7 @@
     use App\Models\Service;
     use App\Support\ProductCatalog;
     use App\Support\StorefrontRoutes;
-    $images = $product->galleryUrls();
+    $mainImage = $product->imageUrl();
     $discount = $product->discountPercent();
     $categorySlug = $product->category?->slug;
     $sectionLabel = StorefrontRoutes::productSectionLabel($product);
@@ -49,18 +49,9 @@
         <div class="am-pdp">
             <div class="am-pdp__gallery" data-pdp-gallery>
                 <div class="am-pdp__gallery-inner">
-                    @if(count($images) > 1)
-                    <div class="am-pdp__thumbs am-pdp__thumbs--vertical">
-                        @foreach($images as $i => $src)
-                        <button type="button" class="am-pdp__thumb {{ $i === 0 ? 'is-active' : '' }}" data-pdp-thumb="{{ $src }}" aria-label="View image {{ $i + 1 }}">
-                            <img src="{{ $src }}" alt="">
-                        </button>
-                        @endforeach
-                    </div>
-                    @endif
                     <div class="am-pdp__main">
-                        @if(count($images))
-                            <img src="{{ $images[0] }}" alt="{{ $product->name }}" id="pdp-main-image" class="am-pdp__main-img">
+                        @if($mainImage)
+                            <img src="{{ $mainImage }}" alt="{{ $product->name }}" id="pdp-main-image" class="am-pdp__main-img">
                         @else
                             <div class="am-pdp__placeholder">VA</div>
                         @endif
@@ -154,17 +145,3 @@
     </div>
 </section>
 @endsection
-
-@push('scripts')
-<script>
-document.querySelectorAll('[data-pdp-thumb]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-        const src = btn.dataset.pdpThumb;
-        const main = document.getElementById('pdp-main-image');
-        if (main && src) main.src = src;
-        document.querySelectorAll('[data-pdp-thumb]').forEach(b => b.classList.remove('is-active'));
-        btn.classList.add('is-active');
-    });
-});
-</script>
-@endpush
