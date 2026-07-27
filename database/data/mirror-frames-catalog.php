@@ -3,7 +3,9 @@
 /**
  * Mirror Frames collection products — shared by seeder and static preview JSON sync.
  *
- * @return list<array{name: string, slug: string, category: string, price: int, compare_price: int|null, sku: string, featured: bool, image: string, desc: string, gallery?: list<string>}>
+ * Dimensions are stored in centimetres (admin Width/Height). Storefront converts to ft / mm / cm.
+ *
+ * @return list<array{name: string, slug: string, category: string, price: int, compare_price: int|null, sku: string, featured: bool, image: string, desc: string, dim_width_cm?: float|null, dim_height_cm?: float|null, gallery?: list<string>}>
  */
 return [
     [
@@ -14,6 +16,8 @@ return [
         'compare_price' => 22900,
         'sku' => 'SSM-MIR-ARC-001',
         'featured' => true,
+        'dim_width_cm' => 90,
+        'dim_height_cm' => 120,
         'image' => 'https://images.unsplash.com/photo-1615874959473-d97dfea35062?w=800&q=80',
         'desc' => 'Soft-arch profile wall mirror with slim PVD stainless frame. Toughened glass, concealed fixings and champagne or matte black finish options.',
         'gallery' => [
@@ -28,6 +32,8 @@ return [
         'compare_price' => 34900,
         'sku' => 'SSM-MIR-FLR-002',
         'featured' => true,
+        'dim_width_cm' => 60,
+        'dim_height_cm' => 180,
         'image' => 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&q=80',
         'desc' => 'Freestanding floor mirror with weighted PVD base plate and anti-tip safety bracket. Ideal for dressing rooms and walk-in closets.',
     ],
@@ -39,6 +45,8 @@ return [
         'compare_price' => null,
         'sku' => 'SSM-MIR-BLT-003',
         'featured' => false,
+        'dim_width_cm' => 60,
+        'dim_height_cm' => 80,
         'image' => 'https://images.unsplash.com/photo-1620626011761-996317b8d101?w=800&q=80',
         'desc' => 'IP44-rated LED backlit bathroom mirror with optional demister pad and touch dimmer. Even vanity illumination for wet-area installs.',
     ],
@@ -50,6 +58,8 @@ return [
         'compare_price' => 39900,
         'sku' => 'SSM-MIR-FLT-004',
         'featured' => true,
+        'dim_width_cm' => 80,
+        'dim_height_cm' => 120,
         'image' => 'https://images.unsplash.com/photo-1600210492494-03fe69c9aeda?w=800&q=80',
         'desc' => 'Vertical fluted PVD frame wrapping toughened mirror glass. Statement format for living rooms, lobbies and hospitality suites.',
     ],
@@ -61,6 +71,8 @@ return [
         'compare_price' => null,
         'sku' => 'SSM-MIR-RND-005',
         'featured' => false,
+        'dim_width_cm' => 60,
+        'dim_height_cm' => 60,
         'image' => 'https://images.unsplash.com/photo-1507089947368-24c3dfe42ee6?w=800&q=80',
         'desc' => '600 mm circular vanity mirror with brushed PVD bezel and bevelled edge glass. Wall-mount or pivot-arm configuration.',
     ],
@@ -72,6 +84,8 @@ return [
         'compare_price' => 42900,
         'sku' => 'SSM-MIR-LED-006',
         'featured' => true,
+        'dim_width_cm' => 70,
+        'dim_height_cm' => 180,
         'image' => 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=800&q=80',
         'desc' => 'Full-height dressing mirror with perimeter LED strip, CRI 90+ warm white and dimmer with memory function.',
     ],
@@ -83,6 +97,8 @@ return [
         'compare_price' => 49900,
         'sku' => 'SSM-MIR-RTL-007',
         'featured' => false,
+        'dim_width_cm' => 90,
+        'dim_height_cm' => 200,
         'image' => 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80',
         'desc' => 'Large-format retail display mirror with reinforced PVD corner joints. Crated for safe Pan-India showroom delivery.',
     ],
@@ -94,6 +110,8 @@ return [
         'compare_price' => null,
         'sku' => 'SSM-MIR-CST-008',
         'featured' => false,
+        'dim_width_cm' => null,
+        'dim_height_cm' => null,
         'image' => 'https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=800&q=80',
         'desc' => 'Bespoke mirror frame profiles — ogee, bullnose, shadow-gap and architect-specified sections with shop drawings and site coordination.',
     ],

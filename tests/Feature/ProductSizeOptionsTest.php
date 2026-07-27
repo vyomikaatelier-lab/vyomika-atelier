@@ -27,6 +27,7 @@ class ProductSizeOptionsTest extends TestCase
             'name' => 'Brass Pull Handle',
             'slug' => 'brass-pull-handle',
             'price' => 1000,
+            'compare_price' => 4000,
             'stock' => 10,
             'section' => Product::SECTION_SHOP,
             'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
@@ -39,22 +40,28 @@ class ProductSizeOptionsTest extends TestCase
             'name' => 'Brass Pull Handle',
             'slug' => 'brass-pull-handle',
             'price' => 1000,
+            'compare_price' => 4000,
             'stock' => 10,
             'section' => Product::SECTION_SHOP,
             'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
             'pricing_type' => Product::PRICING_FIXED,
             'is_active' => '1',
             'size_options' => [
-                ['label' => '8"', 'price' => 800, 'size_inches' => 8, 'sku_suffix' => '8IN'],
-                ['label' => '12"', 'price' => 1500, 'size_inches' => 12, 'sku_suffix' => '12IN'],
+                ['label' => '8"', 'price' => 800, 'compare_price' => 3200, 'size_inches' => 8, 'sku_suffix' => '8IN'],
+                ['label' => '12"', 'price' => 1500, 'compare_price' => 4500, 'size_inches' => 12, 'sku_suffix' => '12IN'],
             ],
         ])->assertRedirect(route('admin.products.edit', ['product' => $product, 'saved' => 1]));
 
-        $product->refresh();
+        $product->refresh()->load('category');
         $this->assertSame('800.00', (string) $product->price);
+        $this->assertNull($product->compare_price);
         $this->assertCount(2, $product->normalizedSizeOptions());
         $this->assertSame('8"', $product->normalizedSizeOptions()[0]['label']);
+        $this->assertSame(3200.0, $product->normalizedSizeOptions()[0]['compare_price']);
+        $this->assertSame(75, $product->normalizedSizeOptions()[0]['discount_percent']);
         $this->assertSame(1500.0, $product->normalizedSizeOptions()[1]['price']);
+        $this->assertSame(4500.0, $product->normalizedSizeOptions()[1]['compare_price']);
+        $this->assertSame(67, $product->normalizedSizeOptions()[1]['discount_percent']);
     }
 
     public function test_admin_ignores_blank_size_option_rows_and_still_saves_filled_ones(): void
@@ -189,9 +196,10 @@ class ProductSizeOptionsTest extends TestCase
         $product = Product::factory()->create([
             'category_id' => $category->id,
             'price' => 800,
+            'compare_price' => 3200,
             'size_options' => [
-                ['label' => '8"', 'price' => 800, 'size_inches' => 8],
-                ['label' => '12"', 'price' => 1500, 'size_inches' => 12],
+                ['label' => '8"', 'price' => 800, 'compare_price' => 3200, 'size_inches' => 8],
+                ['label' => '12"', 'price' => 1500, 'compare_price' => 4500, 'size_inches' => 12],
             ],
         ]);
 
@@ -200,10 +208,16 @@ class ProductSizeOptionsTest extends TestCase
             ->assertSee('data-pdp-size', false)
             ->assertSee('data-size-option', false)
             ->assertSee('data-pdp-price-display', false)
-            ->assertSee('From ₹800', false)
+            ->assertSee('am-size-options--rows', false)
+            ->assertSee('am-size-opt--row', false)
             ->assertSee('data-size-price="1500"', false)
             ->assertSee('₹1,500', false)
-            ->assertSee('am-size-opt__price', false);
+            ->assertSee('₹4,500', false)
+            ->assertSee('-67%', false)
+            ->assertSee('am-size-opt__price', false)
+            ->assertSee('am-size-opt__badge', false)
+            ->assertDontSee('am-featured__price-old', false)
+            ->assertDontSee('From ₹800', false);
     }
 
     public function test_add_to_cart_preserves_selected_size_and_price(): void
@@ -444,7 +458,10 @@ class ProductSizeOptionsTest extends TestCase
             ->assertSee('₹18,500', false)
             ->assertDontSee('From ₹', false)
             ->assertDontSee('data-pdp-size', false)
-            ->assertSee('2 × 3 ft', false);
+            ->assertSee('2 × 3 ft', false)
+            ->assertSee('am-pdp__dimensions', false)
+            ->assertDontSee('900 × 1200 mm standard', false)
+            ->assertSee('Toughened mirror glass', false);
     }
 
     public function test_admin_form_shows_handle_and_mirror_labels(): void
@@ -470,7 +487,7 @@ class ProductSizeOptionsTest extends TestCase
         $this->actingAsAdmin($admin)
             ->get(route('admin.products.edit', $product))
             ->assertOk()
-            ->assertSee('Size &amp; price options (door handles — each size has its own price)', false)
+            ->assertSee('Size &amp; price options (door handles — each size has its own price &amp; discount)', false)
             ->assertSee('id="size-options-section"', false)
             ->assertDontSee('id="size-options-section" class="rounded-lg border-2 border-amber-200 bg-amber-50 p-4 space-y-3 hidden"', false)
             ->assertSee('Mirror dimensions (single size, shown as ft / mm / cm — one price above)', false)

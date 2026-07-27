@@ -70,7 +70,14 @@
 
                 @include('partials.am-mirror-dimensions', ['product' => $product])
 
-                <div class="am-featured__price {{ $showCalculator ? 'am-featured__price--sqft' : '' }}">
+                @php $hasSizeOptions = $product->hasSizeOptions(); @endphp
+
+                {{-- Door handles: size rows carry per-size price/discount; show selector before the price line --}}
+                @if($hasSizeOptions)
+                @include('partials.am-pdp-size-options', ['product' => $product])
+                @endif
+
+                <div class="am-featured__price {{ $showCalculator ? 'am-featured__price--sqft' : '' }}{{ $hasSizeOptions ? ' am-featured__price--size-selected' : '' }}">
                     @if($showCalculator)
                     <div class="am-pdp__sqft-price">
                         <span class="am-pdp__sqft-price-current" data-sqft-rate-display>₹{{ number_format($calcRate, 0) }}</span>
@@ -78,11 +85,9 @@
                     </div>
                     <p class="am-pdp__sqft-price-note" data-sqft-black-note hidden>Black finish selected — ₹{{ number_format($blackRate, 0) }}/sq ft (+30%)</p>
                     @else
-                    <span class="am-featured__price-current" data-pdp-price-display>{{ $product->hasSizeOptions() ? $product->formattedListingPrice() : $product->formattedPrice() }}</span>
-                    @if($product->compare_price)
+                    <span class="am-featured__price-current" data-pdp-price-display>{{ $product->formattedPrice() }}</span>
+                    @if(! $hasSizeOptions && $product->hasDisplayComparePrice())
                     <span class="am-featured__price-old">₹{{ number_format($product->compare_price, 0) }}</span>
-                    @endif
-                    @if($discount)
                     <span class="am-featured__badge">-{{ $discount }}%</span>
                     @endif
                     @endif
@@ -100,8 +105,9 @@
                     'note' => $product->resolvedSwatchesNote(),
                 ])
 
-                {{-- Size options must show whenever saved, not only when checkout buy is gated --}}
+                @unless($hasSizeOptions)
                 @include('partials.am-pdp-size-options', ['product' => $product])
+                @endunless
 
                 @if($product->description)
                 <div class="am-prose am-pdp__desc">{{ $product->description }}</div>

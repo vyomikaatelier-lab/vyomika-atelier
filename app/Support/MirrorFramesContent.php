@@ -90,6 +90,8 @@ class MirrorFramesContent
                 'gallery' => $item['gallery'] ?? null,
                 'is_featured' => $item['featured'] ?? false,
                 'is_active' => true,
+                'dim_width_cm' => $item['dim_width_cm'] ?? null,
+                'dim_height_cm' => $item['dim_height_cm'] ?? null,
             ]
         )->load('category');
     }

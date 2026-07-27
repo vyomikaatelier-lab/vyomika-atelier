@@ -208,24 +208,40 @@
     @php
         $sizeOptionRows = old('size_options', ($showDoorHandleSizes && isset($product)) ? ($product->size_options ?? []) : []);
         if (! is_array($sizeOptionRows) || $sizeOptionRows === []) {
-            $sizeOptionRows = [['label' => '', 'price' => '', 'size_inches' => '', 'sku_suffix' => '']];
+            $sizeOptionRows = [['label' => '', 'price' => '', 'compare_price' => '', 'size_inches' => '', 'sku_suffix' => '']];
         }
     @endphp
     <fieldset id="size-options-section" class="rounded-lg border-2 border-amber-200 bg-amber-50 p-4 space-y-3{{ $showDoorHandleSizes ? '' : ' hidden' }}" aria-labelledby="size-options-heading" data-only-category="door-handles" @if(! $showDoorHandleSizes) inert @endif>
-        <legend id="size-options-heading" class="text-sm font-semibold text-gray-900 px-1">Size &amp; price options (door handles — each size has its own price)</legend>
-        <p class="text-xs text-gray-600 -mt-1">Door handles only. Add each size with its own price (e.g. 8&quot; → ₹800, 12&quot; → ₹1500). Visitors pick a size on the product page; price updates automatically. Leave all rows blank to use the single price above. Not used for mirrors.</p>
+        <legend id="size-options-heading" class="text-sm font-semibold text-gray-900 px-1">Size &amp; price options (door handles — each size has its own price &amp; discount)</legend>
+        <p class="text-xs text-gray-600 -mt-1">Door handles only. Add each size with its own selling price and optional compare price (strikethrough / −% on that size line). Product-level Compare price above is cleared when size options are saved. Leave all rows blank to use the single price above. Not used for mirrors.</p>
         <div id="size-options-rows" class="space-y-3">
             @foreach($sizeOptionRows as $index => $row)
+            @php
+                $rowPrice = $row['price'] ?? '';
+                $rowCompare = $row['compare_price'] ?? '';
+                $rowDiscountPct = '';
+                if (is_numeric($rowPrice) && is_numeric($rowCompare) && (float) $rowCompare > (float) $rowPrice && (float) $rowCompare > 0) {
+                    $rowDiscountPct = (string) (int) round((1 - ((float) $rowPrice / (float) $rowCompare)) * 100);
+                }
+            @endphp
             <div class="size-option-row grid grid-cols-12 gap-2 items-end bg-white border rounded p-3">
-                <div class="col-span-4">
+                <div class="col-span-2">
                     <label class="text-xs text-gray-600 block mb-1">Size label</label>
                     <input type="text" name="size_options[{{ $index }}][label]" value="{{ $row['label'] ?? '' }}" placeholder='e.g. 8"' class="w-full border px-2 py-1 rounded text-sm" @disabled(! $showDoorHandleSizes)>
                 </div>
-                <div class="col-span-3">
+                <div class="col-span-2">
                     <label class="text-xs text-gray-600 block mb-1">Price (₹)</label>
-                    <input type="number" step="0.01" min="0" name="size_options[{{ $index }}][price]" value="{{ $row['price'] ?? '' }}" placeholder="800" class="w-full border px-2 py-1 rounded text-sm" @disabled(! $showDoorHandleSizes)>
+                    <input type="number" step="0.01" min="0" name="size_options[{{ $index }}][price]" value="{{ $rowPrice }}" placeholder="800" class="size-opt-price w-full border px-2 py-1 rounded text-sm" @disabled(! $showDoorHandleSizes)>
                 </div>
                 <div class="col-span-2">
+                    <label class="text-xs text-gray-600 block mb-1">Compare (₹)</label>
+                    <input type="number" step="0.01" min="0" name="size_options[{{ $index }}][compare_price]" value="{{ $rowCompare }}" placeholder="3200" class="size-opt-compare w-full border px-2 py-1 rounded text-sm" @disabled(! $showDoorHandleSizes)>
+                </div>
+                <div class="col-span-2">
+                    <label class="text-xs text-gray-600 block mb-1">Discount %</label>
+                    <input type="number" step="1" min="0" max="99" value="{{ $rowDiscountPct }}" placeholder="75" class="size-opt-discount w-full border px-2 py-1 rounded text-sm" inputmode="numeric" @disabled(! $showDoorHandleSizes)>
+                </div>
+                <div class="col-span-1">
                     <label class="text-xs text-gray-600 block mb-1">Inches</label>
                     <input type="number" step="0.01" min="0" name="size_options[{{ $index }}][size_inches]" value="{{ $row['size_inches'] ?? '' }}" placeholder="8" class="w-full border px-2 py-1 rounded text-sm" @disabled(! $showDoorHandleSizes)>
                 </div>
@@ -243,6 +259,7 @@
         @error('size_options')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
         @error('size_options.*.label')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
         @error('size_options.*.price')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+        @error('size_options.*.compare_price')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
     </fieldset>
     <div class="grid grid-cols-2 gap-4">
         <input type="text" name="sku" value="{{ old('sku', $product->sku ?? '') }}" placeholder="SKU" class="border px-3 py-2 rounded">
@@ -330,18 +347,53 @@
 
     function bindSizeOptionRow(row) {
         var removeBtn = row.querySelector('.size-option-remove');
-        if (!removeBtn) return;
-        removeBtn.addEventListener('click', function () {
-            if (!sizeOptionsRows) return;
-            if (sizeOptionsRows.querySelectorAll('.size-option-row').length <= 1) {
-                row.querySelectorAll('input').forEach(function (input) { input.value = ''; });
-                return;
-            }
-            row.remove();
-            sizeOptionsRows.querySelectorAll('.size-option-remove').forEach(function (btn, index, all) {
-                btn.hidden = all.length <= 1;
+        if (removeBtn) {
+            removeBtn.addEventListener('click', function () {
+                if (!sizeOptionsRows) return;
+                if (sizeOptionsRows.querySelectorAll('.size-option-row').length <= 1) {
+                    row.querySelectorAll('input').forEach(function (input) { input.value = ''; });
+                    return;
+                }
+                row.remove();
+                sizeOptionsRows.querySelectorAll('.size-option-remove').forEach(function (btn, index, all) {
+                    btn.hidden = all.length <= 1;
+                });
             });
-        });
+        }
+
+        var priceEl = row.querySelector('.size-opt-price');
+        var compareEl = row.querySelector('.size-opt-compare');
+        var discountEl = row.querySelector('.size-opt-discount');
+        var rowSyncing = false;
+
+        function syncRowPctFromPrices() {
+            if (rowSyncing || !discountEl) return;
+            rowSyncing = true;
+            var pct = calcDiscountPct(parseFloat(priceEl && priceEl.value), parseFloat(compareEl && compareEl.value));
+            discountEl.value = pct !== null ? String(pct) : '';
+            rowSyncing = false;
+        }
+
+        function syncRowPricesFromPct() {
+            if (rowSyncing || !discountEl || !priceEl || !compareEl) return;
+            rowSyncing = true;
+            var pct = parseFloat(discountEl.value);
+            var price = parseFloat(priceEl.value);
+            var compare = parseFloat(compareEl.value);
+
+            if (!isNaN(pct) && pct > 0 && pct < 100) {
+                if (!isNaN(price) && price >= 0) {
+                    compareEl.value = String(roundMoney(price / (1 - pct / 100)));
+                } else if (!isNaN(compare) && compare > 0) {
+                    priceEl.value = String(roundMoney(compare * (1 - pct / 100)));
+                }
+            }
+            rowSyncing = false;
+        }
+
+        if (priceEl) priceEl.addEventListener('input', syncRowPctFromPrices);
+        if (compareEl) compareEl.addEventListener('input', syncRowPctFromPrices);
+        if (discountEl) discountEl.addEventListener('input', syncRowPricesFromPct);
     }
 
     if (sizeOptionsRows) {
@@ -354,11 +406,15 @@
             var row = document.createElement('div');
             row.className = 'size-option-row grid grid-cols-12 gap-2 items-end bg-white border rounded p-3';
             row.innerHTML = ''
-                + '<div class="col-span-4"><label class="text-xs text-gray-600 block mb-1">Size label</label>'
+                + '<div class="col-span-2"><label class="text-xs text-gray-600 block mb-1">Size label</label>'
                 + '<input type="text" name="size_options[' + index + '][label]" placeholder=\'e.g. 8"\' class="w-full border px-2 py-1 rounded text-sm"></div>'
-                + '<div class="col-span-3"><label class="text-xs text-gray-600 block mb-1">Price (₹)</label>'
-                + '<input type="number" step="0.01" min="0" name="size_options[' + index + '][price]" placeholder="800" class="w-full border px-2 py-1 rounded text-sm"></div>'
-                + '<div class="col-span-2"><label class="text-xs text-gray-600 block mb-1">Inches</label>'
+                + '<div class="col-span-2"><label class="text-xs text-gray-600 block mb-1">Price (₹)</label>'
+                + '<input type="number" step="0.01" min="0" name="size_options[' + index + '][price]" placeholder="800" class="size-opt-price w-full border px-2 py-1 rounded text-sm"></div>'
+                + '<div class="col-span-2"><label class="text-xs text-gray-600 block mb-1">Compare (₹)</label>'
+                + '<input type="number" step="0.01" min="0" name="size_options[' + index + '][compare_price]" placeholder="3200" class="size-opt-compare w-full border px-2 py-1 rounded text-sm"></div>'
+                + '<div class="col-span-2"><label class="text-xs text-gray-600 block mb-1">Discount %</label>'
+                + '<input type="number" step="1" min="0" max="99" placeholder="75" class="size-opt-discount w-full border px-2 py-1 rounded text-sm" inputmode="numeric"></div>'
+                + '<div class="col-span-1"><label class="text-xs text-gray-600 block mb-1">Inches</label>'
                 + '<input type="number" step="0.01" min="0" name="size_options[' + index + '][size_inches]" placeholder="8" class="w-full border px-2 py-1 rounded text-sm"></div>'
                 + '<div class="col-span-2"><label class="text-xs text-gray-600 block mb-1">SKU suffix</label>'
                 + '<input type="text" name="size_options[' + index + '][sku_suffix]" placeholder="8IN" class="w-full border px-2 py-1 rounded text-sm"></div>'

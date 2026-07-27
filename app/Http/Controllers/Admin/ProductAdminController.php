@@ -185,6 +185,7 @@ class ProductAdminController extends Controller
             'size_options' => 'nullable|array',
             'size_options.*.label' => 'required|string|max:50',
             'size_options.*.price' => 'required|numeric|min:0',
+            'size_options.*.compare_price' => 'nullable|numeric|min:0',
             'size_options.*.size_inches' => 'nullable|numeric|min:0',
             'size_options.*.sku_suffix' => 'nullable|string|max:20',
         ]);
@@ -252,6 +253,8 @@ class ProductAdminController extends Controller
         if ($category?->slug === 'door-handles') {
             if ($validated['size_options'] !== null) {
                 $validated['price'] = min(array_column($validated['size_options'], 'price'));
+                // Per-size compare/discount lives on size_options — hide product-level sale UI.
+                $validated['compare_price'] = null;
             }
         } else {
             // Clear so size/price variants never leak onto mirrors or other categories.
@@ -283,14 +286,16 @@ class ProductAdminController extends Controller
 
             $label = trim((string) ($row['label'] ?? ''));
             $price = $row['price'] ?? null;
+            $comparePrice = $row['compare_price'] ?? null;
             $sizeInches = $row['size_inches'] ?? null;
             $skuSuffix = $row['sku_suffix'] ?? null;
 
             $priceBlank = $price === null || $price === '';
+            $compareBlank = $comparePrice === null || $comparePrice === '';
             $inchesBlank = $sizeInches === null || $sizeInches === '';
             $skuBlank = $skuSuffix === null || trim((string) $skuSuffix) === '';
 
-            if ($label === '' && $priceBlank && $inchesBlank && $skuBlank) {
+            if ($label === '' && $priceBlank && $compareBlank && $inchesBlank && $skuBlank) {
                 continue;
             }
 
@@ -304,7 +309,7 @@ class ProductAdminController extends Controller
 
     /**
      * @param  array<int, array<string, mixed>>|null  $rows
-     * @return list<array{label: string, size_inches: ?float, price: float, sku_suffix: ?string}>|null
+     * @return list<array{label: string, size_inches: ?float, price: float, compare_price: ?float, sku_suffix: ?string}>|null
      */
     private function normalizeSizeOptions(?array $rows): ?array
     {
@@ -325,12 +330,18 @@ class ProductAdminController extends Controller
                 continue;
             }
 
+            $compareRaw = $row['compare_price'] ?? null;
+            $comparePrice = filled($compareRaw) && is_numeric($compareRaw)
+                ? round((float) $compareRaw, 2)
+                : null;
+
             $options[] = [
                 'label' => $label,
                 'size_inches' => filled($row['size_inches'] ?? null)
                     ? round((float) $row['size_inches'], 2)
                     : null,
                 'price' => round((float) $price, 2),
+                'compare_price' => $comparePrice,
                 'sku_suffix' => filled($row['sku_suffix'] ?? null)
                     ? trim((string) $row['sku_suffix'])
                     : null,

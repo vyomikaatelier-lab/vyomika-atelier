@@ -25,10 +25,8 @@
     $comparePrice = $isModel ? $product->compare_price : ($isObject ? ($product->compare_price ?? null) : ($product['compare_price'] ?? null));
     $badge = $isModel ? null : ($isObject ? ($product->badge ?? null) : ($product['badge'] ?? null));
 
-    if ($isModel && ! $badge && $comparePrice && $comparePrice > $price) {
-
+    if ($isModel && ! $badge && ! $product->hasSizeOptions() && $comparePrice && $comparePrice > $price) {
         $badge = '-' . round((1 - $price / $comparePrice) * 100) . '%';
-
     }
 
     $image = $isModel

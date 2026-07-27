@@ -115,7 +115,9 @@ class Product extends Model
         return $this->isDoorHandleProduct() && $this->normalizedSizeOptions() !== [];
     }
 
-    /** @return list<array{label: string, size_inches: ?float, price: float, sku_suffix: ?string}> */
+    /**
+     * @return list<array{label: string, size_inches: ?float, price: float, compare_price: ?float, discount_percent: ?int, sku_suffix: ?string}>
+     */
     public function normalizedSizeOptions(): array
     {
         $raw = $this->size_options;
@@ -142,11 +144,17 @@ class Product extends Model
             $skuSuffix = filled($row['sku_suffix'] ?? null)
                 ? trim((string) $row['sku_suffix'])
                 : null;
+            $comparePrice = filled($row['compare_price'] ?? null)
+                ? round((float) $row['compare_price'], 2)
+                : null;
+            $discountPercent = self::discountPercentFromPrices($price, $comparePrice);
 
             $options[] = [
                 'label' => $label,
                 'size_inches' => $sizeInches,
                 'price' => round($price, 2),
+                'compare_price' => $comparePrice,
+                'discount_percent' => $discountPercent,
                 'sku_suffix' => $skuSuffix,
             ];
         }
@@ -177,7 +185,7 @@ class Product extends Model
         return $this->formattedPrice();
     }
 
-    /** @return array{label: string, size_inches: ?float, price: float, sku_suffix: ?string}|null */
+    /** @return array{label: string, size_inches: ?float, price: float, compare_price: ?float, discount_percent: ?int, sku_suffix: ?string}|null */
     public function resolveSizeOption(?string $label): ?array
     {
         $options = $this->normalizedSizeOptions();
@@ -324,11 +332,56 @@ class Product extends Model
 
     public function discountPercent(): ?int
     {
-        if (! $this->compare_price || $this->compare_price <= $this->price) {
+        return self::discountPercentFromPrices((float) $this->price, $this->compare_price !== null ? (float) $this->compare_price : null);
+    }
+
+    public function hasDisplayComparePrice(): bool
+    {
+        return $this->discountPercent() !== null;
+    }
+
+    public static function discountPercentFromPrices(float $price, ?float $comparePrice): ?int
+    {
+        if ($comparePrice === null || $comparePrice <= $price || $comparePrice <= 0 || $price < 0) {
             return null;
         }
 
-        return (int) round((1 - $this->price / $this->compare_price) * 100);
+        return (int) round((1 - $price / $comparePrice) * 100);
+    }
+
+    /** True when a string looks like a size/dimension chip (e.g. "600 x 1200 mm standard"). */
+    public static function isDimensionLikeSpecLine(string $line): bool
+    {
+        $normalized = trim(html_entity_decode($line, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        if ($normalized === '') {
+            return false;
+        }
+
+        // "600 x 1200 mm", "900 × 1200 mm standard", "600 mm diameter"
+        return (bool) preg_match(
+            '/\d+(?:[.,]\d+)?\s*[x×]\s*\d+(?:[.,]\d+)?\s*(mm|cm|m|ft|in|inches?\b)|'
+            .'^\d+(?:[.,]\d+)?\s*(mm|cm|m)\b.*\b(diameter|dia\.?|standard)\b|'
+            .'^\d+(?:[.,]\d+)?\s*(mm|cm)\s*$/iu',
+            $normalized
+        );
+    }
+
+    /**
+     * Spec / highlight lines with dimension chips removed when structured dims exist.
+     *
+     * @param  list<string>  $lines
+     * @return list<string>
+     */
+    public function linesWithoutDimensionChips(array $lines): array
+    {
+        if (! $this->hasMirrorDimensions()) {
+            return array_values($lines);
+        }
+
+        return array_values(array_filter(
+            $lines,
+            fn (string $line): bool => ! self::isDimensionLikeSpecLine($line)
+        ));
     }
 
     /**

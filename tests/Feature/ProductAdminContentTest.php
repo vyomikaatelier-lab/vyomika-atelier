@@ -219,7 +219,8 @@ class ProductAdminContentTest extends TestCase
             ->assertSee('am-pdp__dimensions-item', false)
             ->assertSee('2 × 3 ft', false)
             ->assertSee('610 × 910 mm', false)
-            ->assertSee('61 × 91 cm', false);
+            ->assertSee('61 × 91 cm', false)
+            ->assertDontSee('900 × 1200 mm standard', false);
     }
 
     public function test_mirror_dimensions_hidden_when_not_set(): void
@@ -287,6 +288,41 @@ class ProductAdminContentTest extends TestCase
             ->assertSee('am-featured__price-old', false)
             ->assertSee('am-featured__badge', false)
             ->assertSee('-26%', false);
+    }
+
+    public function test_pdp_hides_compare_when_equal_to_price(): void
+    {
+        $category = Category::query()->firstOrCreate(
+            ['slug' => 'mirror-frames'],
+            ['name' => 'Mirror Frames', 'section' => 'shop', 'is_active' => true]
+        );
+
+        $product = Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Equal Compare Mirror',
+            'slug' => 'equal-compare-mirror',
+            'price' => 24000,
+            'compare_price' => 24000,
+            'stock' => 3,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+            'dim_width_cm' => 60,
+            'dim_height_cm' => 120,
+        ]);
+
+        $this->assertNull($product->discountPercent());
+        $this->assertFalse($product->hasDisplayComparePrice());
+
+        $this->get(route('shop.show', $product->slug))
+            ->assertOk()
+            ->assertSee('₹24,000', false)
+            ->assertDontSee('am-featured__price-old', false)
+            ->assertSee('am-pdp__dimensions', false)
+            ->assertSee('2 × 4 ft', false)
+            ->assertSee('600 × 1200 mm', false)
+            ->assertSee('60 × 120 cm', false);
     }
 
     public function test_admin_form_shows_discount_percent_control_for_non_handle_products(): void

@@ -13,7 +13,6 @@
     use App\Models\Service;
     $mainImage = $product->imageUrl();
     $discount = $product->discountPercent();
-    $highlights = $design['highlights'] ?? [];
 @endphp
 
 <section class="am-page-body am-page-body--pdp am-page-body--mirror-frames">
@@ -49,10 +48,8 @@
 
                 <div class="am-featured__price">
                     <span class="am-featured__price-current">{{ $product->formattedPrice() }}</span>
-                    @if($product->compare_price)
+                    @if($product->hasDisplayComparePrice())
                     <span class="am-featured__price-old">₹{{ number_format($product->compare_price, 0) }}</span>
-                    @endif
-                    @if($discount)
                     <span class="am-featured__badge">-{{ $discount }}%</span>
                     @elseif(!empty($design['badge']))
                     <span class="am-featured__badge">{{ $design['badge'] }}</span>
@@ -65,6 +62,9 @@
                     <li>✓ Estimated delivery: <strong>3–4 weeks</strong></li>
                 </ul>
 
+                @php
+                    $highlights = $product->linesWithoutDimensionChips($design['highlights'] ?? []);
+                @endphp
                 @if(count($highlights))
                 <ul class="am-mirror-frames-highlights">
                     @foreach($highlights as $item)
