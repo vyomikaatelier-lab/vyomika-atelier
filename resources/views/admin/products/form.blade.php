@@ -80,8 +80,12 @@
             <legend class="text-sm font-medium text-gray-800 px-1">Tabs below the buy area</legend>
             <p class="text-xs text-gray-500 -mt-1 mb-2">Specifications, Packaging, and Shipping tabs. Leave blank to use built-in defaults.</p>
             <div>
-                <label for="tab_specifications" class="text-sm text-gray-700 block mb-1">Specifications tab</label>
-                <textarea id="tab_specifications" name="tab_specifications" rows="5" placeholder="HTML for the Specifications tab" class="w-full border px-3 py-2 rounded font-mono text-sm bg-white">{{ old('tab_specifications', $product->tab_specifications ?? '') }}</textarea>
+                <label for="tab_specifications" class="text-sm font-medium text-gray-800 block mb-1">Specifications tab</label>
+                <p class="text-xs text-gray-500 mb-2">One specification per line. Shown as a bullet list on the product page (same style as the site). Leave blank for built-in defaults.</p>
+                @php
+                    $specificationsValue = old('tab_specifications', isset($product) ? implode("\n", $product->specificationLines()) : '');
+                @endphp
+                <textarea id="tab_specifications" name="tab_specifications" rows="8" placeholder="Material: Grade 304/316 stainless with PVD coating&#10;Finish options: Gold, Rose Gold, Champagne, Black&#10;Lead time: 3–4 weeks — Pan-India from Delhi studio" class="w-full border px-3 py-2 rounded text-sm bg-white leading-relaxed">{{ $specificationsValue }}</textarea>
                 @error('tab_specifications')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
             </div>
             <div>
@@ -156,18 +160,31 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-4">
-        <div>
-            <label class="text-sm text-gray-600 block mb-1">Price @if($currentPricingType === 'square_foot')<span class="text-gray-400">(₹ per sq ft)</span>@endif</label>
-            <input type="number" step="0.01" name="price" value="{{ old('price', $product->price ?? '') }}" placeholder="Price" required class="w-full border px-3 py-2 rounded">
-            @error('price')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
-            <p class="text-xs text-gray-500 mt-1">Shop = fixed selling price. Studio = rate per sq ft shown on the product page. When size options are set, this becomes the lowest variant price.</p>
+    <fieldset class="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-3" aria-labelledby="pricing-discount-heading">
+        <legend id="pricing-discount-heading" class="text-sm font-semibold text-gray-900 px-1">Price &amp; discount (as on website)</legend>
+        <p class="text-xs text-gray-600 -mt-1">On the product page and cards: selling price, optional strikethrough original price, and a <strong>−%</strong> badge when compare price is higher than price.</p>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label for="product-price" class="text-sm font-medium text-gray-800 block mb-1">Price @if($currentPricingType === 'square_foot')<span class="font-normal text-gray-500">(₹ per sq ft)</span>@endif</label>
+                <input id="product-price" type="number" step="0.01" name="price" value="{{ old('price', $product->price ?? '') }}" placeholder="Selling price" required class="w-full border px-3 py-2 rounded bg-white">
+                @error('price')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+                <p class="text-xs text-gray-500 mt-1">Shop = fixed selling price. Studio = rate per sq ft. When size options are set, this becomes the lowest variant price.</p>
+            </div>
+            <div>
+                <label for="product-compare-price" class="text-sm font-medium text-gray-800 block mb-1">Compare price <span class="font-normal text-gray-500">(original / before discount)</span></label>
+                <input id="product-compare-price" type="number" step="0.01" name="compare_price" value="{{ old('compare_price', $product->compare_price ?? '') }}" placeholder="e.g. 38999" class="w-full border px-3 py-2 rounded bg-white">
+                @error('compare_price')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+                <p class="text-xs text-gray-500 mt-1">Shows strikethrough + % off badge when higher than Price. Leave blank for no discount.</p>
+            </div>
         </div>
-        <div>
-            <label class="text-sm text-gray-600 block mb-1">Compare price</label>
-            <input type="number" step="0.01" name="compare_price" value="{{ old('compare_price', $product->compare_price ?? '') }}" placeholder="Compare Price" class="w-full border px-3 py-2 rounded">
-        </div>
-    </div>
+        <p id="discount-preview" class="text-sm text-gray-700 hidden" aria-live="polite">
+            Website preview: <span class="inline-flex items-center gap-2 flex-wrap">
+                <span id="discount-preview-price" class="font-medium"></span>
+                <span id="discount-preview-old" class="line-through text-gray-500"></span>
+                <span id="discount-preview-badge" class="inline-block bg-gray-900 text-white text-xs px-2 py-0.5 rounded"></span>
+            </span>
+        </p>
+    </fieldset>
 
     @php
         $sizeOptionRows = old('size_options', isset($product) ? ($product->size_options ?? []) : []);
@@ -339,6 +356,34 @@
     filterCategoryOptions();
     syncMirrorDimensionsSection();
     syncSizeOptionsSection();
+
+    var priceInput = document.getElementById('product-price');
+    var compareInput = document.getElementById('product-compare-price');
+    var discountPreview = document.getElementById('discount-preview');
+    var discountPreviewPrice = document.getElementById('discount-preview-price');
+    var discountPreviewOld = document.getElementById('discount-preview-old');
+    var discountPreviewBadge = document.getElementById('discount-preview-badge');
+
+    function formatInr(amount) {
+        return '₹' + Math.round(amount).toLocaleString('en-IN');
+    }
+
+    function syncDiscountPreview() {
+        if (!priceInput || !compareInput || !discountPreview) return;
+        var price = parseFloat(priceInput.value);
+        var compare = parseFloat(compareInput.value);
+        var show = !isNaN(price) && !isNaN(compare) && compare > price && price >= 0;
+        discountPreview.classList.toggle('hidden', !show);
+        if (!show) return;
+        var pct = Math.round((1 - price / compare) * 100);
+        if (discountPreviewPrice) discountPreviewPrice.textContent = formatInr(price);
+        if (discountPreviewOld) discountPreviewOld.textContent = formatInr(compare);
+        if (discountPreviewBadge) discountPreviewBadge.textContent = '-' + pct + '%';
+    }
+
+    if (priceInput) priceInput.addEventListener('input', syncDiscountPreview);
+    if (compareInput) compareInput.addEventListener('input', syncDiscountPreview);
+    syncDiscountPreview();
 })();
 </script>
 @endsection

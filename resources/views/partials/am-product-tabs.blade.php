@@ -43,8 +43,18 @@
 
         <div class="am-pdp-tabs__panel" data-am-panel="specifications" role="tabpanel" hidden>
             <div class="am-prose am-pdp-tabs__prose">
-                @if(filled($specificationsHtml))
-                    {!! $specificationsHtml !!}
+                @php
+                    $specificationLines = \App\Models\Product::linesFromTabText(
+                        is_string($specificationsHtml) ? $specificationsHtml : null
+                    );
+                @endphp
+                @if(count($specificationLines))
+                <h3>Product Specifications</h3>
+                <ul class="am-pdp-tabs__care-list">
+                    @foreach($specificationLines as $line)
+                        <li>{{ $line }}</li>
+                    @endforeach
+                </ul>
                 @else
                 <h3>Product Specifications</h3>
                 <dl class="am-pdp-spec-table">

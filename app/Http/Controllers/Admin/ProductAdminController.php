@@ -254,6 +254,8 @@ class ProductAdminController extends Controller
             unset($validated['size_options']);
         }
 
+        $validated['tab_specifications'] = Product::normalizeTabLines($validated['tab_specifications'] ?? null);
+
         return $validated;
     }
 

@@ -326,6 +326,57 @@ class Product extends Model
         return (int) round((1 - $this->price / $this->compare_price) * 100);
     }
 
+    /**
+     * Parse tab_specifications into clean display lines.
+     * Accepts newline-separated text or legacy HTML (<li>, <br>, paragraphs).
+     *
+     * @return list<string>
+     */
+    public function specificationLines(): array
+    {
+        return self::linesFromTabText($this->tab_specifications);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function linesFromTabText(?string $text): array
+    {
+        if (! filled($text)) {
+            return [];
+        }
+
+        if (preg_match_all('/<li\b[^>]*>(.*?)<\/li>/is', $text, $matches) && $matches[1] !== []) {
+            return array_values(array_filter(
+                array_map(
+                    fn (string $line): string => trim(html_entity_decode(strip_tags($line), ENT_QUOTES | ENT_HTML5, 'UTF-8')),
+                    $matches[1]
+                ),
+                fn (string $line): bool => $line !== ''
+            ));
+        }
+
+        $normalized = str_ireplace(
+            ['<br>', '<br/>', '<br />', '</p>', '</div>', '</h1>', '</h2>', '</h3>', '</h4>', '</li>'],
+            "\n",
+            $text
+        );
+        $plain = html_entity_decode(strip_tags($normalized), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $lines = preg_split('/\r\n|\r|\n/', $plain) ?: [];
+
+        return array_values(array_filter(
+            array_map(fn (string $line): string => trim($line), $lines),
+            fn (string $line): bool => $line !== ''
+        ));
+    }
+
+    public static function normalizeTabLines(?string $text): ?string
+    {
+        $lines = self::linesFromTabText($text);
+
+        return $lines === [] ? null : implode("\n", $lines);
+    }
+
     /** @return list<string> */
     public static function checkoutCategorySlugs(): array
     {

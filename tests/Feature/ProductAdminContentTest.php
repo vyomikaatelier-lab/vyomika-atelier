@@ -56,7 +56,7 @@ class ProductAdminContentTest extends TestCase
             'description' => 'Updated studio description',
             'headline_text' => 'Custom headline for PDP',
             'swatches_note' => 'Custom swatch note for buyers',
-            'tab_specifications' => '<h3>Custom specs</h3><p>Bespoke specification copy.</p>',
+            'tab_specifications' => "Material: Grade 304 stainless\nFinish: PVD coated\nLead time: 3–4 weeks",
             'tab_packaging' => '<h3>Custom packaging</h3><p>Extra packaging details.</p>',
             'tab_shipping' => '<h3>Custom shipping</h3><p>Express metro delivery available.</p>',
         ]))->assertRedirect(route('admin.products.edit', ['product' => $product, 'saved' => 1]));
@@ -66,16 +66,24 @@ class ProductAdminContentTest extends TestCase
         $this->assertSame('Updated studio description', $product->description);
         $this->assertSame('Custom headline for PDP', $product->headline_text);
         $this->assertSame('Custom swatch note for buyers', $product->swatches_note);
-        $this->assertStringContainsString('Custom specs', (string) $product->tab_specifications);
+        $this->assertSame("Material: Grade 304 stainless\nFinish: PVD coated\nLead time: 3–4 weeks", $product->tab_specifications);
+        $this->assertSame([
+            'Material: Grade 304 stainless',
+            'Finish: PVD coated',
+            'Lead time: 3–4 weeks',
+        ], $product->specificationLines());
 
         $response = $this->get(route('shop.show', $product->slug));
         $response->assertOk()
             ->assertSee('Updated studio description', false)
             ->assertSee('Custom headline for PDP', false)
             ->assertSee('Custom swatch note for buyers', false)
-            ->assertSee('Bespoke specification copy.', false)
+            ->assertSee('Material: Grade 304 stainless', false)
+            ->assertSee('Finish: PVD coated', false)
+            ->assertSee('Lead time: 3–4 weeks', false)
             ->assertSee('Extra packaging details.', false)
-            ->assertSee('Express metro delivery available.', false);
+            ->assertSee('Express metro delivery available.', false)
+            ->assertSee('<ul class="am-pdp-tabs__care-list">', false);
     }
 
     public function test_pdp_hides_headline_line_when_sku_and_headline_text_are_blank(): void
@@ -164,7 +172,11 @@ class ProductAdminContentTest extends TestCase
             ->assertSee('Main description', false)
             ->assertSee('Line under title', false)
             ->assertSee('Note below PVD finish swatches', false)
-            ->assertSee('Specifications tab', false);
+            ->assertSee('Specifications tab', false)
+            ->assertSee('One specification per line', false)
+            ->assertSee('Price &amp; discount (as on website)', false)
+            ->assertSee('Compare price', false)
+            ->assertSee('original / before discount', false);
     }
 
     public function test_admin_can_save_mirror_dimensions_and_pdp_shows_all_units(): void
@@ -230,5 +242,81 @@ class ProductAdminContentTest extends TestCase
             ->assertOk()
             ->assertDontSee('am-pdp__dimensions', false)
             ->assertDontSee('610 × 914 mm', false);
+    }
+
+    public function test_admin_can_save_compare_price_and_pdp_shows_discount_badge(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $category = Category::query()->firstOrCreate(
+            ['slug' => 'mirror-frames'],
+            ['name' => 'Mirror Frames', 'section' => 'shop', 'is_active' => true]
+        );
+
+        $product = Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Discount Mirror',
+            'slug' => 'discount-mirror',
+            'description' => 'Mirror with sale price',
+            'price' => 28999,
+            'stock' => 5,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+        ]);
+
+        $this->actingAsAdmin($admin)->put(route('admin.products.update', $product), $this->productPayload($category, $product, [
+            'price' => '28999',
+            'compare_price' => '38999',
+        ]))->assertRedirect(route('admin.products.edit', ['product' => $product, 'saved' => 1]));
+
+        $product->refresh();
+
+        $this->assertSame('28999.00', (string) $product->price);
+        $this->assertSame('38999.00', (string) $product->compare_price);
+        $this->assertSame(26, $product->discountPercent());
+
+        $this->get(route('shop.show', $product->slug))
+            ->assertOk()
+            ->assertSee('₹28,999', false)
+            ->assertSee('₹38,999', false)
+            ->assertSee('am-featured__price-old', false)
+            ->assertSee('am-featured__badge', false)
+            ->assertSee('-26%', false);
+    }
+
+    public function test_admin_normalizes_legacy_html_specifications_to_lines(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $category = Category::query()->firstOrCreate(
+            ['slug' => 'partitions'],
+            ['name' => 'Partitions', 'section' => 'studio', 'is_active' => true]
+        );
+
+        $product = Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Legacy Specs Product',
+            'slug' => 'legacy-specs-product',
+            'price' => 1800,
+            'stock' => 2,
+            'section' => Product::SECTION_STUDIO,
+            'purchase_mode' => Product::PURCHASE_MODE_ENQUIRY,
+            'pricing_type' => Product::PRICING_SQUARE_FOOT,
+            'is_active' => true,
+        ]);
+
+        $this->actingAsAdmin($admin)->put(route('admin.products.update', $product), $this->productPayload($category, $product, [
+            'tab_specifications' => '<ul><li>Thickness: 1.2mm</li><li>Mounting: Wall &amp; ceiling</li></ul>',
+        ]))->assertRedirect(route('admin.products.edit', ['product' => $product, 'saved' => 1]));
+
+        $product->refresh();
+
+        $this->assertSame("Thickness: 1.2mm\nMounting: Wall & ceiling", $product->tab_specifications);
+
+        $this->get(route('shop.show', $product->slug))
+            ->assertOk()
+            ->assertSee('Thickness: 1.2mm', false)
+            ->assertSee('Mounting: Wall & ceiling')
+            ->assertDontSee('<ul><li>Thickness: 1.2mm</li><li>Mounting:', false);
     }
 }
