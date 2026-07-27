@@ -22,30 +22,30 @@
             <label>Length</label>
             <div class="va-dim-ft-in va-dim-group">
                 <div class="am-calculator__dim-row">
-                    <input type="number" min="0" class="am-input va-len-ft" placeholder="Ft" value="10">
+                    <input type="number" min="0" class="am-input va-len-ft" placeholder="Ft" value="8">
                     <input type="number" min="0" max="11" class="am-input va-len-in" placeholder="In" value="0">
                 </div>
             </div>
             <div class="va-dim-mm va-dim-group hidden">
-                <input type="number" min="0" class="am-input va-len-mm" placeholder="mm" value="3048">
+                <input type="number" min="0" class="am-input va-len-mm" placeholder="mm" value="2438">
             </div>
             <div class="va-dim-cm va-dim-group hidden">
-                <input type="number" min="0" class="am-input va-len-cm" placeholder="cm" value="304.8">
+                <input type="number" min="0" class="am-input va-len-cm" placeholder="cm" value="243.8">
             </div>
         </div>
         <div class="am-calculator__field">
             <label>Height</label>
             <div class="va-dim-ft-in va-dim-group">
                 <div class="am-calculator__dim-row">
-                    <input type="number" min="0" class="am-input va-hgt-ft" placeholder="Ft" value="8">
+                    <input type="number" min="0" class="am-input va-hgt-ft" placeholder="Ft" value="3">
                     <input type="number" min="0" max="11" class="am-input va-hgt-in" placeholder="In" value="0">
                 </div>
             </div>
             <div class="va-dim-mm va-dim-group hidden">
-                <input type="number" min="0" class="am-input va-hgt-mm" placeholder="mm" value="2438">
+                <input type="number" min="0" class="am-input va-hgt-mm" placeholder="mm" value="914">
             </div>
             <div class="va-dim-cm va-dim-group hidden">
-                <input type="number" min="0" class="am-input va-hgt-cm" placeholder="cm" value="243.8">
+                <input type="number" min="0" class="am-input va-hgt-cm" placeholder="cm" value="91.4">
             </div>
         </div>
     </div>
@@ -53,11 +53,11 @@
     <div class="am-calculator__result">
         <div class="am-calculator__result-row">
             <span>Area</span>
-            <span class="va-area-display">80.00 sq ft</span>
+            <span class="va-area-display">24.00 sq ft</span>
         </div>
         <div class="am-calculator__result-row am-calculator__result-row--price">
             <span>Estimated</span>
-            <span class="va-price-display">₹1,44,000</span>
+            <span class="va-price-display">₹{{ number_format(24 * $rate, 0) }}</span>
         </div>
     </div>
 

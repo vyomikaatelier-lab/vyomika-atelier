@@ -61,22 +61,22 @@
       <div class="am-calculator__dims">
         <div class="am-calculator__field"><label>Length</label>
           <div class="va-dim-ft-in va-dim-group"><div class="am-calculator__dim-row">
-            <input type="number" min="0" class="am-input va-len-ft" value="10"><input type="number" min="0" max="11" class="am-input va-len-in" value="0">
+            <input type="number" min="0" class="am-input va-len-ft" value="8"><input type="number" min="0" max="11" class="am-input va-len-in" value="0">
           </div></div>
-          <div class="va-dim-mm va-dim-group hidden"><input type="number" min="0" class="am-input va-len-mm" value="3048"></div>
-          <div class="va-dim-cm va-dim-group hidden"><input type="number" min="0" class="am-input va-len-cm" value="304.8"></div>
+          <div class="va-dim-mm va-dim-group hidden"><input type="number" min="0" class="am-input va-len-mm" value="2438"></div>
+          <div class="va-dim-cm va-dim-group hidden"><input type="number" min="0" class="am-input va-len-cm" value="243.8"></div>
         </div>
         <div class="am-calculator__field"><label>Height</label>
           <div class="va-dim-ft-in va-dim-group"><div class="am-calculator__dim-row">
-            <input type="number" min="0" class="am-input va-hgt-ft" value="8"><input type="number" min="0" max="11" class="am-input va-hgt-in" value="0">
+            <input type="number" min="0" class="am-input va-hgt-ft" value="3"><input type="number" min="0" max="11" class="am-input va-hgt-in" value="0">
           </div></div>
-          <div class="va-dim-mm va-dim-group hidden"><input type="number" min="0" class="am-input va-hgt-mm" value="2438"></div>
-          <div class="va-dim-cm va-dim-group hidden"><input type="number" min="0" class="am-input va-hgt-cm" value="243.8"></div>
+          <div class="va-dim-mm va-dim-group hidden"><input type="number" min="0" class="am-input va-hgt-mm" value="914"></div>
+          <div class="va-dim-cm va-dim-group hidden"><input type="number" min="0" class="am-input va-hgt-cm" value="91.4"></div>
         </div>
       </div>
       <div class="am-calculator__result">
-        <div class="am-calculator__result-row"><span>Area</span><span class="va-area-display">80.00 sq ft</span></div>
-        <div class="am-calculator__result-row am-calculator__result-row--price"><span>Estimated</span><span class="va-price-display">₹1,44,000</span></div>
+        <div class="am-calculator__result-row"><span>Area</span><span class="va-area-display">24.00 sq ft</span></div>
+        <div class="am-calculator__result-row am-calculator__result-row--price"><span>Estimated</span><span class="va-price-display">₹${Number(24 * rate).toLocaleString('en-IN')}</span></div>
       </div>
       <button type="button" class="am-btn am-btn--primary am-btn--full va-order-btn" data-service-slug="partitions" data-design-slug="" data-service-name="${name}">Order Now</button>
     </div>`;
