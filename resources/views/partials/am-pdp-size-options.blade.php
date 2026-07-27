@@ -6,7 +6,14 @@
 
 @if($options !== [])
 <div class="am-pdp-size{{ $compact ? ' am-pdp-size--compact' : '' }}" data-pdp-size>
-    <p class="am-pdp-size__label">Size@if(! $compact): <span data-size-label>{{ $options[0]['label'] }}</span>@else<span class="am-sr-only" data-size-label>{{ $options[0]['label'] }}</span>@endif</p>
+    <p class="am-pdp-size__label">
+        @if($compact)
+        Size
+        <span class="am-sr-only" data-size-label>{{ $options[0]['label'] }}</span>
+        @else
+        Size: <span data-size-label>{{ $options[0]['label'] }}</span>
+        @endif
+    </p>
     <div class="am-size-options {{ $compact ? 'am-size-options--compact' : 'am-size-options--rows' }}" role="listbox" aria-label="Select size">
         @foreach($options as $index => $option)
         @php
