@@ -40,6 +40,10 @@ class ProductAdminController extends Controller
 
     public function store(Request $request)
     {
+        if ($this->multipartPayloadFailed($request)) {
+            return back()->with('error', 'Upload too large for the server limit. Save text changes first, then upload the main image only (max 4 MB).');
+        }
+
         $slug = Str::slug($request->input('slug') ?: $request->input('name', ''));
         $validated = $this->validateProduct($request, new Product(['slug' => $slug]));
         $validated['slug'] = $slug;
@@ -47,7 +51,7 @@ class ProductAdminController extends Controller
         $validated['is_active'] = $request->boolean('is_active', true);
         $validated['is_gallery_visible'] = $request->boolean('is_gallery_visible', true);
         $validated['image'] = $this->resolveImageField($request, 'image_file', 'image', null, 'products');
-        $validated['gallery'] = $this->resolveGalleryField($request, 'gallery_files', 'gallery_urls', null, 'products');
+        $validated = $this->normalizeProductPrices($validated);
 
         Product::create($validated);
 
@@ -64,17 +68,23 @@ class ProductAdminController extends Controller
 
     public function update(Request $request, Product $product)
     {
+        if ($this->multipartPayloadFailed($request)) {
+            return back()->with('error', 'Upload too large for the server limit. Save text changes first, then upload the main image only (max 4 MB).');
+        }
+
         $validated = $this->validateProduct($request, $product);
         $validated['slug'] = Str::slug($request->input('slug') ?: $validated['name']);
         $validated['is_featured'] = $request->boolean('is_featured');
         $validated['is_active'] = $request->boolean('is_active', true);
         $validated['is_gallery_visible'] = $request->boolean('is_gallery_visible', true);
         $validated['image'] = $this->resolveImageField($request, 'image_file', 'image', $product->image, 'products');
-        $validated['gallery'] = $this->resolveGalleryField($request, 'gallery_files', 'gallery_urls', $product->gallery, 'products');
+        $validated = $this->normalizeProductPrices($validated);
 
         $product->update($validated);
 
-        return redirect()->route('admin.products.index')->with('success', 'Product updated.');
+        return redirect()
+            ->route('admin.products.edit', ['product' => $product, 'saved' => 1])
+            ->with('success', 'Product updated. Price saved: ₹'.number_format((float) $product->fresh()->price, 0));
     }
 
     public function destroy(Product $product)
@@ -106,9 +116,6 @@ class ProductAdminController extends Controller
             'stock' => 'required|integer|min:0',
             'image' => 'nullable|string|max:500',
             'image_file' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:4096',
-            'gallery_urls' => 'nullable|string',
-            'gallery_files' => 'nullable|array',
-            'gallery_files.*' => 'image|mimes:jpeg,jpg,png,webp|max:4096',
             'section' => ['required', 'in:'.implode(',', Product::SECTIONS)],
             'purchase_mode' => ['required', 'in:'.implode(',', Product::PURCHASE_MODES)],
             'pricing_type' => ['required', 'in:'.implode(',', Product::PRICING_TYPES)],
@@ -160,6 +167,17 @@ class ProductAdminController extends Controller
                 'section' => 'Active products must have a valid section, parent category, purchase mode, and pricing type.',
             ]);
         }
+
+        return $validated;
+    }
+
+    /** @param  array<string, mixed>  $validated */
+    private function normalizeProductPrices(array $validated): array
+    {
+        $validated['price'] = round((float) ($validated['price'] ?? 0), 2);
+        $validated['compare_price'] = filled($validated['compare_price'] ?? null)
+            ? round((float) $validated['compare_price'], 2)
+            : null;
 
         return $validated;
     }

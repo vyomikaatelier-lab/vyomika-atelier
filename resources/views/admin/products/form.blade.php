@@ -16,9 +16,14 @@
     $pricingTypeLabels = ['fixed' => 'Fixed price', 'square_foot' => 'Per sq ft', 'quotation_only' => 'Quotation only'];
 @endphp
 
+@if(request('saved') || session('success'))
+<div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-4 text-sm max-w-2xl">{{ session('success') ?: 'Product saved successfully.' }}</div>
+@endif
+
 <form method="POST" enctype="multipart/form-data" action="{{ isset($product) ? route('admin.products.update', $product) : route('admin.products.store') }}" class="bg-white p-6 rounded-lg shadow max-w-2xl space-y-4">
     @csrf
     @if(isset($product)) @method('PUT') @endif
+    <input type="hidden" name="_page_save" value="1">
 
     <div class="rounded border border-gray-200 bg-gray-50 p-3 text-sm">
         <p class="text-gray-600">Section decides storefront behaviour: <strong>Shop</strong> → Checkout (cart/order), <strong>Studio</strong> → Enquiry (custom order, no cart), <strong>Railings</strong> → Quote (project quotation only, never enters cart).</p>
@@ -87,8 +92,16 @@
     </div>
 
     <div class="grid grid-cols-2 gap-4">
-        <input type="number" step="0.01" name="price" value="{{ old('price', $product->price ?? '') }}" placeholder="Price" required class="border px-3 py-2 rounded">
-        <input type="number" step="0.01" name="compare_price" value="{{ old('compare_price', $product->compare_price ?? '') }}" placeholder="Compare Price" class="border px-3 py-2 rounded">
+        <div>
+            <label class="text-sm text-gray-600 block mb-1">Price @if($currentPricingType === 'square_foot')<span class="text-gray-400">(₹ per sq ft)</span>@endif</label>
+            <input type="number" step="0.01" name="price" value="{{ old('price', $product->price ?? '') }}" placeholder="Price" required class="w-full border px-3 py-2 rounded">
+            @error('price')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+            <p class="text-xs text-gray-500 mt-1">Shop = fixed selling price. Studio = rate per sq ft shown on the product page.</p>
+        </div>
+        <div>
+            <label class="text-sm text-gray-600 block mb-1">Compare price</label>
+            <input type="number" step="0.01" name="compare_price" value="{{ old('compare_price', $product->compare_price ?? '') }}" placeholder="Compare Price" class="w-full border px-3 py-2 rounded">
+        </div>
     </div>
     <div class="grid grid-cols-2 gap-4">
         <input type="text" name="sku" value="{{ old('sku', $product->sku ?? '') }}" placeholder="SKU" class="border px-3 py-2 rounded">
@@ -107,8 +120,6 @@
     @if(isset($product) && $product->imageUrl())
         <img src="{{ $product->imageUrl() }}" alt="" class="w-32 h-40 object-cover rounded border">
     @endif
-
-    @include('admin.partials.gallery-upload-fields', ['gallery' => isset($product) ? $product->gallery : null, 'directory' => 'products', 'label' => 'Product gallery'])
 
     <label class="flex items-center gap-2"><input type="checkbox" name="is_featured" value="1" @checked(old('is_featured', $product->is_featured ?? false))> Featured</label>
     <label class="flex items-center gap-2"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', $product->is_active ?? true))> Active</label>

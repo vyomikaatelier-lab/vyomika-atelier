@@ -11,8 +11,12 @@ class FinishSwatches
     /** @return list<array{slug: string, name: string, image: string, hex: string, rate: int, is_black: bool}> */
     public static function all(): array
     {
-        $base = Product::baseSqFtRate();
-        $blackRate = Product::blackSqFtRate();
+        return self::forRates(Product::baseSqFtRate(), Product::blackSqFtRate());
+    }
+
+    /** @return list<array{slug: string, name: string, image: string, hex: string, rate: int, is_black: bool}> */
+    public static function forRates(int $base, int $blackRate): array
+    {
         $overrides = self::imageOverrides();
 
         return array_map(function (array $swatch) use ($base, $blackRate, $overrides) {

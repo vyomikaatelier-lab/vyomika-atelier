@@ -94,6 +94,21 @@ class Product extends Model
         return '₹' . number_format($this->price, 0);
     }
 
+    /** Per-sq-ft rate for studio products; uses this product's price when set. */
+    public function sqFtRate(): int
+    {
+        if ($this->resolvedPricingType() === self::PRICING_SQUARE_FOOT && (float) $this->price > 0) {
+            return (int) round((float) $this->price);
+        }
+
+        return self::baseSqFtRate();
+    }
+
+    public function blackSqFtRateForProduct(): int
+    {
+        return (int) round($this->sqFtRate() * (float) config('pricing.black_finish_multiplier', 1.3));
+    }
+
     public function imageUrl(): ?string
     {
         if (! $this->image) {

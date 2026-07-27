@@ -38,8 +38,8 @@
     $showCheckoutBuy = $product->usesCheckoutFlow();
     $calcServiceSlug = Service::serviceSlugForProduct($product->slug, $categorySlug) ?? '';
     $calcLabel = Service::estimateLabelForProduct($product->slug, $categorySlug);
-    $calcRate = \App\Models\Product::baseSqFtRate();
-    $blackRate = \App\Models\Product::blackSqFtRate();
+    $calcRate = $product->sqFtRate();
+    $blackRate = $product->blackSqFtRateForProduct();
 @endphp
 
 <section class="am-page-body am-page-body--pdp">
@@ -102,7 +102,10 @@
                     <li>✓ Estimated delivery: <strong>3–4 weeks</strong></li>
                 </ul>
 
-                @include('partials.am-pdp-finish-swatches')
+                @include('partials.am-pdp-finish-swatches', [
+                    'swatches' => \App\Support\FinishSwatches::forRates($calcRate, $blackRate),
+                    'baseRate' => $calcRate,
+                ])
 
                 @if($product->description)
                 <div class="am-prose am-pdp__desc">{{ $product->description }}</div>
