@@ -44,8 +44,6 @@
                 <p class="am-featured__meta">{{ $headlineMeta }}</p>
                 @endif
 
-                @include('partials.am-mirror-dimensions', ['product' => $product])
-
                 <div class="am-featured__price">
                     <span class="am-featured__price-current">{{ $product->formattedPrice() }}</span>
                     @if($product->hasDisplayComparePrice())
@@ -72,6 +70,8 @@
                     @endforeach
                 </ul>
                 @endif
+
+                @include('partials.am-mirror-dimensions', ['product' => $product])
 
                 @include('partials.am-pdp-finish-swatches', ['note' => $product->resolvedSwatchesNote()])
 

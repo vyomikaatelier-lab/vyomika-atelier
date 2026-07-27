@@ -4,6 +4,7 @@
     use App\Support\FinishSwatches;
     $defaultFinish = FinishSwatches::resolve(null);
     $defaultSize = $product->resolveSizeOption(null);
+    $hasSizeOptions = $product->hasSizeOptions();
 @endphp
 
 <div class="am-pdp-buy">
@@ -15,9 +16,14 @@
         <input type="hidden" name="size_label" value="{{ $defaultSize['label'] }}" data-size-input="label">
         <input type="hidden" name="unit_price" value="{{ $defaultSize['price'] }}" data-size-input="price">
         @endif
-        <div class="am-pdp-buy__qty">
-            <label for="pdp-qty" class="am-pdp-buy__qty-label">Quantity</label>
-            <input type="number" id="pdp-qty" name="quantity" value="1" min="1" max="{{ min($product->stock, 99) }}" class="am-input am-pdp-buy__qty-input" inputmode="numeric">
+        <div class="am-pdp-buy__row{{ $hasSizeOptions ? ' am-pdp-buy__row--with-size' : '' }}">
+            @if($hasSizeOptions)
+            @include('partials.am-pdp-size-options', ['product' => $product, 'compact' => true])
+            @endif
+            <div class="am-pdp-buy__qty">
+                <label for="pdp-qty" class="am-pdp-buy__qty-label">Quantity</label>
+                <input type="number" id="pdp-qty" name="quantity" value="1" min="1" max="{{ min($product->stock, 99) }}" class="am-input am-pdp-buy__qty-input" inputmode="numeric">
+            </div>
         </div>
         <div class="am-pdp-buy__actions">
             <button type="submit" class="am-btn am-btn--outline am-btn--lg am-pdp-buy__btn">Add to Bag</button>

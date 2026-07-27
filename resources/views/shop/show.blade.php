@@ -68,15 +68,8 @@
                 <p class="am-featured__meta">{{ $headlineMeta }}</p>
                 @endif
 
-                @include('partials.am-mirror-dimensions', ['product' => $product])
-
                 @php $hasSizeOptions = $product->hasSizeOptions(); @endphp
                 @php $selectedSize = $hasSizeOptions ? $product->resolveSizeOption(null) : null; @endphp
-
-                {{-- Door handles: size rows carry per-size price/discount; show selector before the price line --}}
-                @if($hasSizeOptions)
-                @include('partials.am-pdp-size-options', ['product' => $product])
-                @endif
 
                 <div class="am-featured__price {{ $showCalculator ? 'am-featured__price--sqft' : '' }}{{ $hasSizeOptions ? ' am-featured__price--size-selected' : '' }}">
                     @if($showCalculator)
@@ -100,15 +93,13 @@
                     <li>✓ Estimated delivery: <strong>3–4 weeks</strong></li>
                 </ul>
 
+                @include('partials.am-mirror-dimensions', ['product' => $product])
+
                 @include('partials.am-pdp-finish-swatches', [
                     'swatches' => \App\Support\FinishSwatches::forRates($calcRate, $blackRate),
                     'baseRate' => $calcRate,
                     'note' => $product->resolvedSwatchesNote(),
                 ])
-
-                @unless($hasSizeOptions)
-                @include('partials.am-pdp-size-options', ['product' => $product])
-                @endunless
 
                 @if($product->description)
                 <div class="am-prose am-pdp__desc">{{ $product->description }}</div>
