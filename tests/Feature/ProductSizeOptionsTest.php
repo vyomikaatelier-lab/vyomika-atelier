@@ -96,7 +96,7 @@ class ProductSizeOptionsTest extends TestCase
             'is_active' => '1',
             'size_options' => [
                 ['label' => '8"', 'price' => 800, 'discount_percent' => 75, 'size_inches' => 8],
-                ['label' => '12"', 'price' => 1500, 'discount_percent' => 67, 'size_inches' => 12],
+                ['label' => '12"', 'price' => 1500, 'discount_percent' => 60, 'size_inches' => 12],
             ],
         ])->assertRedirect(route('admin.products.edit', ['product' => $product, 'saved' => 1]));
 
@@ -104,8 +104,8 @@ class ProductSizeOptionsTest extends TestCase
         $options = $product->normalizedSizeOptions();
         $this->assertSame(3200.0, $options[0]['compare_price']);
         $this->assertSame(75, $options[0]['discount_percent']);
-        $this->assertSame(4500.0, $options[1]['compare_price']);
-        $this->assertSame(67, $options[1]['discount_percent']);
+        $this->assertSame(3750.0, $options[1]['compare_price']);
+        $this->assertSame(60, $options[1]['discount_percent']);
     }
 
     public function test_admin_ignores_blank_size_option_rows_and_still_saves_filled_ones(): void
