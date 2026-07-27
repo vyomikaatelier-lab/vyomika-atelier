@@ -64,7 +64,9 @@
                     <p class="am-featured__cat">{{ $sectionLabel }}</p>
                 @endif
                 <h1 class="am-pdp__title">{{ $product->name }}</h1>
-                <p class="am-featured__meta">{{ $product->resolvedHeadlineText() }}</p>
+                @if(filled($headlineMeta = $product->resolvedHeadlineText()))
+                <p class="am-featured__meta">{{ $headlineMeta }}</p>
+                @endif
 
                 <div class="am-featured__price {{ $showCalculator ? 'am-featured__price--sqft' : '' }}">
                     @if($showCalculator)

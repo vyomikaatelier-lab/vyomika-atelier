@@ -105,13 +105,11 @@ class Product extends Model
             return trim((string) $this->headline_text);
         }
 
-        $parts = [];
-        if ($this->sku) {
-            $parts[] = 'SKU: '.$this->sku;
+        if (! filled($this->sku)) {
+            return '';
         }
-        $parts[] = 'Pan-India shipping';
 
-        return implode(' · ', $parts);
+        return 'SKU: '.$this->sku.' · Pan-India shipping';
     }
 
     public function resolvedSwatchesNote(): string

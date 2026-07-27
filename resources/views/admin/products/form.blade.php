@@ -31,38 +31,54 @@
 
     <input type="text" name="name" value="{{ old('name', $product->name ?? '') }}" placeholder="Product Name" required class="w-full border px-3 py-2 rounded">
     <input type="text" name="slug" value="{{ old('slug', $product->slug ?? '') }}" placeholder="Slug (optional — auto from name)" class="w-full border px-3 py-2 rounded">
-    <textarea name="description" placeholder="Description" rows="4" class="w-full border px-3 py-2 rounded">{{ old('description', $product->description ?? '') }}</textarea>
 
-    <details class="border rounded p-3 bg-gray-50">
-        <summary class="font-medium cursor-pointer text-sm">Product page content</summary>
-        <div class="mt-3 space-y-3">
+    <section class="rounded-lg border-2 border-gray-300 bg-gray-50 p-4 space-y-4" aria-labelledby="pdp-content-heading">
+        <div>
+            <h2 id="pdp-content-heading" class="font-semibold text-base">As shown on product page</h2>
+            <p class="text-sm text-gray-600 mt-1">Edit the copy visitors see on the public product detail page — in the same order as on the website.</p>
+        </div>
+
+        <div>
+            <label for="headline_text" class="text-sm font-medium text-gray-800 block mb-1">Line under title <span class="font-normal text-gray-500">(optional)</span></label>
+            <p class="text-xs text-gray-500 mb-2">Small grey line below the product name, e.g. <em>SKU: MF-001 · Pan-India shipping</em>. Leave blank to auto-build from SKU only; hidden on the site when both this field and SKU are empty.</p>
+            <input id="headline_text" type="text" name="headline_text" value="{{ old('headline_text', $product->headline_text ?? '') }}" placeholder="e.g. SKU: MF-001 · Pan-India shipping" class="w-full border px-3 py-2 rounded bg-white">
+            @error('headline_text')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+        </div>
+
+        <div>
+            <label for="description" class="text-sm font-medium text-gray-800 block mb-1">Main description</label>
+            <p class="text-xs text-gray-500 mb-2">Body text below price and PVD finish swatches. HTML is allowed.</p>
+            <textarea id="description" name="description" rows="5" placeholder="Product description shown on the storefront" class="w-full border px-3 py-2 rounded bg-white">{{ old('description', $product->description ?? '') }}</textarea>
+            @error('description')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+        </div>
+
+        <div>
+            <label for="swatches_note" class="text-sm font-medium text-gray-800 block mb-1">Note below PVD finish swatches <span class="font-normal text-gray-500">(optional)</span></label>
+            <p class="text-xs text-gray-500 mb-2">Shown under the finish colour swatches. Leave blank for the default black-finish +30% note.</p>
+            <input id="swatches_note" type="text" name="swatches_note" value="{{ old('swatches_note', $product->swatches_note ?? '') }}" placeholder="Black Mirror &amp; Black Brush: +30% on sq ft rate" class="w-full border px-3 py-2 rounded bg-white">
+            @error('swatches_note')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+        </div>
+
+        <fieldset class="space-y-3 border-t border-gray-200 pt-4">
+            <legend class="text-sm font-medium text-gray-800 px-1">Tabs below the buy area</legend>
+            <p class="text-xs text-gray-500 -mt-1 mb-2">Specifications, Packaging, and Shipping tabs. Leave blank to use built-in defaults.</p>
             <div>
-                <label class="text-sm text-gray-600 block mb-1">Under headline text</label>
-                <input type="text" name="headline_text" value="{{ old('headline_text', $product->headline_text ?? '') }}" placeholder="e.g. SKU: MF-001 · Pan-India shipping (blank = auto from SKU)" class="w-full border px-3 py-2 rounded">
-                @error('headline_text')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label class="text-sm text-gray-600 block mb-1">Under swatches text</label>
-                <input type="text" name="swatches_note" value="{{ old('swatches_note', $product->swatches_note ?? '') }}" placeholder="Note below PVD finish swatches (blank = default +30% black note)" class="w-full border px-3 py-2 rounded">
-                @error('swatches_note')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label class="text-sm text-gray-600 block mb-1">Specifications tab (HTML)</label>
-                <textarea name="tab_specifications" rows="5" placeholder="Leave blank to use the default specifications layout." class="w-full border px-3 py-2 rounded font-mono text-sm">{{ old('tab_specifications', $product->tab_specifications ?? '') }}</textarea>
+                <label for="tab_specifications" class="text-sm text-gray-700 block mb-1">Specifications tab</label>
+                <textarea id="tab_specifications" name="tab_specifications" rows="5" placeholder="HTML for the Specifications tab" class="w-full border px-3 py-2 rounded font-mono text-sm bg-white">{{ old('tab_specifications', $product->tab_specifications ?? '') }}</textarea>
                 @error('tab_specifications')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
             </div>
             <div>
-                <label class="text-sm text-gray-600 block mb-1">Packaging tab (HTML)</label>
-                <textarea name="tab_packaging" rows="5" placeholder="Leave blank to use the default packaging copy." class="w-full border px-3 py-2 rounded font-mono text-sm">{{ old('tab_packaging', $product->tab_packaging ?? '') }}</textarea>
+                <label for="tab_packaging" class="text-sm text-gray-700 block mb-1">Packaging tab</label>
+                <textarea id="tab_packaging" name="tab_packaging" rows="5" placeholder="HTML for the Packaging tab" class="w-full border px-3 py-2 rounded font-mono text-sm bg-white">{{ old('tab_packaging', $product->tab_packaging ?? '') }}</textarea>
                 @error('tab_packaging')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
             </div>
             <div>
-                <label class="text-sm text-gray-600 block mb-1">Shipping tab (HTML)</label>
-                <textarea name="tab_shipping" rows="5" placeholder="Leave blank to use the default shipping copy." class="w-full border px-3 py-2 rounded font-mono text-sm">{{ old('tab_shipping', $product->tab_shipping ?? '') }}</textarea>
+                <label for="tab_shipping" class="text-sm text-gray-700 block mb-1">Shipping tab</label>
+                <textarea id="tab_shipping" name="tab_shipping" rows="5" placeholder="HTML for the Shipping tab" class="w-full border px-3 py-2 rounded font-mono text-sm bg-white">{{ old('tab_shipping', $product->tab_shipping ?? '') }}</textarea>
                 @error('tab_shipping')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
             </div>
-        </div>
-    </details>
+        </fieldset>
+    </section>
 
     <details class="border rounded p-3 bg-gray-50">
         <summary class="font-medium cursor-pointer text-sm">SEO</summary>

@@ -41,7 +41,9 @@
             <div class="am-pdp__info">
                 <p class="am-featured__cat">Mirror Frames</p>
                 <h1 class="am-pdp__title">{{ $product->name }}</h1>
-                <p class="am-featured__meta">{{ $product->resolvedHeadlineText() }}</p>
+                @if(filled($headlineMeta = $product->resolvedHeadlineText()))
+                <p class="am-featured__meta">{{ $headlineMeta }}</p>
+                @endif
 
                 <div class="am-featured__price">
                     <span class="am-featured__price-current">{{ $product->formattedPrice() }}</span>
