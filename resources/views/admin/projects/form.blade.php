@@ -4,6 +4,7 @@
 <h1 class="text-2xl font-semibold mb-6">{{ isset($project) ? 'Edit' : 'Add' }} Project</h1>
 <form method="POST" action="{{ isset($project) ? route('admin.projects.update', $project) : route('admin.projects.store') }}" enctype="multipart/form-data" class="bg-white p-6 rounded shadow space-y-4 max-w-3xl">
     @csrf @if(isset($project)) @method('PUT') @endif
+    <input type="hidden" name="_page_save" value="1">
     <div class="grid md:grid-cols-2 gap-4">
         <div><label class="block text-sm mb-1">Title</label><input name="title" value="{{ old('title', $project->title ?? '') }}" required class="w-full border px-3 py-2 rounded"></div>
         <div><label class="block text-sm mb-1">Slug</label><input name="slug" value="{{ old('slug', $project->slug ?? '') }}" placeholder="Auto from title if blank" class="w-full border px-3 py-2 rounded"></div>

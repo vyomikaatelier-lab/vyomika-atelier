@@ -62,6 +62,10 @@ class CategoryAdminController extends Controller
 
     public function store(Request $request)
     {
+        if ($this->multipartPayloadFailed($request)) {
+            return back()->withInput()->with('error', 'Upload too large for the server limit. Save text changes first, then upload the image only (max 4 MB).');
+        }
+
         $validated = $this->validateCategory($request);
         $validated['slug'] = Str::slug($validated['name']);
         $validated['is_active'] = $request->boolean('is_active', true);
@@ -83,6 +87,10 @@ class CategoryAdminController extends Controller
 
     public function update(Request $request, Category $category)
     {
+        if ($this->multipartPayloadFailed($request)) {
+            return back()->withInput()->with('error', 'Upload too large for the server limit. Save text changes first, then upload the image only (max 4 MB).');
+        }
+
         $validated = $this->validateCategory($request, $category);
         $validated['slug'] = Str::slug($validated['name']);
         $validated['is_active'] = $request->boolean('is_active', true);

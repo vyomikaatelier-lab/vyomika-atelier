@@ -5,6 +5,7 @@
 <form method="POST" action="{{ isset($category) ? route('admin.categories.update', $category) : route('admin.categories.store') }}" enctype="multipart/form-data" class="bg-white p-6 rounded shadow space-y-4 max-w-2xl">
     @csrf
     @if(isset($category)) @method('PUT') @endif
+    <input type="hidden" name="_page_save" value="1">
     <div><label class="block text-sm mb-1">Name</label><input name="name" value="{{ old('name', $category->name ?? '') }}" required class="w-full border px-3 py-2 rounded"></div>
     <div>
         <label class="block text-sm mb-1">Storefront section <span class="text-red-600">*</span></label>

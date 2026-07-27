@@ -4,6 +4,7 @@
 <h1 class="text-2xl font-semibold mb-6">{{ isset($post) ? 'Edit' : 'New' }} Blog Post</h1>
 <form method="POST" action="{{ isset($post) ? route('admin.blog.update', $post) : route('admin.blog.store') }}" enctype="multipart/form-data" class="bg-white p-6 rounded shadow space-y-4 max-w-3xl">
     @csrf @if(isset($post)) @method('PUT') @endif
+    <input type="hidden" name="_page_save" value="1">
     <div><label class="block text-sm mb-1">Title</label><input name="title" value="{{ old('title', $post->title ?? '') }}" required class="w-full border px-3 py-2 rounded"></div>
     <div><label class="block text-sm mb-1">Excerpt</label><textarea name="excerpt" rows="2" class="w-full border px-3 py-2 rounded">{{ old('excerpt', $post->excerpt ?? '') }}</textarea></div>
     <div><label class="block text-sm mb-1">Body</label><textarea name="content" rows="10" class="w-full border px-3 py-2 rounded font-mono text-sm">{{ old('content', $post->content ?? '') }}</textarea></div>

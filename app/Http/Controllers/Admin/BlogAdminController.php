@@ -41,6 +41,10 @@ class BlogAdminController extends Controller
 
     public function store(Request $request)
     {
+        if ($this->multipartPayloadFailed($request)) {
+            return back()->withInput()->with('error', 'Upload too large for the server limit. Save text changes first, then upload images in smaller batches (max 5 MB each).');
+        }
+
         $validated = $this->validatePost($request);
         $validated['slug'] = Str::slug($validated['title']);
         $validated['is_featured'] = $request->boolean('is_featured');
@@ -65,6 +69,10 @@ class BlogAdminController extends Controller
 
     public function update(Request $request, BlogPost $post)
     {
+        if ($this->multipartPayloadFailed($request)) {
+            return back()->withInput()->with('error', 'Upload too large for the server limit. Save text changes first, then upload images in smaller batches (max 5 MB each).');
+        }
+
         $validated = $this->validatePost($request);
         $validated['slug'] = Str::slug($validated['title']);
         $validated['is_featured'] = $request->boolean('is_featured');
@@ -124,6 +132,10 @@ class BlogAdminController extends Controller
             'gallery_urls' => 'nullable|string',
             'gallery_files' => 'nullable|array',
             'gallery_files.*' => 'image|mimes:jpeg,jpg,png,webp|max:5120',
+            'gallery_replace' => 'nullable|array',
+            'gallery_replace.*' => 'image|mimes:jpeg,jpg,png,webp|max:5120',
+            'gallery_existing' => 'nullable|array',
+            'gallery_existing.*' => 'string|max:500',
             'faq_questions' => 'nullable|array',
             'faq_questions.*' => 'nullable|string|max:500',
             'faq_answers' => 'nullable|array',

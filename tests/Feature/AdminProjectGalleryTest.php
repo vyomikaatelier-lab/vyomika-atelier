@@ -61,4 +61,30 @@ class AdminProjectGalleryTest extends TestCase
 
         Storage::disk('public')->assertMissing($path);
     }
+
+    public function test_admin_can_update_project_without_losing_existing_gallery(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->admin()->create();
+
+        $project = Project::query()->create([
+            'title' => 'Gallery Project',
+            'slug' => 'gallery-project',
+            'gallery' => ['projects/photo-a.jpg', 'projects/photo-b.jpg'],
+            'is_active' => true,
+        ]);
+
+        $this->actingAsAdmin($admin)->put(route('admin.projects.update', $project), [
+            '_page_save' => '1',
+            'title' => 'Gallery Project Updated',
+            'summary' => 'Updated summary',
+            'gallery_managed' => '1',
+            'gallery_existing' => ['projects/photo-a.jpg', 'projects/photo-b.jpg'],
+            'is_active' => '1',
+        ])->assertRedirect(route('admin.projects.index'));
+
+        $project->refresh();
+        $this->assertSame('Gallery Project Updated', $project->title);
+        $this->assertSame(['projects/photo-a.jpg', 'projects/photo-b.jpg'], $project->gallery);
+    }
 }
