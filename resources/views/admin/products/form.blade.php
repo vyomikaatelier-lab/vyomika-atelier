@@ -8,7 +8,7 @@
 @php
     use App\Models\Product;
 
-    $currentSection = old('section', $product->resolvedSection() ?? '');
+    $currentSection = old('section', isset($product) ? $product->resolvedSection() : '');
     $currentPurchaseMode = old('purchase_mode', isset($product) ? $product->resolvedPurchaseMode() : (Product::SECTION_PURCHASE_MODE_MAP[$currentSection] ?? ''));
     $currentPricingType = old('pricing_type', isset($product) ? $product->resolvedPricingType() : '');
     $sectionLabels = ['shop' => 'Shop', 'studio' => 'Studio', 'railings' => 'Railings'];

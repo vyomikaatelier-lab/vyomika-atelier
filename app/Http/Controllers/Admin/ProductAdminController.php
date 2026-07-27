@@ -44,6 +44,7 @@ class ProductAdminController extends Controller
         $unclassifiedCount = Product::query()->unclassified()->count();
 
         $categories = Category::query()
+            ->where('is_active', true)
             ->withCount('products')
             ->orderBy('sort_order')
             ->orderBy('name')
@@ -63,6 +64,12 @@ class ProductAdminController extends Controller
             'other',
         ];
 
+        $categorySectionOrder = [
+            Product::SECTION_SHOP,
+            Product::SECTION_STUDIO,
+            'other',
+        ];
+
         return view('admin.products.index', [
             'products' => $products,
             'unclassifiedCount' => $unclassifiedCount,
@@ -71,6 +78,7 @@ class ProductAdminController extends Controller
             'activeSection' => in_array($section, Product::SECTIONS, true) ? $section : null,
             'sectionLabels' => $sectionLabels,
             'sectionOrder' => $sectionOrder,
+            'categorySectionOrder' => $categorySectionOrder,
             'totalProductCount' => Product::query()->count(),
         ]);
     }

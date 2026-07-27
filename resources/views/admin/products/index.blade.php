@@ -52,33 +52,31 @@
 
     <div>
         <p class="text-xs uppercase tracking-wide text-gray-500 mb-2">Parent category</p>
-        <div class="flex flex-wrap gap-2 mb-3">
-            <a href="{{ route('admin.products.index', $listParams(['category_id' => null])) }}"
-               class="px-3 py-1.5 rounded-full text-sm border {{ ! $categoryFilter ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700' }}">
-                All categories ({{ $totalProductCount }})
-            </a>
-        </div>
-
-        @foreach($sectionOrder as $sectionKey)
-            @php
-                $sectionCategories = $categories->get($sectionKey, collect());
-                $label = $sectionLabels[$sectionKey] ?? 'Other';
-            @endphp
-            @if($sectionCategories->isNotEmpty())
-            <div class="mb-3">
-                <p class="text-xs font-medium text-gray-500 mb-1.5">{{ $label }}</p>
-                <div class="flex flex-wrap gap-2">
-                    @foreach($sectionCategories as $category)
-                    <a href="{{ route('admin.products.index', $listParams(['category_id' => $category->id, 'section' => $sectionKey !== 'other' ? $sectionKey : null])) }}"
-                       class="px-3 py-1.5 rounded-full text-sm border {{ ($categoryFilter?->id === $category->id) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700' }}">
-                        {{ $category->name }}
-                        <span class="opacity-75">({{ $category->products_count }})</span>
-                    </a>
-                    @endforeach
-                </div>
-            </div>
-            @endif
-        @endforeach
+        <form method="GET" action="{{ route('admin.products.index') }}" class="max-w-md">
+            @foreach(request()->only(['section', 'filter']) as $key => $value)
+                @if(filled($value))
+                <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                @endif
+            @endforeach
+            <select name="category_id" onchange="this.form.submit()" class="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white">
+                <option value="">All categories ({{ $totalProductCount }})</option>
+                @foreach($categorySectionOrder as $sectionKey)
+                    @php
+                        $sectionCategories = $categories->get($sectionKey, collect());
+                        $label = $sectionLabels[$sectionKey] ?? 'Other';
+                    @endphp
+                    @if($sectionCategories->isNotEmpty())
+                    <optgroup label="{{ $label }}">
+                        @foreach($sectionCategories as $category)
+                        <option value="{{ $category->id }}" @selected($categoryFilter?->id === $category->id)>
+                            {{ $category->name }} ({{ $category->products_count }})
+                        </option>
+                        @endforeach
+                    </optgroup>
+                    @endif
+                @endforeach
+            </select>
+        </form>
     </div>
 </div>
 

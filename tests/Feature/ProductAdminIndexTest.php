@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
+use App\Support\ProductCatalog;
+use Database\Seeders\CatalogSyncSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -129,5 +131,46 @@ class ProductAdminIndexTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('category_id='.$category->id, false);
+    }
+
+    public function test_admin_products_index_uses_category_dropdown_not_chips(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $this->seed(CatalogSyncSeeder::class);
+
+        $response = $this->actingAsAdmin($admin)->get(route('admin.products.index'));
+
+        $response->assertOk();
+        $response->assertSee('name="category_id"', false);
+        $response->assertSee('<optgroup label="Shop">', false);
+        $response->assertSee('<optgroup label="Studio">', false);
+    }
+
+    public function test_obsolete_categories_hidden_from_admin_products_index_filter(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $this->seed(CatalogSyncSeeder::class);
+
+        $response = $this->actingAsAdmin($admin)->get(route('admin.products.index'));
+
+        $response->assertOk();
+
+        foreach (ProductCatalog::obsoleteCategorySlugs() as $slug) {
+            $response->assertDontSee('value="'.Category::query()->where('slug', $slug)->value('id').'"', false);
+        }
+    }
+
+    public function test_obsolete_categories_hidden_from_product_form_dropdown(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $this->seed(CatalogSyncSeeder::class);
+
+        $response = $this->actingAsAdmin($admin)->get(route('admin.products.create'));
+
+        $response->assertOk();
+
+        foreach (ProductCatalog::obsoleteCategorySlugs() as $slug) {
+            $response->assertDontSee('('.$slug.')', false);
+        }
     }
 }
