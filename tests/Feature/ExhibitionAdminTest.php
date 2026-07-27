@@ -89,4 +89,27 @@ class ExhibitionAdminTest extends TestCase
             ->assertSee('name="gallery_files[]"', false)
             ->assertSee('+ Add another image');
     }
+
+    public function test_admin_can_create_exhibition_with_text_fields_only(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAsAdmin($admin)->post(route('admin.exhibitions.store'), [
+            '_page_save' => '1',
+            'name' => 'New Expo',
+            'city' => 'Mumbai',
+            'country' => 'India',
+            'year' => 2025,
+            'description' => 'Opening night',
+            'gallery_managed' => '1',
+            'sort_order' => 1,
+            'is_active' => '1',
+        ])->assertRedirect(route('admin.exhibitions.index'));
+
+        $exhibition = Exhibition::query()->where('slug', 'new-expo')->first();
+        $this->assertNotNull($exhibition);
+        $this->assertSame('New Expo', $exhibition->name);
+        $this->assertNull($exhibition->gallery);
+    }
 }

@@ -223,7 +223,11 @@ class ProductAdminContentTest extends TestCase
             ->assertSee('2 × 3 ft', false)
             ->assertSee('610 × 914 mm', false)
             ->assertSee('61 × 91.4 cm', false)
-            ->assertDontSee('900 × 1200 mm standard', false);
+            ->assertDontSee('900 × 1200 mm standard', false)
+            ->assertSeeInOrder([
+                'aria-label="Product dimensions"',
+                'class="am-pdp-finish" data-pdp-finish',
+            ], false);
     }
 
     public function test_mirror_dimensions_show_feet_and_inches_when_not_whole_feet(): void
