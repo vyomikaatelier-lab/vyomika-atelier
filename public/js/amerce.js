@@ -159,20 +159,25 @@
   }
 
   /* Buy Now / Add to Bag forms must not bubble to product links */
-  let buyNowFormsBound = false;
   function initBuyNowForms() {
-    if (buyNowFormsBound) return;
-    buyNowFormsBound = true;
-    document.addEventListener('click', (e) => {
+    const stopBubble = (e) => {
       if (e.target.closest('[data-scroll-to-form], a[href^="#"]')) {
         return;
       }
-      const inBuyForm = e.target.closest('.am-product-card__buy-form, .am-design-gallery__buy-form, .am-pdp-buy__form');
-      const inCardActions = e.target.closest('.am-product-card__actions, .am-design-gallery__actions');
-      if (inBuyForm || inCardActions) {
-        e.stopPropagation();
-      }
-    }, true);
+      e.stopPropagation();
+    };
+
+    document.querySelectorAll('.am-product-card__buy-form, .am-design-gallery__buy-form, .am-pdp-buy__form').forEach((form) => {
+      if (form.dataset.clickGuardBound === '1') return;
+      form.dataset.clickGuardBound = '1';
+      form.addEventListener('click', stopBubble);
+    });
+
+    document.querySelectorAll('.am-product-card__actions, .am-design-gallery__actions').forEach((actions) => {
+      if (actions.dataset.clickGuardBound === '1') return;
+      actions.dataset.clickGuardBound = '1';
+      actions.addEventListener('click', stopBubble);
+    });
   }
 
   function scrollToQuoteTarget(target) {

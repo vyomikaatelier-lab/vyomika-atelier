@@ -274,7 +274,12 @@ class ProductSizeOptionsTest extends TestCase
                 'data-pdp-size',
                 'data-pdp-price-display',
                 'Add to Bag',
-            ], false);
+            ], false)
+            ->assertSee('data-size-input="label"', false)
+            ->assertSee('data-size-input="price"', false)
+            ->assertSee('type="button"', false)
+            ->assertSee('data-size-label="8&quot;"', false)
+            ->assertSee('data-size-label="12&quot;"', false);
     }
 
     public function test_add_to_cart_preserves_selected_size_and_price(): void
