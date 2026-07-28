@@ -41,6 +41,6 @@
         </div>
     </details>
 
-    <button class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Save page</button>
+    <button type="submit" class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Save page</button>
 </form>
 @endsection

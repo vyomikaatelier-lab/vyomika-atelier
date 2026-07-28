@@ -27,7 +27,7 @@
                 <option value="0" @selected(! $customer->is_active)>Disabled</option>
             </select>
         </div>
-        <button class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Save</button>
+        <button type="submit" class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Save</button>
     </form>
 </div>
 <div class="mt-8 grid lg:grid-cols-3 gap-6 text-sm">

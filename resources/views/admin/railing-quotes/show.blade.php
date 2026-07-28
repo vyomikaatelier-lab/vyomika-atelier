@@ -26,7 +26,7 @@
         @csrf @method('PUT')
         <div><label class="block text-sm mb-1">Status</label><select name="status" class="w-full border px-3 py-2 rounded">@foreach($statuses as $status)<option value="{{ $status }}" @selected($quote->status === $status)>{{ ucwords(str_replace('_', ' ', $status)) }}</option>@endforeach</select></div>
         <div><label class="block text-sm mb-1">Internal notes</label><textarea name="admin_notes" rows="6" class="w-full border px-3 py-2 rounded">{{ old('admin_notes', $quote->admin_notes) }}</textarea></div>
-        <button class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Save</button>
+        <button type="submit" class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Save</button>
     </form>
 </div>
 @endsection

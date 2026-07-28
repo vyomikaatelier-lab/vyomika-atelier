@@ -46,6 +46,6 @@
         <label class="flex items-center gap-2"><input type="checkbox" name="is_featured" value="1" @checked(old('is_featured', $project->is_featured ?? false))> Featured</label>
         <label class="flex items-center gap-2"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', $project->is_active ?? true))> Published</label>
     </div>
-    <button class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Save</button>
+    <button type="submit" class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Save</button>
 </form>
 @endsection

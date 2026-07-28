@@ -39,7 +39,7 @@
     <div><label class="block text-sm mb-1">Meta description</label><textarea name="meta_description" rows="2" class="w-full border px-3 py-2 rounded">{{ old('meta_description', $category->meta_description ?? '') }}</textarea></div>
     <div><label class="block text-sm mb-1">Display order</label><input type="number" name="sort_order" min="0" value="{{ old('sort_order', $category->sort_order ?? 0) }}" class="w-full border px-3 py-2 rounded"></div>
     <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', $category->is_active ?? true))> Active</label>
-    <button class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Save</button>
+    <button type="submit" class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Save</button>
 </form>
 @if(isset($category) && $category->products()->exists())
 <form method="POST" action="{{ route('admin.categories.destroy', $category) }}" class="mt-6 bg-white p-6 rounded shadow max-w-2xl" onsubmit="return confirm('Delete and reassign products?')">

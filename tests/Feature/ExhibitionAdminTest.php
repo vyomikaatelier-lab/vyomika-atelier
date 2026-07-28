@@ -190,4 +190,61 @@ class ExhibitionAdminTest extends TestCase
             ->assertRedirect(route('admin.exhibitions.edit', $exhibition))
             ->assertSessionHasErrors('name');
     }
+
+    public function test_edit_form_save_button_is_explicit_submit(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $exhibition = Exhibition::query()->create([
+            'slug' => 'design-week',
+            'name' => 'Design Week',
+            'sort_order' => 1,
+            'is_active' => true,
+        ]);
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.exhibitions.edit', $exhibition))
+            ->assertOk()
+            ->assertSee('type="submit"', false)
+            ->assertSee('name="_page_save"', false);
+    }
+
+    public function test_desktop_text_only_multipart_post_updates_exhibition(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $exhibition = Exhibition::query()->create([
+            'slug' => 'design-week',
+            'name' => 'Design Week',
+            'city' => 'Delhi',
+            'country' => 'India',
+            'year' => 2024,
+            'sort_order' => 1,
+            'is_active' => true,
+        ]);
+
+        $this->actingAsAdmin($admin)->post(
+            route('admin.exhibitions.update', $exhibition),
+            [
+                '_token' => csrf_token(),
+                '_method' => 'PUT',
+                '_page_save' => '1',
+                'name' => 'Design Week Renamed',
+                'city' => 'Mumbai',
+                'country' => 'India',
+                'year' => '2024',
+                'description' => 'Updated on desktop',
+                'gallery_managed' => '1',
+                'gallery_urls' => '',
+                'sort_order' => '1',
+                'is_active' => '1',
+            ],
+            ['CONTENT_TYPE' => 'multipart/form-data']
+        )
+            ->assertRedirect(route('admin.exhibitions.index'))
+            ->assertSessionHas('success');
+
+        $exhibition->refresh();
+        $this->assertSame('Design Week Renamed', $exhibition->name);
+        $this->assertSame('Mumbai', $exhibition->city);
+        $this->assertSame('Updated on desktop', $exhibition->description);
+    }
 }

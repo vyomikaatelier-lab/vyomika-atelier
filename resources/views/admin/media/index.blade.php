@@ -28,7 +28,7 @@
         <form method="POST" action="{{ route('admin.media.update', $file) }}" class="mt-2 space-y-1">
             @csrf @method('PUT')
             <input name="alt" value="{{ $file->alt }}" placeholder="Alt text" class="w-full border px-2 py-1 rounded text-xs">
-            <button class="text-blue-600 text-xs">Save alt</button>
+            <button type="submit" class="text-blue-600 text-xs">Save alt</button>
         </form>
         <p class="mt-1"><a href="{{ route('admin.media.download', $file) }}" class="text-blue-600 text-xs">Download</a></p>
         @if($file->referenceCount() === 0)

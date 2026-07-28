@@ -214,6 +214,10 @@
     window.addEventListener('hashchange', scrollOnLoad);
   }
 
+  function findSubmitControl(form) {
+    return form.querySelector('button[type="submit"], input[type="submit"], button:not([type])');
+  }
+
   function initDoubleSubmitGuard() {
     document.addEventListener(
       'submit',
@@ -221,8 +225,9 @@
         var form = e.target;
         if (!(form instanceof HTMLFormElement)) return;
         if (form.dataset.noGuard === 'true') return;
-        var btn = form.querySelector('[type="submit"]');
-        if (!btn || btn.disabled) {
+        var btn = findSubmitControl(form);
+        if (!btn) return;
+        if (btn.disabled) {
           e.preventDefault();
           return;
         }

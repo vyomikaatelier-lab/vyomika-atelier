@@ -60,6 +60,6 @@
     <div><label class="block text-sm mb-1">Status</label><select name="status" class="border px-3 py-2 rounded"><option value="draft" @selected(old('status', $post->status ?? 'draft') === 'draft')>Draft</option><option value="published" @selected(old('status', $post->status ?? '') === 'published')>Published</option></select></div>
     <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="is_featured" value="1" @checked(old('is_featured', $post->is_featured ?? false))> Featured</label>
     <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', $post->is_active ?? true))> Visible on site</label>
-    <button class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Save</button>
+    <button type="submit" class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Save</button>
 </form>
 @endsection

@@ -48,6 +48,6 @@
         <input name="faq_q[]" value="" placeholder="New question" class="w-full border px-3 py-2 rounded">
         <textarea name="faq_a[]" rows="2" placeholder="New answer" class="w-full border px-3 py-2 rounded"></textarea>
     </div>
-    <button class="bg-gray-900 text-white px-5 py-2 rounded text-sm">Save</button>
+    <button type="submit" class="bg-gray-900 text-white px-5 py-2 rounded text-sm">Save</button>
 </form>
 @endsection
