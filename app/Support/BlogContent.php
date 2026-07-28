@@ -74,10 +74,11 @@ class BlogContent
             return false;
         }
 
-        return BlogPost::query()
-            ->where('is_active', true)
-            ->whereNotNull('published_at')
-            ->exists();
+        // Config posts are a first-deploy preview only. Once rows exist the
+        // admin owns the blog, so unpublishing everything has to empty the index
+        // rather than resurrect the seeded posts — and an edit to an unpublished
+        // post must never be shadowed by a config entry with the same slug.
+        return BlogPost::query()->exists();
     }
 
     public static function query(): Builder

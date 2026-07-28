@@ -38,21 +38,10 @@ class HomeController extends Controller
 
         $site = SiteContent::get();
 
-        $portfolio = $featuredProjects->isNotEmpty()
-            ? $featuredProjects
-            : collect($site['portfolio'] ?? []);
-
-        $services = $featuredServices->isNotEmpty()
-            ? $featuredServices
-            : collect($site['services'] ?? []);
-
-        $shopItems = $featuredProducts->isNotEmpty()
-            ? $featuredProducts
-            : collect($site['shop'] ?? []);
-
-        $blogItems = $latestPosts->isNotEmpty()
-            ? $latestPosts
-            : collect($site['blog']['posts'] ?? []);
+        $portfolio = $this->withConfigPreview($featuredProjects, Project::class, $site['portfolio'] ?? []);
+        $services = $this->withConfigPreview($featuredServices, Service::class, $site['services'] ?? []);
+        $shopItems = $this->withConfigPreview($featuredProducts, Product::class, $site['shop'] ?? []);
+        $blogItems = $this->withConfigPreview($latestPosts, BlogPost::class, $site['blog']['posts'] ?? []);
 
 
         $trendingSlugs = collect($site['trending']['products'] ?? [])->pluck('slug')->filter();
@@ -83,5 +72,30 @@ class HomeController extends Controller
             'blogItems',
             'trendingFromDb',
         ));
+    }
+
+    /**
+     * Config seed content is only a first-deploy preview. Once the admin owns
+     * rows in a table, an empty result is a deliberate editorial choice and must
+     * not fall back to the hardcoded homepage sections.
+     *
+     * @param  \Illuminate\Support\Collection<int, mixed>  $records
+     * @param  class-string<\Illuminate\Database\Eloquent\Model>  $model
+     * @param  array<int, mixed>  $preview
+     * @return \Illuminate\Support\Collection<int, mixed>
+     */
+    private function withConfigPreview($records, string $model, array $preview)
+    {
+        if ($records->isNotEmpty()) {
+            return $records;
+        }
+
+        $table = (new $model)->getTable();
+
+        if (Schema::hasTable($table) && $model::query()->exists()) {
+            return $records;
+        }
+
+        return collect($preview);
     }
 }

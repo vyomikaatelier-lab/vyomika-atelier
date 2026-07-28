@@ -63,11 +63,17 @@ class PageSeo
     /** @return array{title?: string, description?: string, og_image?: string|null} */
     public static function siteDefaults(): array
     {
+        // Saved settings win over the config seed even if CmsSettings::hydrate()
+        // could not run (for example when the boot-time hydration was skipped).
         $seo = config('site.seo', []);
-        if ((! is_array($seo) || $seo === []) && Schema::hasTable('site_settings')) {
-            $seo = SiteSetting::getValue('seo', []) ?? [];
-        }
         $seo = is_array($seo) ? $seo : [];
+
+        if (Schema::hasTable('site_settings')) {
+            $stored = SiteSetting::getValue('seo', []);
+            if (is_array($stored)) {
+                $seo = array_merge($seo, array_filter($stored, fn ($value) => filled($value)));
+            }
+        }
 
         return [
             'title' => $seo['default_title'] ?? (config('site.brand.name', 'Vyomika Atelier').' — PVD Partitions & Metal Furniture'),

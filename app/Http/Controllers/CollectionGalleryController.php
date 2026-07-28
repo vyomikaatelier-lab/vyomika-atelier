@@ -89,31 +89,42 @@ class CollectionGalleryController extends Controller
         ]);
     }
 
-    /** @param  list<string>  $catalogSlugs */
+    /**
+     * The catalog slug list is a curated running order, not an allow-list: any
+     * other product the admin filed under this category is appended after it.
+     *
+     * @param  list<string>  $catalogSlugs
+     */
     public static function galleryProductsForCategory(Category $category, array $catalogSlugs = []): Collection
     {
-        if ($catalogSlugs !== []) {
-            $products = Product::query()
+        $fromCategory = $category->exists
+            ? Product::query()
                 ->with('category')
                 ->where('is_active', true)
                 ->where('is_gallery_visible', true)
-                ->whereIn('slug', $catalogSlugs)
+                ->where('category_id', $category->id)
+                ->orderByDesc('is_featured')
+                ->orderBy('name')
                 ->get()
-                ->keyBy('slug');
+            : collect();
 
-            return collect($catalogSlugs)
-                ->map(fn (string $slug) => $products->get($slug))
-                ->filter()
-                ->values();
+        if ($catalogSlugs === []) {
+            return $fromCategory;
         }
 
-        return Product::query()
+        $curated = Product::query()
             ->with('category')
             ->where('is_active', true)
             ->where('is_gallery_visible', true)
-            ->where('category_id', $category->id)
-            ->orderByDesc('is_featured')
-            ->orderBy('name')
-            ->get();
+            ->whereIn('slug', $catalogSlugs)
+            ->get()
+            ->keyBy('slug');
+
+        return collect($catalogSlugs)
+            ->map(fn (string $slug) => $curated->get($slug))
+            ->filter()
+            ->concat($fromCategory)
+            ->unique('id')
+            ->values();
     }
 }

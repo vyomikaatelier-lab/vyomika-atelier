@@ -2,14 +2,21 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\CollectionGalleryController;
 use App\Models\BlogPost;
+use App\Models\Category;
 use App\Models\Exhibition;
 use App\Models\LegalPage;
+use App\Models\MediaFile;
+use App\Models\Product;
 use App\Models\Project;
 use App\Models\Service;
 use App\Models\User;
 use App\Support\CmsSettings;
+use App\Support\ProductCatalog;
+use App\Support\Seo\PageSeo;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -24,6 +31,44 @@ class AdminFrontendSyncTest extends TestCase
     private function admin(): User
     {
         return User::factory()->admin()->create();
+    }
+
+    private function shopCategory(string $name, string $slug): Category
+    {
+        return $this->category($name, $slug, 'shop');
+    }
+
+    private function category(string $name, string $slug, string $section): Category
+    {
+        return Category::query()->updateOrCreate(
+            ['slug' => $slug],
+            [
+                'name' => $name,
+                'section' => $section,
+                'is_active' => true,
+                'sort_order' => 1,
+            ]
+        );
+    }
+
+    /** @param array<string, mixed> $overrides */
+    private function createProductAsAdmin(Category $category, string $name, string $slug, array $overrides = []): void
+    {
+        $this->actingAsAdmin($this->admin())
+            ->post(route('admin.products.store'), array_merge([
+                'category_id' => $category->id,
+                'name' => $name,
+                'slug' => $slug,
+                'price' => 48000,
+                'stock' => 4,
+                'section' => 'shop',
+                'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+                'pricing_type' => Product::PRICING_FIXED,
+                'is_active' => '1',
+                'is_gallery_visible' => '1',
+            ], $overrides))
+            ->assertRedirect(route('admin.products.index'))
+            ->assertSessionHasNoErrors();
     }
 
     public function test_project_edit_appears_on_the_public_project_page(): void
@@ -102,6 +147,57 @@ class AdminFrontendSyncTest extends TestCase
             ->assertRedirect(route('admin.blog.index'))
             ->assertSessionHasNoErrors();
 
+        $this->get(route('blog.show', 'living-with-brass'))
+            ->assertOk()
+            ->assertSee('Patina, care and pairing notes.', false);
+    }
+
+    public function test_blog_index_does_not_fall_back_to_config_posts_once_rows_exist(): void
+    {
+        // A draft-only blog used to make the storefront read config('blog.posts'),
+        // so admin edits were shadowed by the seeded copy.
+        BlogPost::query()->create([
+            'title' => 'Living With Brass',
+            'slug' => 'living-with-brass',
+            'excerpt' => 'Draft excerpt',
+            'status' => 'draft',
+            'is_active' => false,
+        ]);
+
+        $response = $this->get(route('blog.index'))->assertOk();
+
+        foreach (config('blog.posts', []) as $seeded) {
+            if (filled($seeded['title'] ?? null)) {
+                $response->assertDontSee($seeded['title'], false);
+            }
+        }
+
+        $this->get(route('blog.show', 'living-with-brass'))->assertNotFound();
+    }
+
+    public function test_publishing_a_post_from_a_draft_only_blog_shows_the_admin_copy(): void
+    {
+        $post = BlogPost::query()->create([
+            'title' => 'Living With Brass',
+            'slug' => 'living-with-brass',
+            'excerpt' => 'Draft excerpt',
+            'status' => 'draft',
+            'is_active' => false,
+        ]);
+
+        $this->actingAsAdmin($this->admin())
+            ->put(route('admin.blog.update', $post), [
+                '_page_save' => '1',
+                'title' => 'Living With Brass',
+                'excerpt' => 'Patina, care and pairing notes.',
+                'status' => 'published',
+                'published_at' => now()->subDay()->format('Y-m-d\TH:i'),
+                'is_active' => '1',
+            ])
+            ->assertRedirect(route('admin.blog.index'))
+            ->assertSessionHasNoErrors();
+
+        $this->get(route('blog.index'))->assertOk()->assertSee('Living With Brass');
         $this->get(route('blog.show', 'living-with-brass'))
             ->assertOk()
             ->assertSee('Patina, care and pairing notes.', false);
@@ -227,6 +323,337 @@ class AdminFrontendSyncTest extends TestCase
             ->assertOk()
             ->assertSee('About Vyomika Atelier — Metal Craft Studio', false)
             ->assertSee('Our studio, our makers, our finishes.', false);
+    }
+
+    public function test_product_created_in_admin_appears_on_its_shop_collection_page(): void
+    {
+        $category = $this->shopCategory('Coffee Tables', 'coffee-tables');
+
+        $this->createProductAsAdmin($category, 'Meridian Brass Coffee Table', 'meridian-brass-coffee-table');
+
+        $this->get(route('shop.show', 'coffee-tables'))
+            ->assertOk()
+            ->assertSee('Meridian Brass Coffee Table');
+    }
+
+    public function test_curated_catalog_order_still_leads_the_collection_page(): void
+    {
+        $category = $this->shopCategory('Coffee Tables', 'coffee-tables');
+
+        $curatedSlug = ProductCatalog::productSlugsForShopPage('coffee-tables')[0] ?? null;
+        $this->assertNotNull($curatedSlug, 'Expected the static catalog to curate coffee tables.');
+
+        $this->createProductAsAdmin($category, 'Curated Original', $curatedSlug);
+        $this->createProductAsAdmin($category, 'Admin Addition', 'admin-addition-coffee-table');
+
+        $products = CollectionGalleryController::galleryProductsForCategory(
+            $category,
+            ProductCatalog::productSlugsForShopPage('coffee-tables')
+        );
+
+        $this->assertSame('Curated Original', $products->first()->name);
+        $this->assertTrue($products->contains('name', 'Admin Addition'));
+    }
+
+    public function test_products_in_an_admin_created_category_appear_in_the_shop(): void
+    {
+        $category = $this->shopCategory('Steel Planters', 'steel-planters');
+
+        $this->createProductAsAdmin($category, 'Terra Steel Planter', 'terra-steel-planter');
+
+        $this->get(route('shop.index'))
+            ->assertOk()
+            ->assertSee('Terra Steel Planter');
+    }
+
+    public function test_product_created_in_admin_appears_on_the_studio_service_gallery(): void
+    {
+        Service::query()->create([
+            'name' => 'PVD Partitions',
+            'slug' => 'partitions',
+            'summary' => 'Precision stainless partitions.',
+            'lead_form' => 'popup',
+            'is_active' => true,
+        ]);
+
+        $category = $this->category('PVD Partitions', 'partitions', 'studio');
+
+        $this->createProductAsAdmin($category, 'Cascade Fluted Partition', 'cascade-fluted-partition', [
+            'section' => Product::SECTION_STUDIO,
+            'purchase_mode' => Product::PURCHASE_MODE_ENQUIRY,
+            'pricing_type' => Product::PRICING_SQUARE_FOOT,
+        ]);
+
+        $this->get(route('studio.show', 'pvd-partitions'))
+            ->assertOk()
+            ->assertSee('Cascade Fluted Partition');
+    }
+
+    public function test_deactivating_a_product_removes_it_from_the_collection_page(): void
+    {
+        $category = $this->shopCategory('Coffee Tables', 'coffee-tables');
+
+        $this->createProductAsAdmin($category, 'Meridian Brass Coffee Table', 'meridian-brass-coffee-table');
+
+        $product = Product::query()->where('slug', 'meridian-brass-coffee-table')->firstOrFail();
+
+        $this->actingAsAdmin($this->admin())
+            ->put(route('admin.products.update', $product), [
+                'category_id' => $category->id,
+                'name' => 'Meridian Brass Coffee Table',
+                'slug' => 'meridian-brass-coffee-table',
+                'price' => 48000,
+                'stock' => 4,
+                'section' => Product::SECTION_SHOP,
+                'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+                'pricing_type' => Product::PRICING_FIXED,
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertFalse($product->fresh()->is_active);
+
+        $this->get(route('shop.show', 'coffee-tables'))
+            ->assertOk()
+            ->assertDontSee('Meridian Brass Coffee Table');
+    }
+
+    public function test_visiting_a_mirror_frame_page_does_not_overwrite_the_admin_product(): void
+    {
+        $catalog = require database_path('data/mirror-frames-catalog.php');
+        $item = $catalog[0];
+
+        $category = $this->shopCategory('Mirror Frames', 'mirror-frames');
+
+        $product = Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Arch Mirror — Champagne PVD',
+            'slug' => $item['slug'],
+            'price' => 21500,
+            'stock' => 2,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => false,
+            'is_gallery_visible' => true,
+        ]);
+
+        // A public GET must not reseed the row from the static catalog.
+        $this->get(route('shop.mirror-frames.show', $item['slug']))->assertNotFound();
+
+        $product->refresh();
+        $this->assertSame('Arch Mirror — Champagne PVD', $product->name);
+        $this->assertSame('21500.00', (string) $product->price);
+        $this->assertFalse($product->is_active);
+    }
+
+    public function test_announcement_bar_edit_appears_in_the_storefront_layout(): void
+    {
+        $this->actingAsAdmin($this->admin())
+            ->put(route('admin.settings.update'), [
+                'brand_name' => 'Vyomika Atelier',
+                'announcement_text' => 'Monsoon studio hours: 10am to 6pm',
+                'announcement_link_label' => 'Plan a visit',
+                'announcement_link_href' => '/contact',
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        CmsSettings::hydrate();
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('Monsoon studio hours: 10am to 6pm', false);
+    }
+
+    public function test_category_rename_appears_in_the_shop_filter_list(): void
+    {
+        $category = $this->shopCategory('Coffee Tables', 'coffee-tables');
+
+        $this->createProductAsAdmin($category, 'Meridian Brass Coffee Table', 'meridian-brass-coffee-table');
+
+        $this->actingAsAdmin($this->admin())
+            ->put(route('admin.categories.update', $category), [
+                'name' => 'Coffee Tables',
+                'section' => 'shop',
+                'description' => 'Low tables in brass and steel.',
+                'is_active' => '1',
+            ])
+            ->assertRedirect(route('admin.categories.index'))
+            ->assertSessionHasNoErrors();
+
+        $this->get(route('shop.index'))
+            ->assertOk()
+            ->assertSee('Coffee Tables');
+    }
+
+    public function test_deactivating_a_category_hides_its_products_from_the_shop(): void
+    {
+        $category = $this->shopCategory('Coffee Tables', 'coffee-tables');
+
+        $this->createProductAsAdmin($category, 'Meridian Brass Coffee Table', 'meridian-brass-coffee-table');
+
+        $category->update(['is_active' => false]);
+
+        $this->get(route('shop.index'))
+            ->assertOk()
+            ->assertDontSee('Meridian Brass Coffee Table');
+    }
+
+    public function test_hiding_every_exhibition_empties_the_about_section(): void
+    {
+        $exhibition = Exhibition::query()->create([
+            'slug' => 'india-design-id',
+            'name' => 'India Design ID',
+            'city' => 'New Delhi',
+            'year' => 2026,
+            'sort_order' => 1,
+            'is_active' => true,
+        ]);
+
+        $this->get(route('about'))->assertOk()->assertSee('India Design ID');
+
+        $this->actingAsAdmin($this->admin())
+            ->put(route('admin.exhibitions.update', $exhibition), [
+                '_page_save' => '1',
+                'name' => 'India Design ID',
+                'city' => 'New Delhi',
+                'year' => 2026,
+                'gallery_managed' => '1',
+                'sort_order' => 1,
+            ])
+            ->assertRedirect(route('admin.exhibitions.index'))
+            ->assertSessionHasNoErrors();
+
+        $this->assertFalse($exhibition->fresh()->is_active);
+
+        // The config seed events must not reappear now that the admin owns rows.
+        $response = $this->get(route('about'))->assertOk();
+        $response->assertDontSee('India Design ID');
+
+        foreach (config('about.exhibitions.events', []) as $seeded) {
+            $response->assertDontSee($seeded['name']);
+        }
+    }
+
+    public function test_hiding_every_project_empties_the_homepage_portfolio(): void
+    {
+        Project::query()->create([
+            'title' => 'Andheri Loft',
+            'slug' => 'andheri-loft',
+            'is_active' => false,
+            'is_featured' => true,
+            'display_order' => 1,
+        ]);
+
+        $response = $this->get(route('home'))->assertOk();
+
+        foreach (config('site.portfolio', []) as $seeded) {
+            if (filled($seeded['title'] ?? null)) {
+                $response->assertDontSee($seeded['title'], false);
+            }
+        }
+    }
+
+    public function test_media_alt_text_edit_persists_and_shows_in_the_library(): void
+    {
+        Storage::fake('public');
+
+        $this->actingAsAdmin($this->admin())
+            ->post(route('admin.media.store'), [
+                'file' => UploadedFile::fake()->image('brass-console.jpg'),
+                'alt' => 'Brass console table',
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $media = MediaFile::query()->latest('id')->firstOrFail();
+        $this->assertSame('Brass console table', $media->alt);
+
+        $this->actingAsAdmin($this->admin())
+            ->put(route('admin.media.update', $media), ['alt' => 'Brass console table, PVD finish'])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('Brass console table, PVD finish', $media->fresh()->alt);
+
+        $this->actingAsAdmin($this->admin())
+            ->get(route('admin.media.index'))
+            ->assertOk()
+            ->assertSee('Brass console table, PVD finish', false);
+    }
+
+    public function test_collection_page_edit_appears_on_the_public_collection(): void
+    {
+        $this->shopCategory('Coffee Tables', 'coffee-tables');
+
+        $this->actingAsAdmin($this->admin())
+            ->put(route('admin.collection-pages.update', 'coffee-tables'), [
+                '_page_save' => '1',
+                'hero_title' => 'Low tables, high craft',
+                'hero_subtitle' => 'Brass and steel coffee tables built to order.',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->get(route('shop.show', 'coffee-tables'))
+            ->assertOk()
+            ->assertSee('Low tables, high craft', false);
+    }
+
+    public function test_independent_landing_edit_appears_on_the_railings_page(): void
+    {
+        $this->actingAsAdmin($this->admin())
+            ->put(route('admin.independent-pages.update', 'railings'), [
+                '_landing_save' => '1',
+                'hero_title' => 'Railings engineered for the monsoon',
+                'hero_subtitle' => 'Stainless and glass balustrades, installed pan-India.',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->get(route('railings.index'))
+            ->assertOk()
+            ->assertSee('Railings engineered for the monsoon', false);
+    }
+
+    public function test_url_redirect_created_in_admin_takes_effect(): void
+    {
+        $this->actingAsAdmin($this->admin())
+            ->post(route('admin.redirects.store'), [
+                'from_path' => '/old-partitions',
+                'to_url' => '/shop',
+                'status_code' => 301,
+                'is_active' => '1',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->get('/old-partitions')->assertRedirect('/shop');
+    }
+
+    public function test_seo_defaults_come_from_the_database_when_config_is_not_hydrated(): void
+    {
+        $this->actingAsAdmin($this->admin())
+            ->put(route('admin.settings.update'), [
+                'brand_name' => 'Vyomika Atelier',
+                'default_meta_title' => 'Vyomika Atelier — Studio Metalwork',
+                'default_meta_description' => 'PVD partitions, doors and metal furniture.',
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        // Simulate a request where boot-time hydration did not run: the stored
+        // value must still beat the config seed.
+        config(['site.seo' => [
+            'default_title' => 'Stale config title',
+            'default_description' => 'Stale config description',
+        ]]);
+
+        $defaults = PageSeo::siteDefaults();
+        $this->assertSame('Vyomika Atelier — Studio Metalwork', $defaults['title']);
+        $this->assertSame('PVD partitions, doors and metal furniture.', $defaults['description']);
+
+        $this->get(route('contact.index'))
+            ->assertOk()
+            ->assertSee('PVD partitions, doors and metal furniture.', false)
+            ->assertDontSee('Stale config', false);
     }
 
     public function test_page_hero_edit_appears_on_the_about_page(): void

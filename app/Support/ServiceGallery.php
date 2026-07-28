@@ -37,46 +37,71 @@ class ServiceGallery
         return $catalog[$serviceSlug] ?? [];
     }
 
-    /** @return Collection<int, Product> */
+    /**
+     * The catalog slug list is a curated running order, not an allow-list: any
+     * other product the admin filed under this service's categories is
+     * appended after it.
+     *
+     * @return Collection<int, Product>
+     */
     public static function productsFor(Service $service): Collection
     {
         $slugs = ProductCatalog::productSlugsForService($service->slug);
+        $fromCategories = static::categoryQueryFor($service)->orderBy('name')->get();
 
-        if ($slugs !== []) {
-            $products = Product::query()
-                ->with('category')
-                ->where('is_active', true)
-                ->where('is_gallery_visible', true)
-                ->whereIn('slug', $slugs)
-                ->get()
-                ->keyBy('slug');
-
-            return collect($slugs)
-                ->map(fn (string $slug) => $products->get($slug))
-                ->filter()
-                ->values();
+        if ($slugs === []) {
+            return $fromCategories;
         }
 
-        return static::queryFor($service)->orderBy('name')->get();
+        $curated = Product::query()
+            ->with('category')
+            ->where('is_active', true)
+            ->where('is_gallery_visible', true)
+            ->whereIn('slug', $slugs)
+            ->get()
+            ->keyBy('slug');
+
+        return collect($slugs)
+            ->map(fn (string $slug) => $curated->get($slug))
+            ->filter()
+            ->concat($fromCategories)
+            ->unique('id')
+            ->values();
     }
 
     public static function queryFor(Service $service): Builder
     {
         $slugs = ProductCatalog::productSlugsForService($service->slug);
+        $categorySlugs = $service->relatedCategorySlugs();
 
-        if ($slugs !== []) {
-            return Product::query()
-                ->with('category')
-                ->where('is_active', true)
-                ->where('is_gallery_visible', true)
-                ->whereIn('slug', $slugs);
+        $query = Product::query()
+            ->with('category')
+            ->where('is_active', true)
+            ->where('is_gallery_visible', true);
+
+        if ($slugs === []) {
+            return $query->whereHas('category', fn ($q) => $q->whereIn('slug', $categorySlugs));
         }
+
+        return $query->where(fn ($q) => $q
+            ->whereIn('slug', $slugs)
+            ->orWhereHas('category', fn ($c) => $c->whereIn('slug', $categorySlugs)));
+    }
+
+    /** @return Builder<Product> */
+    private static function categoryQueryFor(Service $service): Builder
+    {
+        $categorySlugs = $service->relatedCategorySlugs();
 
         return Product::query()
             ->with('category')
             ->where('is_active', true)
             ->where('is_gallery_visible', true)
-            ->whereHas('category', fn ($q) => $q->whereIn('slug', $service->relatedCategorySlugs()));
+            ->when(
+                $categorySlugs === [],
+                fn (Builder $q) => $q->whereRaw('0 = 1'),
+                fn (Builder $q) => $q->whereHas('category', fn ($c) => $c->whereIn('slug', $categorySlugs))
+            );
     }
 
     public static function galleryHeading(Service $service): string

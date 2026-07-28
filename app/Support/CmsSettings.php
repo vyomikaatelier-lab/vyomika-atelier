@@ -106,7 +106,12 @@ class CmsSettings
             ->get();
 
         if ($rows->isEmpty()) {
-            return config('about.exhibitions.events', []);
+            // Config seed content is only a first-deploy preview. Once the admin
+            // owns rows here, hiding them all must empty the section rather than
+            // resurrect the hardcoded events.
+            return Exhibition::query()->exists()
+                ? []
+                : config('about.exhibitions.events', []);
         }
 
         return $rows->map(fn (Exhibition $event) => [

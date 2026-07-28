@@ -52,12 +52,21 @@ class MirrorFramesContent
         ];
     }
 
+    /**
+     * Bootstraps a mirror frame product on a fresh install. It must never touch a
+     * row that already exists: this runs from a public GET, so reseeding would
+     * overwrite the admin's edits and undo a deliberate deactivation.
+     */
     public static function resolveProductOrSeed(string $productSlug): ?Product
     {
         $product = self::resolveProduct($productSlug);
 
         if ($product) {
             return $product;
+        }
+
+        if (Product::query()->where('slug', $productSlug)->exists()) {
+            return null;
         }
 
         $catalog = require database_path('data/mirror-frames-catalog.php');
@@ -76,9 +85,9 @@ class MirrorFramesContent
             ]
         );
 
-        return Product::query()->updateOrCreate(
-            ['slug' => $productSlug],
+        return Product::query()->create(
             [
+                'slug' => $productSlug,
                 'category_id' => $category->id,
                 'name' => $item['name'],
                 'description' => $item['desc'],
