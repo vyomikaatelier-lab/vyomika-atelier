@@ -46,8 +46,8 @@ class SiteSettingAdminController extends Controller
             return back()->with('error', 'Database table site_settings is missing. Run: php artisan migrate --force');
         }
 
-        if ($request->isMethod('post') && $request->header('Content-Length') > 0 && ! $request->has('brand_name') && empty($request->all())) {
-            return back()->with('error', 'Upload too large for the server limit. Try one image at a time, or ask Hostinger to raise post_max_size.');
+        if ($this->multipartPayloadFailed($request, 'brand_name')) {
+            return back()->withInput()->with('error', 'Upload too large for the server limit. Try one image at a time, or ask Hostinger to raise post_max_size.');
         }
 
         $finishRules = [];

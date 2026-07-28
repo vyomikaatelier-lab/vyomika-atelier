@@ -45,9 +45,13 @@ class ServiceAdminController extends Controller
 
     public function store(Request $request)
     {
+        if ($this->multipartPayloadFailed($request)) {
+            return back()->withInput()->with('error', 'Upload too large for the server limit. Save text changes first, then upload one image at a time (max 5 MB each).');
+        }
+
         $validated = $this->validateService($request);
         $validated['slug'] = Str::slug($request->input('slug') ?: $validated['name']);
-        $validated['is_active'] = $request->boolean('is_active', true);
+        $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
         $validated['has_calculator'] = $request->boolean('has_calculator');
         $validated['has_designs'] = $request->boolean('has_designs');
         $validated['image'] = $this->resolveServiceHeroImages($request, null)['image'] ?? $this->resolveImageField($request, 'image_file', 'image', null, 'services');
@@ -76,12 +80,12 @@ class ServiceAdminController extends Controller
         }
 
         if ($this->multipartPayloadFailed($request)) {
-            return back()->with('error', 'Upload too large for the server limit. Save text changes first, then upload one image at a time (max 5 MB each).');
+            return back()->withInput()->with('error', 'Upload too large for the server limit. Save text changes first, then upload one image at a time (max 5 MB each).');
         }
 
         $validated = $this->validateService($request, $service);
         $validated['slug'] = Str::slug($request->input('slug') ?: $validated['name']);
-        $validated['is_active'] = $request->boolean('is_active', true);
+        $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
         $validated['has_calculator'] = $request->boolean('has_calculator');
         $validated['has_designs'] = $request->boolean('has_designs');
         $validated['image'] = $this->resolveServiceHeroImages($request, $service)['image'] ?? $this->resolveImageField($request, 'image_file', 'image', $service->image, 'services');

@@ -76,7 +76,7 @@
             @endif
             @if($errors->any())
                 <div class="bg-red-100 text-red-800 px-4 py-2 rounded mb-4 text-sm">
-                    <p class="font-medium mb-1">Could not save settings:</p>
+                    <p class="font-medium mb-1">Please fix the following errors:</p>
                     <ul class="list-disc pl-4">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
                 </div>
             @endif

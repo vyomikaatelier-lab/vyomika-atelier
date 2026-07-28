@@ -49,7 +49,7 @@ class ProjectAdminController extends Controller
         $validated = $this->validateProject($request);
         $validated['slug'] = Str::slug($request->input('slug') ?: $validated['title']);
         $validated['is_featured'] = $request->boolean('is_featured');
-        $validated['is_active'] = $request->boolean('is_active', true);
+        $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
         $validated['display_order'] = $request->integer('display_order', Project::max('display_order') + 1);
         $validated['image'] = $this->resolveImageField($request, 'image_file', 'image', null, 'projects');
         $validated['gallery'] = $this->resolveGalleryField($request, 'gallery_files', 'gallery_urls', null, 'projects');
@@ -75,7 +75,7 @@ class ProjectAdminController extends Controller
         $validated = $this->validateProject($request, $project);
         $validated['slug'] = Str::slug($request->input('slug') ?: $validated['title']);
         $validated['is_featured'] = $request->boolean('is_featured');
-        $validated['is_active'] = $request->boolean('is_active', true);
+        $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
         $validated['image'] = $this->resolveImageField($request, 'image_file', 'image', $project->image, 'projects');
         $validated['gallery'] = $this->resolveGalleryField($request, 'gallery_files', 'gallery_urls', $project->gallery, 'projects');
         $validated['materials'] = $this->parseMultilineUrls($request->input('materials_list'));

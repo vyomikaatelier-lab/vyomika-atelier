@@ -68,7 +68,7 @@ class CategoryAdminController extends Controller
 
         $validated = $this->validateCategory($request);
         $validated['slug'] = Str::slug($validated['name']);
-        $validated['is_active'] = $request->boolean('is_active', true);
+        $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
         $validated['sort_order'] = $request->integer('sort_order', Category::max('sort_order') + 1);
         $validated['image'] = $this->resolveImageField($request, 'image_file', 'image', null, 'categories');
 
@@ -93,7 +93,7 @@ class CategoryAdminController extends Controller
 
         $validated = $this->validateCategory($request, $category);
         $validated['slug'] = Str::slug($validated['name']);
-        $validated['is_active'] = $request->boolean('is_active', true);
+        $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
         $validated['sort_order'] = $request->integer('sort_order', $category->sort_order);
         $validated['image'] = $this->resolveImageField($request, 'image_file', 'image', $category->image, 'categories');
 

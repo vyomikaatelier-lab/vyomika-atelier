@@ -124,6 +124,12 @@ trait HandlesAdminUploads
         return $urls ?: null;
     }
 
+    /** Unchecked HTML checkboxes are omitted from the request; never default them to true. */
+    protected function checkboxBoolean(Request $request, string $field): bool
+    {
+        return $request->has($field) && $request->boolean($field);
+    }
+
     protected function multipartPayloadFailed(Request $request, ?string $probeField = null): bool
     {
         if (! $request->isMethod('POST') && ! $request->isMethod('PUT')) {

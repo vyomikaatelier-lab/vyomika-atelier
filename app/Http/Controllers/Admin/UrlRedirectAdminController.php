@@ -29,7 +29,7 @@ class UrlRedirectAdminController extends Controller
             [
                 'to_url' => $validated['to_url'],
                 'status_code' => $validated['status_code'] ?? 301,
-                'is_active' => $request->boolean('is_active', true),
+                'is_active' => $request->has('is_active') && $request->boolean('is_active'),
             ]
         );
 

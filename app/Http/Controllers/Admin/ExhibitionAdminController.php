@@ -35,7 +35,7 @@ class ExhibitionAdminController extends Controller
 
         $validated = $this->validateExhibition($request);
         $validated['slug'] = Str::slug($validated['name']);
-        $validated['is_active'] = $request->boolean('is_active', true);
+        $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
         $validated['sort_order'] = $request->integer('sort_order', Exhibition::max('sort_order') + 1);
         $validated['cover_image'] = $this->resolveImageField($request, 'cover_file', 'cover_image', null, 'exhibitions');
         $validated['gallery'] = $this->resolveGalleryField($request, 'gallery_files', 'gallery_urls', null, 'exhibitions');
@@ -58,7 +58,7 @@ class ExhibitionAdminController extends Controller
 
         $validated = $this->validateExhibition($request);
         $validated['slug'] = Str::slug($validated['name']);
-        $validated['is_active'] = $request->boolean('is_active', true);
+        $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
         $validated['sort_order'] = $request->integer('sort_order', $exhibition->sort_order);
         $validated['cover_image'] = $this->resolveImageField($request, 'cover_file', 'cover_image', $exhibition->cover_image, 'exhibitions');
         $validated['gallery'] = $this->resolveGalleryField($request, 'gallery_files', 'gallery_urls', $exhibition->gallery, 'exhibitions');

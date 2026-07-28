@@ -39,6 +39,10 @@ class MediaAdminController extends Controller
 
     public function store(Request $request)
     {
+        if ($this->multipartPayloadFailed($request, 'file')) {
+            return back()->withInput()->with('error', 'Upload too large for the server limit. Try a smaller file (max 8 MB).');
+        }
+
         $request->validate([
             'file' => 'required|file|mimes:jpg,jpeg,png,webp,pdf|max:8192',
             'is_private' => 'nullable|boolean',

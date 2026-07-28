@@ -4,6 +4,7 @@
 <h1 class="text-2xl font-semibold mb-6">Site Settings</h1>
 <form method="POST" action="{{ route('admin.settings.update') }}" enctype="multipart/form-data" class="bg-white p-6 rounded shadow space-y-6 max-w-3xl">
     @csrf
+    <input type="hidden" name="_page_save" value="1">
     <section class="space-y-3">
         <h2 class="font-medium">Business</h2>
         <input name="brand_name" value="{{ old('brand_name', $brand['name'] ?? '') }}" placeholder="Business name" required class="w-full border px-3 py-2 rounded">

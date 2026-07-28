@@ -94,15 +94,15 @@ class ProductAdminController extends Controller
     public function store(Request $request)
     {
         if ($this->multipartPayloadFailed($request)) {
-            return back()->with('error', 'Upload too large for the server limit. Save text changes first, then upload the main image only (max 4 MB).');
+            return back()->withInput()->with('error', 'Upload too large for the server limit. Save text changes first, then upload the main image only (max 4 MB).');
         }
 
         $slug = Str::slug($request->input('slug') ?: $request->input('name', ''));
         $validated = $this->validateProduct($request, new Product(['slug' => $slug]));
         $validated['slug'] = $slug;
         $validated['is_featured'] = $request->boolean('is_featured');
-        $validated['is_active'] = $request->boolean('is_active', true);
-        $validated['is_gallery_visible'] = $request->boolean('is_gallery_visible', true);
+        $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
+        $validated['is_gallery_visible'] = $this->checkboxBoolean($request, 'is_gallery_visible');
         $validated['image'] = $this->resolveImageField($request, 'image_file', 'image', null, 'products');
         $validated = $this->normalizeProductPrices($validated);
 
@@ -122,14 +122,14 @@ class ProductAdminController extends Controller
     public function update(Request $request, Product $product)
     {
         if ($this->multipartPayloadFailed($request)) {
-            return back()->with('error', 'Upload too large for the server limit. Save text changes first, then upload the main image only (max 4 MB).');
+            return back()->withInput()->with('error', 'Upload too large for the server limit. Save text changes first, then upload the main image only (max 4 MB).');
         }
 
         $validated = $this->validateProduct($request, $product);
         $validated['slug'] = Str::slug($request->input('slug') ?: $validated['name']);
         $validated['is_featured'] = $request->boolean('is_featured');
-        $validated['is_active'] = $request->boolean('is_active', true);
-        $validated['is_gallery_visible'] = $request->boolean('is_gallery_visible', true);
+        $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
+        $validated['is_gallery_visible'] = $this->checkboxBoolean($request, 'is_gallery_visible');
         $validated['image'] = $this->resolveImageField($request, 'image_file', 'image', $product->image, 'products');
         $validated = $this->normalizeProductPrices($validated);
 
@@ -233,7 +233,7 @@ class ProductAdminController extends Controller
         $preview = ($existing ?? new Product())->fill([
             ...$validated,
             'slug' => $productSlug,
-            'is_active' => $request->boolean('is_active', true),
+            'is_active' => $this->checkboxBoolean($request, 'is_active'),
         ]);
 
         if ($preview->is_active && ! $preview->isClassified()) {

@@ -42,8 +42,8 @@ class LegalPageAdminController extends Controller
 
         $legal->update([
             'title' => $validated['title'],
-            'meta_title' => $validated['meta_title'],
-            'meta_description' => $validated['meta_description'],
+            'meta_title' => $validated['meta_title'] ?? null,
+            'meta_description' => $validated['meta_description'] ?? null,
             'sections' => $sections,
             'content_updated_at' => $validated['content_updated_at'] ?? now()->toDateString(),
         ]);

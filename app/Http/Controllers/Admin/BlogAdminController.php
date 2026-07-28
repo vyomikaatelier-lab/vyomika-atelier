@@ -48,7 +48,7 @@ class BlogAdminController extends Controller
         $validated = $this->validatePost($request);
         $validated['slug'] = Str::slug($validated['title']);
         $validated['is_featured'] = $request->boolean('is_featured');
-        $validated['is_active'] = $request->boolean('is_active', true);
+        $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
         $validated['status'] = $request->input('status', 'draft');
         $validated['image'] = $this->resolveImageField($request, 'image_file', 'image', null, 'blog');
         $validated['gallery'] = $this->resolveGalleryField($request, 'gallery_files', 'gallery_urls', null, 'blog');
@@ -76,7 +76,7 @@ class BlogAdminController extends Controller
         $validated = $this->validatePost($request);
         $validated['slug'] = Str::slug($validated['title']);
         $validated['is_featured'] = $request->boolean('is_featured');
-        $validated['is_active'] = $request->boolean('is_active', true);
+        $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
         $validated['status'] = $request->input('status', 'draft');
         $validated['image'] = $this->resolveImageField($request, 'image_file', 'image', $post->image, 'blog');
         $validated['gallery'] = $this->resolveGalleryField($request, 'gallery_files', 'gallery_urls', $post->gallery, 'blog');

@@ -53,7 +53,7 @@ class IndependentLandingAdminController extends Controller
         }
 
         if ($this->multipartPayloadFailed($request)) {
-            return back()->with('error', 'Upload too large for the server limit. Save text changes first, then upload one image at a time (max 5 MB each).');
+            return back()->withInput()->with('error', 'Upload too large for the server limit. Save text changes first, then upload one image at a time (max 5 MB each).');
         }
 
         $maxInputVars = (int) ini_get('max_input_vars');

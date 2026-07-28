@@ -79,10 +79,13 @@ class CustomerAdminController extends Controller
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($customer->id)],
             'mobile' => ['required', 'string', 'max:20', Rule::unique('users', 'mobile')->ignore($customer->id)],
             'account_type' => ['required', Rule::in(array_keys(User::ACCOUNT_TYPES))],
-            'is_active' => 'required|boolean',
+            'is_active' => 'required|in:0,1',
         ]);
 
-        $customer->update($validated);
+        $customer->update([
+            ...$validated,
+            'is_active' => $request->boolean('is_active'),
+        ]);
 
         return back()->with('success', 'Customer account updated.');
     }
