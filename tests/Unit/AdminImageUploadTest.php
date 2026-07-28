@@ -26,13 +26,19 @@ class AdminImageUploadTest extends TestCase
     public function test_treats_empty_upload_slots_as_blank(): void
     {
         $emptySlot = new UploadedFile('', '', null, UPLOAD_ERR_NO_FILE, true);
+        $tmp = tempnam(sys_get_temp_dir(), 'empty');
+        $zeroByteSlot = new UploadedFile($tmp, '', 'application/octet-stream', UPLOAD_ERR_OK, true);
 
         $this->assertTrue(AdminImageUpload::isEmptyUpload(null));
         $this->assertTrue(AdminImageUpload::isEmptyUpload(''));
         $this->assertTrue(AdminImageUpload::isEmptyUpload($emptySlot));
+        $this->assertTrue(AdminImageUpload::isEmptyUpload($zeroByteSlot));
 
         $rules = ['file' => AdminImageUpload::rules()];
         $validator = \Illuminate\Support\Facades\Validator::make(['file' => $emptySlot], $rules, AdminImageUpload::messages());
+        $this->assertFalse($validator->fails());
+
+        $validator = \Illuminate\Support\Facades\Validator::make(['file' => $zeroByteSlot], $rules, AdminImageUpload::messages());
         $this->assertFalse($validator->fails());
     }
 

@@ -11,6 +11,11 @@ echo "==> Deploying VYOMIKA ATELIER to $APP_DIR"
 
 cd "$APP_DIR"
 
+echo "==> Pulling latest code..."
+git fetch origin main
+git pull origin main
+echo "    Commit: $(git log -1 --oneline)"
+
 echo "==> Installing dependencies..."
 if ! php composer.phar install --no-dev --optimize-autoloader --no-interaction 2>/dev/null; then
     if ! composer install --no-dev --optimize-autoloader --no-interaction 2>/dev/null; then

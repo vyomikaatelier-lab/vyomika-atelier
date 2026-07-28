@@ -75,9 +75,26 @@ class AdminImageUpload
 
     public static function isEmptyUpload(mixed $value): bool
     {
-        return $value === null
-            || $value === ''
-            || ($value instanceof UploadedFile && $value->getError() === UPLOAD_ERR_NO_FILE);
+        if ($value === null || $value === '') {
+            return true;
+        }
+
+        if (! $value instanceof UploadedFile) {
+            return false;
+        }
+
+        if ($value->getError() === UPLOAD_ERR_NO_FILE) {
+            return true;
+        }
+
+        // iOS/Android often submit untouched file inputs as UPLOAD_ERR_OK with no filename or content.
+        if ($value->getError() === UPLOAD_ERR_OK) {
+            $size = $value->getSize();
+
+            return $size === 0 || $size === false || $value->getClientOriginalName() === '';
+        }
+
+        return false;
     }
 
     /** @return \Closure(string, mixed, \Closure): void */
