@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\Http\Controllers\Admin\Concerns\HandlesAdminUploads;
 use App\Support\AdminImageUpload;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class AdminImageUploadTest extends TestCase
@@ -20,6 +21,19 @@ class AdminImageUploadTest extends TestCase
         $this->assertFalse(AdminImageUpload::isHeic(
             \Illuminate\Http\UploadedFile::fake()->image('photo.JPG')
         ));
+    }
+
+    public function test_treats_empty_upload_slots_as_blank(): void
+    {
+        $emptySlot = new UploadedFile('', '', null, UPLOAD_ERR_NO_FILE, true);
+
+        $this->assertTrue(AdminImageUpload::isEmptyUpload(null));
+        $this->assertTrue(AdminImageUpload::isEmptyUpload(''));
+        $this->assertTrue(AdminImageUpload::isEmptyUpload($emptySlot));
+
+        $rules = ['file' => AdminImageUpload::rules()];
+        $validator = \Illuminate\Support\Facades\Validator::make(['file' => $emptySlot], $rules, AdminImageUpload::messages());
+        $this->assertFalse($validator->fails());
     }
 
     public function test_multipart_payload_failed_when_post_body_stripped(): void

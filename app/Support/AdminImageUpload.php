@@ -12,12 +12,7 @@ class AdminImageUpload
     /** @return array<int, mixed> */
     public static function rules(bool $nullable = true): array
     {
-        $rules = [
-            self::inspectRule(),
-            File::types(['jpg', 'jpeg', 'png', 'webp'])
-                ->image()
-                ->max(self::MAX_KILOBYTES),
-        ];
+        $rules = [self::inspectRule()];
 
         if ($nullable) {
             array_unshift($rules, 'nullable');
@@ -78,11 +73,18 @@ class AdminImageUpload
         return 'The image failed to upload — it may exceed the 5 MB server limit. Compress the photo or upload one image at a time.';
     }
 
+    public static function isEmptyUpload(mixed $value): bool
+    {
+        return $value === null
+            || $value === ''
+            || ($value instanceof UploadedFile && $value->getError() === UPLOAD_ERR_NO_FILE);
+    }
+
     /** @return \Closure(string, mixed, \Closure): void */
     private static function inspectRule(): \Closure
     {
         return function (string $attribute, mixed $value, \Closure $fail): void {
-            if ($value === null || $value === '') {
+            if (self::isEmptyUpload($value)) {
                 return;
             }
 
@@ -90,7 +92,7 @@ class AdminImageUpload
                 return;
             }
 
-            if (! $value->isValid() && $value->getError() !== UPLOAD_ERR_NO_FILE) {
+            if (! $value->isValid()) {
                 $fail(self::uploadFailedMessage());
 
                 return;
@@ -98,6 +100,18 @@ class AdminImageUpload
 
             if (self::isHeic($value)) {
                 $fail(self::heicMessage());
+
+                return;
+            }
+
+            $validator = \Illuminate\Support\Facades\Validator::make(
+                ['file' => $value],
+                ['file' => File::types(['jpg', 'jpeg', 'png', 'webp'])->image()->max(self::MAX_KILOBYTES)],
+                self::messages()
+            );
+
+            if ($validator->fails()) {
+                $fail($validator->errors()->first('file') ?? self::uploadFailedMessage());
             }
         };
     }

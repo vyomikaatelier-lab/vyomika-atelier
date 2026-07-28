@@ -199,12 +199,20 @@ trait HandlesAdminUploads
     {
         if ($request->boolean('gallery_managed')) {
             $items = array_values(array_filter((array) $request->input('gallery_existing', []), fn ($item) => filled($item)));
+            $hasGalleryUpload = $this->hasGalleryFileUpload($request, $filesField);
+
             if (
+                $items === []
+                && is_array($current)
+                && $current !== []
+                && $hasGalleryUpload
+            ) {
+                $items = array_values($current);
+            } elseif (
                 ! $request->has('gallery_existing')
                 && is_array($current)
                 && $current !== []
-                && ! $request->hasFile($filesField)
-                && ! $request->hasFile('gallery_replace')
+                && ! $hasGalleryUpload
                 && ! $request->filled($urlsField)
                 && ! $request->has('remove_gallery')
             ) {
@@ -219,7 +227,7 @@ trait HandlesAdminUploads
         $replacements = $request->file('gallery_replace', []);
         if (is_array($replacements)) {
             foreach ($replacements as $index => $file) {
-                if (! $file || ! $file->isValid()) {
+                if (! $this->isUsableUpload($file)) {
                     continue;
                 }
 
@@ -242,7 +250,7 @@ trait HandlesAdminUploads
             }
 
             foreach ($files as $file) {
-                if (! $file || ! $file->isValid()) {
+                if (! $this->isUsableUpload($file)) {
                     continue;
                 }
 
@@ -272,6 +280,41 @@ trait HandlesAdminUploads
         }
 
         return $items !== [] ? array_values(array_unique($items)) : null;
+    }
+
+    protected function hasGalleryFileUpload(Request $request, string $filesField): bool
+    {
+        if ($this->hasUsableUploads($request->file($filesField))) {
+            return true;
+        }
+
+        return $this->hasUsableUploads($request->file('gallery_replace', []));
+    }
+
+    protected function hasUsableUploads(mixed $files): bool
+    {
+        if ($files instanceof \Illuminate\Http\UploadedFile) {
+            return $this->isUsableUpload($files);
+        }
+
+        if (! is_array($files)) {
+            return false;
+        }
+
+        foreach ($files as $file) {
+            if ($this->isUsableUpload($file)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    protected function isUsableUpload(mixed $file): bool
+    {
+        return $file instanceof \Illuminate\Http\UploadedFile
+            && ! AdminImageUpload::isEmptyUpload($file)
+            && $file->isValid();
     }
 
     protected function storeGalleryUpload(\Illuminate\Http\UploadedFile $file, string $directory): string
