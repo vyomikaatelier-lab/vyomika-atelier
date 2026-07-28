@@ -40,6 +40,7 @@
     </div>
     <div class="space-y-3 border rounded p-4 bg-gray-50">
         <p class="text-sm font-medium">Cover image</p>
+        <p class="text-xs text-gray-600">{{ \App\Support\AdminImageUpload::hintText() }}</p>
         @if(isset($exhibition) && $exhibition->coverImageUrl())
             <img src="{{ $exhibition->coverImageUrl() }}" alt="" class="w-40 h-28 object-cover rounded border">
         @endif
@@ -50,7 +51,7 @@
         </div>
         <div>
             <label class="block text-sm mb-1">Upload cover</label>
-            <input type="file" name="cover_file" accept="image/jpeg,image/png,image/webp" class="w-full text-sm @error('cover_file') border-red-500 @enderror">
+            <input type="file" name="cover_file" accept="{{ \App\Support\AdminImageUpload::acceptAttribute() }}" class="w-full text-sm @error('cover_file') border-red-500 @enderror">
             @error('cover_file')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
         </div>
     </div>

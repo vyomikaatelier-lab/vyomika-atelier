@@ -10,11 +10,14 @@
     if (is_array($oldExisting)) {
         $galleryItems = array_values(array_filter($oldExisting, fn ($item) => filled($item)));
     }
+    $imageAccept = \App\Support\AdminImageUpload::acceptAttribute();
+    $imageHint = \App\Support\AdminImageUpload::hintText();
 @endphp
 
 <div class="space-y-3 border rounded p-4 bg-gray-50" data-gallery-upload>
     <p class="text-sm font-medium">{{ $label }}</p>
     <p class="text-xs text-gray-600">Upload one image per row. Existing images can be replaced or removed individually.</p>
+    <p class="text-xs text-gray-600">{{ $imageHint }}</p>
     <input type="hidden" name="gallery_managed" value="1">
 
     @if($galleryItems !== [])
@@ -32,7 +35,8 @@
                 </label>
                 <div>
                     <label class="block text-xs text-gray-600 mb-1">Replace image</label>
-                    <input type="file" name="gallery_replace[{{ $index }}]" accept="image/jpeg,image/png,image/webp" class="w-full text-xs">
+                    <input type="file" name="gallery_replace[{{ $index }}]" accept="{{ $imageAccept }}" class="w-full text-xs @error('gallery_replace.'.$index) border-red-500 @enderror">
+                    @error('gallery_replace.'.$index)<p class="text-red-600 text-xs mt-1">{{ $message }}</p>@enderror
                 </div>
             </div>
         </div>
@@ -45,7 +49,7 @@
         <div class="gallery-new-row flex items-end gap-2">
             <div class="flex-1">
                 <label class="block text-xs text-gray-600 mb-1">Image 1</label>
-                <input type="file" name="gallery_files[]" accept="image/jpeg,image/png,image/webp" class="w-full text-sm">
+                <input type="file" name="gallery_files[]" accept="{{ $imageAccept }}" class="w-full text-sm @error('gallery_files.*') border-red-500 @enderror">
             </div>
             <button type="button" class="gallery-new-remove text-xs text-red-600 hover:underline hidden mb-2" aria-label="Remove row">Remove</button>
         </div>
@@ -105,7 +109,7 @@
         row.innerHTML = ''
             + '<div class="flex-1">'
             + '<label class="block text-xs text-gray-600 mb-1">Image ' + (index + 1) + '</label>'
-            + '<input type="file" name="gallery_files[]" accept="image/jpeg,image/png,image/webp" class="w-full text-sm">'
+            + '<input type="file" name="gallery_files[]" accept="{{ $imageAccept }}" class="w-full text-sm">'
             + '</div>'
             + '<button type="button" class="gallery-new-remove text-xs text-red-600 hover:underline mb-2" aria-label="Remove row">Remove</button>';
         newRows.appendChild(row);

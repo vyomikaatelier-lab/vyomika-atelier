@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Concerns;
 
 use App\Models\MediaFile;
+use App\Support\AdminImageUpload;
 use App\Support\ResponsiveHero;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -136,7 +137,7 @@ trait HandlesAdminUploads
             return false;
         }
 
-        $contentLength = (int) $request->header('Content-Length', 0);
+        $contentLength = (int) ($request->header('Content-Length') ?: ($_SERVER['CONTENT_LENGTH'] ?? 0));
         if ($contentLength <= 0) {
             return false;
         }
@@ -150,7 +151,47 @@ trait HandlesAdminUploads
             }
         }
 
+        $postMaxBytes = $this->iniSizeBytes(ini_get('post_max_size'));
+        if ($postMaxBytes > 0 && $contentLength > $postMaxBytes) {
+            return true;
+        }
+
         return $payload === [];
+    }
+
+    protected function multipartPayloadErrorMessage(): string
+    {
+        return AdminImageUpload::multipartErrorMessage();
+    }
+
+    /** @return array<int, mixed> */
+    protected function adminImageUploadRules(bool $nullable = true): array
+    {
+        return AdminImageUpload::rules($nullable);
+    }
+
+    /** @return array<string, string> */
+    protected function adminImageUploadMessages(): array
+    {
+        return AdminImageUpload::messages();
+    }
+
+    protected function iniSizeBytes(string|false $value): int
+    {
+        if ($value === false || $value === '') {
+            return 0;
+        }
+
+        $value = trim($value);
+        $unit = strtolower(substr($value, -1));
+        $number = (int) $value;
+
+        return match ($unit) {
+            'g' => $number * 1024 * 1024 * 1024,
+            'm' => $number * 1024 * 1024,
+            'k' => $number * 1024,
+            default => $number,
+        };
     }
 
     /** @return array<int, string>|null */

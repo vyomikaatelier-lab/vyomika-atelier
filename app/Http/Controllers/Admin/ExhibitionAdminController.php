@@ -31,7 +31,7 @@ class ExhibitionAdminController extends Controller
     public function store(Request $request)
     {
         if ($this->multipartPayloadFailed($request)) {
-            return back()->withInput()->with('error', 'Upload too large for the server limit. Save text changes first, then upload images in smaller batches (max 5 MB each).');
+            return back()->withInput()->with('error', $this->multipartPayloadErrorMessage());
         }
 
         $validated = $this->validateExhibition($request);
@@ -54,7 +54,7 @@ class ExhibitionAdminController extends Controller
     public function update(Request $request, Exhibition $exhibition)
     {
         if ($this->multipartPayloadFailed($request)) {
-            return back()->withInput()->with('error', 'Upload too large for the server limit. Save text changes first, then upload images in smaller batches (max 5 MB each).');
+            return back()->withInput()->with('error', $this->multipartPayloadErrorMessage());
         }
 
         $validated = $this->validateExhibition($request);
@@ -145,6 +145,8 @@ class ExhibitionAdminController extends Controller
 
     private function validateExhibition(Request $request): array
     {
+        $imageRules = $this->adminImageUploadRules();
+
         return $request->validate([
             'name' => 'required|string|max:255',
             'city' => 'nullable|string|max:120',
@@ -152,15 +154,15 @@ class ExhibitionAdminController extends Controller
             'year' => 'nullable|integer|min:1990|max:2100',
             'description' => 'nullable|string',
             'cover_image' => 'nullable|string|max:500',
-            'cover_file' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
+            'cover_file' => $imageRules,
             'gallery_urls' => 'nullable|string',
             'gallery_files' => 'nullable|array',
-            'gallery_files.*' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
+            'gallery_files.*' => $imageRules,
             'gallery_replace' => 'nullable|array',
-            'gallery_replace.*' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
+            'gallery_replace.*' => $imageRules,
             'gallery_existing' => 'nullable|array',
             'gallery_existing.*' => 'string|max:500',
             'sort_order' => 'nullable|integer|min:0',
-        ]);
+        ], $this->adminImageUploadMessages());
     }
 }
