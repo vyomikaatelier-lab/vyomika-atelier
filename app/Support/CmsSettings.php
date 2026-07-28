@@ -10,20 +10,40 @@ use Illuminate\Support\Facades\Schema;
 
 class CmsSettings
 {
+    /**
+     * Records what the last hydration actually did. A storefront that renders
+     * config seed content is indistinguishable from one that has no saved
+     * settings, so the outcome has to be inspectable after the fact.
+     *
+     * @var array<string, mixed>|null
+     */
+    private static ?array $status = null;
+
     public static function hydrate(): void
     {
+        self::$status = [
+            'ran' => true,
+            'table_found' => false,
+            'applied' => [],
+            'error' => null,
+        ];
+
         if (! Schema::hasTable('site_settings')) {
             return;
         }
 
+        self::$status['table_found'] = true;
+
         $brand = SiteSetting::getValue('brand');
         if (is_array($brand)) {
             config(['site.brand' => array_merge(config('site.brand', []), $brand)]);
+            self::$status['applied'][] = 'brand';
         }
 
         $social = SiteSetting::getValue('social');
         if (is_array($social)) {
             config(['site.social' => array_merge(config('site.social', []), $social)]);
+            self::$status['applied'][] = 'social';
         }
 
         $seo = SiteSetting::getValue('seo');
@@ -61,6 +81,7 @@ class CmsSettings
                 }
 
                 config(['site.hero.slides' => $slides]);
+                self::$status['applied'][] = 'hero';
             }
         }
 
@@ -73,6 +94,7 @@ class CmsSettings
                 ['text' => null, 'link_label' => null, 'link_href' => null],
                 $homepage['announcement']
             )]);
+            self::$status['applied'][] = 'homepage.announcement';
         }
 
         $collectionPages = SiteSetting::getValue('collection_pages');
@@ -90,6 +112,34 @@ class CmsSettings
         if (filled($legalUpdated)) {
             config(['legal.last_updated' => $legalUpdated]);
         }
+    }
+
+    /**
+     * What the last hydration in this process achieved. `ran => false` means the
+     * storefront is rendering config seed content because hydration never
+     * happened, which looks identical to "the admin saved nothing".
+     *
+     * @return array<string, mixed>
+     */
+    public static function hydrationStatus(): array
+    {
+        return self::$status ?? [
+            'ran' => false,
+            'table_found' => false,
+            'applied' => [],
+            'error' => null,
+        ];
+    }
+
+    /** Keep a failed boot-time hydration visible instead of losing the reason. */
+    public static function recordHydrationFailure(\Throwable $e): void
+    {
+        self::$status = [
+            'ran' => true,
+            'table_found' => self::$status['table_found'] ?? false,
+            'applied' => self::$status['applied'] ?? [],
+            'error' => $e->getMessage(),
+        ];
     }
 
     /** @return list<array<string, mixed>> */

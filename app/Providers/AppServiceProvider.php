@@ -10,6 +10,7 @@ use App\View\Composers\StorefrontSeoComposer;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -34,8 +35,20 @@ class AppServiceProvider extends ServiceProvider
 
         try {
             CmsSettings::hydrate();
-        } catch (\Throwable) {
-            // Database may not be ready during install.
+        } catch (\Throwable $e) {
+            // Database may not be ready during install, so a failure here must
+            // not take the site down. It must still be recorded: without this,
+            // a hydration failure silently serves config seed content on every
+            // page while artisan diagnostics that hydrate themselves look fine.
+            CmsSettings::recordHydrationFailure($e);
+
+            try {
+                Log::warning('CmsSettings::hydrate() failed; storefront is serving config seed content.', [
+                    'exception' => $e->getMessage(),
+                ]);
+            } catch (\Throwable) {
+                // Logging must never break booting.
+            }
         }
 
         View::composer('layouts.store', StorefrontSeoComposer::class);

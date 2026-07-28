@@ -53,9 +53,12 @@ class SyncDoctorCommand extends Command
         $this->reportResolvedValues();
 
         $this->newLine();
-        $this->line('If a resolved value above matches the database but the live page does not,');
-        $this->line('the code and database are correct: clear the caches listed above, then look');
-        $this->line('at a CDN / proxy / browser cache in front of PHP.');
+        $this->line('The resolved values above are produced by hydrating in this process, so they');
+        $this->line('prove the database and the code agree — not that a web request renders them.');
+        $this->line('If the live page disagrees with any value above, run:');
+        $this->line('  php artisan vyomika:sync-trace');
+        $this->line('It reports the boot-time value a web request actually sees and names the');
+        $this->line('layer where the stale value enters.');
 
         return self::SUCCESS;
     }
@@ -225,7 +228,23 @@ class SyncDoctorCommand extends Command
 
     private function reportResolvedValues(): void
     {
+        // Captured before hydrating: this is what AppServiceProvider::boot()
+        // produced, and therefore what a web request actually renders. Without
+        // it, hydrating below would report a healthy boot even when the real
+        // boot-time hydration failed and the storefront serves seed content.
+        $bootAnnouncement = config('site.announcement.text');
+        $bootStatus = CmsSettings::hydrationStatus();
+
         CmsSettings::hydrate();
+
+        if (! $bootStatus['ran'] || ! empty($bootStatus['error']) || $bootAnnouncement !== config('site.announcement.text')) {
+            $this->line('Boot-time hydration did NOT produce these values — run php artisan vyomika:sync-trace');
+            $this->line('Announcement at boot (what the live page renders): '.($bootAnnouncement ?: '(hidden)'));
+            if (! empty($bootStatus['error'])) {
+                $this->line('Boot-time hydration error: '.$bootStatus['error']);
+            }
+            $this->newLine();
+        }
 
         $this->line('Brand name: '.(config('site.brand.name') ?: '(unset)'));
         $this->line('Brand email: '.(config('site.brand.email') ?: '(unset)'));
