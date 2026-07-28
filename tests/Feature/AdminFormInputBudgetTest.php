@@ -35,32 +35,31 @@ class AdminFormInputBudgetTest extends TestCase
         return count($matches[1]);
     }
 
-    /** @return array<string, array{0: string}> */
-    public static function largestAdminForms(): array
+    public function test_admin_form_stays_within_the_input_variable_budget(): void
     {
-        return [
-            'railings landing' => ['admin/independent-pages/railings/edit'],
-            'corten landing' => ['admin/independent-pages/corten-steel/edit'],
-            'site settings' => ['admin/settings'],
-            'about page hero' => ['admin/page-heroes/about/edit'],
+        $paths = [
+            'admin/independent-pages/railings/edit',
+            'admin/independent-pages/corten-steel/edit',
+            'admin/settings',
+            'admin/page-heroes/about/edit',
         ];
-    }
 
-    /** @dataProvider largestAdminForms */
-    public function test_admin_form_stays_within_the_input_variable_budget(string $path): void
-    {
-        $response = $this->actingAsAdmin($this->admin())->get('/'.ltrim($path, '/'));
-        $response->assertOk();
+        $admin = $this->admin();
 
-        $count = $this->countInputs($response->getContent());
+        foreach ($paths as $path) {
+            $response = $this->actingAsAdmin($admin)->get('/'.$path);
+            $response->assertOk();
 
-        $this->assertGreaterThan(0, $count, $path.' rendered no form inputs');
-        $this->assertLessThanOrEqual(
-            self::BUDGET,
-            $count,
-            $path.' posts '.$count.' fields, over the '.self::BUDGET
-                .' budget; PHP max_input_vars would truncate the payload.'
-        );
+            $count = $this->countInputs($response->getContent());
+
+            $this->assertGreaterThan(0, $count, $path.' rendered no form inputs');
+            $this->assertLessThanOrEqual(
+                self::BUDGET,
+                $count,
+                $path.' posts '.$count.' fields, over the '.self::BUDGET
+                    .' budget; PHP max_input_vars would truncate the payload.'
+            );
+        }
     }
 
     public function test_product_form_stays_within_the_input_variable_budget(): void
