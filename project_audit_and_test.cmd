@@ -64,15 +64,26 @@ call :section "1. TOOLCHAIN"
 rem ===========================================================================
 
 call :run_c "PHP runtime" "php -v"
-call :run_w "Composer" "composer --version"
 call :run_w "Node" "node -v"
 call :run_w "NPM" "npm -v"
 
+call :probe "Composer"
+set "COMPOSER_CMD="
+composer --version >> "%REPORT%" 2>&1 && set "COMPOSER_CMD=composer"
+if not defined COMPOSER_CMD (
+    if exist "composer.phar" (
+        php composer.phar --version >> "%REPORT%" 2>&1 && set "COMPOSER_CMD=php composer.phar"
+    )
+)
+if not defined COMPOSER_CMD (
+    echo [INFO] composer not on PATH - dependency checks limited to vendor/ presence >> "%REPORT%"
+)
+
 call :probe "PHP ini limits"
-php -r "foreach (['post_max_size','upload_max_filesize','memory_limit','max_execution_time','max_file_uploads','max_input_vars'] as $k) { echo str_pad($k, 22), '= ', ini_get($k), PHP_EOL; }" >> "%REPORT%" 2>&1
+php diagnostics\audit_checks.php ini >> "%REPORT%" 2>&1
 
 call :probe "PHP extensions"
-php -r "$need=['pdo','mbstring','openssl','tokenizer','xml','ctype','json','fileinfo','curl','gd']; $miss=[]; foreach($need as $e){ if(!extension_loaded($e)){ $miss[]=$e; } } echo $miss ? 'MISSING: '.implode(', ',$miss).PHP_EOL : 'All required extensions loaded.'.PHP_EOL; exit($miss?1:0);" >> "%REPORT%" 2>&1
+php diagnostics\audit_checks.php ext >> "%REPORT%" 2>&1
 if errorlevel 1 call :flag_critical "Required PHP extensions missing"
 
 rem ===========================================================================
@@ -87,11 +98,8 @@ if not exist ".env" (
 )
 
 call :probe "Environment summary - secrets redacted"
-php -r "$f='.env'; if(!is_file($f)){exit(0);} $safe=['APP_ENV','APP_DEBUG','APP_URL','LOG_CHANNEL','LOG_LEVEL','DB_CONNECTION','DB_HOST','DB_PORT','DB_DATABASE','CACHE_STORE','SESSION_DRIVER','QUEUE_CONNECTION','FILESYSTEM_DISK','MAIL_MAILER']; foreach(file($f, FILE_IGNORE_NEW_LINES|FILE_SKIP_EMPTY_LINES) as $line){ $line=trim($line); if($line==='' || $line[0]==='#'){continue;} $p=array_pad(explode('=',$line,2),2,''); if(in_array(trim($p[0]),$safe,true)){ echo $line, PHP_EOL; } }" >> "%REPORT%" 2>&1
-
-call :probe "Production sanity - APP_DEBUG"
-php -r "$env=[]; if(is_file('.env')){ foreach(file('.env', FILE_IGNORE_NEW_LINES|FILE_SKIP_EMPTY_LINES) as $l){ $l=trim($l); if($l==='' || $l[0]==='#'){continue;} $p=array_pad(explode('=',$l,2),2,''); $env[trim($p[0])]=trim(trim($p[1]), chr(34).chr(39)); } } $appEnv=$env['APP_ENV'] ?? ''; $debug=strtolower($env['APP_DEBUG'] ?? ''); echo 'APP_ENV=', $appEnv, ' APP_DEBUG=', $debug, PHP_EOL; if($appEnv==='production' && in_array($debug,['true','1','on'],true)){ echo 'WARN: APP_DEBUG enabled while APP_ENV=production', PHP_EOL; exit(1); }" >> "%REPORT%" 2>&1
-if errorlevel 1 call :flag_warn "APP_DEBUG enabled in production"
+php diagnostics\audit_checks.php env >> "%REPORT%" 2>&1
+if errorlevel 1 call :flag_critical "Environment configuration problem"
 
 rem ===========================================================================
 call :section "3. CACHE CLEAR - non destructive"
@@ -136,31 +144,38 @@ php artisan route:list --json > "%ROUTEJSON%" 2>> "%REPORT%"
 if errorlevel 1 (
     call :flag_critical "route:list failed - routes file may be broken"
 ) else (
-    php -r "$j=json_decode(file_get_contents(getenv('ROUTEJSON')), true) ?: []; $admin=array_filter($j, fn($r)=>str_starts_with($r['uri'] ?? '', 'admin')); $writes=array_filter($admin, fn($r)=>preg_match('/POST|PUT|PATCH|DELETE/', $r['method'] ?? '')); echo 'total routes       : ', count($j), PHP_EOL; echo 'admin routes       : ', count($admin), PHP_EOL; echo 'admin write routes : ', count($writes), PHP_EOL;" >> "%REPORT%" 2>&1
+    php diagnostics\audit_checks.php routes >> "%REPORT%" 2>&1
+    if errorlevel 1 call :flag_critical "Admin route problems detected"
 )
-
-call :probe "Admin route table"
-php artisan route:list --path=admin --columns=method,uri,name,action >> "%REPORT%" 2>&1
-
-call :probe "Admin routes handled by closures"
-php -r "$f=getenv('ROUTEJSON'); if(!is_file($f)){exit(0);} $j=json_decode(file_get_contents($f), true) ?: []; $bad=0; foreach($j as $r){ if(!str_starts_with($r['uri'] ?? '', 'admin')){continue;} if(($r['action'] ?? '')==='Closure'){ echo 'CLOSURE: ', $r['method'], ' ', $r['uri'], PHP_EOL; $bad++; } } if(!$bad){ echo 'All admin routes resolve to controller actions.', PHP_EOL; }" >> "%REPORT%" 2>&1
 
 rem ===========================================================================
 call :section "7. STATIC INTEGRITY CHECKS"
 rem ===========================================================================
 
 call :probe "PHP lint - app routes config database tests"
-php -r "$dirs=['app','routes','config','database','tests']; $bad=0; foreach($dirs as $d){ if(!is_dir($d)){continue;} $it=new RecursiveIteratorIterator(new RecursiveDirectoryIterator($d)); foreach($it as $f){ if(!$f->isFile() || $f->getExtension()!=='php'){continue;} $out=[]; $rc=0; exec('php -l ' . escapeshellarg($f->getPathname()) . ' 2>&1', $out, $rc); if($rc!==0){ echo 'SYNTAX ERROR: ', $f->getPathname(), PHP_EOL, implode(PHP_EOL, $out), PHP_EOL; $bad++; } } } echo $bad ? ('Lint failures: '.$bad.PHP_EOL) : ('PHP lint clean.'.PHP_EOL); exit($bad?1:0);" >> "%REPORT%" 2>&1
+php diagnostics\audit_checks.php lint >> "%REPORT%" 2>&1
 if errorlevel 1 call :flag_critical "PHP syntax errors detected"
 
+call :probe "Blade template compile check"
+php diagnostics\audit_checks.php blade >> "%REPORT%" 2>&1
+if errorlevel 1 call :flag_critical "Blade templates fail to compile"
+
 call :probe "Admin POST forms without validation error output"
-php -r "$dir='resources/views/admin'; if(!is_dir($dir)){echo 'no admin views', PHP_EOL; exit(0);} $it=new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir)); $bad=0; foreach($it as $f){ if(!$f->isFile() || !str_ends_with($f->getFilename(), '.blade.php')){continue;} $c=file_get_contents($f->getPathname()); if(!preg_match('/<form/i', $c)){continue;} if(!preg_match('/method\s*=\s*.(post|POST)/', $c)){continue;} if(str_contains($c,'@error') || str_contains($c,'errors->any()') || str_contains($c,'errors->all()') || str_contains($c,'admin.partials.errors')){continue;} echo 'NO ERROR DISPLAY: ', str_replace(chr(92), '/', $f->getPathname()), PHP_EOL; $bad++; } if(!$bad){ echo 'All admin POST forms surface validation errors.', PHP_EOL; }" >> "%REPORT%" 2>&1
+php diagnostics\audit_checks.php forms >> "%REPORT%" 2>&1
 
 call :probe "Checkbox booleans defaulting to true"
-php -r "$dir='app/Http/Controllers'; $it=new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir)); $bad=0; foreach($it as $f){ if(!$f->isFile() || $f->getExtension()!=='php'){continue;} foreach(file($f->getPathname()) as $n=>$line){ if(preg_match('/->boolean\(\s*.[A-Za-z0-9_]+.\s*,\s*true\s*\)/', $line)){ echo 'DEFAULT-TRUE: ', basename($f->getPathname()), ':', $n+1, ' ', trim($line), PHP_EOL; $bad++; } } } if(!$bad){ echo 'No default-true checkbox reads found.', PHP_EOL; }" >> "%REPORT%" 2>&1
+php diagnostics\audit_checks.php booleans >> "%REPORT%" 2>&1
+if errorlevel 1 call :flag_critical "Unchecked checkboxes would be saved as true"
+
+call :probe "Admin form fields never read by a controller"
+php diagnostics\audit_checks.php fields >> "%REPORT%" 2>&1
+
+call :probe "Mass assignment - controller writes vs model fillable"
+php diagnostics\audit_checks.php fillable >> "%REPORT%" 2>&1
+if errorlevel 1 call :flag_critical "Admin writes columns missing from model fillable"
 
 call :probe "Admin controllers vs feature test coverage"
-php -r "$dir='app/Http/Controllers/Admin'; if(!is_dir($dir)){exit(0);} $tests=''; if(is_dir('tests')){ $it=new RecursiveIteratorIterator(new RecursiveDirectoryIterator('tests')); foreach($it as $f){ if($f->isFile() && $f->getExtension()==='php'){ $tests .= file_get_contents($f->getPathname()); } } } foreach(glob($dir.'/*.php') as $c){ $base=basename($c, '.php'); $module=strtolower(str_replace('AdminController','',$base)); $hit=stripos($tests, $module)!==false; echo str_pad($base, 46), $hit ? 'covered' : 'NO TEST REFERENCE', PHP_EOL; }" >> "%REPORT%" 2>&1
+php diagnostics\audit_checks.php coverage >> "%REPORT%" 2>&1
 
 call :probe "Storage symlink"
 if exist "public\storage" (
@@ -175,8 +190,12 @@ call :section "8. COMPOSER"
 rem ===========================================================================
 
 call :probe "composer validate"
-composer validate --no-check-publish --no-check-all >> "%REPORT%" 2>&1
-if errorlevel 1 call :flag_warn "composer validate reported problems"
+if defined COMPOSER_CMD (
+    %COMPOSER_CMD% validate --no-check-publish --no-check-all >> "%REPORT%" 2>&1
+    if errorlevel 1 call :flag_warn "composer validate reported problems"
+) else (
+    echo [SKIP] composer executable not found >> "%REPORT%"
+)
 
 call :probe "vendor installed"
 if exist "vendor\autoload.php" (

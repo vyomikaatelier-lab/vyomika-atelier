@@ -18,6 +18,8 @@
 !/bootstrap/cache/.gitignore
 /database/backups/*
 !/database/backups/.gitignore
+/diagnostics/*
+!/diagnostics/audit_checks.php
 /vendor
 .env
 .env.backup
