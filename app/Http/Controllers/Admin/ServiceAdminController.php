@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Admin\Concerns\HandlesAdminUploads;
+use App\Http\Controllers\Admin\Concerns\ResolvesUniqueSlug;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Service;
@@ -17,6 +18,7 @@ use Illuminate\Validation\Rule;
 class ServiceAdminController extends Controller
 {
     use HandlesAdminUploads;
+    use ResolvesUniqueSlug;
 
     public function index(Request $request)
     {
@@ -50,7 +52,11 @@ class ServiceAdminController extends Controller
         }
 
         $validated = $this->validateService($request);
-        $validated['slug'] = Str::slug($request->input('slug') ?: $validated['name']);
+        $validated['slug'] = $this->resolveUniqueSlug(
+            Service::class,
+            $request->input('slug') ?: $validated['name'],
+            'slug'
+        );
         $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
         $validated['has_calculator'] = $request->boolean('has_calculator');
         $validated['has_designs'] = $request->boolean('has_designs');
@@ -84,7 +90,12 @@ class ServiceAdminController extends Controller
         }
 
         $validated = $this->validateService($request, $service);
-        $validated['slug'] = Str::slug($request->input('slug') ?: $validated['name']);
+        $validated['slug'] = $this->resolveUniqueSlug(
+            Service::class,
+            $request->input('slug') ?: $validated['name'],
+            'slug',
+            $service
+        );
         $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
         $validated['has_calculator'] = $request->boolean('has_calculator');
         $validated['has_designs'] = $request->boolean('has_designs');

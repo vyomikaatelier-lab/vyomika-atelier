@@ -3,18 +3,19 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Admin\Concerns\HandlesAdminUploads;
+use App\Http\Controllers\Admin\Concerns\ResolvesUniqueSlug;
 use App\Http\Controllers\Controller;
 use App\Models\BlogPost;
 use App\Models\Product;
 use App\Models\Project;
 use App\Models\Service;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class BlogAdminController extends Controller
 {
     use HandlesAdminUploads;
+    use ResolvesUniqueSlug;
 
     public function index(Request $request)
     {
@@ -46,7 +47,7 @@ class BlogAdminController extends Controller
         }
 
         $validated = $this->validatePost($request);
-        $validated['slug'] = Str::slug($validated['title']);
+        $validated['slug'] = $this->resolveUniqueSlug(BlogPost::class, $validated['title'], 'title');
         $validated['is_featured'] = $request->boolean('is_featured');
         $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
         $validated['status'] = $request->input('status', 'draft');
@@ -74,7 +75,7 @@ class BlogAdminController extends Controller
         }
 
         $validated = $this->validatePost($request);
-        $validated['slug'] = Str::slug($validated['title']);
+        $validated['slug'] = $this->resolveUniqueSlug(BlogPost::class, $validated['title'], 'title', $post);
         $validated['is_featured'] = $request->boolean('is_featured');
         $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
         $validated['status'] = $request->input('status', 'draft');

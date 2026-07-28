@@ -3,15 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Admin\Concerns\HandlesAdminUploads;
+use App\Http\Controllers\Admin\Concerns\ResolvesUniqueSlug;
 use App\Http\Controllers\Controller;
 use App\Models\Exhibition;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 
 class ExhibitionAdminController extends Controller
 {
     use HandlesAdminUploads;
+    use ResolvesUniqueSlug;
 
     public function index()
     {
@@ -121,20 +121,7 @@ class ExhibitionAdminController extends Controller
 
     private function resolveExhibitionSlug(string $name, ?Exhibition $exhibition = null): string
     {
-        $slug = Str::slug($name);
-
-        $conflict = Exhibition::query()
-            ->where('slug', $slug)
-            ->when($exhibition, fn ($query) => $query->whereKeyNot($exhibition->id))
-            ->exists();
-
-        if ($conflict) {
-            throw ValidationException::withMessages([
-                'name' => 'Another exhibition already uses this name.',
-            ]);
-        }
-
-        return $slug;
+        return $this->resolveUniqueSlug(Exhibition::class, $name, 'name', $exhibition);
     }
 
     /** @param  array<string, mixed>  $validated */

@@ -3,17 +3,18 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Admin\Concerns\HandlesAdminUploads;
+use App\Http\Controllers\Admin\Concerns\ResolvesUniqueSlug;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
 use App\Support\ProductCatalog;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class CategoryAdminController extends Controller
 {
     use HandlesAdminUploads;
+    use ResolvesUniqueSlug;
 
     /** @var array<string, string> */
     private const SECTION_LABELS = [
@@ -67,7 +68,7 @@ class CategoryAdminController extends Controller
         }
 
         $validated = $this->validateCategory($request);
-        $validated['slug'] = Str::slug($validated['name']);
+        $validated['slug'] = $this->resolveUniqueSlug(Category::class, $validated['name'], 'name');
         $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
         $validated['sort_order'] = $request->integer('sort_order', Category::max('sort_order') + 1);
         $validated['image'] = $this->resolveImageField($request, 'image_file', 'image', null, 'categories');
@@ -92,7 +93,7 @@ class CategoryAdminController extends Controller
         }
 
         $validated = $this->validateCategory($request, $category);
-        $validated['slug'] = Str::slug($validated['name']);
+        $validated['slug'] = $this->resolveUniqueSlug(Category::class, $validated['name'], 'name', $category);
         $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
         $validated['sort_order'] = $request->integer('sort_order', $category->sort_order);
         $validated['image'] = $this->resolveImageField($request, 'image_file', 'image', $category->image, 'categories');

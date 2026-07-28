@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Admin\Concerns\HandlesAdminUploads;
+use App\Http\Controllers\Admin\Concerns\ResolvesUniqueSlug;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
@@ -15,6 +16,7 @@ use Illuminate\Validation\ValidationException;
 class ProductAdminController extends Controller
 {
     use HandlesAdminUploads;
+    use ResolvesUniqueSlug;
 
     public function index(Request $request)
     {
@@ -99,7 +101,7 @@ class ProductAdminController extends Controller
 
         $slug = Str::slug($request->input('slug') ?: $request->input('name', ''));
         $validated = $this->validateProduct($request, new Product(['slug' => $slug]));
-        $validated['slug'] = $slug;
+        $validated['slug'] = $this->resolveUniqueSlug(Product::class, $slug, 'slug');
         $validated['is_featured'] = $request->boolean('is_featured');
         $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
         $validated['is_gallery_visible'] = $this->checkboxBoolean($request, 'is_gallery_visible');
@@ -126,7 +128,12 @@ class ProductAdminController extends Controller
         }
 
         $validated = $this->validateProduct($request, $product);
-        $validated['slug'] = Str::slug($request->input('slug') ?: $validated['name']);
+        $validated['slug'] = $this->resolveUniqueSlug(
+            Product::class,
+            $request->input('slug') ?: $validated['name'],
+            'slug',
+            $product
+        );
         $validated['is_featured'] = $request->boolean('is_featured');
         $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
         $validated['is_gallery_visible'] = $this->checkboxBoolean($request, 'is_gallery_visible');

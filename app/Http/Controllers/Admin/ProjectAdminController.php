@@ -3,15 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Admin\Concerns\HandlesAdminUploads;
+use App\Http\Controllers\Admin\Concerns\ResolvesUniqueSlug;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class ProjectAdminController extends Controller
 {
     use HandlesAdminUploads;
+    use ResolvesUniqueSlug;
 
     public function index(Request $request)
     {
@@ -47,7 +48,11 @@ class ProjectAdminController extends Controller
         }
 
         $validated = $this->validateProject($request);
-        $validated['slug'] = Str::slug($request->input('slug') ?: $validated['title']);
+        $validated['slug'] = $this->resolveUniqueSlug(
+            Project::class,
+            $request->input('slug') ?: $validated['title'],
+            'slug'
+        );
         $validated['is_featured'] = $request->boolean('is_featured');
         $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
         $validated['display_order'] = $request->integer('display_order', Project::max('display_order') + 1);
@@ -73,7 +78,12 @@ class ProjectAdminController extends Controller
         }
 
         $validated = $this->validateProject($request, $project);
-        $validated['slug'] = Str::slug($request->input('slug') ?: $validated['title']);
+        $validated['slug'] = $this->resolveUniqueSlug(
+            Project::class,
+            $request->input('slug') ?: $validated['title'],
+            'slug',
+            $project
+        );
         $validated['is_featured'] = $request->boolean('is_featured');
         $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
         $validated['image'] = $this->resolveImageField($request, 'image_file', 'image', $project->image, 'projects');
