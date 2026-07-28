@@ -101,10 +101,10 @@
                         <button type="button"
                             class="am-about-gallery__item"
                             data-about-lightbox
-                            data-src="{{ asset(ltrim($img, '/')) }}"
+                            data-src="{{ $img }}"
                             data-caption="{{ $event['name'] }} — {{ $event['location'] }}, {{ $event['year'] }}"
                             aria-label="View {{ $event['name'] }} photo {{ $i + 1 }}">
-                            <img src="{{ asset(ltrim($img, '/')) }}" alt="{{ $event['name'] }} — photo {{ $i + 1 }}" loading="lazy">
+                            <img src="{{ $img }}" alt="{{ $event['name'] }} — photo {{ $i + 1 }}" loading="lazy">
                         </button>
                         @endforeach
                     </div>

@@ -146,7 +146,9 @@ class CmsSettings
     public static function exhibitions(): array
     {
         if (! Schema::hasTable('exhibitions')) {
-            return config('about.exhibitions.events', []);
+            return collect(config('about.exhibitions.events', []))
+                ->map(fn (array $event) => self::exhibitionEvent($event))
+                ->all();
         }
 
         $rows = Exhibition::query()
@@ -159,19 +161,37 @@ class CmsSettings
             // Config seed content is only a first-deploy preview. Once the admin
             // owns rows here, hiding them all must empty the section rather than
             // resurrect the hardcoded events.
-            return Exhibition::query()->exists()
-                ? []
-                : config('about.exhibitions.events', []);
+            if (Exhibition::query()->exists()) {
+                return [];
+            }
+
+            return collect(config('about.exhibitions.events', []))
+                ->map(fn (array $event) => self::exhibitionEvent($event))
+                ->all();
         }
 
-        return $rows->map(fn (Exhibition $event) => [
-            'slug' => $event->slug,
-            'name' => $event->name,
-            'location' => $event->locationLabel(),
-            'year' => $event->year,
-            'summary' => $event->description,
-            'images' => $event->gallery ?? array_filter([$event->cover_image]),
-        ])->all();
+        return $rows
+            ->map(fn (Exhibition $event) => self::exhibitionEvent([
+                'slug' => $event->slug,
+                'name' => $event->name,
+                'location' => $event->locationLabel(),
+                'year' => $event->year,
+                'summary' => $event->description,
+                'images' => $event->gallery ?? array_filter([$event->cover_image]),
+            ]))
+            ->all();
+    }
+
+    /**
+     * @param  array<string, mixed>  $event
+     * @return array<string, mixed>
+     */
+    private static function exhibitionEvent(array $event): array
+    {
+        $images = $event['images'] ?? [];
+        $event['images'] = MediaUrl::resolveMany(is_array($images) ? $images : []);
+
+        return $event;
     }
 
     /** @param  array<string, mixed>  $slide

@@ -35,9 +35,14 @@ class Exhibition extends Model
         return implode(', ', $parts) ?: ($this->city ?? '');
     }
 
+    public static function imageUrl(?string $path): ?string
+    {
+        return MediaUrl::resolve($path);
+    }
+
     public function coverImageUrl(): ?string
     {
-        return MediaUrl::resolve($this->cover_image);
+        return self::imageUrl($this->cover_image);
     }
 
     /** @return array<int, string> */

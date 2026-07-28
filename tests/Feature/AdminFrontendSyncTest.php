@@ -262,6 +262,29 @@ class AdminFrontendSyncTest extends TestCase
             ->assertSee('India Design ID');
     }
 
+    public function test_exhibition_storage_gallery_images_appear_on_the_about_page(): void
+    {
+        Storage::fake('public');
+
+        $path = 'exhibitions/index-2023-gallery.jpg';
+        Storage::disk('public')->put($path, 'fake-image-content');
+
+        Exhibition::query()->create([
+            'slug' => 'index-2023',
+            'name' => 'INDEX 2023',
+            'city' => 'Mumbai',
+            'year' => 2023,
+            'gallery' => [$path],
+            'sort_order' => 1,
+            'is_active' => true,
+        ]);
+
+        $this->get(route('about'))
+            ->assertOk()
+            ->assertSee('INDEX 2023')
+            ->assertSee(asset('storage/'.$path), false);
+    }
+
     public function test_legal_page_edit_appears_on_the_public_policy_page(): void
     {
         // The storefront resolves legal pages by the short config key.
