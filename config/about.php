@@ -1,7 +1,7 @@
 <?php
 
 /**
- * About page — brand story, capabilities, exhibitions, values.
+ * About page — brand story, exhibitions, values.
  */
 return [
     'meta_title' => 'About Vyomika Atelier | Architectural Metalwork & Exhibitions',
@@ -22,57 +22,6 @@ return [
             'From concept drawings to site-ready installation, we bring material expertise and reliable execution to residential, hospitality and commercial projects.',
         ],
         'image' => 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80',
-    ],
-
-    'capabilities' => [
-        'title' => 'Capabilities',
-        'items' => [
-            [
-                'name' => 'PVD Partitions',
-                'text' => 'Wave, fluted and laser-cut room dividers in champagne, rose gold and matte black PVD.',
-                'route' => 'studio.show',
-                'params' => ['slug' => 'pvd-partitions'],
-                'image' => 'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg',
-            ],
-            [
-                'name' => 'Designer Doors',
-                'text' => 'Slim profile systems and main entrance PVD doors engineered for premium entrances.',
-                'route' => 'studio.show',
-                'params' => ['slug' => 'slim-profile-door-systems'],
-                'image' => 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80',
-            ],
-            [
-                'name' => 'Mirrors',
-                'text' => 'Framed and frameless metal mirror systems with integrated lighting and custom profiles.',
-                'route' => 'shop.mirror-frames.index',
-                'image' => 'https://images.unsplash.com/photo-1618220179428-22790b461013?w=800&q=80',
-            ],
-            [
-                'name' => 'Furniture',
-                'text' => 'Bespoke coffee tables, consoles, racks and display systems in PVD and brushed metal.',
-                'route' => 'shop.show',
-                'params' => ['slug' => 'bespoke-metal-furniture'],
-                'image' => 'https://images.unsplash.com/photo-1532372320572-127d86b32558?w=800&q=80',
-            ],
-            [
-                'name' => 'Railings',
-                'text' => 'Stair and balcony railings, balustrades and handrails in stainless and PVD finishes.',
-                'route' => 'railings.index',
-                'image' => 'https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=800&q=80',
-            ],
-            [
-                'name' => 'Corten Steel',
-                'text' => 'Weathering steel façades, screens and landscape features with controlled patina.',
-                'route' => 'corten-steel.show',
-                'image' => 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80',
-            ],
-            [
-                'name' => 'Custom Metal Fabrication',
-                'text' => 'End-to-end CNC cutting, welding and finishing for one-off architectural metalwork.',
-                'route' => 'leads.create',
-                'image' => 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&q=80',
-            ],
-        ],
     ],
 
     'exhibitions' => [

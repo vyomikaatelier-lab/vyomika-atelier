@@ -285,6 +285,34 @@ class AdminFrontendSyncTest extends TestCase
             ->assertSee(asset('storage/'.$path), false);
     }
 
+    public function test_exhibition_cover_image_appears_alongside_gallery_on_about_page(): void
+    {
+        Storage::fake('public');
+
+        $coverPath = 'exhibitions/cover-only.jpg';
+        $galleryPath = 'exhibitions/gallery-only.jpg';
+        Storage::disk('public')->put($coverPath, 'cover');
+        Storage::disk('public')->put($galleryPath, 'gallery');
+
+        Exhibition::query()->create([
+            'slug' => 'uk-construction-week-2025',
+            'name' => 'UK Construction Week',
+            'city' => 'London',
+            'year' => 2025,
+            'cover_image' => $coverPath,
+            'gallery' => [$galleryPath],
+            'sort_order' => 1,
+            'is_active' => true,
+        ]);
+
+        $this->get(route('about'))
+            ->assertOk()
+            ->assertSee('UK Construction Week')
+            ->assertSee(asset('storage/'.$coverPath), false)
+            ->assertSee(asset('storage/'.$galleryPath), false)
+            ->assertSee('am-about-gallery__featured', false);
+    }
+
     public function test_legal_page_edit_appears_on_the_public_policy_page(): void
     {
         // The storefront resolves legal pages by the short config key.

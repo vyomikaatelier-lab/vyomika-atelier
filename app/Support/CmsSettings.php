@@ -177,7 +177,8 @@ class CmsSettings
                 'location' => $event->locationLabel(),
                 'year' => $event->year,
                 'summary' => $event->description,
-                'images' => $event->gallery ?? array_filter([$event->cover_image]),
+                'cover_image' => $event->cover_image,
+                'gallery' => $event->gallery ?? [],
             ]))
             ->all();
     }
@@ -188,10 +189,31 @@ class CmsSettings
      */
     private static function exhibitionEvent(array $event): array
     {
-        $images = $event['images'] ?? [];
-        $event['images'] = MediaUrl::resolveMany(is_array($images) ? $images : []);
+        $cover = $event['cover_image'] ?? null;
+        $gallery = $event['gallery'] ?? $event['images'] ?? [];
+        if (! is_array($gallery)) {
+            $gallery = [];
+        }
 
-        return $event;
+        $resolvedCover = MediaUrl::resolve(is_string($cover) ? $cover : null);
+        $resolvedGallery = MediaUrl::resolveMany($gallery);
+
+        if ($resolvedCover !== null) {
+            $resolvedGallery = array_values(array_filter(
+                $resolvedGallery,
+                fn (string $url) => $url !== $resolvedCover
+            ));
+        }
+
+        $allImages = $resolvedCover !== null
+            ? array_merge([$resolvedCover], $resolvedGallery)
+            : $resolvedGallery;
+
+        return array_merge($event, [
+            'cover_image' => $resolvedCover,
+            'gallery' => $resolvedGallery,
+            'images' => $allImages,
+        ]);
     }
 
     /** @param  array<string, mixed>  $slide

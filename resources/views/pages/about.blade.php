@@ -3,7 +3,6 @@
 @php
     $hero = $page['hero'] ?? [];
     $story = $page['brand_story'] ?? [];
-    $capabilities = $page['capabilities'] ?? [];
     $exhibitions = $page['exhibitions'] ?? [];
     $values = $page['values'] ?? [];
     $cta = $page['cta'] ?? [];
@@ -49,30 +48,6 @@
 </section>
 @endif
 
-{{-- Capabilities --}}
-@if(!empty($capabilities['items']))
-<section class="am-section am-section--cream" id="capabilities">
-    <div class="am-container">
-        <h2 class="am-corten-section__title am-corten-section__title--center am-reveal">{{ $capabilities['title'] ?? 'Capabilities' }}</h2>
-        <div class="am-about-caps">
-            @foreach($capabilities['items'] as $item)
-            <article class="am-about-caps__card am-reveal">
-                <a href="{{ isset($item['route']) ? route($item['route'], $item['params'] ?? []) : '#' }}" class="am-about-caps__link">
-                    <div class="am-about-caps__media">
-                        <img src="{{ $item['image'] ?? '' }}" alt="{{ $item['name'] }}" loading="lazy">
-                    </div>
-                    <div class="am-about-caps__body">
-                        <h3>{{ $item['name'] }}</h3>
-                        <p>{{ $item['text'] }}</p>
-                    </div>
-                </a>
-            </article>
-            @endforeach
-        </div>
-    </div>
-</section>
-@endif
-
 {{-- Exhibitions --}}
 @if(!empty($exhibitions['events']))
 <section class="am-section am-section--white" id="exhibitions">
@@ -95,18 +70,40 @@
                     @if(!empty($event['summary']))
                     <p class="am-about-timeline__summary">{{ $event['summary'] }}</p>
                     @endif
-                    @if(!empty($event['images']))
-                    <div class="am-about-gallery" data-about-gallery>
-                        @foreach($event['images'] as $i => $img)
+                    @php
+                        $coverImage = $event['cover_image'] ?? null;
+                        $galleryImages = $event['gallery'] ?? [];
+                        $lightboxCaption = $event['name'].' — '.$event['location'].', '.$event['year'];
+                        $photoIndex = 0;
+                    @endphp
+                    @if($coverImage || !empty($galleryImages))
+                    <div class="am-about-exhibition-media" data-about-gallery>
+                        @if($coverImage)
+                        @php $photoIndex++; @endphp
                         <button type="button"
-                            class="am-about-gallery__item"
+                            class="am-about-gallery__featured"
                             data-about-lightbox
-                            data-src="{{ $img }}"
-                            data-caption="{{ $event['name'] }} — {{ $event['location'] }}, {{ $event['year'] }}"
-                            aria-label="View {{ $event['name'] }} photo {{ $i + 1 }}">
-                            <img src="{{ $img }}" alt="{{ $event['name'] }} — photo {{ $i + 1 }}" loading="lazy">
+                            data-src="{{ $coverImage }}"
+                            data-caption="{{ $lightboxCaption }}"
+                            aria-label="View {{ $event['name'] }} cover photo">
+                            <img src="{{ $coverImage }}" alt="{{ $event['name'] }} — cover" loading="lazy">
                         </button>
-                        @endforeach
+                        @endif
+                        @if(!empty($galleryImages))
+                        <div class="am-about-gallery{{ $coverImage ? ' am-about-gallery--with-featured' : '' }}">
+                            @foreach($galleryImages as $img)
+                            @php $photoIndex++; @endphp
+                            <button type="button"
+                                class="am-about-gallery__item"
+                                data-about-lightbox
+                                data-src="{{ $img }}"
+                                data-caption="{{ $lightboxCaption }}"
+                                aria-label="View {{ $event['name'] }} photo {{ $photoIndex }}">
+                                <img src="{{ $img }}" alt="{{ $event['name'] }} — photo {{ $photoIndex }}" loading="lazy">
+                            </button>
+                            @endforeach
+                        </div>
+                        @endif
                     </div>
                     @endif
                 </div>
