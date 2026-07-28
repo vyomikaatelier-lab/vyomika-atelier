@@ -158,6 +158,17 @@ trait HandlesAdminUploads
     {
         if ($request->boolean('gallery_managed')) {
             $items = array_values(array_filter((array) $request->input('gallery_existing', []), fn ($item) => filled($item)));
+            if (
+                ! $request->has('gallery_existing')
+                && is_array($current)
+                && $current !== []
+                && ! $request->hasFile($filesField)
+                && ! $request->hasFile('gallery_replace')
+                && ! $request->filled($urlsField)
+                && ! $request->has('remove_gallery')
+            ) {
+                $items = $current;
+            }
         } elseif ($request->has($urlsField)) {
             $items = $this->parseMultilineUrls($request->input($urlsField)) ?? [];
         } else {

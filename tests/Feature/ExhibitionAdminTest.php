@@ -112,4 +112,82 @@ class ExhibitionAdminTest extends TestCase
         $this->assertSame('New Expo', $exhibition->name);
         $this->assertNull($exhibition->gallery);
     }
+
+    public function test_browser_empty_year_and_sort_order_do_not_block_save(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAsAdmin($admin)->post(route('admin.exhibitions.store'), [
+            '_page_save' => '1',
+            'name' => 'Browser Expo',
+            'city' => 'Mumbai',
+            'country' => 'India',
+            'year' => '',
+            'description' => 'Test',
+            'gallery_managed' => '1',
+            'sort_order' => '',
+            'is_active' => '1',
+        ])->assertRedirect(route('admin.exhibitions.index'));
+
+        $this->assertNotNull(Exhibition::query()->where('slug', 'browser-expo')->first());
+    }
+
+    public function test_text_update_preserves_gallery_when_existing_fields_not_submitted(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $exhibition = Exhibition::query()->create([
+            'slug' => 'index-2023',
+            'name' => 'INDEX 2023',
+            'gallery' => [
+                '/images/exhibitions/index-2023/01.svg',
+                '/images/exhibitions/index-2023/02.svg',
+            ],
+            'sort_order' => 1,
+            'is_active' => true,
+        ]);
+
+        $this->actingAsAdmin($admin)->put(route('admin.exhibitions.update', $exhibition), [
+            '_page_save' => '1',
+            'name' => 'INDEX 2023 Updated',
+            'gallery_managed' => '1',
+            'is_active' => '1',
+        ])->assertRedirect(route('admin.exhibitions.index'));
+
+        $exhibition->refresh();
+        $this->assertSame('INDEX 2023 Updated', $exhibition->name);
+        $this->assertSame([
+            '/images/exhibitions/index-2023/01.svg',
+            '/images/exhibitions/index-2023/02.svg',
+        ], $exhibition->gallery);
+    }
+
+    public function test_duplicate_name_shows_validation_error(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        Exhibition::query()->create([
+            'slug' => 'index-2024',
+            'name' => 'INDEX 2024',
+            'sort_order' => 2,
+            'is_active' => true,
+        ]);
+
+        $exhibition = Exhibition::query()->create([
+            'slug' => 'index-2023',
+            'name' => 'INDEX 2023',
+            'sort_order' => 1,
+            'is_active' => true,
+        ]);
+
+        $this->actingAsAdmin($admin)->from(route('admin.exhibitions.edit', $exhibition))
+            ->put(route('admin.exhibitions.update', $exhibition), [
+                '_page_save' => '1',
+                'name' => 'INDEX 2024',
+                'gallery_managed' => '1',
+                'is_active' => '1',
+            ])
+            ->assertRedirect(route('admin.exhibitions.edit', $exhibition))
+            ->assertSessionHasErrors('name');
+    }
 }

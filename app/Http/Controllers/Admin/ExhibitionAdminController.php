@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Exhibition;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class ExhibitionAdminController extends Controller
 {
@@ -34,13 +35,13 @@ class ExhibitionAdminController extends Controller
         }
 
         $validated = $this->validateExhibition($request);
-        $validated['slug'] = Str::slug($validated['name']);
+        $validated['slug'] = $this->resolveExhibitionSlug($validated['name']);
         $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
         $validated['sort_order'] = $request->integer('sort_order', Exhibition::max('sort_order') + 1);
         $validated['cover_image'] = $this->resolveImageField($request, 'cover_file', 'cover_image', null, 'exhibitions');
         $validated['gallery'] = $this->resolveGalleryField($request, 'gallery_files', 'gallery_urls', null, 'exhibitions');
 
-        Exhibition::create($validated);
+        Exhibition::create($this->exhibitionPayload($validated));
 
         return redirect()->route('admin.exhibitions.index')->with('success', 'Exhibition created.');
     }
@@ -57,13 +58,13 @@ class ExhibitionAdminController extends Controller
         }
 
         $validated = $this->validateExhibition($request);
-        $validated['slug'] = Str::slug($validated['name']);
+        $validated['slug'] = $this->resolveExhibitionSlug($validated['name'], $exhibition);
         $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
         $validated['sort_order'] = $request->integer('sort_order', $exhibition->sort_order);
         $validated['cover_image'] = $this->resolveImageField($request, 'cover_file', 'cover_image', $exhibition->cover_image, 'exhibitions');
         $validated['gallery'] = $this->resolveGalleryField($request, 'gallery_files', 'gallery_urls', $exhibition->gallery, 'exhibitions');
 
-        $exhibition->update($validated);
+        $exhibition->update($this->exhibitionPayload($validated));
 
         return redirect()->route('admin.exhibitions.index')->with('success', 'Exhibition updated.');
     }
@@ -116,6 +117,30 @@ class ExhibitionAdminController extends Controller
         }
 
         return back()->with('success', 'Exhibition order updated.');
+    }
+
+    private function resolveExhibitionSlug(string $name, ?Exhibition $exhibition = null): string
+    {
+        $slug = Str::slug($name);
+
+        $conflict = Exhibition::query()
+            ->where('slug', $slug)
+            ->when($exhibition, fn ($query) => $query->whereKeyNot($exhibition->id))
+            ->exists();
+
+        if ($conflict) {
+            throw ValidationException::withMessages([
+                'name' => 'Another exhibition already uses this name.',
+            ]);
+        }
+
+        return $slug;
+    }
+
+    /** @param  array<string, mixed>  $validated */
+    private function exhibitionPayload(array $validated): array
+    {
+        return collect($validated)->only((new Exhibition)->getFillable())->all();
     }
 
     private function validateExhibition(Request $request): array
