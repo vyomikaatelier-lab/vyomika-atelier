@@ -188,33 +188,31 @@ class AdminRoundTripTest extends TestCase
         $this->get('/retired-page')->assertNotFound();
     }
 
-    /** @return array<string, array{0: string, 1: string}> */
-    public static function leadActions(): array
+    public function test_lead_queue_action_persists(): void
     {
-        return [
-            'mark spam' => ['admin.leads.mark-spam', 'spam_suspected'],
-            'mark vendor' => ['admin.leads.mark-vendor', 'marketing_vendor'],
+        $actions = [
+            'admin.leads.mark-spam' => 'spam_suspected',
+            'admin.leads.mark-vendor' => 'marketing_vendor',
         ];
-    }
 
-    /** @dataProvider leadActions */
-    public function test_lead_queue_action_persists(string $route, string $expectedStatus): void
-    {
-        $lead = Lead::query()->create([
-            'name' => 'Vendor Pitch',
-            'email' => 'pitch@example.test',
-            'phone' => '9876500000',
-            'message' => 'We supply hardware.',
-            'type' => 'inquiry',
-            'status' => 'new',
-        ]);
+        foreach ($actions as $route => $expectedStatus) {
+            $lead = Lead::query()->create([
+                'name' => 'Vendor Pitch',
+                'email' => 'pitch@example.test',
+                'phone' => '9876500000',
+                'message' => 'We supply hardware.',
+                'type' => 'inquiry',
+                'status' => 'new',
+            ]);
 
-        $this->actingAsAdmin($this->admin())
-            ->post(route($route, $lead))
-            ->assertRedirect()
-            ->assertSessionHasNoErrors();
+            $this->actingAsAdmin($this->admin())
+                ->post(route($route, $lead))
+                ->assertRedirect()
+                ->assertSessionHasNoErrors();
 
-        $this->assertSame($expectedStatus, $lead->fresh()->status?->value ?? $lead->fresh()->status);
+            $fresh = $lead->fresh();
+            $this->assertSame($expectedStatus, $fresh->status?->value ?? $fresh->status, $route.' did not persist');
+        }
     }
 
     public function test_lead_can_be_restored_to_the_review_queue(): void
