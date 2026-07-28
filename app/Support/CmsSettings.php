@@ -65,10 +65,14 @@ class CmsSettings
         }
 
         $homepage = SiteSetting::getValue('homepage');
-        if (is_array($homepage) && $homepage !== []) {
-            if (isset($homepage['announcement']) && is_array($homepage['announcement'])) {
-                config(['site.announcement' => array_merge(config('site.announcement', []), $homepage['announcement'])]);
-            }
+        if (is_array($homepage) && is_array($homepage['announcement'] ?? null)) {
+            // The stored announcement is authoritative: once an admin has saved
+            // the homepage, blanking the text must hide the bar rather than fall
+            // back to the config default.
+            config(['site.announcement' => array_merge(
+                ['text' => null, 'link_label' => null, 'link_href' => null],
+                $homepage['announcement']
+            )]);
         }
 
         $collectionPages = SiteSetting::getValue('collection_pages');

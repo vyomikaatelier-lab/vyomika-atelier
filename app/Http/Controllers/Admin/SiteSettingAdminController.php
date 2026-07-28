@@ -154,12 +154,14 @@ class SiteSettingAdminController extends Controller
                 'slides' => $this->buildHeroSlidesFromRequest($request, SiteSetting::getValue('hero', [])),
             ]);
 
+            // Keep cleared fields as explicit nulls so hydration can tell
+            // "admin removed the announcement" from "admin never set one".
             SiteSetting::setValue('homepage', [
-                'announcement' => array_filter([
+                'announcement' => [
                     'text' => $validated['announcement_text'] ?? null,
                     'link_label' => $validated['announcement_link_label'] ?? null,
                     'link_href' => $validated['announcement_link_href'] ?? null,
-                ], fn ($value) => filled($value)),
+                ],
             ]);
 
             $finishImages = \App\Support\FinishSwatches::imageOverrides();

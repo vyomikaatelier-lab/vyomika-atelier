@@ -290,7 +290,20 @@ class LeadAdminController extends Controller
 
 
 
-        $lead->update(collect($validated)->except('internal_note')->filter(fn ($v) => $v !== null)->all());
+        // Keys the form did not submit must keep their stored value; keys the
+        // admin deliberately cleared must be written back as null.
+
+        $lead->update(
+
+            collect($validated)
+
+                ->except('internal_note')
+
+                ->filter(fn ($value, $key) => $request->has($key))
+
+                ->all()
+
+        );
 
 
 
