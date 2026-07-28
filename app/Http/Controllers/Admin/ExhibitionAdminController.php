@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Admin\Concerns\HandlesAdminUploads;
+use App\Http\Controllers\Admin\Concerns\ReordersRecords;
 use App\Http\Controllers\Admin\Concerns\ResolvesUniqueSlug;
 use App\Http\Controllers\Controller;
 use App\Models\Exhibition;
@@ -11,14 +12,12 @@ use Illuminate\Http\Request;
 class ExhibitionAdminController extends Controller
 {
     use HandlesAdminUploads;
+    use ReordersRecords;
     use ResolvesUniqueSlug;
 
     public function index()
     {
-        $exhibitions = Exhibition::query()
-            ->orderBy('sort_order')
-            ->orderByDesc('year')
-            ->paginate(20);
+        $exhibitions = $this->ordered()->paginate(20);
 
         return view('admin.exhibitions.index', compact('exhibitions'));
     }
@@ -100,23 +99,31 @@ class ExhibitionAdminController extends Controller
     {
         abort_unless(in_array($direction, ['up', 'down'], true), 404);
 
-        $neighbor = Exhibition::query()
-            ->when($direction === 'up', function ($query) use ($exhibition) {
-                $query->where('sort_order', '<', $exhibition->sort_order)
-                    ->orderByDesc('sort_order');
-            }, function ($query) use ($exhibition) {
-                $query->where('sort_order', '>', $exhibition->sort_order)
-                    ->orderBy('sort_order');
-            })
-            ->first();
+        $moved = $this->moveRecord(
+            $this->ordered(),
+            $this->ordered(),
+            $exhibition,
+            $direction
+        );
 
-        if ($neighbor) {
-            [$exhibition->sort_order, $neighbor->sort_order] = [$neighbor->sort_order, $exhibition->sort_order];
-            $exhibition->save();
-            $neighbor->save();
-        }
+        return back()->with(
+            'success',
+            $moved ? 'Exhibition order updated.' : 'Exhibition is already '.($direction === 'up' ? 'first' : 'last').'.'
+        );
+    }
 
-        return back()->with('success', 'Exhibition order updated.');
+    /**
+     * The listing order the move buttons step through. The trailing key sort
+     * keeps it total, so "one row up" is never ambiguous.
+     *
+     * @return \Illuminate\Database\Eloquent\Builder<Exhibition>
+     */
+    private function ordered()
+    {
+        return Exhibition::query()
+            ->orderBy('sort_order')
+            ->orderByDesc('year')
+            ->orderBy('id');
     }
 
     private function resolveExhibitionSlug(string $name, ?Exhibition $exhibition = null): string

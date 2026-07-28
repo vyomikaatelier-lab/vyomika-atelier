@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Admin\Concerns\HandlesAdminUploads;
+use App\Http\Controllers\Admin\Concerns\ReordersRecords;
 use App\Http\Controllers\Admin\Concerns\ResolvesUniqueSlug;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
@@ -14,6 +15,7 @@ use Illuminate\Validation\Rule;
 class CategoryAdminController extends Controller
 {
     use HandlesAdminUploads;
+    use ReordersRecords;
     use ResolvesUniqueSlug;
 
     /** @var array<string, string> */
@@ -25,28 +27,7 @@ class CategoryAdminController extends Controller
 
     public function index(Request $request)
     {
-        $query = Category::query()->orderBy('sort_order')->orderBy('name');
-
-        if ($request->filled('q')) {
-            $q = $request->string('q');
-            $query->where(function ($builder) use ($q) {
-                $builder->where('name', 'like', "%{$q}%")
-                    ->orWhere('slug', 'like', "%{$q}%");
-            });
-        }
-
-        $status = $request->input('status', 'active');
-        if ($status === 'active') {
-            $query->where('is_active', true);
-        } elseif ($status === 'inactive') {
-            $query->where('is_active', false);
-        }
-
-        if ($request->filled('section')) {
-            $query->where('section', $request->string('section'));
-        }
-
-        $categories = $query->withCount('products')->paginate(20)->withQueryString();
+        $categories = $this->filtered($request)->withCount('products')->paginate(20)->withQueryString();
 
         return view('admin.categories.index', [
             'categories' => $categories,
@@ -153,27 +134,61 @@ class CategoryAdminController extends Controller
         return back()->with('success', 'Category order updated.');
     }
 
-    public function move(Category $category, string $direction)
+    public function move(Request $request, Category $category, string $direction)
     {
         abort_unless(in_array($direction, ['up', 'down'], true), 404);
 
-        $neighbor = Category::query()
-            ->when($direction === 'up', function ($query) use ($category) {
-                $query->where('sort_order', '<', $category->sort_order)
-                    ->orderByDesc('sort_order');
-            }, function ($query) use ($category) {
-                $query->where('sort_order', '>', $category->sort_order)
-                    ->orderBy('sort_order');
-            })
-            ->first();
+        // The move form forwards the active filters so the neighbour is the row
+        // the admin actually sees above or below this one.
+        $moved = $this->moveRecord(
+            $this->ordered(),
+            $this->filtered($request),
+            $category,
+            $direction
+        );
 
-        if ($neighbor) {
-            [$category->sort_order, $neighbor->sort_order] = [$neighbor->sort_order, $category->sort_order];
-            $category->save();
-            $neighbor->save();
+        return back()->with(
+            'success',
+            $moved ? 'Category order updated.' : 'Category is already '.($direction === 'up' ? 'first' : 'last').'.'
+        );
+    }
+
+    /**
+     * The listing order the move buttons step through. The trailing key sort
+     * keeps it total, so "one row up" is never ambiguous.
+     *
+     * @return \Illuminate\Database\Eloquent\Builder<Category>
+     */
+    private function ordered()
+    {
+        return Category::query()->orderBy('sort_order')->orderBy('name')->orderBy('id');
+    }
+
+    /** @return \Illuminate\Database\Eloquent\Builder<Category> */
+    private function filtered(Request $request)
+    {
+        $query = $this->ordered();
+
+        if ($request->filled('q')) {
+            $q = $request->string('q');
+            $query->where(function ($builder) use ($q) {
+                $builder->where('name', 'like', "%{$q}%")
+                    ->orWhere('slug', 'like', "%{$q}%");
+            });
         }
 
-        return back()->with('success', 'Category order updated.');
+        $status = $request->input('status', 'active');
+        if ($status === 'active') {
+            $query->where('is_active', true);
+        } elseif ($status === 'inactive') {
+            $query->where('is_active', false);
+        }
+
+        if ($request->filled('section')) {
+            $query->where('section', $request->string('section'));
+        }
+
+        return $query;
     }
 
     private function validateCategory(Request $request, ?Category $category = null): array

@@ -74,8 +74,16 @@
             </td>
             <td class="p-3">{{ $category->is_active ? 'Active' : 'Inactive' }}</td>
             <td class="p-3 space-x-2">
-                <form action="{{ route('admin.categories.move', [$category, 'up']) }}" method="POST" class="inline">@csrf<button class="text-gray-600" title="Move up">↑</button></form>
-                <form action="{{ route('admin.categories.move', [$category, 'down']) }}" method="POST" class="inline">@csrf<button class="text-gray-600" title="Move down">↓</button></form>
+                @foreach(['up' => '↑', 'down' => '↓'] as $direction => $arrow)
+                <form action="{{ route('admin.categories.move', [$category, $direction]) }}" method="POST" class="inline">
+                    @csrf
+                    {{-- Forwarded so the neighbour is the row visible above/below this one. --}}
+                    <input type="hidden" name="q" value="{{ request('q') }}">
+                    <input type="hidden" name="status" value="{{ request('status', 'active') }}">
+                    <input type="hidden" name="section" value="{{ request('section') }}">
+                    <button class="text-gray-600" title="Move {{ $direction }}">{{ $arrow }}</button>
+                </form>
+                @endforeach
                 <a href="{{ route('admin.categories.edit', $category) }}" class="text-blue-600">Edit</a>
                 @if($category->products_count === 0)
                 <form action="{{ route('admin.categories.destroy', $category) }}" method="POST" class="inline" onsubmit="return confirm('Delete this category?')">@csrf @method('DELETE')<button class="text-red-600">Delete</button></form>
