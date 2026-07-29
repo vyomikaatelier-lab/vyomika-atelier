@@ -26,7 +26,7 @@ class ServiceGallery
     }
 
     /** @return list<string> */
-    public static function portraitGalleryServiceSlugs(): array
+    public static function squareGalleryServiceSlugs(): array
     {
         return [
             'slim-profile-door-system',
@@ -34,11 +34,11 @@ class ServiceGallery
         ];
     }
 
-    public static function usesPortraitGalleryLayout(Service|string $service): bool
+    public static function usesSquareGalleryLayout(Service|string $service): bool
     {
         $slug = $service instanceof Service ? $service->slug : $service;
 
-        return in_array($slug, self::portraitGalleryServiceSlugs(), true);
+        return in_array($slug, self::squareGalleryServiceSlugs(), true);
     }
 
     /** @return list<array<string, mixed>> */

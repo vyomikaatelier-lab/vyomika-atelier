@@ -2380,13 +2380,13 @@ ul { list-style: none; }
   object-fit: cover;
   transition: transform 0.35s ease;
 }
-.am-design-gallery--portrait .am-design-gallery__media {
-  aspect-ratio: 3 / 4;
+.am-design-gallery--square .am-design-gallery__media {
+  aspect-ratio: 1 / 1;
 }
-.am-design-gallery--portrait .am-design-gallery__media img {
+.am-design-gallery--square .am-design-gallery__media img {
   object-fit: contain;
 }
-.am-design-gallery--portrait .am-design-gallery__card:hover .am-design-gallery__media img {
+.am-design-gallery--square .am-design-gallery__card:hover .am-design-gallery__media img {
   transform: none;
 }
 .am-design-gallery__card:hover .am-design-gallery__media img { transform: scale(1.05); }
