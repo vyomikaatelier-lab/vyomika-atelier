@@ -7,7 +7,10 @@
 ])
 
 @if($products->isNotEmpty())
-<section class="am-design-gallery am-design-gallery--service" id="studio-gallery">
+@php
+    $portraitGallery = \App\Support\ServiceGallery::usesPortraitGalleryLayout($serviceSlug ?? '');
+@endphp
+<section class="am-design-gallery am-design-gallery--service{{ $portraitGallery ? ' am-design-gallery--portrait' : '' }}" id="studio-gallery">
     <p class="am-card__label">Design Gallery</p>
     <h2 class="am-design-gallery__title">{{ $heading }}</h2>
     <div class="am-design-gallery__grid am-design-gallery__grid--studio">

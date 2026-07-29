@@ -25,6 +25,22 @@ class ServiceGallery
         return $service->slug !== 'corten-steel-facade';
     }
 
+    /** @return list<string> */
+    public static function portraitGalleryServiceSlugs(): array
+    {
+        return [
+            'slim-profile-door-system',
+            'main-entrance-pvd-doors',
+        ];
+    }
+
+    public static function usesPortraitGalleryLayout(Service|string $service): bool
+    {
+        $slug = $service instanceof Service ? $service->slug : $service;
+
+        return in_array($slug, self::portraitGalleryServiceSlugs(), true);
+    }
+
     /** @return list<array<string, mixed>> */
     public static function catalogFor(string $serviceSlug): array
     {
