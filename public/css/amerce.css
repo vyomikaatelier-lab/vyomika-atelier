@@ -4406,94 +4406,124 @@ ul { list-style: none; }
   line-height: 1.55;
   color: var(--am-muted);
 }
-.am-about-exhibitions__head { max-width: 40rem; margin-bottom: 2.5rem; }
-.am-about-timeline { display: flex; flex-direction: column; gap: 3rem; }
+.am-about-exhibitions__head { max-width: 40rem; margin-bottom: 3rem; }
+.am-about-timeline { display: flex; flex-direction: column; gap: 0; }
 .am-about-timeline__event {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.25rem;
-  padding-bottom: 3rem;
+  gap: 1.75rem;
+  padding: 2.75rem 0;
   border-bottom: 1px solid var(--am-border);
 }
+.am-about-timeline__event:first-child { padding-top: 0; }
 .am-about-timeline__event:last-child { border-bottom: none; padding-bottom: 0; }
-@media (min-width: 768px) {
-  .am-about-timeline__event { grid-template-columns: 220px 1fr; gap: 2.5rem; }
+@media (min-width: 900px) {
+  .am-about-timeline__event--has-media {
+    grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+    gap: 3.5rem;
+    align-items: start;
+  }
+}
+.am-about-timeline__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 .am-about-timeline__year {
   display: inline-block;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--am-gold-dark);
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.15rem;
 }
 .am-about-timeline__name {
   font-family: var(--am-display);
-  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
-  margin: 0 0 0.25rem;
+  font-size: clamp(1.4rem, 2.5vw, 1.85rem);
+  line-height: 1.2;
+  margin: 0;
 }
 .am-about-timeline__location {
   margin: 0;
   font-size: 0.9rem;
   color: var(--am-muted);
+  letter-spacing: 0.02em;
 }
 .am-about-timeline__summary {
-  margin: 0 0 1.25rem;
-  line-height: 1.65;
+  margin: 0.85rem 0 0;
+  line-height: 1.7;
+  font-size: 0.95rem;
   color: var(--am-charcoal-soft);
 }
+.am-about-timeline__visual { min-width: 0; }
 .am-about-exhibition-media {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 @media (min-width: 768px) {
-  .am-about-exhibition-media:has(.am-about-gallery__featured):has(.am-about-gallery--with-featured) {
+  .am-about-exhibition-media--split {
     display: grid;
-    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
-    gap: 0.75rem;
-    align-items: start;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: stretch;
   }
 }
 .am-about-gallery__featured {
   display: block;
   padding: 0;
-  border: none;
-  background: none;
+  border: 1px solid var(--am-border);
+  background: var(--am-cream, #faf9f7);
   cursor: zoom-in;
   border-radius: var(--am-radius-lg);
   overflow: hidden;
   width: 100%;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 9;
+  box-shadow: var(--am-shadow);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.am-about-gallery__featured:hover {
+  border-color: rgba(179, 139, 66, 0.35);
+  box-shadow: 0 8px 32px rgba(var(--am-ink-rgb), 0.12);
 }
 .am-about-gallery__featured img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.35s ease, opacity 0.35s ease;
+  transition: transform 0.4s ease, opacity 0.35s ease;
 }
 .am-about-gallery__featured:hover img { transform: scale(1.03); opacity: 0.94; }
 .am-about-gallery {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.65rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
 }
-@media (max-width: 480px) { .am-about-gallery { grid-template-columns: repeat(2, 1fr); } }
 .am-about-gallery--with-featured { grid-template-columns: repeat(2, 1fr); }
 @media (min-width: 768px) {
-  .am-about-exhibition-media:not(:has(.am-about-gallery__featured)) .am-about-gallery,
-  .am-about-gallery:not(.am-about-gallery--with-featured) { grid-template-columns: repeat(3, 1fr); }
+  .am-about-exhibition-media:not(.am-about-exhibition-media--split) .am-about-gallery {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 520px;
+  }
+  .am-about-gallery--with-featured {
+    grid-template-columns: repeat(2, 1fr);
+    align-self: stretch;
+  }
 }
 .am-about-gallery__item {
   display: block;
   padding: 0;
-  border: none;
-  background: none;
+  border: 1px solid var(--am-border);
+  background: var(--am-cream, #faf9f7);
   cursor: zoom-in;
   border-radius: var(--am-radius);
   overflow: hidden;
   aspect-ratio: 4 / 3;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.am-about-gallery__item:hover {
+  border-color: rgba(179, 139, 66, 0.35);
+  box-shadow: 0 4px 16px rgba(var(--am-ink-rgb), 0.1);
 }
 .am-about-gallery__item img {
   width: 100%;

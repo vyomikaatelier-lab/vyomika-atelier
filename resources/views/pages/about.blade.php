@@ -60,24 +60,25 @@
         </div>
         <div class="am-about-timeline">
             @foreach($exhibitions['events'] as $event)
-            <article class="am-about-timeline__event am-reveal" id="exhibition-{{ $event['slug'] }}">
-                <div class="am-about-timeline__meta">
+            @php
+                $coverImage = $event['cover_image'] ?? null;
+                $galleryImages = array_slice($event['gallery'] ?? [], 0, 4);
+                $hasMedia = $coverImage || !empty($galleryImages);
+                $lightboxCaption = $event['name'].' — '.$event['location'].', '.$event['year'];
+                $photoIndex = 0;
+            @endphp
+            <article class="am-about-timeline__event{{ $hasMedia ? ' am-about-timeline__event--has-media' : '' }} am-reveal" id="exhibition-{{ $event['slug'] }}">
+                <div class="am-about-timeline__copy">
                     <span class="am-about-timeline__year">{{ $event['year'] }}</span>
                     <h3 class="am-about-timeline__name">{{ $event['name'] }}</h3>
                     <p class="am-about-timeline__location">{{ $event['location'] }}</p>
-                </div>
-                <div class="am-about-timeline__content">
                     @if(!empty($event['summary']))
                     <p class="am-about-timeline__summary">{{ $event['summary'] }}</p>
                     @endif
-                    @php
-                        $coverImage = $event['cover_image'] ?? null;
-                        $galleryImages = $event['gallery'] ?? [];
-                        $lightboxCaption = $event['name'].' — '.$event['location'].', '.$event['year'];
-                        $photoIndex = 0;
-                    @endphp
-                    @if($coverImage || !empty($galleryImages))
-                    <div class="am-about-exhibition-media" data-about-gallery>
+                </div>
+                @if($hasMedia)
+                <div class="am-about-timeline__visual">
+                    <div class="am-about-exhibition-media{{ $coverImage && !empty($galleryImages) ? ' am-about-exhibition-media--split' : '' }}" data-about-gallery>
                         @if($coverImage)
                         @php $photoIndex++; @endphp
                         <button type="button"
@@ -105,8 +106,8 @@
                         </div>
                         @endif
                     </div>
-                    @endif
                 </div>
+                @endif
             </article>
             @endforeach
         </div>

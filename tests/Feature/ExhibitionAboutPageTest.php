@@ -80,6 +80,43 @@ class ExhibitionAboutPageTest extends TestCase
             ->assertDontSee('am-about-gallery--with-featured', false);
     }
 
+    public function test_exhibition_gallery_displays_up_to_four_images_on_about_page(): void
+    {
+        Storage::fake('public');
+
+        $coverPath = 'exhibitions/cover.jpg';
+        Storage::disk('public')->put($coverPath, 'cover');
+
+        $galleryPaths = [];
+        for ($i = 1; $i <= 6; $i++) {
+            $path = "exhibitions/gallery-{$i}.jpg";
+            Storage::disk('public')->put($path, "img{$i}");
+            $galleryPaths[] = $path;
+        }
+
+        Exhibition::query()->create([
+            'slug' => 'index-2025',
+            'name' => 'INDEX 2025',
+            'city' => 'Mumbai',
+            'year' => 2025,
+            'cover_image' => $coverPath,
+            'gallery' => $galleryPaths,
+            'sort_order' => 1,
+            'is_active' => true,
+        ]);
+
+        $response = $this->get(route('about'));
+        $response->assertOk()
+            ->assertSee('am-about-gallery__featured', false);
+
+        $html = $response->getContent();
+        $this->assertSame(4, substr_count($html, 'am-about-gallery__item'));
+        $this->assertStringContainsString(asset('storage/exhibitions/gallery-1.jpg'), $html);
+        $this->assertStringContainsString(asset('storage/exhibitions/gallery-4.jpg'), $html);
+        $this->assertStringNotContainsString(asset('storage/exhibitions/gallery-5.jpg'), $html);
+        $this->assertStringNotContainsString(asset('storage/exhibitions/gallery-6.jpg'), $html);
+    }
+
     public function test_config_seed_exhibitions_resolve_gallery_images(): void
     {
         $events = CmsSettings::exhibitions();

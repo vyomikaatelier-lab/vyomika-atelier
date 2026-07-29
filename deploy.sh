@@ -43,6 +43,7 @@ php artisan storage:link 2>/dev/null || ln -sf "$APP_DIR/storage/app/public" "$A
 
 echo "==> Clearing stale caches..."
 php artisan optimize:clear
+php artisan view:clear
 
 echo "==> Caching config..."
 php artisan config:cache
