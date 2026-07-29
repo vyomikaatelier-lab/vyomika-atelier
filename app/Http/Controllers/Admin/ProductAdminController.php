@@ -110,7 +110,9 @@ class ProductAdminController extends Controller
 
         Product::create($validated);
 
-        return redirect()->route('admin.products.index')->with('success', 'Product created.');
+        return redirect()
+            ->route('admin.products.index', $this->productIndexParams($request))
+            ->with('success', 'Product created.');
     }
 
     public function edit(Product $product)
@@ -142,12 +144,19 @@ class ProductAdminController extends Controller
 
         $product->update($validated);
 
+        $indexParams = $this->productIndexParams($request);
+        if ($indexParams !== []) {
+            return redirect()
+                ->route('admin.products.index', $indexParams)
+                ->with('success', 'Product updated. Price saved: ₹'.number_format((float) $product->fresh()->price, 0));
+        }
+
         return redirect()
             ->route('admin.products.edit', ['product' => $product, 'saved' => 1])
             ->with('success', 'Product updated. Price saved: ₹'.number_format((float) $product->fresh()->price, 0));
     }
 
-    public function destroy(Product $product)
+    public function destroy(Request $request, Product $product)
     {
         $this->deleteStoredPath($product->image);
 
@@ -157,7 +166,9 @@ class ProductAdminController extends Controller
 
         $product->delete();
 
-        return redirect()->route('admin.products.index')->with('success', 'Product deleted.');
+        return redirect()
+            ->route('admin.products.index', $this->productIndexParams($request))
+            ->with('success', 'Product deleted.');
     }
 
     private function validateProduct(Request $request, ?Product $existing = null): array
@@ -433,6 +444,16 @@ class ProductAdminController extends Controller
             : null;
 
         return $validated;
+    }
+
+    /** @return array<string, mixed> */
+    private function productIndexParams(Request $request): array
+    {
+        return array_filter([
+            'category_id' => $request->input('_return_category_id') ?: $request->query('category_id'),
+            'section' => $request->input('_return_section') ?: $request->query('section'),
+            'filter' => $request->input('_return_filter') ?: $request->query('filter'),
+        ], fn ($value) => filled($value));
     }
 
     /**

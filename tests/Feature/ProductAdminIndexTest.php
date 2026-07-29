@@ -173,4 +173,105 @@ class ProductAdminIndexTest extends TestCase
             $response->assertDontSee('('.$slug.')', false);
         }
     }
+
+    public function test_store_redirects_back_to_filtered_products_index(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $mirrors = Category::query()->firstOrCreate(
+            ['slug' => 'mirror-frames'],
+            ['name' => 'Mirror Frames', 'section' => 'shop', 'is_active' => true]
+        );
+
+        $this->actingAsAdmin($admin)
+            ->from(route('admin.products.create', ['category_id' => $mirrors->id]))
+            ->post(route('admin.products.store'), [
+                '_page_save' => '1',
+                '_return_category_id' => $mirrors->id,
+                'category_id' => $mirrors->id,
+                'name' => 'Filtered Mirror',
+                'slug' => 'filtered-mirror',
+                'price' => 5000,
+                'stock' => 2,
+                'section' => Product::SECTION_SHOP,
+                'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+                'pricing_type' => Product::PRICING_FIXED,
+                'is_active' => '1',
+            ])
+            ->assertRedirect(route('admin.products.index', ['category_id' => $mirrors->id]))
+            ->assertSessionHasNoErrors();
+    }
+
+    public function test_update_redirects_back_to_filtered_products_index(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $mirrors = Category::query()->firstOrCreate(
+            ['slug' => 'mirror-frames'],
+            ['name' => 'Mirror Frames', 'section' => 'shop', 'is_active' => true]
+        );
+
+        $product = Product::query()->create([
+            'category_id' => $mirrors->id,
+            'name' => 'Round Mirror',
+            'slug' => 'round-mirror',
+            'price' => 5000,
+            'stock' => 5,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+        ]);
+
+        $this->actingAsAdmin($admin)
+            ->from(route('admin.products.edit', ['product' => $product, 'category_id' => $mirrors->id]))
+            ->put(route('admin.products.update', $product), [
+                '_page_save' => '1',
+                '_return_category_id' => $mirrors->id,
+                'category_id' => $mirrors->id,
+                'name' => 'Updated Mirror',
+                'slug' => 'round-mirror',
+                'price' => 5500,
+                'stock' => 5,
+                'section' => Product::SECTION_SHOP,
+                'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+                'pricing_type' => Product::PRICING_FIXED,
+                'is_active' => '1',
+            ])
+            ->assertRedirect(route('admin.products.index', ['category_id' => $mirrors->id]))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('Updated Mirror', $product->fresh()->name);
+    }
+
+    public function test_destroy_redirects_back_to_filtered_products_index(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $mirrors = Category::query()->firstOrCreate(
+            ['slug' => 'mirror-frames'],
+            ['name' => 'Mirror Frames', 'section' => 'shop', 'is_active' => true]
+        );
+
+        $product = Product::query()->create([
+            'category_id' => $mirrors->id,
+            'name' => 'Round Mirror',
+            'slug' => 'round-mirror',
+            'price' => 5000,
+            'stock' => 5,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+        ]);
+
+        $this->actingAsAdmin($admin)
+            ->from(route('admin.products.index', ['category_id' => $mirrors->id]))
+            ->delete(route('admin.products.destroy', $product), [
+                '_return_category_id' => $mirrors->id,
+            ])
+            ->assertRedirect(route('admin.products.index', ['category_id' => $mirrors->id]));
+
+        $this->assertDatabaseMissing('products', ['id' => $product->id]);
+    }
 }

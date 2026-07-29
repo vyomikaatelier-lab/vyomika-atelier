@@ -21,6 +21,12 @@
     $showMirrorDimensions = $selectedCategorySlug === 'mirror-frames';
 @endphp
 
+@php
+    $returnCategoryId = request('category_id', old('_return_category_id'));
+    $returnSection = request('section', old('_return_section'));
+    $returnFilter = request('filter', old('_return_filter'));
+@endphp
+
 @if(request('saved') || session('success'))
 <div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-4 text-sm max-w-2xl">{{ session('success') ?: 'Product saved successfully.' }}</div>
 @endif
@@ -29,6 +35,15 @@
     @csrf
     @if(isset($product)) @method('PUT') @endif
     <input type="hidden" name="_page_save" value="1">
+    @if(filled($returnCategoryId))
+    <input type="hidden" name="_return_category_id" value="{{ $returnCategoryId }}">
+    @endif
+    @if(filled($returnSection))
+    <input type="hidden" name="_return_section" value="{{ $returnSection }}">
+    @endif
+    @if(filled($returnFilter))
+    <input type="hidden" name="_return_filter" value="{{ $returnFilter }}">
+    @endif
 
     <div class="rounded border border-gray-200 bg-gray-50 p-3 text-sm">
         <p class="text-gray-600">Section decides storefront behaviour: <strong>Shop</strong> → Checkout (cart/order), <strong>Studio</strong> → Enquiry (custom order, no cart), <strong>Railings</strong> → Quote (project quotation only, never enters cart).</p>
