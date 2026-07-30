@@ -28,17 +28,12 @@ class ServiceGallery
     /** @return list<string> */
     public static function squareGalleryServiceSlugs(): array
     {
-        return [
-            'slim-profile-door-system',
-            'main-entrance-pvd-doors',
-        ];
+        return self::galleryServiceSlugs();
     }
 
     public static function usesSquareGalleryLayout(Service|string $service): bool
     {
-        $slug = $service instanceof Service ? $service->slug : $service;
-
-        return in_array($slug, self::squareGalleryServiceSlugs(), true);
+        return true;
     }
 
     /** @return list<array<string, mixed>> */

@@ -331,15 +331,17 @@
 
     <div>
         <label class="text-sm text-gray-600 block mb-1">Upload Image</label>
-        <input type="file" name="image_file" accept="image/jpeg,image/png,image/webp" class="w-full border px-3 py-2 rounded">
-        <p class="text-xs text-gray-500 mt-1">JPEG, PNG or WebP. Max 4 MB.</p>
+        <input type="file" name="image_file" accept="{{ \App\Support\AdminImageUpload::acceptAttribute() }}" class="w-full border px-3 py-2 rounded">
+        <p class="text-xs text-gray-500 mt-1">{{ \App\Support\ProductImageSizes::galleryAdminHint() }}</p>
+        <p class="text-xs text-gray-500 mt-1">{{ \App\Support\ProductImageSizes::pdpAdminHint() }}</p>
+        <p class="text-xs text-gray-500 mt-1">{{ \App\Support\AdminImageUpload::hintText() }}</p>
     </div>
     <div>
         <label class="text-sm text-gray-600 block mb-1">Or Image URL</label>
         <input type="text" name="image" value="{{ old('image', isset($product) && str_starts_with($product->image ?? '', 'http') ? $product->image : '') }}" placeholder="https://..." class="w-full border px-3 py-2 rounded">
     </div>
     @if(isset($product) && $product->imageUrl())
-        <img src="{{ $product->imageUrl() }}" alt="" class="w-32 h-40 object-cover rounded border">
+        <img src="{{ $product->imageUrl() }}" alt="" class="w-32 h-40 object-contain rounded border bg-gray-50">
     @endif
 
     <label class="flex items-center gap-2"><input type="checkbox" name="is_featured" value="1" @checked(old('is_featured', $product->is_featured ?? false))> Featured</label>

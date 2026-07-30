@@ -7,7 +7,7 @@
     $quoteAnchor = $quoteAnchor ?? null;
     $quoteLabel = $quoteLabel ?? 'Order Now';
     $darkSection = $darkSection ?? false;
-    $gallerySectionClass = 'am-design-gallery am-design-gallery--service'.($darkSection ? ' am-design-gallery--on-dark' : '');
+    $gallerySectionClass = 'am-design-gallery am-design-gallery--service am-design-gallery--square'.($darkSection ? ' am-design-gallery--on-dark' : '');
 @endphp
 
 @if(!empty($items))

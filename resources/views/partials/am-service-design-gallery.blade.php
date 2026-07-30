@@ -4,7 +4,7 @@
 ])
 
 @if($service->has_designs && $service->designs->isNotEmpty())
-<section class="am-design-gallery">
+<section class="am-design-gallery am-design-gallery--square">
     <p class="am-card__label">Design Gallery</p>
     <h2 class="am-design-gallery__title">
         {{ $service->slug === 'rack-systems-metal-pvd' ? 'Available Designs' : $heading }}

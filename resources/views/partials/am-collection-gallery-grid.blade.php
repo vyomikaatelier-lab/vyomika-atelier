@@ -7,7 +7,7 @@
 ])
 
 @if($products->isNotEmpty())
-<section class="am-section am-section--cream am-collection-designs" id="collection-gallery">
+<section class="am-section am-section--cream am-collection-designs am-design-gallery am-design-gallery--square" id="collection-gallery">
     <div class="am-container">
         <div class="am-mirror-frames-section-head">
             <p class="am-card__label">{{ $sectionTitle }}</p>

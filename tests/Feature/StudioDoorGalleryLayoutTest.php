@@ -52,12 +52,9 @@ class StudioDoorGalleryLayoutTest extends TestCase
         return compact('service', 'category', 'product');
     }
 
-    public function test_square_gallery_service_slugs_include_door_studio_pages(): void
+    public function test_square_gallery_service_slugs_include_all_studio_gallery_pages(): void
     {
-        $this->assertSame([
-            'slim-profile-door-system',
-            'main-entrance-pvd-doors',
-        ], ServiceGallery::squareGalleryServiceSlugs());
+        $this->assertSame(ServiceGallery::galleryServiceSlugs(), ServiceGallery::squareGalleryServiceSlugs());
     }
 
     public function test_slim_profile_studio_gallery_uses_square_contain_layout(): void
@@ -94,7 +91,7 @@ class StudioDoorGalleryLayoutTest extends TestCase
             ->assertSee('Grand Entrance Door', false);
     }
 
-    public function test_partitions_studio_gallery_keeps_default_landscape_cover_layout(): void
+    public function test_partitions_studio_gallery_uses_square_contain_layout(): void
     {
         $this->studioGalleryFixtures(
             'partitions',
@@ -107,7 +104,7 @@ class StudioDoorGalleryLayoutTest extends TestCase
         $this->get(route('studio.show', 'pvd-partitions'))
             ->assertOk()
             ->assertSee('am-design-gallery--service', false)
-            ->assertDontSee('am-design-gallery--square', false)
+            ->assertSee('am-design-gallery--square', false)
             ->assertSee('Cascade Fluted Partition', false);
     }
 }
