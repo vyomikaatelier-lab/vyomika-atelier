@@ -723,7 +723,7 @@ ${hero ? serviceHeroHtml(hero) : pageHero('Studio', service.name, meta.action, f
     <section class="am-design-gallery am-design-gallery--service">
       <p class="am-card__label">Design Gallery</p>
       <h2 class="am-design-gallery__title">${meta.heading}</h2>
-      <div class="am-design-gallery__grid am-design-gallery__grid--dense">
+      <div class="am-design-gallery__grid am-design-gallery__grid--dense am-collection-gallery-grid">
         ${products.map((p) => serviceProductCardHtml(p, meta.cta, service.name)).join('')}
       </div>
     </section>
@@ -2303,7 +2303,7 @@ ${whyHtml ? `<section class="am-section am-section--dark"><div class="am-contain
     document.getElementById('am-main').innerHTML = `
 <section class="am-mirror-frames-hero" style="--mirror-frames-hero-img: url('${page.image}')"><div class="am-container am-mirror-frames-hero__inner"><h1 class="am-mirror-frames-hero__title">${page.title}</h1><p class="am-mirror-frames-hero__subtitle">${page.subtitle}</p><div class="am-pro-hero__actions"><a href="#collection-gallery" class="am-btn am-btn--primary">Browse Designs</a><a href="/shop" class="am-btn am-btn--outline am-btn--light">Browse All Shop</a></div></div></section>
 <section class="am-section am-section--white"><div class="am-container am-mirror-frames-intro"><h2 class="am-corten-section__title am-corten-section__title--center">${page.title}</h2><p class="am-corten-section__lead am-corten-section__lead--center">${page.intro}</p></div></section>
-<section class="am-section am-section--cream am-collection-designs" id="collection-gallery"><div class="am-container"><div class="am-mirror-frames-section-head"><p class="am-card__label">Design Gallery</p><h2 class="am-corten-section__title">${page.gallery}</h2></div><div class="am-design-gallery__grid am-design-gallery__grid--dense">${cards}</div></div></section>`;
+<section class="am-section am-section--cream am-collection-designs" id="collection-gallery"><div class="am-container"><div class="am-mirror-frames-section-head"><p class="am-card__label">Design Gallery</p><h2 class="am-corten-section__title">${page.gallery}</h2></div><div class="am-design-gallery__grid am-design-gallery__grid--dense am-collection-gallery-grid">${cards}</div></div></section>`;
     document.dispatchEvent(new CustomEvent('am-content-ready'));
   }
 
@@ -2349,7 +2349,7 @@ ${whyHtml ? `<section class="am-section am-section--dark"><div class="am-contain
   </div>
 </section>
 ${page.intro?.body ? `<section class="am-section am-section--white"><div class="am-container am-mirror-frames-intro"><h2 class="am-corten-section__title am-corten-section__title--center">${page.intro.title || ''}</h2><p class="am-corten-section__lead am-corten-section__lead--center">${page.intro.body}</p></div></section>` : ''}
-${designsHtml ? `<section class="am-section am-section--cream am-mirror-frames-designs" id="mirror-designs"><div class="am-container"><div class="am-mirror-frames-section-head"><p class="am-card__label">Design Gallery</p><h2 class="am-corten-section__title">Mirror Frame Designs</h2></div><div class="am-design-gallery__grid am-design-gallery__grid--dense am-mirror-frames-grid">${designsHtml}</div></div></section>` : ''}
+${designsHtml ? `<section class="am-section am-section--cream am-mirror-frames-designs" id="mirror-designs"><div class="am-container"><div class="am-mirror-frames-section-head"><p class="am-card__label">Design Gallery</p><h2 class="am-corten-section__title">Mirror Frame Designs</h2></div><div class="am-design-gallery__grid am-design-gallery__grid--dense am-collection-gallery-grid am-mirror-frames-grid">${designsHtml}</div></div></section>` : ''}
 ${finishesHtml ? `<section class="am-section am-section--white"><div class="am-container"><div class="am-mirror-frames-section-head am-mirror-frames-section-head--center"><h2 class="am-corten-section__title">${page.finishes?.title || 'PVD Frame Finishes'}</h2>${page.finishes?.subtitle ? `<p class="am-corten-section__lead">${page.finishes.subtitle}</p>` : ''}</div><div class="am-mirror-frames-finishes">${finishesHtml}</div></div></section>` : ''}`;
     document.dispatchEvent(new CustomEvent('am-content-ready'));
   }

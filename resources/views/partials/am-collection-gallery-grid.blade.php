@@ -13,7 +13,7 @@
             <p class="am-card__label">{{ $sectionTitle }}</p>
             <h2 class="am-corten-section__title">{{ $galleryTitle }}</h2>
         </div>
-        <div class="am-design-gallery__grid am-design-gallery__grid--dense">
+        <div class="am-design-gallery__grid am-design-gallery__grid--dense am-collection-gallery-grid">
             @foreach($products as $product)
             @php
                 $showUrl = \App\Support\StorefrontRoutes::productUrl(

@@ -32,7 +32,7 @@
             <p class="am-card__label">Design Gallery</p>
             <h2 class="am-corten-section__title">Mirror Frame Designs</h2>
         </div>
-        <div class="am-design-gallery__grid am-design-gallery__grid--dense am-mirror-frames-grid">
+        <div class="am-design-gallery__grid am-design-gallery__grid--dense am-collection-gallery-grid am-mirror-frames-grid">
             @foreach($designs as $design)
             @php
                 $card = \App\Support\MirrorFramesContent::galleryCardFromDesign($design);

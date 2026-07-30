@@ -158,29 +158,10 @@ svg:not(.am-icon-btn svg) {
   }
 }
 
-/* Design gallery density */
+/* Design gallery — collection grids use am-collection-gallery-grid in amerce.css */
 @media (max-width: 374px) {
-  .am-design-gallery__grid,
-  .am-design-gallery__grid--dense {
+  .am-design-gallery__grid:not(.am-collection-gallery-grid) {
     grid-template-columns: 1fr;
-  }
-}
-
-@media (min-width: 375px) and (max-width: 539px) {
-  .am-design-gallery__grid--dense {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 540px) and (max-width: 767px) {
-  .am-design-gallery__grid--dense {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 768px) and (max-width: 1023px) {
-  .am-design-gallery__grid--dense {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 

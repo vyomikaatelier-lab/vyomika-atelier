@@ -40,6 +40,56 @@ class ProductGalleryImageLayoutTest extends TestCase
         );
     }
 
+    public function test_stylesheet_defines_collection_gallery_three_column_grid(): void
+    {
+        $css = file_get_contents(public_path('css/amerce.css'));
+
+        $this->assertIsString($css);
+        $this->assertMatchesRegularExpression(
+            '/\.am-design-gallery__grid\.am-collection-gallery-grid\s*\{[^}]*grid-template-columns:\s*1fr/',
+            $css
+        );
+        $this->assertMatchesRegularExpression(
+            '/@media \(min-width:\s*1024px\)\s*\{[^}]*\.am-design-gallery__grid\.am-collection-gallery-grid[^}]*grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/s',
+            $css
+        );
+        $this->assertMatchesRegularExpression(
+            '/@media \(min-width:\s*640px\)\s*\{[^}]*\.am-design-gallery__grid\.am-collection-gallery-grid[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/s',
+            $css
+        );
+        $this->assertStringNotContainsString(
+            'grid-template-columns: repeat(5, 1fr)',
+            $css
+        );
+    }
+
+    public function test_shop_category_gallery_uses_three_column_grid_class(): void
+    {
+        $category = Category::query()->firstOrCreate(
+            ['slug' => 'door-handles'],
+            ['name' => 'Door Handles', 'section' => 'shop', 'is_active' => true]
+        );
+
+        Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Grid Layout Handle',
+            'slug' => 'grid-layout-handle',
+            'description' => 'Three-column gallery layout test.',
+            'price' => 1200,
+            'stock' => 20,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+            'is_gallery_visible' => true,
+        ]);
+
+        $this->get(route('shop.show', 'door-handles'))
+            ->assertOk()
+            ->assertSee('am-collection-gallery-grid', false)
+            ->assertSee('am-design-gallery--square', false);
+    }
+
     public function test_shop_index_uses_square_cover_product_cards(): void
     {
         $category = Category::query()->firstOrCreate(
@@ -196,6 +246,7 @@ class ProductGalleryImageLayoutTest extends TestCase
         $response = $this->get(route($routeName, $routeParams))->assertOk();
 
         $response->assertSee('am-design-gallery--square', false);
+        $response->assertSee('am-collection-gallery-grid', false);
 
         if ($slug === 'mirror-frames') {
             $response->assertSee('id="mirror-designs"', false);
