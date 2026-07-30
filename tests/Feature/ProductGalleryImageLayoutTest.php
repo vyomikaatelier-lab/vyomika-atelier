@@ -12,17 +12,17 @@ class ProductGalleryImageLayoutTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_stylesheet_uses_contain_for_gallery_and_shop_cards(): void
+    public function test_stylesheet_uses_cover_for_gallery_and_shop_cards_and_contain_for_pdp(): void
     {
         $css = file_get_contents(public_path('css/amerce.css'));
 
         $this->assertIsString($css);
         $this->assertMatchesRegularExpression(
-            '/\.am-product-card__thumb img\s*\{[^}]*object-fit:\s*contain/',
+            '/\.am-product-card__thumb img\s*\{[^}]*object-fit:\s*cover/',
             $css
         );
         $this->assertMatchesRegularExpression(
-            '/\.am-design-gallery__media img\s*\{[^}]*object-fit:\s*contain/',
+            '/\.am-design-gallery__media img\s*\{[^}]*object-fit:\s*cover/',
             $css
         );
         $this->assertMatchesRegularExpression(
@@ -31,7 +31,7 @@ class ProductGalleryImageLayoutTest extends TestCase
         );
     }
 
-    public function test_shop_category_gallery_uses_square_contain_layout(): void
+    public function test_shop_category_gallery_uses_square_cover_layout(): void
     {
         $category = Category::query()->firstOrCreate(
             ['slug' => 'coffee-tables'],
@@ -59,7 +59,7 @@ class ProductGalleryImageLayoutTest extends TestCase
             ->assertSee('Gallery Coffee Table', false);
     }
 
-    public function test_door_handles_shop_category_gallery_uses_square_contain_layout(): void
+    public function test_door_handles_shop_category_gallery_uses_square_cover_layout(): void
     {
         $category = Category::query()->firstOrCreate(
             ['slug' => 'door-handles'],
@@ -94,7 +94,8 @@ class ProductGalleryImageLayoutTest extends TestCase
             ->get(route('admin.products.create'))
             ->assertOk()
             ->assertSee(ProductImageSizes::galleryDimensionsLabel(), false)
+            ->assertSee(ProductImageSizes::galleryLargeDimensionsLabel(), false)
             ->assertSee(ProductImageSizes::pdpDimensionsLabel(), false)
-            ->assertSee('without cropping', false);
+            ->assertSee('fill the frame edge to edge', false);
     }
 }

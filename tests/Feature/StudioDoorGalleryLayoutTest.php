@@ -57,7 +57,7 @@ class StudioDoorGalleryLayoutTest extends TestCase
         $this->assertSame(ServiceGallery::galleryServiceSlugs(), ServiceGallery::squareGalleryServiceSlugs());
     }
 
-    public function test_slim_profile_studio_gallery_uses_square_contain_layout(): void
+    public function test_slim_profile_studio_gallery_uses_square_cover_layout(): void
     {
         $this->studioGalleryFixtures(
             'slim-profile-door-system',
@@ -75,7 +75,7 @@ class StudioDoorGalleryLayoutTest extends TestCase
             ->assertSee('Slim Profile Pivot Door', false);
     }
 
-    public function test_main_entrance_pvd_studio_gallery_uses_square_contain_layout(): void
+    public function test_main_entrance_pvd_studio_gallery_uses_square_cover_layout(): void
     {
         $this->studioGalleryFixtures(
             'main-entrance-pvd-doors',
@@ -91,7 +91,7 @@ class StudioDoorGalleryLayoutTest extends TestCase
             ->assertSee('Grand Entrance Door', false);
     }
 
-    public function test_partitions_studio_gallery_uses_square_contain_layout(): void
+    public function test_partitions_studio_gallery_uses_square_cover_layout(): void
     {
         $this->studioGalleryFixtures(
             'partitions',

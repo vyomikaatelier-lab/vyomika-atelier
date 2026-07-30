@@ -4,10 +4,12 @@ namespace App\Support;
 
 class ProductImageSizes
 {
-    /** Gallery grids and shop product cards (1:1 square cell, object-fit: contain). */
+    /** Gallery grids and shop product cards (1:1 square cell, object-fit: cover). */
     public const GALLERY_WIDTH = 800;
 
     public const GALLERY_HEIGHT = 800;
+
+    public const GALLERY_LARGE = 1200;
 
     public const GALLERY_RATIO = '1:1';
 
@@ -21,6 +23,11 @@ class ProductImageSizes
     public static function galleryDimensionsLabel(): string
     {
         return sprintf('%d×%d px', self::GALLERY_WIDTH, self::GALLERY_HEIGHT);
+    }
+
+    public static function galleryLargeDimensionsLabel(): string
+    {
+        return sprintf('%d×%d px', self::GALLERY_LARGE, self::GALLERY_LARGE);
     }
 
     public static function pdpDimensionsLabel(): string
@@ -40,8 +47,9 @@ class ProductImageSizes
     public static function adminDimensionSummary(): string
     {
         return sprintf(
-            'Recommended: %s (%s) for shop/studio gallery cards; %s (%s) for the product detail hero.',
+            'Recommended: %s or %s (%s) for shop/studio gallery cards; %s (%s) for the product detail hero.',
             self::galleryDimensionsLabel(),
+            self::galleryLargeDimensionsLabel(),
             self::GALLERY_RATIO,
             self::pdpDimensionsLabel(),
             self::PDP_RATIO
@@ -51,9 +59,10 @@ class ProductImageSizes
     public static function galleryAdminHint(): string
     {
         return sprintf(
-            'Gallery & shop cards display in a %s square without cropping — upload %s (%s). Portrait or landscape originals are fine; the site letterboxes them on cream.',
+            'Gallery & shop cards display as %s squares with cover — upload square %s or %s (%s) so images fill the frame edge to edge.',
             self::GALLERY_RATIO,
             self::galleryDimensionsLabel(),
+            self::galleryLargeDimensionsLabel(),
             self::GALLERY_RATIO
         );
     }
