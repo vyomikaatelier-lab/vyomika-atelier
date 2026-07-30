@@ -54,14 +54,6 @@
                 </ul>
             </div>
             <div>
-                <h5>Trade</h5>
-                <ul>
-                    @foreach($footer['trade_links'] ?? [] as $link)
-                    <li><a href="{{ $storefrontLink($link['route'], $link['params'] ?? [], '/professionals') }}">{{ $link['label'] }}</a></li>
-                    @endforeach
-                </ul>
-            </div>
-            <div>
                 <h5>Legal</h5>
                 <ul>
                     @foreach($legalLinks as $link)
@@ -132,21 +124,6 @@
                         </ul>
                     </div>
                 </div>
-                @if(!empty($footer['trade_links']))
-                <div class="am-footer__accordion">
-                    <button type="button" class="am-footer__accordion-toggle" data-am-footer-toggle aria-expanded="false" aria-controls="am-footer-panel-trade">
-                        Trade
-                        <svg class="am-footer__accordion-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 4.5l3 3 3-3"/></svg>
-                    </button>
-                    <div class="am-footer__accordion-panel" id="am-footer-panel-trade" hidden>
-                        <ul>
-                            @foreach($footer['trade_links'] as $link)
-                            <li><a href="{{ $storefrontLink($link['route'], $link['params'] ?? [], '/professionals') }}">{{ $link['label'] }}</a></li>
-                            @endforeach
-                        </ul>
-                    </div>
-                </div>
-                @endif
             </div>
 
             <nav class="am-footer__compact-legal" aria-label="Legal">

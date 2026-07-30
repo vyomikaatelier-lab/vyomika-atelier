@@ -145,92 +145,6 @@ return [
         ],
     ],
 
-    /**
-     * "Shop by collection" row. Category names and links come from the
-     * categories table; this block only supplies the artwork and one-line
-     * caption that the table has no column for, keyed by category slug.
-     */
-    'collection_row' => [
-        'title' => 'Shop by Collection',
-        'subtitle' => 'Six made-to-order metal collections — mirrors, tables, handles, and bespoke furniture, finished in PVD gold, rose gold, or matte black.',
-        'cta_label' => 'View all collections',
-        'limit' => 4,
-        'cards' => [
-            'mirror-frames' => [
-                'caption' => 'Arched, round & fluted frames',
-                'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg',
-            ],
-            'coffee-tables' => [
-                'caption' => 'Brass, black & glass tops',
-                'image' => 'https://images.unsplash.com/photo-1532372320572-127d86b32558?w=800&q=80',
-            ],
-            'door-handles' => [
-                'caption' => 'Pull handles in PVD finishes',
-                'image' => 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80',
-            ],
-            'bespoke-metal-furniture' => [
-                'caption' => 'Consoles, racks & custom pieces',
-                'image' => 'https://images.unsplash.com/photo-1615529182904-896166571fac?w=800&q=80',
-            ],
-            'corner-tables' => [
-                'caption' => 'Slim corner & side tables',
-                'image' => 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&q=80',
-            ],
-            'glass-tables' => [
-                'caption' => 'Tempered glass on metal bases',
-                'image' => 'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=800&q=80',
-            ],
-        ],
-    ],
-
-    'how_it_works' => [
-        'title' => 'How It Works',
-        'subtitle' => 'From first measurement to installed metalwork — four steps, handled by our Delhi studio.',
-        'steps' => [
-            [
-                'title' => 'Share Your Measurements',
-                'description' => 'Send drawings, site photos, or rough sizes. Our team confirms dimensions and advises on load, fixing, and clearances.',
-            ],
-            [
-                'title' => 'Choose Design & Finish',
-                'description' => 'Pick a pattern and a PVD finish — champagne gold, rose gold, brushed brass, or matte black — with samples on request.',
-            ],
-            [
-                'title' => 'Precision Fabrication',
-                'description' => 'Stainless steel is laser-cut, welded, and PVD-coated in our Delhi workshop, then quality-checked before dispatch.',
-            ],
-            [
-                'title' => 'Delivery & Installation',
-                'description' => 'Crated safely for Pan-India delivery in 3–4 weeks, with installation support for partitions, doors, and railings.',
-            ],
-        ],
-    ],
-
-    'quote_cta' => [
-        'kicker' => 'No-obligation estimate',
-        'title' => 'Get a Fabrication Quote',
-        'description' => 'Send your sizes and finish preference. Our studio replies with a costed estimate, lead time, and finish options — usually within one working day.',
-        'image' => 'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg',
-        'image_alt' => 'PVD partition being finished at the Vyomika Atelier studio',
-        'points' => [
-            'Priced per sq ft for partitions, panels & railings',
-            'Made-to-measure furniture, doors & handles',
-            'Trade pricing for architects and interior designers',
-        ],
-        'primary_cta_label' => 'Request a Quote',
-        'primary_cta_href' => '/custom-order',
-        'secondary_cta_label' => 'Talk to the Studio',
-        'secondary_cta_href' => '/contact',
-        'footnote' => 'Mon–Sat, 10am–7pm IST · Delhi studio · Pan-India delivery',
-    ],
-
-    'reviews' => [
-        'title' => 'Loved in 1,200+ Homes & Offices',
-        'subtitle' => 'Verified buyers on PVD partitions, metal furniture, and bespoke fabrication.',
-        'rating_label' => '4.8 average rating',
-        'cta_label' => null,
-    ],
-
     'category_banners' => [
         [
             'title' => 'PVD Partitions',
@@ -338,22 +252,16 @@ return [
             'quote' => 'The champagne PVD partition arrived perfectly finished — even more stunning than the renders. Our Mumbai office lobby looks world-class.',
             'client' => 'Rahul Mehta',
             'role' => 'Verified Buyer — Architect',
-            'rating' => 5,
-            'location' => 'Mumbai',
         ],
         [
             'quote' => 'Vyomika Atelier understood our showroom brief immediately. Packaging was secure, installation was smooth, and the wave divider is a showstopper.',
             'client' => 'Priya Nair',
             'role' => 'Verified Buyer — Interior Designer',
-            'rating' => 5,
-            'location' => 'Bengaluru',
         ],
         [
             'quote' => 'We ordered a custom coffee table and PVD handles for our Pune residence. Quality is exceptional — already planning the next partition.',
             'client' => 'Vikram Singh',
             'role' => 'Verified Buyer — Homeowner',
-            'rating' => 5,
-            'location' => 'Pune',
         ],
     ],
 
@@ -436,13 +344,6 @@ return [
             ['label' => 'Slim Profile Door Systems', 'route' => 'studio.show', 'params' => ['slug' => 'slim-profile-door-systems']],
             ['label' => 'Main Entrance PVD Doors', 'route' => 'studio.show', 'params' => ['slug' => 'main-entrance-pvd-doors']],
             ['label' => 'Metal PVD Rack Systems', 'route' => 'studio.show', 'params' => ['slug' => 'metal-pvd-rack-systems']],
-        ],
-        'trade_links' => [
-            ['label' => 'Architects & Designers', 'route' => 'professionals.index'],
-            ['label' => 'Dealer Application', 'route' => 'dealer.index'],
-            ['label' => 'Vendor & Service Proposals', 'route' => 'vendor-proposal.index'],
-            ['label' => 'Request Catalogue', 'route' => 'catalogue.index'],
-            ['label' => 'Custom Order Quote', 'route' => 'leads.create'],
         ],
     ],
 
