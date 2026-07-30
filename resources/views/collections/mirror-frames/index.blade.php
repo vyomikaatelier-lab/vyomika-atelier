@@ -26,7 +26,7 @@
 @endif
 
 @if(!empty($designs))
-<section class="am-section am-section--cream am-mirror-frames-designs" id="mirror-designs">
+<section class="am-section am-section--cream am-collection-designs am-mirror-frames-designs am-design-gallery am-design-gallery--square" id="mirror-designs">
     <div class="am-container">
         <div class="am-mirror-frames-section-head">
             <p class="am-card__label">Design Gallery</p>
