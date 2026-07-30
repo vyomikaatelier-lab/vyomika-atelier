@@ -13,7 +13,6 @@
     $trending = SiteContent::trending();
     $spotlights = SiteContent::spotlights();
     $ctaBand = SiteContent::get('cta_band', []);
-    $testimonials = SiteContent::testimonials();
     $blogSection = SiteContent::blogSection();
     $trustBadges = SiteContent::trustBadges();
 
@@ -47,6 +46,9 @@
         @endforeach
     </div>
 </section>
+
+{{-- Shop by collection --}}
+@include('partials.am-home-collections')
 
 {{-- Best sellers --}}
 <section class="am-section am-section--white am-section--edge">
@@ -137,6 +139,12 @@
     </div>
 </section>
 
+{{-- How it works --}}
+@include('partials.am-home-steps')
+
+{{-- Quote / enquiry CTA --}}
+@include('partials.am-home-quote-cta')
+
 {{-- CTA band --}}
 <section class="am-cta-band">
     <h2>{{ $ctaBand['title'] ?? '' }}</h2>
@@ -144,29 +152,8 @@
     <a href="{{ url($ctaBand['cta_href'] ?? '/shop') }}" class="am-btn am-btn--primary am-btn--lg">{{ $ctaBand['cta_label'] ?? 'View All Products' }}</a>
 </section>
 
-{{-- Testimonials --}}
-<section class="am-section am-testimonials">
-    <div class="am-container">
-        <div class="am-section-head">
-            <h2>What Our Customers Say</h2>
-            <p>Real stories from architects, designers, and homeowners across India.</p>
-        </div>
-        <div class="am-testimonial-slider">
-            @foreach($testimonials as $i => $item)
-            <div class="am-testimonial-slide {{ $i === 0 ? 'is-active' : '' }}">
-                <p class="am-testimonial-quote">"{{ $item['quote'] }}"</p>
-                <p class="am-testimonial-author">{{ $item['client'] }}</p>
-                <p class="am-testimonial-role">{{ $item['role'] }}</p>
-            </div>
-            @endforeach
-            <div class="am-testimonial-dots">
-                @foreach($testimonials as $i => $item)
-                <button type="button" class="am-testimonial-dot {{ $i === 0 ? 'is-active' : '' }}" aria-label="Testimonial {{ $i + 1 }}"></button>
-                @endforeach
-            </div>
-        </div>
-    </div>
-</section>
+{{-- Reviews --}}
+@include('partials.am-home-reviews')
 
 {{-- Blog --}}
 <section class="am-section am-section--white am-section--edge">
