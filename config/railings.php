@@ -9,9 +9,13 @@ return [
     'primary_keyword' => 'custom stainless steel railings India',
 
     'hero' => [
-        'label' => 'PVD Railings & Custom Metal Solutions',
-        'title' => 'Designer Railings',
-        'subtitle' => 'Designed to inspire. Built to last. Exquisite PVD finishes, timeless designs and craftsmanship for luxury spaces.',
+        'hero_layout' => 'compact',
+        'eyebrow' => 'PVD Railings & Custom Metal Solutions',
+        'title_line1' => 'Designer',
+        'title_accent' => 'Railings',
+        'tagline' => 'Designed to inspire.',
+        'tagline_accent' => 'Built to last.',
+        'subtitle' => 'Exquisite PVD finishes, timeless designs and craftsmanship for luxury spaces.',
         'highlights' => [
             'Premium PVD finish',
             'Custom design',

@@ -8,7 +8,8 @@
     $imagePosition = $hero['image_position'] ?? 'right';
     $heroLayout = $hero['hero_layout'] ?? 'default';
     $isCompact = $heroLayout === 'compact';
-    $hasStructuredTitle = filled($hero['title_line1'] ?? null) || filled($hero['title_accent'] ?? null);
+    $hasStructuredTitle = ! filled($hero['title'] ?? null)
+        && (filled($hero['title_line1'] ?? null) || filled($hero['title_accent'] ?? null));
     $eyebrow = $hero['eyebrow'] ?? $hero['label'] ?? null;
 @endphp
 

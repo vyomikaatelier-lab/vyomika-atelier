@@ -23,8 +23,18 @@
 @endphp
 
 @if($service->usesGalleryOnlyLayout())
-@if(is_array($hero) && !empty($hero['title']))
-@include('partials.am-service-hero', ['hero' => $hero])
+@php
+    $hasCompactHero = is_array($hero) && (
+        ! empty($hero['title'])
+        || ! empty($hero['title_line1'])
+        || ! empty($hero['title_accent'])
+        || ! empty($hero['image'])
+        || ! empty($hero['image_tablet'])
+        || ! empty($hero['image_mobile'])
+    );
+@endphp
+@if($hasCompactHero)
+@include('partials.am-shop-category-hero', ['hero' => $hero])
 @else
 @include('partials.am-page-hero', [
     'label' => 'Studio',

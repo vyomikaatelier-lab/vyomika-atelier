@@ -6,8 +6,12 @@
 return [
     'partitions' => [
         'hero' => [
-            'label' => 'Studio',
-            'title' => 'PVD Partitions',
+            'hero_layout' => 'compact',
+            'eyebrow' => 'Studio',
+            'title_line1' => 'PVD',
+            'title_accent' => 'Partitions',
+            'tagline' => 'Define space with',
+            'tagline_accent' => 'precision metalwork.',
             'subtitle' => 'Wave, fluted, and laser-cut stainless partitions in champagne gold, rose gold, and matte black G?? engineered for offices, showrooms, and luxury residences.',
             'highlights' => [
                 'Sq ft calculator',
@@ -25,9 +29,13 @@ return [
     ],
     'slim-profile-door-system' => [
         'hero' => [
-            'label' => 'Studio',
-            'title' => 'Telescopic Sliding Slim Profile Doors',
-            'subtitle' => 'Wider views. Sleeker spaces. Slim-profile frames, telescopic sliding systems and premium materials for modern residential and commercial interiors.',
+            'hero_layout' => 'compact',
+            'eyebrow' => 'Studio',
+            'title_line1' => 'Slim Profile',
+            'title_accent' => 'Door Systems',
+            'tagline' => 'Wider views.',
+            'tagline_accent' => 'Sleeker spaces.',
+            'subtitle' => 'Slim-profile frames, telescopic sliding systems and premium materials for modern residential and commercial interiors.',
             'highlights' => [
                 'Slim profile ? maximum view',
                 'Telescopic sliding system',
@@ -46,8 +54,12 @@ return [
     ],
     'main-entrance-pvd-doors' => [
         'hero' => [
-            'label' => 'Studio',
-            'title' => 'Main Entrance PVD Doors',
+            'hero_layout' => 'compact',
+            'eyebrow' => 'Studio',
+            'title_line1' => 'Main Entrance',
+            'title_accent' => 'PVD Doors',
+            'tagline' => 'Statement entrances.',
+            'tagline_accent' => 'Built to impress.',
             'subtitle' => 'Statement entrance doors and PVD pull systems G?? double-leaf, pivot, and framed configurations for lobbies, villas, and commercial frontages.',
             'highlights' => [
                 'Entrance-grade fabrication',
@@ -65,8 +77,12 @@ return [
     ],
     'rack-systems-metal-pvd' => [
         'hero' => [
-            'label' => 'Studio',
-            'title' => 'Rack Systems, Metal PVD',
+            'hero_layout' => 'compact',
+            'eyebrow' => 'Studio',
+            'title_line1' => 'Metal PVD',
+            'title_accent' => 'Rack Systems',
+            'tagline' => 'Modular display.',
+            'tagline_accent' => 'Premium finishes.',
             'subtitle' => 'Wall-mounted and freestanding PVD rack systems for retail, wardrobes, and display G?? modular layouts with champagne, rose gold, and matte black finishes.',
             'highlights' => [
                 'Modular configurations',
