@@ -41,7 +41,7 @@
     <details class="bg-white rounded shadow p-4" open>
         <summary class="font-medium cursor-pointer">1. Hero section</summary>
         <div class="mt-4">
-            @include('admin.partials.hero-fields', ['prefix' => 'hero', 'hero' => data_get($page, 'hero', []), 'context' => 'cover'])
+            @include('admin.partials.hero-fields', ['prefix' => 'hero', 'hero' => data_get($page, 'hero', []), 'context' => $isCorten ? 'cover' : 'compact'])
         </div>
     </details>
 

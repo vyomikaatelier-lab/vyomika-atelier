@@ -76,6 +76,11 @@ class ResponsiveHero
                 'tablet' => ['size' => '1200 × 900 px', 'ratio' => '4:3 landscape', 'min' => '1024 × 768 px', 'crop' => 'Landscape iPad crop. Falls back to desktop if empty.'],
                 'mobile' => ['size' => '900 × 1200 px', 'ratio' => '3:4 portrait', 'min' => '800 × 1200 px', 'crop' => 'Portrait or square; image stacks above text. Falls back to tablet/desktop if empty.'],
             ],
+            'compact' => [
+                'desktop' => ['size' => '800 × 1200 px', 'ratio' => '2:3 portrait', 'min' => '600 × 900 px', 'crop' => 'Portrait photo for the compact side panel (~48% width, up to 380px tall). One desktop image is usually enough.'],
+                'tablet' => ['size' => '800 × 1200 px', 'ratio' => '2:3 portrait', 'min' => '600 × 900 px', 'crop' => 'Same as desktop; capped at ~380px tall. Falls back to desktop if empty.'],
+                'mobile' => ['size' => '1200 × 600 px', 'ratio' => '2:1 landscape', 'min' => '800 × 500 px', 'crop' => 'Short wide strip (full width, 200–280px tall). Falls back to tablet/desktop if empty.'],
+            ],
             'service' => [
                 'desktop' => ['size' => '1920 × 1080 px', 'ratio' => '16:9 landscape', 'min' => '1600 × 900 px', 'crop' => 'Also used as the /services list thumbnail. Keep the subject centered.'],
                 'tablet' => ['size' => '1200 × 800 px', 'ratio' => '3:2 landscape', 'min' => '1024 × 768 px', 'crop' => 'Landscape iPad crop. Falls back to desktop if empty.'],
@@ -125,6 +130,7 @@ class ResponsiveHero
     {
         return match ($context) {
             'homepage' => 'Upload separate images per slide for desktop (1024px+), tablet/iPad (768–1023px), and mobile (up to 767px). Recommended: desktop 1920×1080, tablet 1200×900, mobile 900×1200.',
+            'compact' => 'Compact split hero: a short image panel beside the text (not a full-width banner). Use portrait 800×1200 for desktop/tablet; optional landscape 1200×600 for the mobile strip. Do not upload 1920×1080 banners.',
             'service' => 'Upload desktop, tablet, and mobile cover images. Desktop is also used on the /services listing. Recommended: desktop 1920×1080, tablet 1200×800, mobile 800×1200.',
             default => 'Upload desktop, tablet, and mobile cover images. Empty tablet/mobile slots fall back to the next larger size. Recommended: desktop 1920×1080, tablet 1200×800, mobile 800×1200.',
         };

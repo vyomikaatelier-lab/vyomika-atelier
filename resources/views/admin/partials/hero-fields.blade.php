@@ -1,7 +1,8 @@
 @php
     $prefix = $prefix ?? 'hero';
     $heroData = $hero ?? [];
-    $context = $context ?? 'cover';
+    $heroLayout = old($prefix.'_layout', data_get($heroData, 'hero_layout', 'default'));
+    $context = $heroLayout === 'compact' ? 'compact' : ($context ?? 'cover');
     $showLayoutOptions = $showLayoutOptions ?? true;
     $lines = fn ($value) => is_array($value) ? implode("\n", $value) : (string) ($value ?? '');
     $eyebrow = data_get($heroData, 'eyebrow') ?: data_get($heroData, 'label');

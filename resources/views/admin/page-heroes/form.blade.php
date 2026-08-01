@@ -15,7 +15,12 @@
 <form method="POST" action="{{ route('admin.page-heroes.update', $slug) }}" enctype="multipart/form-data" class="bg-white p-6 rounded shadow space-y-4 max-w-4xl">
     @csrf @method('PUT')
     <input type="hidden" name="_page_save" value="1">
-    @include('admin.partials.hero-fields', ['prefix' => 'hero', 'hero' => $page, 'context' => 'cover'])
+    @php
+        $heroContext = data_get($page, 'hero_layout') === 'compact' || str_starts_with($slug, 'service:') || $slug === 'mirror-frames'
+            ? 'compact'
+            : 'cover';
+    @endphp
+    @include('admin.partials.hero-fields', ['prefix' => 'hero', 'hero' => $page, 'context' => $heroContext])
     <button type="submit" class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Save hero</button>
 </form>
 @endsection

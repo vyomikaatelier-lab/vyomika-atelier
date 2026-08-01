@@ -20,7 +20,7 @@
     </div>
     <div class="space-y-3 border rounded p-4 bg-gray-50">
         <p class="text-sm font-medium">Hero section (desktop, tablet &amp; mobile)</p>
-        @include('admin.partials.hero-fields', ['prefix' => 'hero', 'hero' => $hero ?? [], 'context' => 'service'])
+        @include('admin.partials.hero-fields', ['prefix' => 'hero', 'hero' => $hero ?? []])
     </div>
     <div class="grid md:grid-cols-2 gap-4">
         <div><label class="block text-sm mb-1">SEO title</label><input name="meta_title" value="{{ old('meta_title', $service->meta_title ?? '') }}" class="w-full border px-3 py-2 rounded"></div>

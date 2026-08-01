@@ -19,7 +19,7 @@
     <div><label class="block text-sm mb-1">Meta description</label><textarea name="meta_description" rows="2" class="w-full border px-3 py-2 rounded">{{ old('meta_description', $page['meta_description'] ?? '') }}</textarea></div>
     <div class="space-y-3 border rounded p-4 bg-gray-50">
         <p class="text-sm font-medium">Hero section</p>
-        @include('admin.partials.hero-fields', ['prefix' => 'hero', 'hero' => data_get($page, 'hero', []), 'context' => 'cover'])
+        @include('admin.partials.hero-fields', ['prefix' => 'hero', 'hero' => data_get($page, 'hero', [])])
     </div>
     <div class="space-y-3 border rounded p-4 bg-gray-50">
         <p class="text-sm font-medium">Intro</p>
