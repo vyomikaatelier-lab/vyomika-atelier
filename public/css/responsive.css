@@ -642,12 +642,10 @@ main,
     display: none;
   }
 
-  .am-shop-category-hero--compact .am-shop-category-hero__media {
-    max-height: clamp(200px, 52vw, 280px);
-  }
-
-  .am-shop-category-hero--compact .am-shop-category-hero__media img {
-    min-height: clamp(200px, 52vw, 280px);
+  .am-shop-category-hero--compact .am-shop-category-hero__media--fixed {
+    width: 100%;
+    max-height: none;
+    aspect-ratio: 500 / 380;
   }
 
   .am-breadcrumbs--hide-mobile,

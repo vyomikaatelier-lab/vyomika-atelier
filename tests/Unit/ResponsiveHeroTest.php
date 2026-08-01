@@ -23,9 +23,10 @@ class ResponsiveHeroTest extends TestCase
         $this->assertStringContainsString('/services list thumbnail', $service['desktop']['hint']);
 
         $compact = ResponsiveHero::adminVariants('compact');
-        $this->assertSame('800 × 1200 px', $compact['desktop']['size']);
-        $this->assertSame('1200 × 600 px', $compact['mobile']['size']);
-        $this->assertStringContainsString('compact side panel', $compact['desktop']['hint']);
-        $this->assertStringContainsString('Compact split hero', ResponsiveHero::adminUploadIntro('compact'));
+        $this->assertSame('500 × 380 px', $compact['desktop']['size']);
+        $this->assertSame('500 × 380 px', $compact['mobile']['size']);
+        $this->assertStringContainsString('Fixed image panel', $compact['desktop']['hint']);
+        $this->assertStringContainsString('Split hero image panel', ResponsiveHero::adminUploadIntro('compact'));
+        $this->assertStringContainsString('1000×760', ResponsiveHero::adminUploadIntro('compact'));
     }
 }

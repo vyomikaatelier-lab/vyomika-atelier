@@ -20,7 +20,10 @@
 ])>
     <div class="am-shop-category-hero__grid">
         @if($imagePosition === 'left')
-        <div class="am-shop-category-hero__media">
+        <div @class([
+            'am-shop-category-hero__media',
+            'am-shop-category-hero__media--fixed' => $isCompact,
+        ])>
             @if($hasImage)
                 @include('partials.am-hero-picture', ['slide' => $hero, 'priority' => true])
             @endif
@@ -105,7 +108,10 @@
         </div>
 
         @if($imagePosition !== 'left')
-        <div class="am-shop-category-hero__media">
+        <div @class([
+            'am-shop-category-hero__media',
+            'am-shop-category-hero__media--fixed' => $isCompact,
+        ])>
             @if($hasImage)
                 @include('partials.am-hero-picture', ['slide' => $hero, 'priority' => true])
             @endif
