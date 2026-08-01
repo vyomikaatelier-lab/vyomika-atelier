@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\Concerns\HandlesAdminUploads;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateIndependentLandingPageRequest;
 use App\Models\SiteSetting;
+use App\Support\HeroAdminFields;
 use App\Support\LandingPageContent;
 use App\Support\ResponsiveHero;
 use Illuminate\Http\Request;
@@ -232,46 +233,7 @@ class IndependentLandingAdminController extends Controller
     {
         $existingHero = is_array(data_get($existingOverride, 'hero')) ? data_get($existingOverride, 'hero') : [];
 
-        $hero = array_merge($existingHero, [
-            'label' => $request->input('hero_label'),
-            'title' => $request->input('hero_title'),
-            'subtitle' => $request->input('hero_subtitle'),
-            'image_alt' => $request->input('hero_image_alt'),
-            'highlights' => $this->linesToList($request->input('hero_highlights')),
-        ]);
-
-        $ctaPrimary = array_filter([
-            'label' => $request->input('hero_cta_primary_label'),
-            'href' => $request->input('hero_cta_primary_href'),
-        ], fn ($value) => filled($value));
-
-        $ctaSecondary = array_filter([
-            'label' => $request->input('hero_cta_secondary_label'),
-            'href' => $request->input('hero_cta_secondary_href'),
-        ], fn ($value) => filled($value));
-
-        if ($ctaPrimary !== []) {
-            $hero['cta_primary'] = $ctaPrimary;
-        }
-
-        if ($ctaSecondary !== []) {
-            $hero['cta_secondary'] = $ctaSecondary;
-        }
-
-        foreach ($heroImages as $key => $path) {
-            if (filled($path)) {
-                $hero[$key] = $path;
-            }
-        }
-
-        foreach (ResponsiveHero::storageKeys() as $storageKey) {
-            $flatField = ResponsiveHero::flatFieldForStorageKey('hero', $storageKey);
-            if ($request->boolean($flatField.'_remove')) {
-                unset($hero[$storageKey]);
-            }
-        }
-
-        return $hero;
+        return HeroAdminFields::buildFromRequest($request, 'hero', $existingHero, $heroImages);
     }
 
     /** @return list<string> */

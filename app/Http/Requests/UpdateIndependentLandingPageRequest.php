@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\HeroAdminFields;
 use App\Support\ResponsiveHero;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -18,16 +19,7 @@ class UpdateIndependentLandingPageRequest extends FormRequest
         return [
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
-            'hero_label' => 'nullable|string|max:120',
-            'hero_title' => 'nullable|string|max:255',
-            'hero_subtitle' => 'nullable|string|max:2000',
-            ...ResponsiveHero::flatValidationRules('hero'),
-            'hero_image_alt' => 'nullable|string|max:255',
-            'hero_cta_primary_label' => 'nullable|string|max:120',
-            'hero_cta_primary_href' => 'nullable|string|max:255',
-            'hero_cta_secondary_label' => 'nullable|string|max:120',
-            'hero_cta_secondary_href' => 'nullable|string|max:255',
-            'hero_highlights' => 'nullable|string|max:2000',
+            ...HeroAdminFields::validationRules('hero'),
             'intro_title' => 'nullable|string|max:255',
             'intro_body' => 'nullable|string|max:8000',
             'section_title' => 'nullable|string|max:255',

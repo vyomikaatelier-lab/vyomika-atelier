@@ -94,6 +94,48 @@ class CollectionPageAdminTest extends TestCase
 
 
 
+    public function test_admin_can_save_structured_collection_hero_fields(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAsAdmin($admin)->put(route('admin.collection-pages.update', 'coffee-tables'), [
+            'hero_eyebrow' => 'Custom Eyebrow',
+            'hero_title_line1' => 'Custom',
+            'hero_title_accent' => 'Coffee',
+            'hero_title_line2' => 'Tables',
+            'hero_tagline' => 'Crafted to be',
+            'hero_tagline_accent' => 'yours.',
+            'hero_highlights' => "Line one\nLine two",
+            'hero_footer_tagline' => 'Bold forms.',
+            'hero_footer_tagline_accent' => 'Built to last.',
+            'hero_cta_primary_label' => 'Browse',
+            'hero_cta_primary_href' => '#collection-gallery',
+            'hero_layout' => 'compact',
+            'hero_image_position' => 'left',
+        ])->assertRedirect(route('admin.collection-pages.edit', ['slug' => 'coffee-tables', 'saved' => 1]));
+
+        $stored = data_get(SiteSetting::getValue('collection_pages', []), 'coffee-tables.hero');
+        $this->assertSame('Custom Eyebrow', $stored['eyebrow'] ?? null);
+        $this->assertSame('Coffee', $stored['title_accent'] ?? null);
+        $this->assertSame('yours.', $stored['tagline_accent'] ?? null);
+        $this->assertSame(['Line one', 'Line two'], $stored['highlights'] ?? null);
+        $this->assertSame('compact', $stored['hero_layout'] ?? null);
+        $this->assertSame('left', $stored['image_position'] ?? null);
+
+        Category::query()->firstOrCreate(
+            ['slug' => 'coffee-tables'],
+            ['name' => 'Coffee Tables', 'section' => 'shop', 'is_active' => true]
+        );
+
+        $this->get(route('shop.show', 'coffee-tables'))
+            ->assertOk()
+            ->assertSee('Custom Eyebrow', false)
+            ->assertSee('Coffee', false)
+            ->assertSee('yours.', false)
+            ->assertSee('am-shop-category-hero--compact', false)
+            ->assertSee('am-shop-category-hero--image-left', false);
+    }
+
     public function test_shop_category_pages_render_split_hero_layout(): void
     {
         Category::query()->firstOrCreate(

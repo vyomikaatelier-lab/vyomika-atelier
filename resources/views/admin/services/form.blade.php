@@ -19,9 +19,8 @@
         <div><label class="block text-sm mb-1">Rate per sq ft</label><input type="number" step="0.01" name="rate_per_sqft" value="{{ old('rate_per_sqft', $service->rate_per_sqft ?? 1800) }}" class="w-full border px-3 py-2 rounded"></div>
     </div>
     <div class="space-y-3 border rounded p-4 bg-gray-50">
-        <p class="text-sm font-medium">Cover photo (desktop, tablet &amp; mobile)</p>
-        <p class="text-xs text-gray-500">{{ \App\Support\ResponsiveHero::adminUploadIntro('service') }}</p>
-        @include('admin.partials.responsive-hero-images', ['prefix' => 'hero', 'hero' => $hero ?? [], 'context' => 'service'])
+        <p class="text-sm font-medium">Hero section (desktop, tablet &amp; mobile)</p>
+        @include('admin.partials.hero-fields', ['prefix' => 'hero', 'hero' => $hero ?? [], 'context' => 'service'])
     </div>
     <div class="grid md:grid-cols-2 gap-4">
         <div><label class="block text-sm mb-1">SEO title</label><input name="meta_title" value="{{ old('meta_title', $service->meta_title ?? '') }}" class="w-full border px-3 py-2 rounded"></div>

@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Admin\Concerns\HandlesAdminUploads;
 use App\Http\Controllers\Controller;
 use App\Models\SiteSetting;
+use App\Support\HeroAdminFields;
 use App\Support\PageHeroContent;
-use App\Support\ResponsiveHero;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 
@@ -56,28 +56,12 @@ class PageHeroAdminController extends Controller
             return back()->withInput()->with('error', 'Upload too large for the server limit. Save text changes first, then upload one image at a time (max 5 MB each).');
         }
 
-        $validated = $request->validate(array_merge([
-            'hero_label' => 'nullable|string|max:120',
-            'hero_title' => 'nullable|string|max:255',
-            'hero_subtitle' => 'nullable|string|max:2000',
-        ], ResponsiveHero::flatValidationRules('hero')));
+        $request->validate(HeroAdminFields::validationRules('hero'));
 
         $stored = $this->storedHero($slug);
         $currentHero = array_merge(PageHeroContent::defaultHero($slug), $stored);
         $heroImages = $this->persistResponsiveHeroFlatFields($request, 'hero', $currentHero, 'page-heroes');
-
-        $hero = array_merge($stored, [
-            'label' => $validated['hero_label'] ?? null,
-            'title' => $validated['hero_title'] ?? null,
-            'subtitle' => $validated['hero_subtitle'] ?? null,
-        ], $heroImages);
-
-        foreach (ResponsiveHero::storageKeys() as $storageKey) {
-            $flatField = ResponsiveHero::flatFieldForStorageKey('hero', $storageKey);
-            if ($request->boolean($flatField.'_remove')) {
-                unset($hero[$storageKey]);
-            }
-        }
+        $hero = HeroAdminFields::buildFromRequest($request, 'hero', $stored, $heroImages);
 
         $pages = SiteSetting::getValue('page_heroes', []) ?? [];
         $pages[$slug] = $hero;
@@ -94,7 +78,7 @@ class PageHeroAdminController extends Controller
 
         return redirect()
             ->route('admin.page-heroes.edit', ['slug' => $slug, 'saved' => 1])
-            ->with('success', PageHeroContent::label($slug).' hero saved. Title: "'.($hero['title'] ?: '—').'"');
+            ->with('success', PageHeroContent::label($slug).' hero saved. Title: "'.HeroAdminFields::displayTitle($hero).'"');
     }
 
     /** @return array<string, mixed> */

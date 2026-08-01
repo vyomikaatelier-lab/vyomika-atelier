@@ -6,7 +6,7 @@ use App\Http\Controllers\Admin\Concerns\HandlesAdminUploads;
 use App\Http\Controllers\Controller;
 use App\Models\SiteSetting;
 use App\Support\CollectionContent;
-use App\Support\ResponsiveHero;
+use App\Support\HeroAdminFields;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 
@@ -55,29 +55,16 @@ class CollectionPageAdminController extends Controller
         $validated = $request->validate(array_merge([
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
-            'hero_title' => 'nullable|string|max:255',
-            'hero_subtitle' => 'nullable|string|max:1000',
             'intro_title' => 'nullable|string|max:255',
             'intro_body' => 'nullable|string|max:5000',
             'gallery_title' => 'nullable|string|max:255',
-        ], ResponsiveHero::flatValidationRules('hero')));
+        ], HeroAdminFields::validationRules('hero')));
 
         $storedHero = data_get($this->storedPage($slug), 'hero', data_get(CollectionContent::page($slug), 'hero', []));
         $storedHero = is_array($storedHero) ? $storedHero : [];
 
         $heroImages = $this->persistResponsiveHeroFlatFields($request, 'hero', $storedHero, 'collections');
-
-        $hero = array_merge($storedHero, [
-            'title' => $validated['hero_title'] ?? null,
-            'subtitle' => $validated['hero_subtitle'] ?? null,
-        ], $heroImages);
-
-        foreach (ResponsiveHero::storageKeys() as $storageKey) {
-            $flatField = ResponsiveHero::flatFieldForStorageKey('hero', $storageKey);
-            if ($request->boolean($flatField.'_remove')) {
-                unset($hero[$storageKey]);
-            }
-        }
+        $hero = HeroAdminFields::buildFromRequest($request, 'hero', $storedHero, $heroImages);
 
         $pages = SiteSetting::getValue('collection_pages', []) ?? [];
         $pages[$slug] = [
@@ -103,7 +90,7 @@ class CollectionPageAdminController extends Controller
 
         return redirect()
             ->route('admin.collection-pages.edit', ['slug' => $slug, 'saved' => 1])
-            ->with('success', ucfirst(str_replace('-', ' ', $slug)).' updated. Saved hero title: "'.($hero['title'] ?: '—').'"');
+            ->with('success', ucfirst(str_replace('-', ' ', $slug)).' updated. Saved hero title: "'.HeroAdminFields::displayTitle($hero).'"');
     }
 
     /** @return array<string, mixed> */

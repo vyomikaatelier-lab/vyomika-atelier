@@ -63,7 +63,63 @@ class PageHeroAdminTest extends TestCase
         $this->get(route('shop.mirror-frames.index'))
             ->assertOk()
             ->assertSee('storage/'.$path, false)
-            ->assertSee('--hero-bg-desktop:', false);
+            ->assertSee('am-shop-category-hero', false)
+            ->assertSee('<picture>', false);
+    }
+
+    public function test_admin_can_save_structured_page_hero_fields(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAsAdmin($admin)->put(route('admin.page-heroes.update', 'mirror-frames'), [
+            'hero_eyebrow' => 'Mirror Eyebrow',
+            'hero_title_line1' => 'Designer',
+            'hero_title_accent' => 'Mirrors',
+            'hero_tagline' => 'Luxury',
+            'hero_tagline_accent' => 'reflection.',
+            'hero_highlights' => "Corrosion resistant\nCustom sizes",
+            'hero_layout' => 'compact',
+            'hero_image_position' => 'left',
+        ])->assertRedirect();
+
+        $stored = data_get(SiteSetting::getValue('page_heroes', []), 'mirror-frames');
+        $this->assertSame('Mirror Eyebrow', $stored['eyebrow'] ?? null);
+        $this->assertSame('Mirrors', $stored['title_accent'] ?? null);
+        $this->assertSame('compact', $stored['hero_layout'] ?? null);
+
+        $this->get(route('shop.mirror-frames.index'))
+            ->assertOk()
+            ->assertSee('Mirror Eyebrow', false)
+            ->assertSee('Mirrors', false)
+            ->assertSee('am-shop-category-hero--compact', false);
+    }
+
+    public function test_admin_can_save_structured_service_page_hero_fields(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->admin()->create();
+        $service = \App\Models\Service::query()->create([
+            'slug' => 'slim-profile-door-system',
+            'name' => 'Slim Profile Door Systems',
+            'lead_form' => 'popup',
+            'has_designs' => true,
+            'is_active' => true,
+        ]);
+
+        $this->actingAsAdmin($admin)->put(route('admin.services.update', $service), [
+            'name' => $service->name,
+            'slug' => $service->slug,
+            'lead_form' => 'popup',
+            'hero_title_line1' => 'Custom Slim',
+            'hero_title_accent' => 'Doors',
+            'hero_tagline_accent' => 'Sleeker override.',
+            'hero_layout' => 'compact',
+        ])->assertRedirect();
+
+        $stored = data_get(SiteSetting::getValue('service_page_heroes', []), 'slim-profile-door-system');
+        $this->assertSame('Custom Slim', $stored['title_line1'] ?? null);
+        $this->assertSame('Doors', $stored['title_accent'] ?? null);
+        $this->assertSame('compact', $stored['hero_layout'] ?? null);
     }
 
     public function test_service_page_hero_uses_uploaded_images(): void

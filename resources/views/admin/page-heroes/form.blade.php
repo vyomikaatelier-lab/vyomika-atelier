@@ -12,15 +12,10 @@
 @if(data_get($stored, 'title'))
 <p class="text-xs text-gray-500 mb-4">Database hero title: <strong>{{ data_get($stored, 'title') }}</strong></p>
 @endif
-<p class="text-sm text-gray-600 mb-6">{{ \App\Support\ResponsiveHero::adminUploadIntro() }}</p>
-
 <form method="POST" action="{{ route('admin.page-heroes.update', $slug) }}" enctype="multipart/form-data" class="bg-white p-6 rounded shadow space-y-4 max-w-4xl">
     @csrf @method('PUT')
     <input type="hidden" name="_page_save" value="1">
-    <input name="hero_label" value="{{ old('hero_label', $page['label'] ?? '') }}" placeholder="Eyebrow / label (optional)" class="w-full border px-3 py-2 rounded">
-    <input name="hero_title" value="{{ old('hero_title', $page['title'] ?? '') }}" placeholder="Hero title (optional)" class="w-full border px-3 py-2 rounded">
-    <textarea name="hero_subtitle" rows="2" placeholder="Hero subtitle (optional)" class="w-full border px-3 py-2 rounded">{{ old('hero_subtitle', $page['subtitle'] ?? '') }}</textarea>
-    @include('admin.partials.responsive-hero-images', ['prefix' => 'hero', 'hero' => $page])
+    @include('admin.partials.hero-fields', ['prefix' => 'hero', 'hero' => $page, 'context' => 'cover'])
     <button type="submit" class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Save hero</button>
 </form>
 @endsection

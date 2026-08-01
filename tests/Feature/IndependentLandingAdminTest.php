@@ -257,6 +257,33 @@ class IndependentLandingAdminTest extends TestCase
         $this->assertSame('New', $merged['categories']['items'][0]['title']);
     }
 
+    public function test_admin_can_save_structured_railings_hero_fields(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAsAdmin($admin)->put(route('admin.independent-pages.update', 'railings'), [
+            'hero_eyebrow' => 'Custom Railings Eyebrow',
+            'hero_title_line1' => 'Designer',
+            'hero_title_accent' => 'Railings',
+            'hero_tagline_accent' => 'Built forever.',
+            'hero_layout' => 'compact',
+            'section_title' => 'Cats',
+            'cards' => [],
+            'layouts' => [],
+        ])->assertRedirect();
+
+        $stored = data_get(SiteSetting::getValue('landing_pages', []), 'railings.hero');
+        $this->assertSame('Custom Railings Eyebrow', $stored['eyebrow'] ?? null);
+        $this->assertSame('Railings', $stored['title_accent'] ?? null);
+        $this->assertSame('Built forever.', $stored['tagline_accent'] ?? null);
+
+        $this->get(route('railings.index'))
+            ->assertOk()
+            ->assertSee('Custom Railings Eyebrow', false)
+            ->assertSee('Built forever.', false)
+            ->assertSee('am-shop-category-hero--compact', false);
+    }
+
     public function test_admin_can_upload_responsive_hero_images(): void
     {
         Storage::fake('public');
@@ -281,8 +308,10 @@ class IndependentLandingAdminTest extends TestCase
 
         $this->get(route('railings.index'))
             ->assertOk()
-            ->assertSee('--hero-bg-desktop:', false)
-            ->assertSee('--hero-bg-mobile:', false);
+            ->assertSee('am-shop-category-hero', false)
+            ->assertSee('<picture>', false)
+            ->assertSee($stored['image'], false)
+            ->assertSee($stored['image_mobile'], false);
     }
 
     public function test_corten_changes_persist_after_reload(): void
@@ -381,9 +410,10 @@ class IndependentLandingAdminTest extends TestCase
     {
         $this->get(route('railings.index'))
             ->assertOk()
+            ->assertSee('Designer', false)
             ->assertSee('Railings', false)
-            ->assertSee('Balustrades', false)
             ->assertSee('Glass Railings', false)
+            ->assertSee('am-shop-category-hero--compact', false)
             ->assertSee('href="#railing-quote-form"', false);
 
         $this->get(route('corten-steel.show'))

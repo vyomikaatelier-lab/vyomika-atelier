@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\Service;
 use App\Models\ServiceDesign;
 use App\Models\SiteSetting;
+use App\Support\HeroAdminFields;
 use App\Support\ResponsiveHero;
 use App\Support\ServicePageHero;
 use Illuminate\Http\Request;
@@ -133,7 +134,7 @@ class ServiceAdminController extends Controller
             'rate_per_sqft' => 'nullable|numeric|min:0',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
-            ...ResponsiveHero::flatValidationRules('hero'),
+            ...HeroAdminFields::validationRules('hero'),
             'designs' => 'nullable|array',
             'designs.*.id' => 'nullable|integer|exists:service_designs,id',
             'designs.*.name' => 'nullable|string|max:255',
@@ -228,8 +229,11 @@ class ServiceAdminController extends Controller
         $heroImages = $this->persistResponsiveHeroFlatFields($request, 'hero', $current, 'services');
 
         $pages = SiteSetting::getValue('service_page_heroes', []) ?? [];
-        if ($heroImages !== []) {
-            $pages[$slug] = array_merge($pages[$slug] ?? [], $heroImages);
+        $existing = is_array($pages[$slug] ?? null) ? $pages[$slug] : [];
+        $hero = HeroAdminFields::buildFromRequest($request, 'hero', $existing, $heroImages);
+
+        if ($hero !== []) {
+            $pages[$slug] = $hero;
             SiteSetting::setValue('service_page_heroes', $pages);
         }
 
