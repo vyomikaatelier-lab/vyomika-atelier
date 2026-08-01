@@ -645,7 +645,7 @@ main,
   .am-shop-category-hero--compact .am-shop-category-hero__media--fixed {
     width: 100%;
     max-height: none;
-    aspect-ratio: 500 / 380;
+    aspect-ratio: 600 / 480;
   }
 
   .am-breadcrumbs--hide-mobile,

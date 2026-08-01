@@ -23,10 +23,16 @@ class ResponsiveHeroTest extends TestCase
         $this->assertStringContainsString('/services list thumbnail', $service['desktop']['hint']);
 
         $compact = ResponsiveHero::adminVariants('compact');
-        $this->assertSame('500 × 380 px', $compact['desktop']['size']);
-        $this->assertSame('500 × 380 px', $compact['mobile']['size']);
-        $this->assertStringContainsString('Fixed image panel', $compact['desktop']['hint']);
-        $this->assertStringContainsString('Split hero image panel', ResponsiveHero::adminUploadIntro('compact'));
-        $this->assertStringContainsString('1000×760', ResponsiveHero::adminUploadIntro('compact'));
+        $this->assertSame('600 × 480 px', $compact['desktop']['size']);
+        $this->assertSame('600 × 480 px', $compact['mobile']['size']);
+        $this->assertStringContainsString('One image for all devices', $compact['desktop']['hint']);
+        $this->assertStringContainsString('One image 600×480', ResponsiveHero::adminUploadIntro('compact'));
+        $this->assertStringContainsString('1200×960', ResponsiveHero::adminUploadIntro('compact'));
+
+        $compactForm = ResponsiveHero::adminFormVariants('compact');
+        $this->assertCount(1, $compactForm);
+        $this->assertArrayHasKey('desktop', $compactForm);
+        $this->assertSame('Hero image (all devices)', $compactForm['desktop']['label']);
+        $this->assertCount(3, ResponsiveHero::adminFormVariants('cover'));
     }
 }

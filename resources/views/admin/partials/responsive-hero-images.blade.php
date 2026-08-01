@@ -5,9 +5,10 @@
     $prefix = $prefix ?? 'hero';
     $heroData = $hero ?? [];
     $context = $context ?? 'cover';
-    $variants = ResponsiveHero::adminVariants($context);
+    $variants = ResponsiveHero::adminFormVariants($context);
+    $isSingleUpload = $context === 'compact';
 @endphp
-<div class="grid lg:grid-cols-3 gap-3">
+<div @class(['grid gap-3', 'max-w-md' => $isSingleUpload, 'lg:grid-cols-3' => ! $isSingleUpload])>
     @foreach($variants as $variant => $meta)
         @php
             $storageKey = $meta['key'];
