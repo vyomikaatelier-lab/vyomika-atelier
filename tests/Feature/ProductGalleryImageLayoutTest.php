@@ -38,6 +38,14 @@ class ProductGalleryImageLayoutTest extends TestCase
             '/\.am-section__body \.am-product-card__thumb\s*\{[^}]*padding:\s*0/',
             $css
         );
+        $this->assertMatchesRegularExpression(
+            '/\.am-design-gallery__media\s*\{[^}]*aspect-ratio:\s*3\s*\/\s*4/',
+            $css
+        );
+        $this->assertMatchesRegularExpression(
+            '/\.am-design-gallery--portrait \.am-design-gallery__media\s*\{[^}]*aspect-ratio:\s*3\s*\/\s*4/',
+            $css
+        );
     }
 
     public function test_stylesheet_defines_collection_gallery_three_column_grid(): void
@@ -87,7 +95,7 @@ class ProductGalleryImageLayoutTest extends TestCase
         $this->get(route('shop.show', 'door-handles'))
             ->assertOk()
             ->assertSee('am-collection-gallery-grid', false)
-            ->assertSee('am-design-gallery--square', false);
+            ->assertSee('am-design-gallery--portrait', false);
     }
 
     public function test_shop_index_uses_square_cover_product_cards(): void
@@ -146,7 +154,7 @@ class ProductGalleryImageLayoutTest extends TestCase
             ->assertSee('Homepage Featured Handle', false);
     }
 
-    public function test_mirror_frames_gallery_uses_square_cover_layout(): void
+    public function test_mirror_frames_gallery_uses_portrait_cover_layout(): void
     {
         $category = Category::query()->firstOrCreate(
             ['slug' => 'mirror-frames'],
@@ -169,7 +177,7 @@ class ProductGalleryImageLayoutTest extends TestCase
 
         $this->get(route('shop.mirror-frames.index'))
             ->assertOk()
-            ->assertSee('am-design-gallery--square', false)
+            ->assertSee('am-design-gallery--portrait', false)
             ->assertSee('Square Mirror Frame', false);
     }
 
@@ -194,7 +202,7 @@ class ProductGalleryImageLayoutTest extends TestCase
     /**
      * @dataProvider shopCategoryGalleryRoutesProvider
      */
-    public function test_all_shop_category_galleries_use_square_cover_layout(
+    public function test_all_shop_category_galleries_use_portrait_cover_layout(
         string $slug,
         string $routeName,
         array $routeParams,
@@ -213,7 +221,7 @@ class ProductGalleryImageLayoutTest extends TestCase
                 'category_id' => $category->id,
                 'name' => 'Gallery '.$slug,
                 'slug' => 'gallery-'.$slug,
-                'description' => 'Square gallery card for '.$slug.'.',
+                'description' => 'Portrait gallery card for '.$slug.'.',
                 'price' => 15000,
                 'stock' => 5,
                 'section' => Product::SECTION_SHOP,
@@ -232,7 +240,7 @@ class ProductGalleryImageLayoutTest extends TestCase
                 'category_id' => $category->id,
                 'name' => 'Gallery mirror-frames',
                 'slug' => 'arched-wall-mirror',
-                'description' => 'Square mirror frames gallery card.',
+                'description' => 'Portrait mirror frames gallery card.',
                 'price' => 12000,
                 'stock' => 10,
                 'section' => Product::SECTION_SHOP,
@@ -245,7 +253,7 @@ class ProductGalleryImageLayoutTest extends TestCase
 
         $response = $this->get(route($routeName, $routeParams))->assertOk();
 
-        $response->assertSee('am-design-gallery--square', false);
+        $response->assertSee('am-design-gallery--portrait', false);
         $response->assertSee('am-collection-gallery-grid', false);
 
         if ($slug === 'mirror-frames') {
@@ -255,7 +263,7 @@ class ProductGalleryImageLayoutTest extends TestCase
         }
     }
 
-    public function test_shop_category_gallery_uses_square_cover_layout(): void
+    public function test_shop_category_gallery_uses_portrait_cover_layout(): void
     {
         $category = Category::query()->firstOrCreate(
             ['slug' => 'coffee-tables'],
@@ -266,7 +274,7 @@ class ProductGalleryImageLayoutTest extends TestCase
             'category_id' => $category->id,
             'name' => 'Gallery Coffee Table',
             'slug' => 'gallery-coffee-table',
-            'description' => 'Square gallery card test product.',
+            'description' => 'Portrait gallery card test product.',
             'price' => 15000,
             'stock' => 5,
             'section' => Product::SECTION_SHOP,
@@ -279,11 +287,11 @@ class ProductGalleryImageLayoutTest extends TestCase
         $this->get(route('shop.show', 'coffee-tables'))
             ->assertOk()
             ->assertSee('id="collection-gallery"', false)
-            ->assertSee('am-design-gallery--square', false)
+            ->assertSee('am-design-gallery--portrait', false)
             ->assertSee('Gallery Coffee Table', false);
     }
 
-    public function test_door_handles_shop_category_gallery_uses_square_cover_layout(): void
+    public function test_door_handles_shop_category_gallery_uses_portrait_cover_layout(): void
     {
         $category = Category::query()->firstOrCreate(
             ['slug' => 'door-handles'],
@@ -306,7 +314,7 @@ class ProductGalleryImageLayoutTest extends TestCase
 
         $this->get(route('shop.show', 'door-handles'))
             ->assertOk()
-            ->assertSee('am-design-gallery--square', false)
+            ->assertSee('am-design-gallery--portrait', false)
             ->assertSee('Brass Pull Handle', false);
     }
 

@@ -19,4 +19,5 @@ return [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
+    'preview_bar' => env('APP_PREVIEW_BAR', env('APP_ENV') === 'local'),
 ];

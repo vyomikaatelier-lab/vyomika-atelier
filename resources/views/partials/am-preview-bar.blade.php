@@ -34,11 +34,11 @@
         <button type="button" data-theme-set="wheat">Wheat</button>
     </div>
     <span class="am-preview-bar__sep" aria-hidden="true"></span>
-    <div class="am-preview-bar__group" role="group" aria-label="Hero layout">
-        <span class="am-preview-bar__label">Hero</span>
-        <button type="button" data-hero-set="split">Split</button>
-        <button type="button" data-hero-set="fullscreen" class="is-active">Fullscreen</button>
-        <button type="button" data-hero-set="centered">Centered</button>
+    <div class="am-preview-bar__group" role="group" aria-label="Homepage hero layout">
+        <span class="am-preview-bar__label">Home hero</span>
+        <button type="button" data-hero-set="fullscreen" class="is-active">Full screen</button>
+        <button type="button" data-hero-set="split">Half split</button>
+        <button type="button" data-hero-set="compact">Compact panel</button>
     </div>
-    <span class="am-preview-bar__hint">All pages · theme saves in browser</span>
+    <span class="am-preview-bar__hint">Homepage · hero saves in browser · ?hero=compact</span>
 </div>

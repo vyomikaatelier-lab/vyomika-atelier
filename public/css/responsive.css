@@ -38,6 +38,15 @@ body {
   width: 100%;
 }
 
+.am-shop-category-hero {
+  --am-hero-gutter: clamp(16px, 2.5vw, 40px);
+  max-width: var(--am-content-max);
+  margin-inline: auto;
+  padding-left: max(var(--am-hero-gutter), var(--am-safe-left));
+  padding-right: max(var(--am-hero-gutter), var(--am-safe-right));
+  box-sizing: border-box;
+}
+
 .am-prose,
 .am-corten-section__lead,
 .am-about-hero__subtitle {
@@ -613,6 +622,34 @@ main,
     margin-top: 0.75rem;
   }
 
+  .am-shop-category-hero__grid {
+    max-height: none;
+  }
+
+  .am-shop-category-hero__content {
+    padding: 1.35rem 1.15rem 1.5rem;
+  }
+
+  .am-shop-category-hero__brand {
+    margin-bottom: 0.6rem;
+  }
+
+  .am-shop-category-hero__highlights {
+    display: none;
+  }
+
+  .am-shop-category-hero__footer-tagline {
+    display: none;
+  }
+
+  .am-shop-category-hero--compact .am-shop-category-hero__media {
+    max-height: clamp(200px, 52vw, 280px);
+  }
+
+  .am-shop-category-hero--compact .am-shop-category-hero__media img {
+    min-height: clamp(200px, 52vw, 280px);
+  }
+
   .am-breadcrumbs--hide-mobile,
   .am-shop-sidebar--desktop-only,
   .am-page-hero--hide-mobile {
@@ -817,6 +854,10 @@ main,
   --mirror-frames-hero-img: var(--hero-bg-desktop);
 }
 
+.am-shop-category-hero__media.am-hero-responsive {
+  background-image: var(--hero-bg-desktop);
+}
+
 .am-about-hero.am-hero-responsive {
   --about-hero-img: var(--hero-bg-desktop);
 }
@@ -836,6 +877,10 @@ main,
 
   .am-mirror-frames-hero.am-hero-responsive {
     --mirror-frames-hero-img: var(--hero-bg-tablet, var(--hero-bg-desktop));
+  }
+
+  .am-shop-category-hero__media.am-hero-responsive {
+    background-image: var(--hero-bg-tablet, var(--hero-bg-desktop));
   }
 
   .am-about-hero.am-hero-responsive {
@@ -858,6 +903,10 @@ main,
 
   .am-mirror-frames-hero.am-hero-responsive {
     --mirror-frames-hero-img: var(--hero-bg-mobile, var(--hero-bg-tablet, var(--hero-bg-desktop)));
+  }
+
+  .am-shop-category-hero__media.am-hero-responsive {
+    background-image: var(--hero-bg-mobile, var(--hero-bg-tablet, var(--hero-bg-desktop)));
   }
 
   .am-about-hero.am-hero-responsive {

@@ -9,18 +9,20 @@ return [
     'primary_keyword' => 'custom stainless steel railings India',
 
     'hero' => [
-        'label' => 'Railings',
-        'title' => 'Railings & Balustrades',
-        'subtitle' => 'Precision-fabricated stair railings, glass balustrades and bespoke metal guards — engineered for Indian residences, hospitality and commercial projects.',
+        'label' => 'PVD Railings & Custom Metal Solutions',
+        'title' => 'Designer Railings',
+        'subtitle' => 'Designed to inspire. Built to last. Exquisite PVD finishes, timeless designs and craftsmanship for luxury spaces.',
         'highlights' => [
-            'Glass & metal systems',
-            'Indoor & exterior rated',
-            'Pan-India fabrication',
+            'Premium PVD finish',
+            'Custom design',
+            'Luxury that lasts',
+            'Built for every space',
+            'Easy to maintain & durable',
         ],
         'cta_primary' => ['label' => 'Request Quotation', 'href' => '#railing-quote'],
         'cta_secondary' => ['label' => 'View Categories', 'href' => '#railing-categories'],
-        'image' => 'https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=1400&q=80',
-        'image_alt' => 'Custom staircase railings',
+        'image' => 'images/shop-heroes/railings-hero.png',
+        'image_alt' => 'Designer gold PVD staircase railings',
     ],
 
     'intro' => [

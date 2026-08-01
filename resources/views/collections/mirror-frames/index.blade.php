@@ -14,7 +14,7 @@
 
 @section('content')
 
-@include('partials.am-service-hero', ['hero' => $hero, 'class' => 'am-service-hero--compact-mobile'])
+@include('partials.am-shop-category-hero', ['hero' => $hero])
 
 @if(!empty($page['intro']['body']))
 <section class="am-section am-section--white">
@@ -26,7 +26,7 @@
 @endif
 
 @if(!empty($designs))
-<section class="am-section am-section--cream am-collection-designs am-mirror-frames-designs am-design-gallery am-design-gallery--square" id="mirror-designs">
+<section class="am-section am-section--cream am-collection-designs am-mirror-frames-designs am-design-gallery am-design-gallery--portrait" id="mirror-designs">
     <div class="am-container">
         <div class="am-mirror-frames-section-head">
             <p class="am-card__label">Design Gallery</p>

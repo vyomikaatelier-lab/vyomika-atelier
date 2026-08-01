@@ -630,6 +630,89 @@ body.has-preview-bar [data-hero="fullscreen"] .am-hero__slides {
   text-shadow: 0 2px 18px rgba(0, 0, 0, 0.72), 0 1px 4px rgba(0, 0, 0, 0.45);
 }
 
+/* Hero layout: Compact panel (cream copy + full vertical image, like shop categories) */
+[data-hero="compact"] .am-hero {
+  background: var(--am-cream);
+  border-bottom: 1px solid var(--am-border);
+}
+[data-hero="compact"] .am-hero__slides {
+  min-height: 0;
+}
+[data-hero="compact"] .am-hero__slide {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  align-items: stretch;
+}
+[data-hero="compact"] .am-hero__content {
+  position: relative;
+  justify-content: center;
+  align-items: flex-start;
+  text-align: left;
+  background: var(--am-cream);
+  color: var(--am-charcoal);
+  padding: clamp(1.75rem, 3vw, 2.75rem) clamp(1.5rem, 4vw, 3rem);
+}
+[data-hero="compact"] .am-hero__kicker {
+  color: var(--am-gold-dark);
+}
+[data-hero="compact"] .am-hero__title {
+  color: var(--am-charcoal);
+  font-weight: 400;
+}
+[data-hero="compact"] .am-hero__desc {
+  color: var(--am-charcoal-soft);
+}
+[data-hero="compact"] .am-hero__slide::before {
+  display: none;
+}
+[data-hero="compact"] .am-hero__image {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--am-cream);
+  min-height: 0;
+}
+[data-hero="compact"] .am-hero__image picture {
+  display: block;
+  width: 100%;
+}
+[data-hero="compact"] .am-hero__image img {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  max-height: min(72vh, 640px);
+  object-fit: contain;
+  object-position: center;
+}
+[data-hero="compact"] .am-hero__dots {
+  bottom: 1rem;
+}
+[data-hero="compact"] .am-hero__dot {
+  background: color-mix(in srgb, var(--am-charcoal) 25%, transparent);
+}
+[data-hero="compact"] .am-hero__dot.is-active {
+  background: var(--am-gold);
+}
+@media (max-width: 767px) {
+  [data-hero="compact"] .am-hero__slide {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+  }
+  [data-hero="compact"] .am-hero__content {
+    order: 2;
+    padding: 1.5rem 1.25rem 2rem;
+  }
+  [data-hero="compact"] .am-hero__image {
+    order: 1;
+    max-height: 52vw;
+    overflow: hidden;
+  }
+  [data-hero="compact"] .am-hero__image img {
+    max-height: 52vw;
+  }
+}
+
 /* Preview control bar */
 .am-preview-bar {
   position: fixed;

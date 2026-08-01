@@ -11,8 +11,8 @@
     <title>@yield('title', $defaultPageTitle)</title>
     @include('partials.seo-meta')
     @stack('meta')
-    @if(filter_var(env('APP_PREVIEW_BAR', false), FILTER_VALIDATE_BOOLEAN))
-    <script>try{var t=localStorage.getItem('ssmetal-theme');document.documentElement.dataset.theme=t||'atelier';var h=localStorage.getItem('ssmetal-hero');document.documentElement.dataset.hero=h||'fullscreen'}catch(e){document.documentElement.dataset.theme='atelier';document.documentElement.dataset.hero='fullscreen'}</script>
+    @if(config('app.preview_bar'))
+    <script>try{var p=new URLSearchParams(location.search),qh=p.get('hero'),t=localStorage.getItem('ssmetal-theme'),h=qh||localStorage.getItem('ssmetal-hero');document.documentElement.dataset.theme=t||'atelier';document.documentElement.dataset.hero=(h&&['split','fullscreen','centered','compact'].includes(h))?h:'fullscreen';if(qh)localStorage.setItem('ssmetal-hero',qh)}catch(e){document.documentElement.dataset.theme='atelier';document.documentElement.dataset.hero='fullscreen'}</script>
     @endif
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
     @php
@@ -25,10 +25,10 @@
     <link rel="stylesheet" href="{{ asset('css/responsive.css') }}?v={{ $assetResponsiveVer }}">
     @stack('styles')
 </head>
-<body @if(filter_var(env('APP_PREVIEW_BAR', false), FILTER_VALIDATE_BOOLEAN)) class="has-preview-bar" @endif>
+<body @if(config('app.preview_bar')) class="has-preview-bar" @endif>
 
 @php
-    $previewBar = filter_var(env('APP_PREVIEW_BAR', false), FILTER_VALIDATE_BOOLEAN);
+    $previewBar = (bool) config('app.preview_bar');
 @endphp
 @if($previewBar)
     @include('partials.am-preview-bar')

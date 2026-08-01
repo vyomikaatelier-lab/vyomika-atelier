@@ -26,12 +26,12 @@ class ServiceGallery
     }
 
     /** @return list<string> */
-    public static function squareGalleryServiceSlugs(): array
+    public static function portraitGalleryServiceSlugs(): array
     {
         return self::galleryServiceSlugs();
     }
 
-    public static function usesSquareGalleryLayout(Service|string $service): bool
+    public static function usesPortraitGalleryLayout(Service|string $service): bool
     {
         return true;
     }

@@ -46,6 +46,16 @@
     });
   }
 
+  function heroFromQuery() {
+    try {
+      const hero = new URLSearchParams(window.location.search).get('hero');
+      if (hero && ['split', 'fullscreen', 'centered', 'compact'].includes(hero)) {
+        return hero;
+      }
+    } catch (_) { /* ignore */ }
+    return null;
+  }
+
   function initFromStorage() {
     applySiteDefaults();
     let theme = DEFAULT_THEME;
@@ -53,7 +63,8 @@
     try {
       theme = localStorage.getItem(THEME_KEY) || DEFAULT_THEME;
       if (theme === 'corten-bottle') theme = 'corten-final';
-      hero = localStorage.getItem(HERO_KEY) || DEFAULT_HERO;
+      hero = heroFromQuery() || localStorage.getItem(HERO_KEY) || DEFAULT_HERO;
+      if (heroFromQuery()) localStorage.setItem(HERO_KEY, hero);
     } catch (_) { /* ignore */ }
     setTheme(theme);
     setHero(hero);

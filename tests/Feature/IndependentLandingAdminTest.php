@@ -155,6 +155,10 @@ class IndependentLandingAdminTest extends TestCase
             MediaUrl::resolve('https://cdn.example.com/a.jpg')
         );
         $this->assertStringContainsString('storage/landing-pages/x.jpg', (string) MediaUrl::resolve('landing-pages/x.jpg'));
+        $this->assertStringContainsString(
+            '/images/shop-heroes/coffee-tables-hero.png',
+            (string) MediaUrl::resolve('images/shop-heroes/coffee-tables-hero.png')
+        );
         $this->assertNull(MediaUrl::resolve('javascript:alert(1)'));
         $this->assertNull(MediaUrl::resolve('data:text/html,hi'));
     }

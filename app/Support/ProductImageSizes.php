@@ -4,14 +4,16 @@ namespace App\Support;
 
 class ProductImageSizes
 {
-    /** Gallery grids and shop product cards (1:1 square cell, object-fit: cover). */
+    /** Gallery grids (3:4 portrait cell, object-fit: cover). */
     public const GALLERY_WIDTH = 800;
 
-    public const GALLERY_HEIGHT = 800;
+    public const GALLERY_HEIGHT = 1067;
 
     public const GALLERY_LARGE = 1200;
 
-    public const GALLERY_RATIO = '1:1';
+    public const GALLERY_LARGE_HEIGHT = 1600;
+
+    public const GALLERY_RATIO = '3:4';
 
     /** PDP hero image (3:4 portrait frame, object-fit: contain). */
     public const PDP_WIDTH = 1200;
@@ -27,7 +29,7 @@ class ProductImageSizes
 
     public static function galleryLargeDimensionsLabel(): string
     {
-        return sprintf('%d×%d px', self::GALLERY_LARGE, self::GALLERY_LARGE);
+        return sprintf('%d×%d px', self::GALLERY_LARGE, self::GALLERY_LARGE_HEIGHT);
     }
 
     public static function pdpDimensionsLabel(): string
@@ -59,7 +61,7 @@ class ProductImageSizes
     public static function galleryAdminHint(): string
     {
         return sprintf(
-            'Gallery & shop cards display as %s squares with cover — upload square %s or %s (%s) so images fill the frame edge to edge.',
+            'Gallery cards display as %s portraits with cover — upload %s or %s (%s) so images fill the frame edge to edge.',
             self::GALLERY_RATIO,
             self::galleryDimensionsLabel(),
             self::galleryLargeDimensionsLabel(),
