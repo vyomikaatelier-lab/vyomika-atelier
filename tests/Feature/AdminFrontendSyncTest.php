@@ -222,7 +222,7 @@ class AdminFrontendSyncTest extends TestCase
                 'lead_form' => 'popup',
                 'is_active' => '1',
             ])
-            ->assertRedirect(route('admin.services.edit', ['service' => $service, 'saved' => 1]))
+            ->assertRedirect(route('admin.services.index'))
             ->assertSessionHasNoErrors();
 
         $this->get(route('services.show', 'fluted-screens'))
@@ -367,7 +367,7 @@ class AdminFrontendSyncTest extends TestCase
                 'meta_description' => 'Our studio, our makers, our finishes.',
                 'robots' => 'index',
             ])
-            ->assertRedirect(route('admin.static-pages.edit', 'about'))
+            ->assertRedirect(route('admin.static-pages.index'))
             ->assertSessionHasNoErrors();
 
         $this->get(route('about'))
@@ -717,7 +717,7 @@ class AdminFrontendSyncTest extends TestCase
                 'hero_title' => 'Metal, made deliberately',
                 'hero_subtitle' => 'A studio practice in brass, steel and stone.',
             ])
-            ->assertRedirect(route('admin.page-heroes.edit', ['slug' => 'about', 'saved' => 1]))
+            ->assertRedirect(route('admin.page-heroes.index'))
             ->assertSessionHasNoErrors();
 
         $this->get(route('about'))

@@ -220,7 +220,7 @@ class IndependentLandingAdminController extends Controller
         }
 
         return redirect()
-            ->route('admin.independent-pages.edit', ['slug' => $slug, 'saved' => 1])
+            ->route('admin.independent-pages.index')
             ->with('success', LandingPageContent::label($slug).' updated. Saved hero title: "'.(data_get($override, 'hero.title') ?: '—').'"');
     }
 

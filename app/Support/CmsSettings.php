@@ -105,6 +105,7 @@ class CmsSettings
 
         $collectionPages = $settings['collection_pages'] ?? null;
         if (is_array($collectionPages) && $collectionPages !== []) {
+            $collectionPages = CollectionContent::normalizeStoredPages($collectionPages);
             config(['collections' => array_replace_recursive(config('collections', []), $collectionPages)]);
         }
 

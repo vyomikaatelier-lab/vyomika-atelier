@@ -80,7 +80,7 @@ class StaticPageSeoAdminController extends Controller
         SiteSetting::setValue('static_pages', $all);
 
         return redirect()
-            ->route('admin.static-pages.edit', $slug)
+            ->route('admin.static-pages.index')
             ->with('success', StaticPageContent::label($slug).' SEO saved.');
     }
 }

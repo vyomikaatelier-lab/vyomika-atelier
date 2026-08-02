@@ -52,7 +52,7 @@ class CollectionPageAdminTest extends TestCase
 
             'hero_image_tablet_file' => $tablet,
 
-        ])->assertRedirect(route('admin.collection-pages.edit', ['slug' => 'coffee-tables', 'saved' => 1]));
+        ])->assertRedirect(route('admin.collection-pages.index'));
 
 
 
@@ -112,7 +112,7 @@ class CollectionPageAdminTest extends TestCase
             'hero_cta_primary_href' => '#collection-gallery',
             'hero_layout' => 'compact',
             'hero_image_position' => 'left',
-        ])->assertRedirect(route('admin.collection-pages.edit', ['slug' => 'coffee-tables', 'saved' => 1]));
+        ])->assertRedirect(route('admin.collection-pages.index'));
 
         $stored = data_get(SiteSetting::getValue('collection_pages', []), 'coffee-tables.hero');
         $this->assertSame('Custom Eyebrow', $stored['eyebrow'] ?? null);

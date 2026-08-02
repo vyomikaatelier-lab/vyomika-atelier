@@ -128,6 +128,7 @@ return [
             'eyebrow' => 'PVD Partitions & Custom Metal Furniture',
             'title_line1' => 'Luxury in Every',
             'title_accent' => 'Detail',
+            'title_line2' => 'Metal Furniture',
             'tagline' => 'Bespoke partitions. Timeless furniture.',
             'tagline_accent' => 'Exceptional spaces.',
             'highlights' => [

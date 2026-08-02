@@ -9,9 +9,11 @@ use App\Models\Product;
 use App\Models\Service;
 use App\Models\ServiceDesign;
 use App\Models\SiteSetting;
+use App\Support\CollectionContent;
 use App\Support\HeroAdminFields;
 use App\Support\ResponsiveHero;
 use App\Support\ServicePageHero;
+use App\Support\StorefrontRoutes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -106,7 +108,7 @@ class ServiceAdminController extends Controller
         $this->syncDesigns($request, $service);
 
         return redirect()
-            ->route('admin.services.edit', ['service' => $service, 'saved' => 1])
+            ->route('admin.services.index')
             ->with('success', 'Service updated.');
     }
 
@@ -235,8 +237,29 @@ class ServiceAdminController extends Controller
         if ($hero !== []) {
             $pages[$slug] = $hero;
             SiteSetting::setValue('service_page_heroes', $pages);
+            $this->syncShopCollectionHero($slug, $hero);
         }
 
         return $heroImages;
+    }
+
+    /** Mirror shop-category service heroes into collection_pages for the public /shop route. */
+    private function syncShopCollectionHero(string $slug, array $hero): void
+    {
+        if (! StorefrontRoutes::isShopCategory($slug)) {
+            return;
+        }
+
+        $pages = CollectionContent::normalizeStoredPages(SiteSetting::getValue('collection_pages', []) ?? []);
+        $existing = is_array($pages[$slug] ?? null) ? $pages[$slug] : [];
+        $pages[$slug] = array_replace_recursive($existing, ['hero' => $hero]);
+
+        foreach (CollectionContent::overrideKeysFor($slug) as $legacyKey) {
+            if ($legacyKey !== $slug) {
+                unset($pages[$legacyKey]);
+            }
+        }
+
+        SiteSetting::setValue('collection_pages', $pages);
     }
 }

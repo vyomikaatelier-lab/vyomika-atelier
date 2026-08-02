@@ -109,7 +109,7 @@ class AdminRoundTripTest extends TestCase
                 'meta_title' => 'Coffee Tables — Vyomika Atelier',
                 'meta_description' => 'Hand-welded coffee tables in brass and steel.',
             ])
-            ->assertRedirect(route('admin.collection-pages.edit', ['slug' => 'coffee-tables', 'saved' => 1]))
+            ->assertRedirect(route('admin.collection-pages.index'))
             ->assertSessionHasNoErrors();
 
         $this->actingAsAdmin($admin)

@@ -292,7 +292,7 @@ class AdminSaveAuditTest extends TestCase
         $this->actingAsAdmin($admin)->put(route('admin.page-heroes.update', $slug), [
             '_page_save' => '1',
             'hero_title' => 'Hero audit title',
-        ])->assertRedirect(route('admin.page-heroes.edit', ['slug' => $slug, 'saved' => 1]));
+        ])->assertRedirect(route('admin.page-heroes.index'));
 
         $stored = \App\Models\SiteSetting::getValue('page_heroes', []);
         $this->assertSame('Hero audit title', data_get($stored, "{$slug}.title"));

@@ -77,7 +77,7 @@ class PageHeroAdminController extends Controller
         }
 
         return redirect()
-            ->route('admin.page-heroes.edit', ['slug' => $slug, 'saved' => 1])
+            ->route('admin.page-heroes.index')
             ->with('success', PageHeroContent::label($slug).' hero saved. Title: "'.HeroAdminFields::displayTitle($hero).'"');
     }
 

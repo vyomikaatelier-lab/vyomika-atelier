@@ -21,9 +21,10 @@ class CollectionPageAdminController extends Controller
 
         foreach ($slugs as $slug) {
             $page = CollectionContent::page($slug) ?? [];
+            $heroTitle = HeroAdminFields::displayTitle(data_get($page, 'hero', []));
             $pages[] = [
                 'slug' => $slug,
-                'title' => data_get($page, 'hero.title', ucfirst(str_replace('-', ' ', $slug))),
+                'title' => $heroTitle !== '—' ? $heroTitle : ucfirst(str_replace('-', ' ', $slug)),
             ];
         }
 
@@ -66,7 +67,7 @@ class CollectionPageAdminController extends Controller
         $heroImages = $this->persistResponsiveHeroFlatFields($request, 'hero', $storedHero, 'collections');
         $hero = HeroAdminFields::buildFromRequest($request, 'hero', $storedHero, $heroImages);
 
-        $pages = SiteSetting::getValue('collection_pages', []) ?? [];
+        $pages = CollectionContent::normalizeStoredPages(SiteSetting::getValue('collection_pages', []) ?? []);
         $pages[$slug] = [
             'meta_title' => $validated['meta_title'] ?? null,
             'meta_description' => $validated['meta_description'] ?? null,
@@ -77,6 +78,12 @@ class CollectionPageAdminController extends Controller
                 'body' => $validated['intro_body'] ?? null,
             ],
         ];
+
+        foreach (CollectionContent::overrideKeysFor($slug) as $legacyKey) {
+            if ($legacyKey !== $slug) {
+                unset($pages[$legacyKey]);
+            }
+        }
 
         try {
             SiteSetting::setValue('collection_pages', $pages);
@@ -89,16 +96,13 @@ class CollectionPageAdminController extends Controller
         }
 
         return redirect()
-            ->route('admin.collection-pages.edit', ['slug' => $slug, 'saved' => 1])
+            ->route('admin.collection-pages.index')
             ->with('success', ucfirst(str_replace('-', ' ', $slug)).' updated. Saved hero title: "'.HeroAdminFields::displayTitle($hero).'"');
     }
 
     /** @return array<string, mixed> */
     private function storedPage(string $slug): array
     {
-        $pages = SiteSetting::getValue('collection_pages', []) ?? [];
-        $stored = $pages[$slug] ?? null;
-
-        return is_array($stored) ? $stored : [];
+        return CollectionContent::storedOverrides($slug);
     }
 }
