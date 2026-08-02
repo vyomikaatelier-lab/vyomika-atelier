@@ -34,6 +34,12 @@ class Service extends Model
         return $this->lead_form === 'popup';
     }
 
+    /** Service slugs managed via Independent Pages admin, not Services admin. */
+    public static function adminHiddenSlugs(): array
+    {
+        return ['corten-steel-facade'];
+    }
+
     /** @return list<string> */
     public static function calculatorPageSlugs(): array
     {

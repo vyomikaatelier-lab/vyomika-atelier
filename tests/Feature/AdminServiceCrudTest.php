@@ -6,6 +6,7 @@ use App\Models\Service;
 use App\Models\ServiceDesign;
 use App\Models\SiteSetting;
 use App\Models\User;
+use Database\Seeders\CatalogSyncSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -14,6 +15,19 @@ use Tests\TestCase;
 class AdminServiceCrudTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_admin_services_index_hides_independent_landing_services(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $this->seed(CatalogSyncSeeder::class);
+
+        $this->assertDatabaseMissing('services', ['slug' => 'corten-steel-facade']);
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.services.index'))
+            ->assertOk()
+            ->assertDontSee('Corten steel', false);
+    }
 
     public function test_admin_can_create_service_with_design(): void
     {

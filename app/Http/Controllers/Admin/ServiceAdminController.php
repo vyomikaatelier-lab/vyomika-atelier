@@ -25,7 +25,9 @@ class ServiceAdminController extends Controller
 
     public function index(Request $request)
     {
-        $query = Service::query()->orderBy('name');
+        $query = Service::query()
+            ->whereNotIn('slug', Service::adminHiddenSlugs())
+            ->orderBy('name');
 
         if ($request->filled('q')) {
             $q = $request->string('q');

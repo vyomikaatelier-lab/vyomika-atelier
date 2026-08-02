@@ -88,6 +88,13 @@ class CatalogSyncSeeder extends Seeder
 
     private function syncServices(): void
     {
+        Service::query()
+            ->whereIn('slug', Service::adminHiddenSlugs())
+            ->each(function (Service $service) {
+                $service->designs()->delete();
+                $service->delete();
+            });
+
         $services = [
             [
                 'name' => 'PVD Partitions',
@@ -104,18 +111,6 @@ class CatalogSyncSeeder extends Seeder
                     ['name' => 'Laser-Cut Screen', 'slug' => 'laser-cut-screen', 'product_slug' => 'laser-cut-partition', 'description' => 'Custom patterns cut in stainless with precision CNC finishing.', 'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg'],
                     ['name' => 'Frameless Glass + Metal', 'slug' => 'frameless-glass-metal', 'product_slug' => 'rose-gold-room-divider', 'description' => 'Hybrid partition combining PVD metal frames with glass infill.', 'image' => 'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg'],
                 ],
-            ],
-            [
-                'name' => 'Corten steel',
-                'slug' => 'corten-steel-facade',
-                'summary' => 'Weathering steel facades, screens, planters and custom metalwork with a natural rust finish.',
-                'content' => '<p>Corten cladding, screens, and entrance features that develop a protective patina. Ideal for commercial entrances, landscape walls, and architectural statements.</p>',
-                'image' => 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80',
-                'has_calculator' => false,
-                'has_designs' => false,
-                'lead_form' => 'inline',
-                'meta_title' => 'Corten Steel Facades, Screens & Custom Fabrication — Vyomika Atelier LLP',
-                'meta_description' => 'Explore custom Corten steel facades, decorative screens, planters, gates and architectural metalwork designed and fabricated by Vyomika Atelier LLP.',
             ],
             [
                 'name' => 'Slim Profile Door System',
