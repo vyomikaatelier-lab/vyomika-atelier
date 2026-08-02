@@ -18,7 +18,7 @@
     @php
         $heroContext = \App\Support\HeroAdminFields::uploadContext(
             $page,
-            (str_starts_with($slug, 'service:') || $slug === 'mirror-frames') ? 'compact' : 'cover'
+            str_starts_with($slug, 'service:') ? 'compact' : 'cover'
         );
     @endphp
     @include('admin.partials.hero-fields', ['prefix' => 'hero', 'hero' => $page, 'context' => $heroContext])

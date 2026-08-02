@@ -94,4 +94,19 @@ class BespokeHeroTest extends TestCase
         $this->assertArrayNotHasKey('image_tablet', $stored);
         $this->assertArrayNotHasKey('image_mobile', $stored);
     }
+
+    public function test_bespoke_admin_normalizes_default_layout_to_compact_on_save(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAsAdmin($admin)->put(route('admin.collection-pages.update', 'bespoke-metal-furniture'), [
+            '_page_save' => '1',
+            'hero_layout' => 'default',
+            'hero_title_line1' => 'Normalized',
+        ])->assertSessionHasNoErrors();
+
+        $stored = data_get(SiteSetting::getValue('collection_pages', []), 'bespoke-metal-furniture.hero');
+        $this->assertSame('compact', $stored['hero_layout'] ?? null);
+        $this->assertSame('Normalized', $stored['title_line1'] ?? null);
+    }
 }

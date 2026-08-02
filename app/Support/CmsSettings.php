@@ -107,6 +107,13 @@ class CmsSettings
         if (is_array($collectionPages) && $collectionPages !== []) {
             $collectionPages = CollectionContent::normalizeStoredPages($collectionPages);
             config(['collections' => array_replace_recursive(config('collections', []), $collectionPages)]);
+
+            if (isset($collectionPages['mirror-frames']) && is_array($collectionPages['mirror-frames'])) {
+                config(['mirror-frames' => array_replace_recursive(
+                    config('mirror-frames', []),
+                    $collectionPages['mirror-frames']
+                )]);
+            }
         }
 
         $business = $settings['business'] ?? null;

@@ -163,6 +163,71 @@ class CollectionPageAdminTest extends TestCase
             ->assertDontSee('Tablet / iPad image', false)
             ->assertDontSee('Mobile image (phones', false);
     }
+
+    public function test_bespoke_collection_admin_shows_single_upload_when_canonical_override_has_default_layout(): void
+    {
+        SiteSetting::setValue('collection_pages', [
+            'bespoke-metal-furniture' => [
+                'hero' => [
+                    'title_line1' => 'Saved Default',
+                    'hero_layout' => 'default',
+                    'image_tablet' => 'collections/tablet.jpg',
+                    'image_mobile' => 'collections/mobile.jpg',
+                ],
+            ],
+        ]);
+
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.collection-pages.edit', 'bespoke-metal-furniture'))
+            ->assertOk()
+            ->assertSee('Hero image (all devices)', false)
+            ->assertDontSee('Tablet / iPad image', false)
+            ->assertDontSee('Mobile image (phones', false);
+    }
+
+    public function test_mirror_frames_appears_in_collection_pages_admin(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.collection-pages.index'))
+            ->assertOk()
+            ->assertSee('mirror-frames', false)
+            ->assertSee('Mirror Frames', false);
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.collection-pages.edit', 'mirror-frames'))
+            ->assertOk()
+            ->assertSee('Hero image (all devices)', false)
+            ->assertSee('600 × 480 px', false);
+    }
+
+    public function test_admin_can_upload_mirror_frames_hero_via_collection_pages(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->admin()->create();
+        $image = UploadedFile::fake()->image('mirror-hero.jpg', 600, 480);
+
+        $this->actingAsAdmin($admin)->put(route('admin.collection-pages.update', 'mirror-frames'), [
+            '_page_save' => '1',
+            'hero_eyebrow' => 'Mirror Eyebrow',
+            'hero_layout' => 'compact',
+            'hero_image_file' => $image,
+        ])->assertRedirect(route('admin.collection-pages.index'));
+
+        $stored = data_get(SiteSetting::getValue('collection_pages', []), 'mirror-frames.hero');
+        $this->assertSame('Mirror Eyebrow', $stored['eyebrow'] ?? null);
+        $this->assertNotEmpty($stored['image'] ?? null);
+        Storage::disk('public')->assertExists($stored['image']);
+
+        $this->get(route('shop.mirror-frames.index'))
+            ->assertOk()
+            ->assertSee('Mirror Eyebrow', false)
+            ->assertSee('am-shop-category-hero--compact', false)
+            ->assertSee($stored['image'], false);
+    }
 }
 
 

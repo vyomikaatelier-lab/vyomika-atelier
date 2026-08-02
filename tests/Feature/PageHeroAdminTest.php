@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\SiteSetting;
 use App\Models\User;
 use App\Support\AboutContent;
-use App\Support\MirrorFramesContent;
 use App\Support\PageHeroContent;
 use App\Support\ProfessionalsContent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -46,32 +45,41 @@ class PageHeroAdminTest extends TestCase
             ->assertSee('--hero-bg-mobile:', false);
     }
 
-    public function test_admin_can_upload_mirror_frames_hero_images(): void
+    public function test_admin_can_upload_mirror_frames_hero_images_via_legacy_page_heroes(): void
     {
         Storage::fake('public');
         $admin = User::factory()->admin()->create();
-        $desktop = UploadedFile::fake()->image('mirror-desktop.jpg', 1600, 900);
+        $desktop = UploadedFile::fake()->image('mirror-desktop.jpg', 600, 480);
 
-        $this->actingAsAdmin($admin)->put(route('admin.page-heroes.update', 'mirror-frames'), [
+        SiteSetting::setValue('page_heroes', [
+            'mirror-frames' => [
+                'image' => 'page-heroes/legacy-mirror.jpg',
+            ],
+        ]);
+
+        $this->actingAsAdmin($admin)->put(route('admin.collection-pages.update', 'mirror-frames'), [
+            '_page_save' => '1',
             'hero_image_file' => $desktop,
-        ])->assertRedirect();
+            'hero_layout' => 'compact',
+        ])->assertRedirect(route('admin.collection-pages.index'));
 
-        $path = data_get(SiteSetting::getValue('page_heroes', []), 'mirror-frames.image');
+        $path = data_get(SiteSetting::getValue('collection_pages', []), 'mirror-frames.hero.image');
         $this->assertNotEmpty($path);
         Storage::disk('public')->assertExists($path);
 
         $this->get(route('shop.mirror-frames.index'))
             ->assertOk()
-            ->assertSee('storage/'.$path, false)
+            ->assertSee($path, false)
             ->assertSee('am-shop-category-hero', false)
             ->assertSee('<picture>', false);
     }
 
-    public function test_admin_can_save_structured_page_hero_fields(): void
+    public function test_admin_can_save_structured_mirror_frames_fields_via_collection_pages(): void
     {
         $admin = User::factory()->admin()->create();
 
-        $this->actingAsAdmin($admin)->put(route('admin.page-heroes.update', 'mirror-frames'), [
+        $this->actingAsAdmin($admin)->put(route('admin.collection-pages.update', 'mirror-frames'), [
+            '_page_save' => '1',
             'hero_eyebrow' => 'Mirror Eyebrow',
             'hero_title_line1' => 'Designer',
             'hero_title_accent' => 'Mirrors',
@@ -80,9 +88,9 @@ class PageHeroAdminTest extends TestCase
             'hero_highlights' => "Corrosion resistant\nCustom sizes",
             'hero_layout' => 'compact',
             'hero_image_position' => 'left',
-        ])->assertRedirect();
+        ])->assertRedirect(route('admin.collection-pages.index'));
 
-        $stored = data_get(SiteSetting::getValue('page_heroes', []), 'mirror-frames');
+        $stored = data_get(SiteSetting::getValue('collection_pages', []), 'mirror-frames.hero');
         $this->assertSame('Mirror Eyebrow', $stored['eyebrow'] ?? null);
         $this->assertSame('Mirrors', $stored['title_accent'] ?? null);
         $this->assertSame('compact', $stored['hero_layout'] ?? null);
@@ -147,7 +155,7 @@ class PageHeroAdminTest extends TestCase
             ->assertOk()
             ->assertSee('About', false)
             ->assertSee('Professionals', false)
-            ->assertSee('Mirror Frames', false)
+            ->assertDontSee('Mirror Frames', false)
             ->assertSee('Studio service: Partitions', false);
     }
 

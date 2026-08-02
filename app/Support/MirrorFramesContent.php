@@ -10,9 +10,21 @@ class MirrorFramesContent
     public static function all(): array
     {
         $page = config('mirror-frames', []);
-        $page['hero'] = PageHeroContent::heroWithResolvedImages('mirror-frames');
+        $collectionPage = CollectionContent::page('mirror-frames');
 
-        return $page;
+        if (is_array($collectionPage)) {
+            foreach (['meta_title', 'meta_description', 'intro', 'gallery_title'] as $key) {
+                if (array_key_exists($key, $collectionPage)) {
+                    $page[$key] = $collectionPage[$key];
+                }
+            }
+
+            if (isset($collectionPage['hero']) && is_array($collectionPage['hero'])) {
+                $page['hero'] = $collectionPage['hero'];
+            }
+        }
+
+        return LandingPageContent::withResolvedImages($page);
     }
 
     public static function design(string $slug): ?array

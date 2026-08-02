@@ -26,12 +26,6 @@ class PageHeroContent
                 'defaults' => fn () => data_get(config('professionals'), 'hero', []),
                 'preview' => fn () => route('professionals.index'),
             ],
-            'mirror-frames' => [
-                'label' => 'Mirror Frames',
-                'group' => 'Shop collections',
-                'defaults' => fn () => data_get(config('mirror-frames'), 'hero', []),
-                'preview' => fn () => route('shop.mirror-frames.index'),
-            ],
         ];
 
         foreach (array_keys(config('service-pages', [])) as $slug) {

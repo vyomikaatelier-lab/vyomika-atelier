@@ -42,6 +42,15 @@ class ServicePageHero
         $merged = LandingPageContent::mergePage($base, self::stored($service->slug));
         $hero = LandingPageContent::withResolvedImages(['hero' => $merged])['hero'] ?? [];
 
+        if ($hero !== []) {
+            $configLayout = (string) data_get(config("service-pages.{$service->slug}"), 'hero.hero_layout', 'default');
+            $storedLayout = (string) ($hero['hero_layout'] ?? '');
+
+            if ($configLayout === 'compact' && ($storedLayout === '' || $storedLayout === 'default')) {
+                $hero['hero_layout'] = 'compact';
+            }
+        }
+
         return $hero !== [] ? $hero : null;
     }
 }

@@ -85,10 +85,22 @@ class LandingPageContent
             $overrides = is_array($pages[$slug] ?? null) ? $pages[$slug] : [];
         }
 
-        return self::mergePage(
+        $page = self::mergePage(
             is_array($defaults) ? $defaults : [],
             $overrides
         );
+
+        $configLayout = (string) data_get(is_array($defaults) ? $defaults : [], 'hero.hero_layout', 'default');
+        $storedHero = is_array($overrides['hero'] ?? null) ? $overrides['hero'] : [];
+        $storedLayout = (string) ($storedHero['hero_layout'] ?? '');
+
+        if (is_array($page['hero'] ?? null)
+            && $configLayout === 'compact'
+            && ($storedLayout === '' || $storedLayout === 'default')) {
+            $page['hero']['hero_layout'] = 'compact';
+        }
+
+        return $page;
     }
 
     /**

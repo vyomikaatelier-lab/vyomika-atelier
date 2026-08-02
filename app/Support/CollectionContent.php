@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Schema;
 
 class CollectionContent
 {
+    private const MIRROR_FRAMES_SLUG = 'mirror-frames';
+
     /** Legacy admin keys that map to a canonical shop collection slug. */
     private const OVERRIDE_SLUG_ALIASES = [
         'metal-furniture' => 'bespoke-metal-furniture',
@@ -43,6 +45,14 @@ class CollectionContent
 
         $merged = [];
 
+        if ($slug === self::MIRROR_FRAMES_SLUG) {
+            $pageHeroes = SiteSetting::getValue('page_heroes', []) ?? [];
+            $legacyHero = is_array($pageHeroes[$slug] ?? null) ? $pageHeroes[$slug] : [];
+            if ($legacyHero !== []) {
+                $merged = array_replace_recursive($merged, ['hero' => $legacyHero]);
+            }
+        }
+
         foreach (self::overrideKeysFor($slug) as $key) {
             $override = $pages[$key] ?? null;
             if (is_array($override)) {
@@ -78,6 +88,7 @@ class CollectionContent
     public static function slugs(): array
     {
         $configSlugs = array_keys(config('collections', []));
+        $configSlugs[] = self::MIRROR_FRAMES_SLUG;
         $overrideSlugs = [];
 
         if (Schema::hasTable('site_settings')) {
@@ -88,9 +99,28 @@ class CollectionContent
     }
 
     /** @return array<string, mixed>|null */
+    public static function configDefaults(string $slug): ?array
+    {
+        if ($slug === self::MIRROR_FRAMES_SLUG) {
+            $defaults = config('mirror-frames');
+
+            return is_array($defaults) ? $defaults : null;
+        }
+
+        $defaults = config("collections.{$slug}");
+
+        return is_array($defaults) ? $defaults : null;
+    }
+
+    public static function configHeroLayout(string $slug): string
+    {
+        return (string) data_get(self::configDefaults($slug), 'hero.hero_layout', 'default');
+    }
+
+    /** @return array<string, mixed>|null */
     public static function page(string $slug): ?array
     {
-        $defaults = config("collections.{$slug}");
+        $defaults = self::configDefaults($slug);
         $overrides = self::storedOverrides($slug);
 
         if (! is_array($defaults) && $overrides === []) {
@@ -127,6 +157,8 @@ class CollectionContent
      */
     public static function resolvedHeroLayout(string $slug): string
     {
+        $configLayout = self::configHeroLayout($slug);
+
         if (Schema::hasTable('site_settings')) {
             $pages = SiteSetting::getValue('collection_pages', []) ?? [];
             $canonicalStoredHero = data_get(is_array($pages) ? $pages : [], "{$slug}.hero", []);
@@ -134,11 +166,32 @@ class CollectionContent
             if (is_array($canonicalStoredHero)
                 && array_key_exists('hero_layout', $canonicalStoredHero)
                 && filled($canonicalStoredHero['hero_layout'])) {
-                return (string) $canonicalStoredHero['hero_layout'];
+                $stored = (string) $canonicalStoredHero['hero_layout'];
+
+                if ($configLayout === 'compact' && $stored === 'default') {
+                    return 'compact';
+                }
+
+                return $stored;
             }
         }
 
-        return (string) data_get(config("collections.{$slug}"), 'hero.hero_layout', 'default');
+        return $configLayout;
+    }
+
+    /**
+     * Normalize a hero payload before persisting — legacy "default" must not override config compact.
+     *
+     * @param  array<string, mixed>  $hero
+     * @return array<string, mixed>
+     */
+    public static function normalizeStoredHero(string $slug, array $hero): array
+    {
+        if (($hero['hero_layout'] ?? '') === 'default' && self::configHeroLayout($slug) === 'compact') {
+            $hero['hero_layout'] = 'compact';
+        }
+
+        return $hero;
     }
 
     /** @param  array<string, mixed>  $page */

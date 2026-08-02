@@ -66,6 +66,7 @@ class CollectionPageAdminController extends Controller
 
         $heroImages = $this->persistResponsiveHeroFlatFields($request, 'hero', $storedHero, 'collections');
         $hero = HeroAdminFields::buildFromRequest($request, 'hero', $storedHero, $heroImages);
+        $hero = CollectionContent::normalizeStoredHero($slug, $hero);
 
         $pages = CollectionContent::normalizeStoredPages(SiteSetting::getValue('collection_pages', []) ?? []);
         $pages[$slug] = [
