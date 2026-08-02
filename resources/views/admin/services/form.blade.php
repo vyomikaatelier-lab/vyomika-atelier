@@ -18,9 +18,15 @@
         <div><label class="block text-sm mb-1">Lead form</label><select name="lead_form" class="w-full border px-3 py-2 rounded"><option value="popup" @selected(old('lead_form', $service->lead_form ?? 'popup') === 'popup')>Popup</option><option value="inline" @selected(old('lead_form', $service->lead_form ?? '') === 'inline')>Inline</option></select></div>
         <div><label class="block text-sm mb-1">Rate per sq ft</label><input type="number" step="0.01" name="rate_per_sqft" value="{{ old('rate_per_sqft', $service->rate_per_sqft ?? 1800) }}" class="w-full border px-3 py-2 rounded"></div>
     </div>
+    @php
+        $heroData = $hero ?? [];
+        $heroContext = \App\Support\HeroAdminFields::uploadContext($heroData);
+    @endphp
     <div class="space-y-3 border rounded p-4 bg-gray-50">
-        <p class="text-sm font-medium">Hero section (desktop, tablet &amp; mobile)</p>
-        @include('admin.partials.hero-fields', ['prefix' => 'hero', 'hero' => $hero ?? []])
+        <p class="text-sm font-medium">
+            {{ $heroContext === 'compact' ? 'Hero section (single image, all devices)' : 'Hero section (desktop, tablet & mobile)' }}
+        </p>
+        @include('admin.partials.hero-fields', ['prefix' => 'hero', 'hero' => $heroData, 'context' => $heroContext])
     </div>
     <div class="grid md:grid-cols-2 gap-4">
         <div><label class="block text-sm mb-1">SEO title</label><input name="meta_title" value="{{ old('meta_title', $service->meta_title ?? '') }}" class="w-full border px-3 py-2 rounded"></div>

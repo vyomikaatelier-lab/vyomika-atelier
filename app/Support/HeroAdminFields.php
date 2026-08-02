@@ -6,6 +6,19 @@ use Illuminate\Http\Request;
 
 class HeroAdminFields
 {
+    /**
+     * Admin upload context for responsive hero fields (compact = single 600×480 slot).
+     *
+     * @param  array<string, mixed>  $hero
+     */
+    public static function uploadContext(array $hero, ?string $fallbackContext = null): string
+    {
+        $layoutFallback = ($fallbackContext ?? 'cover') === 'compact' ? 'compact' : 'default';
+        $layout = (string) ($hero['hero_layout'] ?? $layoutFallback);
+
+        return $layout === 'compact' ? 'compact' : ($fallbackContext ?? 'cover');
+    }
+
     /** @return array<string, mixed> */
     public static function validationRules(string $prefix = 'hero'): array
     {
@@ -101,6 +114,10 @@ class HeroAdminFields
             if ($request->boolean($flatField.'_remove')) {
                 unset($hero[$storageKey]);
             }
+        }
+
+        if (($hero['hero_layout'] ?? '') === 'compact') {
+            unset($hero['image_tablet'], $hero['image_mobile']);
         }
 
         return $hero;

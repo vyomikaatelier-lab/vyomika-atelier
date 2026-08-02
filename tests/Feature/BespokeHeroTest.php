@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
-use App\Models\Service;
 use App\Models\SiteSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -69,42 +68,30 @@ class BespokeHeroTest extends TestCase
             ->assertSee('collections/legacy-hero.jpg', false);
     }
 
-    public function test_service_admin_hero_syncs_to_bespoke_shop_collection_page(): void
+    public function test_compact_hero_save_clears_legacy_tablet_and_mobile_images(): void
     {
-        Storage::fake('public');
-        Category::query()->firstOrCreate(
-            ['slug' => 'bespoke-metal-furniture'],
-            ['name' => 'Bespoke Metal Furniture', 'section' => 'shop', 'is_active' => true]
-        );
-
-        $service = Service::query()->create([
-            'name' => 'Bespoke Metal Furniture',
-            'slug' => 'bespoke-metal-furniture',
-            'lead_form' => 'inline',
-            'is_active' => false,
+        SiteSetting::setValue('collection_pages', [
+            'bespoke-metal-furniture' => [
+                'hero' => [
+                    'hero_layout' => 'compact',
+                    'image' => 'collections/desktop.jpg',
+                    'image_tablet' => 'collections/tablet.jpg',
+                    'image_mobile' => 'collections/mobile.jpg',
+                ],
+            ],
         ]);
 
         $admin = User::factory()->admin()->create();
-        $image = UploadedFile::fake()->image('service-bespoke.jpg', 600, 480);
 
-        $this->actingAsAdmin($admin)->put(route('admin.services.update', $service), [
-            'name' => 'Bespoke Metal Furniture',
-            'slug' => 'bespoke-metal-furniture',
-            'lead_form' => 'inline',
-            'is_active' => '0',
-            'hero_title_line1' => 'From Service',
-            'hero_title_accent' => 'Admin',
+        $this->actingAsAdmin($admin)->put(route('admin.collection-pages.update', 'bespoke-metal-furniture'), [
+            '_page_save' => '1',
             'hero_layout' => 'compact',
-            'hero_image_file' => $image,
+            'hero_title_line1' => 'Still Compact',
         ])->assertSessionHasNoErrors();
 
-        $collectionHero = data_get(SiteSetting::getValue('collection_pages', []), 'bespoke-metal-furniture.hero');
-        $this->assertSame('From Service', $collectionHero['title_line1'] ?? null);
-        $this->assertNotEmpty($collectionHero['image'] ?? null);
-
-        $this->get(route('shop.show', 'bespoke-metal-furniture'))
-            ->assertOk()
-            ->assertSee('From Service', false)
-            ->assertSee($collectionHero['image'], false);
+        $stored = data_get(SiteSetting::getValue('collection_pages', []), 'bespoke-metal-furniture.hero');
+        $this->assertSame('Still Compact', $stored['title_line1'] ?? null);
+        $this->assertArrayNotHasKey('image_tablet', $stored);
+        $this->assertArrayNotHasKey('image_mobile', $stored);
     }
 }

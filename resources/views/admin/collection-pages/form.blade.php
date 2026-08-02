@@ -21,7 +21,7 @@
         <p class="text-sm font-medium">Hero section</p>
         @php
             $hero = \App\Support\CollectionContent::heroForAdmin($slug);
-            $heroContext = ($hero['hero_layout'] ?? 'default') === 'compact' ? 'compact' : 'cover';
+            $heroContext = \App\Support\HeroAdminFields::uploadContext($hero);
         @endphp
         @include('admin.partials.hero-fields', ['prefix' => 'hero', 'hero' => $hero, 'context' => $heroContext])
     </div>

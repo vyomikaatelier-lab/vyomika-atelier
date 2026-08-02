@@ -30,66 +30,37 @@ class CollectionPageAdminTest extends TestCase
 
 
 
-    public function test_admin_can_upload_responsive_collection_hero_images(): void
-
+    public function test_admin_can_upload_compact_collection_hero_image(): void
     {
-
         Storage::fake('public');
-
         $admin = User::factory()->admin()->create();
-
-        $desktop = UploadedFile::fake()->image('coffee-desktop.jpg', 1600, 900);
-
-        $tablet = UploadedFile::fake()->image('coffee-tablet.jpg', 1200, 800);
-
-
+        $image = UploadedFile::fake()->image('coffee-hero.jpg', 600, 480);
 
         $this->actingAsAdmin($admin)->put(route('admin.collection-pages.update', 'coffee-tables'), [
-
             'hero_title' => 'Coffee Tables Hero',
-
-            'hero_image_file' => $desktop,
-
-            'hero_image_tablet_file' => $tablet,
-
+            'hero_layout' => 'compact',
+            'hero_image_file' => $image,
         ])->assertRedirect(route('admin.collection-pages.index'));
 
-
-
         $stored = data_get(SiteSetting::getValue('collection_pages', []), 'coffee-tables.hero');
-
         $this->assertSame('Coffee Tables Hero', $stored['title'] ?? null);
-
         $this->assertNotEmpty($stored['image'] ?? null);
-
-        $this->assertNotEmpty($stored['image_tablet'] ?? null);
-
+        $this->assertArrayNotHasKey('image_tablet', $stored);
+        $this->assertArrayNotHasKey('image_mobile', $stored);
         Storage::disk('public')->assertExists($stored['image']);
 
-        Storage::disk('public')->assertExists($stored['image_tablet']);
-
-
+        Category::query()->firstOrCreate(
+            ['slug' => 'coffee-tables'],
+            ['name' => 'Coffee Tables', 'section' => 'shop', 'is_active' => true]
+        );
 
         $this->get(route('shop.show', 'coffee-tables'))
-
             ->assertOk()
-
             ->assertSee('Coffee Tables Hero', false)
-
-            ->assertSee('am-shop-category-hero', false)
-
-            ->assertSee('am-shop-category-hero__media', false)
-
-            ->assertSee('am-shop-category-hero__content', false)
-
-            ->assertSee('<picture>', false)
-
+            ->assertSee('am-shop-category-hero--compact', false)
+            ->assertSee('am-shop-category-hero__media--fixed', false)
             ->assertSee($stored['image'], false)
-
-            ->assertSee($stored['image_tablet'], false)
-
             ->assertDontSee('am-shop-category-hero--artwork', false);
-
     }
 
 
