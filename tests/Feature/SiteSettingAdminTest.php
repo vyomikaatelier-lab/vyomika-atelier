@@ -121,4 +121,15 @@ class SiteSettingAdminTest extends TestCase
         $this->assertStringContainsString('https://example.com/tablet.jpg', $html);
         $this->assertStringContainsString('https://example.com/desktop.jpg', $html);
     }
+
+    public function test_cms_settings_cache_reflects_updates_immediately_after_save(): void
+    {
+        SiteSetting::setValue('brand', ['name' => 'Cached Brand One']);
+        CmsSettings::hydrate();
+        $this->assertSame('Cached Brand One', config('site.brand.name'));
+
+        SiteSetting::setValue('brand', ['name' => 'Cached Brand Two']);
+        CmsSettings::hydrate();
+        $this->assertSame('Cached Brand Two', config('site.brand.name'));
+    }
 }

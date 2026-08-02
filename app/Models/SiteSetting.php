@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\CmsSettings;
 use Illuminate\Database\Eloquent\Model;
 
 class SiteSetting extends Model
@@ -28,5 +29,6 @@ class SiteSetting extends Model
     public static function setValue(string $key, mixed $value): void
     {
         static::query()->updateOrCreate(['key' => $key], ['value' => $value]);
+        CmsSettings::clearCache();
     }
 }

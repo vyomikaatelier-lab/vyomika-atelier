@@ -6,10 +6,14 @@ use App\Models\Exhibition;
 use App\Models\LegalPage;
 use App\Models\SiteSetting;
 use App\Support\MediaUrl;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 
 class CmsSettings
 {
+    public const CACHE_KEY = 'cms_settings';
+
+    public const CACHE_TTL = 3600;
     /**
      * Records what the last hydration actually did. A storefront that renders
      * config seed content is indistinguishable from one that has no saved
@@ -34,34 +38,36 @@ class CmsSettings
 
         self::$status['table_found'] = true;
 
-        $brand = SiteSetting::getValue('brand');
+        $settings = self::cachedSettings();
+
+        $brand = $settings['brand'] ?? null;
         if (is_array($brand)) {
             config(['site.brand' => array_merge(config('site.brand', []), $brand)]);
             self::$status['applied'][] = 'brand';
         }
 
-        $social = SiteSetting::getValue('social');
+        $social = $settings['social'] ?? null;
         if (is_array($social)) {
             config(['site.social' => array_merge(config('site.social', []), $social)]);
             self::$status['applied'][] = 'social';
         }
 
-        $seo = SiteSetting::getValue('seo');
+        $seo = $settings['seo'] ?? null;
         if (is_array($seo)) {
             config(['site.seo' => array_merge(config('site.seo', []), $seo)]);
         }
 
-        $store = SiteSetting::getValue('store');
+        $store = $settings['store'] ?? null;
         if (is_array($store)) {
             config(['site.store' => array_merge(config('site.store', []), $store)]);
         }
 
-        $nav = SiteSetting::getValue('nav');
+        $nav = $settings['nav'] ?? null;
         if (is_array($nav) && $nav !== []) {
             config(['site.nav' => $nav]);
         }
 
-        $hero = SiteSetting::getValue('hero');
+        $hero = $settings['hero'] ?? null;
         if (is_array($hero) && $hero !== []) {
             $slides = config('site.hero.slides', []);
             if ($slides !== []) {
@@ -85,7 +91,7 @@ class CmsSettings
             }
         }
 
-        $homepage = SiteSetting::getValue('homepage');
+        $homepage = $settings['homepage'] ?? null;
         if (is_array($homepage) && is_array($homepage['announcement'] ?? null)) {
             // The stored announcement is authoritative: once an admin has saved
             // the homepage, blanking the text must hide the bar rather than fall
@@ -97,21 +103,36 @@ class CmsSettings
             self::$status['applied'][] = 'homepage.announcement';
         }
 
-        $collectionPages = SiteSetting::getValue('collection_pages');
+        $collectionPages = $settings['collection_pages'] ?? null;
         if (is_array($collectionPages) && $collectionPages !== []) {
             config(['collections' => array_replace_recursive(config('collections', []), $collectionPages)]);
         }
 
-        $business = SiteSetting::getValue('business');
+        $business = $settings['business'] ?? null;
         if (is_array($business)) {
             $business = array_filter($business, fn ($value) => filled($value));
             config(['legal.business' => array_merge(config('legal.business', []), $business)]);
         }
 
-        $legalUpdated = SiteSetting::getValue('legal_last_updated');
+        $legalUpdated = $settings['legal_last_updated'] ?? null;
         if (filled($legalUpdated)) {
             config(['legal.last_updated' => $legalUpdated]);
         }
+    }
+
+    public static function clearCache(): void
+    {
+        Cache::forget(self::CACHE_KEY);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private static function cachedSettings(): array
+    {
+        return Cache::remember(self::CACHE_KEY, self::CACHE_TTL, function (): array {
+            return SiteSetting::query()->pluck('value', 'key')->all();
+        });
     }
 
     /**
