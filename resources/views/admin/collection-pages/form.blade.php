@@ -19,7 +19,11 @@
     <div><label class="block text-sm mb-1">Meta description</label><textarea name="meta_description" rows="2" class="w-full border px-3 py-2 rounded">{{ old('meta_description', $page['meta_description'] ?? '') }}</textarea></div>
     <div class="space-y-3 border rounded p-4 bg-gray-50">
         <p class="text-sm font-medium">Hero section</p>
-        @include('admin.partials.hero-fields', ['prefix' => 'hero', 'hero' => data_get($page, 'hero', [])])
+        @php
+            $hero = \App\Support\CollectionContent::heroForAdmin($slug);
+            $heroContext = ($hero['hero_layout'] ?? 'default') === 'compact' ? 'compact' : 'cover';
+        @endphp
+        @include('admin.partials.hero-fields', ['prefix' => 'hero', 'hero' => $hero, 'context' => $heroContext])
     </div>
     <div class="space-y-3 border rounded p-4 bg-gray-50">
         <p class="text-sm font-medium">Intro</p>

@@ -97,7 +97,48 @@ class CollectionContent
             return null;
         }
 
-        return array_replace_recursive($defaults ?? [], $overrides);
+        $page = array_replace_recursive($defaults ?? [], $overrides);
+        $hero = data_get($page, 'hero');
+
+        if (is_array($hero)) {
+            $page['hero'] = array_merge($hero, [
+                'hero_layout' => self::resolvedHeroLayout($slug),
+            ]);
+        }
+
+        return $page;
+    }
+
+    /**
+     * Hero payload for collection admin forms (canonical override, else config default).
+     *
+     * @return array<string, mixed>
+     */
+    public static function heroForAdmin(string $slug): array
+    {
+        $hero = data_get(self::page($slug), 'hero', []);
+
+        return is_array($hero) ? $hero : [];
+    }
+
+    /**
+     * Resolve hero_layout from the canonical slug's stored override, falling back to config.
+     * Legacy alias keys (e.g. metal-furniture) must not override the config default.
+     */
+    public static function resolvedHeroLayout(string $slug): string
+    {
+        if (Schema::hasTable('site_settings')) {
+            $pages = SiteSetting::getValue('collection_pages', []) ?? [];
+            $canonicalStoredHero = data_get(is_array($pages) ? $pages : [], "{$slug}.hero", []);
+
+            if (is_array($canonicalStoredHero)
+                && array_key_exists('hero_layout', $canonicalStoredHero)
+                && filled($canonicalStoredHero['hero_layout'])) {
+                return (string) $canonicalStoredHero['hero_layout'];
+            }
+        }
+
+        return (string) data_get(config("collections.{$slug}"), 'hero.hero_layout', 'default');
     }
 
     /** @param  array<string, mixed>  $page */

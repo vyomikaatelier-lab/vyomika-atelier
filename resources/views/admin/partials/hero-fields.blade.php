@@ -1,7 +1,8 @@
 @php
     $prefix = $prefix ?? 'hero';
     $heroData = $hero ?? [];
-    $heroLayout = old($prefix.'_layout', data_get($heroData, 'hero_layout', 'default'));
+    $layoutFallback = ($context ?? 'cover') === 'compact' ? 'compact' : 'default';
+    $heroLayout = old($prefix.'_layout', data_get($heroData, 'hero_layout', $layoutFallback));
     $context = $heroLayout === 'compact' ? 'compact' : ($context ?? 'cover');
     $showLayoutOptions = $showLayoutOptions ?? true;
     $lines = fn ($value) => is_array($value) ? implode("\n", $value) : (string) ($value ?? '');
@@ -117,8 +118,8 @@
         <div>
             <label class="block text-sm mb-1">Hero layout</label>
             <select name="{{ $prefix }}_layout" class="w-full border px-3 py-2 rounded">
-                <option value="default" @selected(old($prefix.'_layout', data_get($heroData, 'hero_layout', 'default')) === 'default')>Default</option>
-                <option value="compact" @selected(old($prefix.'_layout', data_get($heroData, 'hero_layout')) === 'compact')>Compact split</option>
+                <option value="default" @selected(old($prefix.'_layout', data_get($heroData, 'hero_layout', $layoutFallback)) === 'default')>Default</option>
+                <option value="compact" @selected(old($prefix.'_layout', data_get($heroData, 'hero_layout', $layoutFallback)) === 'compact')>Compact split</option>
             </select>
         </div>
         <div>

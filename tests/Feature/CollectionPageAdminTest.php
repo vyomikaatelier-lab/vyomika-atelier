@@ -167,6 +167,31 @@ class CollectionPageAdminTest extends TestCase
             ->assertDontSee('am-shop-category-hero--artwork', false)
             ->assertDontSee('/storage/images/shop-heroes/coffee-tables-hero.png', false);
     }
+
+    public function test_bespoke_collection_admin_shows_compact_single_hero_upload_despite_legacy_override(): void
+    {
+        SiteSetting::setValue('collection_pages', [
+            'metal-furniture' => [
+                'hero' => [
+                    'title_line1' => 'Legacy',
+                    'hero_layout' => 'default',
+                    'image' => 'collections/legacy.jpg',
+                    'image_tablet' => 'collections/legacy-tablet.jpg',
+                ],
+            ],
+        ]);
+
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.collection-pages.edit', 'bespoke-metal-furniture'))
+            ->assertOk()
+            ->assertSee('Hero image (all devices)', false)
+            ->assertSee('600 × 480 px', false)
+            ->assertSee('One image 600×480', false)
+            ->assertDontSee('Tablet / iPad image', false)
+            ->assertDontSee('Mobile image (phones', false);
+    }
 }
 
 
