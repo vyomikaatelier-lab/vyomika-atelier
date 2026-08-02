@@ -22,11 +22,13 @@ class AdminServiceCrudTest extends TestCase
         $this->seed(CatalogSyncSeeder::class);
 
         $this->assertDatabaseMissing('services', ['slug' => 'corten-steel-facade']);
+        $this->assertDatabaseMissing('services', ['slug' => 'bespoke-metal-furniture']);
 
         $this->actingAsAdmin($admin)
             ->get(route('admin.services.index'))
             ->assertOk()
-            ->assertDontSee('Corten steel', false);
+            ->assertDontSee('Corten steel', false)
+            ->assertDontSee('Bespoke Metal Furniture', false);
     }
 
     public function test_admin_can_create_service_with_design(): void

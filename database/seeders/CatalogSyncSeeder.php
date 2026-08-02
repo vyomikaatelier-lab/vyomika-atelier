@@ -128,17 +128,6 @@ class CatalogSyncSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'Bespoke Metal Furniture',
-                'slug' => 'bespoke-metal-furniture',
-                'summary' => 'Custom coffee tables, consoles, and display furniture in PVD finishes.',
-                'content' => '<p>From coffee tables to consoles and shelving — fabricated to your exact dimensions with welding, powder coating, and PVD finishing.</p>',
-                'image' => 'https://images.unsplash.com/photo-1532372320572-127d86b32558?w=1200&q=80',
-                'has_calculator' => false,
-                'has_designs' => false,
-                'lead_form' => 'inline',
-                'is_active' => false,
-            ],
-            [
                 'name' => 'Main Entrance PVD Doors',
                 'slug' => 'main-entrance-pvd-doors',
                 'summary' => 'Grand entrance doors with scratch-resistant PVD metal finishes.',

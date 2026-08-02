@@ -34,10 +34,10 @@ class Service extends Model
         return $this->lead_form === 'popup';
     }
 
-    /** Service slugs managed via Independent Pages admin, not Services admin. */
+    /** Service slugs managed outside Services admin (Independent Pages or Collection Pages). */
     public static function adminHiddenSlugs(): array
     {
-        return ['corten-steel-facade'];
+        return ['corten-steel-facade', 'bespoke-metal-furniture'];
     }
 
     /** @return list<string> */

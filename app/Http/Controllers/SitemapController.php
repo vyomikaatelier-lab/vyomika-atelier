@@ -136,7 +136,7 @@ class SitemapController extends Controller
                     if (StorefrontRoutes::studioUrlForService($service->slug)) {
                         return;
                     }
-                    if (in_array($service->slug, ['bespoke-metal-furniture', 'corten-steel-facade'], true)) {
+                    if (in_array($service->slug, Service::adminHiddenSlugs(), true)) {
                         return;
                     }
                     $urls[] = [
