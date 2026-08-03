@@ -66,6 +66,7 @@ class Product extends Model
         'gallery',
         'is_featured',
         'is_active',
+        'sort_order',
         'section',
         'purchase_mode',
         'pricing_type',
@@ -93,6 +94,12 @@ class Product extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    /** Higher sort_order appears first in admin and storefront listings. */
+    public function scopeOrderedForDisplay($query)
+    {
+        return $query->orderByDesc('sort_order')->orderByDesc('id');
     }
 
     public function inStock(): bool

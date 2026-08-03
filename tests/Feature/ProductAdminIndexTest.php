@@ -103,7 +103,7 @@ class ProductAdminIndexTest extends TestCase
             ->assertDontSee('Shop Product', false);
     }
 
-    public function test_category_filter_preserves_through_pagination(): void
+    public function test_category_filter_shows_all_matching_products(): void
     {
         $admin = User::factory()->admin()->create();
 
@@ -119,6 +119,7 @@ class ProductAdminIndexTest extends TestCase
                 'slug' => "mirror-{$i}",
                 'price' => 1000 + $i,
                 'stock' => 1,
+                'sort_order' => $i,
                 'section' => Product::SECTION_SHOP,
                 'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
                 'pricing_type' => Product::PRICING_FIXED,
@@ -126,11 +127,68 @@ class ProductAdminIndexTest extends TestCase
             ]);
         }
 
-        $response = $this->actingAsAdmin($admin)
-            ->get(route('admin.products.index', ['category_id' => $category->id]));
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.products.index', ['category_id' => $category->id]))
+            ->assertOk()
+            ->assertSee('Mirror 16', false)
+            ->assertSee('Mirror 1', false)
+            ->assertSee('category_id='.$category->id, false);
+    }
 
-        $response->assertOk();
-        $response->assertSee('category_id='.$category->id, false);
+    public function test_admin_can_reorder_products_by_drag_payload(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $category = Category::query()->firstOrCreate(
+            ['slug' => 'mirror-frames'],
+            ['name' => 'Mirror Frames', 'section' => 'shop', 'is_active' => true]
+        );
+
+        $first = Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'First Mirror',
+            'slug' => 'first-mirror',
+            'price' => 5000,
+            'stock' => 5,
+            'sort_order' => 10,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+        ]);
+
+        $second = Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Second Mirror',
+            'slug' => 'second-mirror',
+            'price' => 6000,
+            'stock' => 5,
+            'sort_order' => 20,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+        ]);
+
+        $this->actingAsAdmin($admin)
+            ->postJson(route('admin.products.reorder'), [
+                'order' => [$second->id, $first->id],
+            ])
+            ->assertOk();
+
+        $this->assertSame(20, $second->fresh()->sort_order);
+        $this->assertSame(10, $first->fresh()->sort_order);
+
+        $html = $this->actingAsAdmin($admin)
+            ->get(route('admin.products.index'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertLessThan(
+            strpos($html, 'First Mirror'),
+            strpos($html, 'Second Mirror'),
+            'Second mirror should appear above first after reorder.'
+        );
     }
 
     public function test_admin_products_index_uses_category_dropdown_not_chips(): void
@@ -172,6 +230,82 @@ class ProductAdminIndexTest extends TestCase
         foreach (ProductCatalog::obsoleteCategorySlugs() as $slug) {
             $response->assertDontSee('('.$slug.')', false);
         }
+    }
+
+    public function test_admin_products_index_lists_newest_product_first(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $category = Category::query()->firstOrCreate(
+            ['slug' => 'mirror-frames'],
+            ['name' => 'Mirror Frames', 'section' => 'shop', 'is_active' => true]
+        );
+
+        Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Older Mirror',
+            'slug' => 'older-mirror',
+            'price' => 5000,
+            'stock' => 5,
+            'sort_order' => 1,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+        ]);
+
+        Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Newest Mirror',
+            'slug' => 'newest-mirror',
+            'price' => 6000,
+            'stock' => 5,
+            'sort_order' => 2,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+        ]);
+
+        $html = $this->actingAsAdmin($admin)
+            ->get(route('admin.products.index'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertLessThan(
+            strpos($html, 'Older Mirror'),
+            strpos($html, 'Newest Mirror'),
+            'Newest product should appear above older products in the admin list.'
+        );
+    }
+
+    public function test_admin_products_index_shows_product_thumbnail(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $category = Category::query()->firstOrCreate(
+            ['slug' => 'mirror-frames'],
+            ['name' => 'Mirror Frames', 'section' => 'shop', 'is_active' => true]
+        );
+
+        Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Mirrored Product',
+            'slug' => 'mirrored-product',
+            'price' => 5000,
+            'stock' => 5,
+            'image' => 'https://example.test/mirror.jpg',
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+        ]);
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.products.index'))
+            ->assertOk()
+            ->assertSee('https://example.test/mirror.jpg', false)
+            ->assertSee('object-cover', false);
     }
 
     public function test_store_redirects_back_to_filtered_products_index(): void

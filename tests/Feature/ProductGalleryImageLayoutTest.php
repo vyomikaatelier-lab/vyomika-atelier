@@ -154,6 +154,48 @@ class ProductGalleryImageLayoutTest extends TestCase
             ->assertSee('Homepage Featured Handle', false);
     }
 
+    public function test_homepage_new_products_section_lists_newest_product_first(): void
+    {
+        $category = Category::query()->firstOrCreate(
+            ['slug' => 'coffee-tables'],
+            ['name' => 'Coffee Tables', 'section' => 'shop', 'is_active' => true]
+        );
+
+        Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Older Coffee Table',
+            'slug' => 'older-coffee-table',
+            'price' => 12000,
+            'stock' => 2,
+            'sort_order' => 1,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+        ]);
+
+        Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Newest Coffee Table',
+            'slug' => 'newest-coffee-table',
+            'price' => 14000,
+            'stock' => 2,
+            'sort_order' => 2,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+        ]);
+
+        $html = $this->get(route('home'))->assertOk()->getContent();
+
+        $this->assertLessThan(
+            strpos($html, 'Older Coffee Table'),
+            strpos($html, 'Newest Coffee Table'),
+            'Homepage product grid should render newest products before older ones (left to right).'
+        );
+    }
+
     public function test_mirror_frames_gallery_uses_portrait_cover_layout(): void
     {
         $category = Category::query()->firstOrCreate(

@@ -135,9 +135,12 @@ php artisan view:cache
 
 ## Step 6 — Enable SSL (hPanel browser)
 
-1. hPanel → **Security** → **SSL**
-2. Install free SSL for `vyomikaatelier.com`
+1. hPanel → **Websites** → **Manage** → **SSL**
+2. Install free Let's Encrypt SSL for **both** `vyomikaatelier.com` **and** `www.vyomikaatelier.com`
 3. Turn on **Force HTTPS** if available
+4. Add a permanent (301) redirect: `www.vyomikaatelier.com` → `https://vyomikaatelier.com` (hPanel → **Redirects**, or rely on `public/.htaccess`)
+
+**If `https://www.vyomikaatelier.com` shows `NET::ERR_CERT_COMMON_NAME_INVALID`:** the certificate only covers the apex domain. Reinstall SSL and ensure `www` is included in the certificate SAN list before the redirect can work (browsers block the connection at TLS if www is missing from the cert).
 
 ---
 
@@ -250,6 +253,39 @@ tail -50 ~/vyomika-atelier/storage/logs/laravel.log
 # Fix permissions
 chmod -R 775 ~/vyomika-atelier/storage ~/vyomika-atelier/bootstrap/cache
 ```
+
+---
+
+## ISP blocking (e.g. Reliance Jio WiFi)
+
+If visitors on **Reliance/Jio** (or another ISP) cannot reach the site but it works on mobile data, VPN, or other networks, the ISP may be blocking the **Hostinger origin IP** (`82.25.106.229`).
+
+**Symptoms:** Browser timeout or “site can’t be reached” on Jio WiFi; `nslookup vyomikaatelier.com` returns `82.25.106.229`; same URL works on VPN or another ISP.
+
+**Fix (recommended): Cloudflare free proxy**
+
+Traffic goes to Cloudflare edge IPs instead of the blocked Hostinger IP. Origin hosting, SSL on Hostinger, and hPanel stay the same.
+
+1. [Cloudflare](https://dash.cloudflare.com) → Add site → **Free** plan → import DNS.
+2. **DNS records** (orange cloud = proxied):
+   - `A` `@` → `82.25.106.229` — **Proxied**
+   - `CNAME` `www` → `vyomikaatelier.com` — **Proxied**
+   - Mail records (MX, SPF, DKIM): **DNS only** (grey cloud) — copy from hPanel if missing.
+3. **hPanel** → **Domains** → **vyomikaatelier.com** → change **nameservers** to Cloudflare’s (e.g. `xxx.ns.cloudflare.com`).
+4. Cloudflare → **SSL/TLS** → **Full (strict)** (requires Let’s Encrypt on Hostinger for apex + www — see Step 6 above).
+5. Cloudflare → **SSL/TLS** → **Edge Certificates** → enable **Always Use HTTPS**.
+
+**Verify:** `nslookup vyomikaatelier.com` should show Cloudflare IPs (`104.x` / `172.x`), not `82.25.106.229`.
+
+**Stale ISP cache after proxy is enabled:** Global DNS may already show Cloudflare while Reliance WiFi still returns `82.25.106.229` for 15–30 minutes (sometimes up to 24 hours). Bypass local cache to confirm Cloudflare is live: `nslookup vyomikaatelier.com 1.1.1.1`. On Windows: `ipconfig /flushdns` then retry. The site should work on Jio once the ISP cache refreshes.
+
+**SSH from a blocked ISP:** Direct SSH to `82.25.106.229:65002` may still fail. Use **hPanel → Advanced → SSH → Browser terminal** instead.
+
+**Laravel behind Cloudflare:** `bootstrap/app.php` includes `trustProxies` so visitor IPs are correct for rate limits and lead tracking. After deploy, run `php artisan config:cache`.
+
+**Temporary workarounds:** Jio mobile data (if unblocked), VPN, or wait for DNS propagation after Cloudflare (often 15 min–2 hours).
+
+**ISP complaint:** Report false positive block of `vyomikaatelier.com` / IP `82.25.106.229` to Jio support with your city and connection type (Fiber/WiFi).
 
 ---
 

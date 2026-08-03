@@ -186,6 +186,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware('admin')->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
+        Route::post('products/reorder', [ProductAdminController::class, 'reorder'])->name('products.reorder');
         Route::resource('products', ProductAdminController::class)->except(['show']);
         Route::resource('orders', OrderAdminController::class)->only(['index', 'show', 'update']);
         Route::resource('leads', LeadAdminController::class)->only(['index', 'show', 'update', 'destroy']);

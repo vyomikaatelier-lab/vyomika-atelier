@@ -16,8 +16,8 @@ class HomeController extends Controller
     {
         $featuredProducts = Schema::hasTable('products')
             ? \App\Support\ShopCatalog::applyShopScope(
-                Product::where('is_active', true)->where('is_featured', true)
-            )->latest()->take(6)->get()
+                Product::where('is_active', true)
+            )->orderedForDisplay()->take(6)->get()
             : collect();
 
         $categories = Schema::hasTable('categories')
@@ -48,15 +48,15 @@ class HomeController extends Controller
         $trendingFromDb = ($trendingSlugs->isNotEmpty() && Schema::hasTable('products'))
             ? \App\Support\ShopCatalog::applyShopScope(
                 Product::where('is_active', true)->whereIn('slug', $trendingSlugs)
-            )->get()
+            )->orderedForDisplay()->get()
             : collect();
         if ($trendingFromDb->count() < 4 && Schema::hasTable('products')) {
             $trendingFromDb = $trendingFromDb->concat(
                 \App\Support\ShopCatalog::applyShopScope(
                     Product::where('is_active', true)
                         ->whereNotIn('id', $trendingFromDb->pluck('id'))
-                )->latest()->take(4 - $trendingFromDb->count())->get()
-            );
+                )->orderedForDisplay()->take(4 - $trendingFromDb->count())->get()
+            )->unique('id')->sortByDesc(fn (Product $product) => [$product->sort_order, $product->id])->values();
         }
 
         return view('home', compact(

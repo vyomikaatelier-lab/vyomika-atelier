@@ -20,29 +20,11 @@ class ProductAdminController extends Controller
 
     public function index(Request $request)
     {
-        $query = Product::with('category')->latest();
+        [$categoryFilter, $activeSection] = $this->resolveProductIndexFilters($request);
 
-        if ($request->query('filter') === 'unclassified') {
-            $query->unclassified();
-        }
-
-        $section = $request->query('section');
-        if (filled($section) && in_array($section, Product::SECTIONS, true)) {
-            $query->where('section', $section);
-        }
-
-        $categoryFilter = null;
-        if ($request->filled('category_id')) {
-            $categoryFilter = Category::query()->find($request->integer('category_id'));
-        } elseif ($request->filled('category')) {
-            $categoryFilter = Category::query()->where('slug', $request->query('category'))->first();
-        }
-
-        if ($categoryFilter) {
-            $query->where('category_id', $categoryFilter->id);
-        }
-
-        $products = $query->paginate(15)->withQueryString();
+        $products = $this->filteredProductsQuery($request)
+            ->orderedForDisplay()
+            ->get();
         $unclassifiedCount = Product::query()->unclassified()->count();
 
         $categories = Category::query()
@@ -77,7 +59,7 @@ class ProductAdminController extends Controller
             'unclassifiedCount' => $unclassifiedCount,
             'categories' => $categories,
             'categoryFilter' => $categoryFilter,
-            'activeSection' => in_array($section, Product::SECTIONS, true) ? $section : null,
+            'activeSection' => $activeSection,
             'sectionLabels' => $sectionLabels,
             'sectionOrder' => $sectionOrder,
             'categorySectionOrder' => $categorySectionOrder,
@@ -107,6 +89,7 @@ class ProductAdminController extends Controller
         $validated['is_gallery_visible'] = $this->checkboxBoolean($request, 'is_gallery_visible');
         $validated['image'] = $this->resolveImageField($request, 'image_file', 'image', null, 'products');
         $validated = $this->normalizeProductPrices($validated);
+        $validated['sort_order'] = (Product::max('sort_order') ?? 0) + 1;
 
         Product::create($validated);
 
@@ -169,6 +152,42 @@ class ProductAdminController extends Controller
         return redirect()
             ->route('admin.products.index', $this->productIndexParams($request))
             ->with('success', 'Product deleted.');
+    }
+
+    public function reorder(Request $request)
+    {
+        $validated = $request->validate([
+            'order' => 'required|array|min:1',
+            'order.*' => 'integer|exists:products,id',
+            'section' => 'nullable|string',
+            'category_id' => 'nullable|integer|exists:categories,id',
+            'filter' => 'nullable|string|in:unclassified',
+        ]);
+
+        $allowedIds = $this->filteredProductsQuery($request)
+            ->whereIn('id', $validated['order'])
+            ->pluck('id')
+            ->all();
+
+        if (count($allowedIds) !== count($validated['order'])) {
+            abort(422, 'One or more products are outside the current filter.');
+        }
+
+        $slots = Product::query()
+            ->whereIn('id', $validated['order'])
+            ->orderByDesc('sort_order')
+            ->pluck('sort_order')
+            ->values();
+
+        foreach ($validated['order'] as $index => $id) {
+            Product::whereKey($id)->update(['sort_order' => $slots[$index]]);
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json(['ok' => true]);
+        }
+
+        return back()->with('success', 'Product order updated.');
     }
 
     private function validateProduct(Request $request, ?Product $existing = null): array
@@ -444,6 +463,45 @@ class ProductAdminController extends Controller
             : null;
 
         return $validated;
+    }
+
+    /** @return array{0: ?Category, 1: ?string} */
+    private function resolveProductIndexFilters(Request $request): array
+    {
+        $section = $request->input('section');
+        $activeSection = filled($section) && in_array($section, Product::SECTIONS, true)
+            ? $section
+            : null;
+
+        $categoryFilter = null;
+        if ($request->filled('category_id')) {
+            $categoryFilter = Category::query()->find($request->integer('category_id'));
+        } elseif ($request->filled('category')) {
+            $categoryFilter = Category::query()->where('slug', $request->input('category'))->first();
+        }
+
+        return [$categoryFilter, $activeSection];
+    }
+
+    private function filteredProductsQuery(Request $request)
+    {
+        $query = Product::with('category');
+
+        if ($request->input('filter') === 'unclassified') {
+            $query->unclassified();
+        }
+
+        [$categoryFilter, $activeSection] = $this->resolveProductIndexFilters($request);
+
+        if ($activeSection !== null) {
+            $query->where('section', $activeSection);
+        }
+
+        if ($categoryFilter) {
+            $query->where('category_id', $categoryFilter->id);
+        }
+
+        return $query;
     }
 
     /** @return array<string, mixed> */
