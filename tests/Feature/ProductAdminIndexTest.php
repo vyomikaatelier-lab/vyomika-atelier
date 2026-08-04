@@ -305,7 +305,9 @@ class ProductAdminIndexTest extends TestCase
             ->get(route('admin.products.index'))
             ->assertOk()
             ->assertSee('https://example.test/mirror.jpg', false)
-            ->assertSee('object-cover', false);
+            ->assertSee('object-cover', false)
+            ->assertSee('Mirrored Product', false)
+            ->assertSee('>Product</th>', false);
     }
 
     public function test_store_redirects_back_to_filtered_products_index(): void
