@@ -18,6 +18,9 @@
     <img
         src="{{ filled($desktop) ? $desktop : ($tablet ?: $mobile) }}"
         alt="{{ $alt }}"
+        width="1200"
+        height="900"
+        decoding="async"
         @if($priority) fetchpriority="high" @else loading="lazy" @endif
     >
 </picture>

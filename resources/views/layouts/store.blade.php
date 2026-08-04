@@ -19,10 +19,18 @@
         $assetCssVer = @filemtime(public_path('css/amerce.css')) ?: time();
         $assetThemeVer = @filemtime(public_path('css/amerce-themes.css')) ?: $assetCssVer;
         $assetResponsiveVer = @filemtime(public_path('css/responsive.css')) ?: $assetCssVer;
+        $cssAmerce = asset('css/amerce.css').'?v='.$assetCssVer;
+        $cssThemes = asset('css/amerce-themes.css').'?v='.$assetThemeVer;
+        $cssResponsive = asset('css/responsive.css').'?v='.$assetResponsiveVer;
     @endphp
-    <link rel="stylesheet" href="{{ asset('css/amerce.css') }}?v={{ $assetCssVer }}">
-    <link rel="stylesheet" href="{{ asset('css/amerce-themes.css') }}?v={{ $assetThemeVer }}">
-    <link rel="stylesheet" href="{{ asset('css/responsive.css') }}?v={{ $assetResponsiveVer }}">
+    <link rel="preload" href="{{ $cssAmerce }}" as="style">
+    <link rel="stylesheet" href="{{ $cssAmerce }}">
+    <link rel="stylesheet" href="{{ $cssThemes }}" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="{{ $cssResponsive }}" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="{{ $cssThemes }}">
+        <link rel="stylesheet" href="{{ $cssResponsive }}">
+    </noscript>
     @stack('styles')
 </head>
 <body @if(config('app.preview_bar')) class="has-preview-bar" @endif>
@@ -174,10 +182,10 @@
 @include('partials.am-popup-form-modal')
 
 <script src="{{ asset('js/responsive.js') }}?v={{ @filemtime(public_path('js/responsive.js')) ?: $assetCssVer }}" defer></script>
-<script src="{{ asset('js/amerce.js') }}?v={{ @filemtime(public_path('js/amerce.js')) ?: $assetCssVer }}"></script>
-<script src="{{ asset('js/calculator.js') }}"></script>
+<script src="{{ asset('js/amerce.js') }}?v={{ @filemtime(public_path('js/amerce.js')) ?: $assetCssVer }}" defer></script>
+<script src="{{ asset('js/calculator.js') }}?v={{ @filemtime(public_path('js/calculator.js')) ?: $assetCssVer }}" defer></script>
 @if($previewBar ?? false)
-<script src="{{ asset('js/preview-options.js') }}"></script>
+<script src="{{ asset('js/preview-options.js') }}" defer></script>
 @endif
 @stack('scripts')
 </body>

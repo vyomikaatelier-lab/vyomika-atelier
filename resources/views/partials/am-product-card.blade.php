@@ -54,7 +54,7 @@
             <span class="am-product-card__badge {{ $badge === 'NEW' ? 'am-product-card__badge--new' : '' }}">{{ $badge }}</span>
             @endif
             @if($image)
-            <img src="{{ $image }}" alt="{{ $name }}" loading="lazy">
+            <img src="{{ $image }}" alt="{{ $name }}" width="400" height="500" loading="lazy" decoding="async">
             @endif
         </a>
         <div class="am-product-card__actions">

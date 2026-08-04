@@ -285,6 +285,16 @@ Traffic goes to Cloudflare edge IPs instead of the blocked Hostinger IP. Origin 
 
 **Temporary workarounds:** Jio mobile data (if unblocked), VPN, or wait for DNS propagation after Cloudflare (often 15 min–2 hours).
 
+**Page speed (Cloudflare):** After proxy is on, reduce Lighthouse “cache / redirects / images” warnings:
+
+1. **SSL/TLS → Edge Certificates** → Always Use HTTPS **On**
+2. **Rules → Redirect Rules** → one 301: `www.vyomikaatelier.com` → `https://vyomikaatelier.com` (keep a single hop; avoid stacking Hostinger + Cloudflare www redirects)
+3. **Caching → Configuration** → Browser Cache TTL **1 month**; Caching Level **Standard**
+4. **Speed → Optimization** → Auto Minify (CSS/JS/HTML) **On**, Brotli **On**
+5. Cache static paths (`/css/*`, `/js/*`, `/storage/*`) as **Eligible for cache** with long Edge TTL
+
+Origin `.htaccess` already sets 30-day `Cache-Control` for CSS/JS/images. Redeploy after pulling speed-related commits, then re-test Page Speed.
+
 **ISP complaint:** Report false positive block of `vyomikaatelier.com` / IP `82.25.106.229` to Jio support with your city and connection type (Fiber/WiFi).
 
 ---
