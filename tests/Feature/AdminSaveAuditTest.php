@@ -168,6 +168,7 @@ class AdminSaveAuditTest extends TestCase
             'mobile' => $customer->mobile,
             'account_type' => $customer->account_type,
             'is_active' => '0',
+            'current_password' => 'password',
         ])->assertRedirect();
 
         $this->assertFalse($customer->fresh()->is_active);

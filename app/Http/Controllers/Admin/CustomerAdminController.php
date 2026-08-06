@@ -74,16 +74,26 @@ class CustomerAdminController extends Controller
     {
         abort_if($customer->is_admin, 404);
 
-        $validated = $request->validate([
+        $rules = [
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($customer->id)],
             'mobile' => ['required', 'string', 'max:20', Rule::unique('users', 'mobile')->ignore($customer->id)],
             'account_type' => ['required', Rule::in(array_keys(User::ACCOUNT_TYPES))],
             'is_active' => 'required|in:0,1',
-        ]);
+        ];
+
+        $willDisable = ! $request->boolean('is_active') && $customer->is_active;
+        if ($willDisable) {
+            $rules['current_password'] = ['required', 'current_password'];
+        }
+
+        $validated = $request->validate($rules);
 
         $customer->update([
-            ...$validated,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'mobile' => $validated['mobile'],
+            'account_type' => $validated['account_type'],
             'is_active' => $request->boolean('is_active'),
         ]);
 

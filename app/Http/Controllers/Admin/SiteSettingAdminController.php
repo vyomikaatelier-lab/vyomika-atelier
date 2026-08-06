@@ -50,6 +50,10 @@ class SiteSettingAdminController extends Controller
             return back()->withInput()->with('error', 'Upload too large for the server limit. Try one image at a time, or ask Hostinger to raise post_max_size.');
         }
 
+        $request->validate([
+            'current_password' => ['required', 'current_password'],
+        ]);
+
         $finishRules = [];
         foreach (config('finishes.swatches', []) as $swatch) {
             $slug = $swatch['slug'];

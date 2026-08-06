@@ -79,6 +79,7 @@ class AdminClearFieldsTest extends TestCase
         $admin = User::factory()->admin()->create();
 
         $this->actingAsAdmin($admin)->put(route('admin.settings.update'), [
+            'current_password' => 'password',
             'brand_name' => 'Vyomika Atelier',
             'announcement_text' => 'Festive Offer',
             'announcement_link_label' => 'Shop Now',
@@ -89,6 +90,7 @@ class AdminClearFieldsTest extends TestCase
         $this->assertSame('Festive Offer', config('site.announcement.text'));
 
         $this->actingAsAdmin($admin)->put(route('admin.settings.update'), [
+            'current_password' => 'password',
             'brand_name' => 'Vyomika Atelier',
             'announcement_text' => '',
             'announcement_link_label' => '',

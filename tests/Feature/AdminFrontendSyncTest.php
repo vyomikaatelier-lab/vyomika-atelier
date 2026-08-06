@@ -345,6 +345,7 @@ class AdminFrontendSyncTest extends TestCase
     {
         $this->actingAsAdmin($this->admin())
             ->put(route('admin.settings.update'), [
+                'current_password' => 'password',
                 'brand_name' => 'Vyomika Atelier',
                 'phone' => '9812345678',
                 'email' => 'hello@vyomika.test',
@@ -501,6 +502,7 @@ class AdminFrontendSyncTest extends TestCase
     {
         $this->actingAsAdmin($this->admin())
             ->put(route('admin.settings.update'), [
+                'current_password' => 'password',
                 'brand_name' => 'Vyomika Atelier',
                 'announcement_text' => 'Monsoon studio hours: 10am to 6pm',
                 'announcement_link_label' => 'Plan a visit',
@@ -683,6 +685,7 @@ class AdminFrontendSyncTest extends TestCase
     {
         $this->actingAsAdmin($this->admin())
             ->put(route('admin.settings.update'), [
+                'current_password' => 'password',
                 'brand_name' => 'Vyomika Atelier',
                 'default_meta_title' => 'Vyomika Atelier — Studio Metalwork',
                 'default_meta_description' => 'PVD partitions, doors and metal furniture.',

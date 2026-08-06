@@ -79,8 +79,7 @@ class AdminAccessIsolationTest extends TestCase
 
     public function test_admin_login_grants_panel_access(): void
     {
-        $admin = User::factory()->create([
-            'is_admin' => true,
+        $admin = User::factory()->admin()->create([
             'is_active' => true,
             'password' => 'password',
         ]);
@@ -95,8 +94,7 @@ class AdminAccessIsolationTest extends TestCase
 
     public function test_storefront_account_route_does_not_expose_admin_panel(): void
     {
-        $admin = User::factory()->create([
-            'is_admin' => true,
+        $admin = User::factory()->admin()->create([
             'is_active' => true,
         ]);
 
@@ -108,8 +106,7 @@ class AdminAccessIsolationTest extends TestCase
 
     public function test_admin_panel_access_is_cleared_when_admin_access_flag_removed(): void
     {
-        $admin = User::factory()->create([
-            'is_admin' => true,
+        $admin = User::factory()->admin()->create([
             'is_active' => true,
             'password' => 'password',
         ]);

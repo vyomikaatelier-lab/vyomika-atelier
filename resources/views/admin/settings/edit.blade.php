@@ -115,6 +115,14 @@
             @endforeach
         </div>
     </section>
+    <div class="border-t pt-4 space-y-2">
+        <label class="block text-sm font-medium">Confirm with your admin password</label>
+        <input type="password" name="current_password" required autocomplete="current-password"
+               class="w-full border px-3 py-2 rounded max-w-md @error('current_password') border-red-500 @enderror"
+               placeholder="Current password">
+        @error('current_password')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+        <p class="text-xs text-gray-500">Required to save site settings.</p>
+    </div>
     <button type="submit" class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Save settings</button>
 </form>
 @endsection

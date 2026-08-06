@@ -56,7 +56,23 @@ class AppServiceProvider extends ServiceProvider
 
     private function configureRateLimiting(): void
     {
-        RateLimiter::for('auth', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
+        RateLimiter::for('auth', function (Request $request) {
+            $email = strtolower((string) $request->input('email', ''));
+
+            return [
+                Limit::perMinute(10)->by($request->ip()),
+                Limit::perMinute(5)->by($email !== '' ? 'auth-email:'.$email : 'auth-email:'.$request->ip()),
+            ];
+        });
+
+        RateLimiter::for('admin-mfa', function (Request $request) {
+            $userId = $request->user()?->id ?? $request->session()->get(\App\Support\AdminMfa::SESSION_PENDING, $request->ip());
+
+            return [
+                Limit::perMinute(8)->by($request->ip()),
+                Limit::perMinute(5)->by('admin-mfa:'.$userId),
+            ];
+        });
 
         RateLimiter::for('otp-send', fn (Request $request) => [
             Limit::perHour(3)->by($request->ip()),

@@ -183,8 +183,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('/login', [AdminAuthController::class, 'login'])->middleware('throttle:auth')->name('login.submit');
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
 
+    Route::get('/mfa/challenge', [\App\Http\Controllers\Admin\MfaController::class, 'showChallenge'])->name('mfa.challenge');
+    Route::post('/mfa/challenge', [\App\Http\Controllers\Admin\MfaController::class, 'challenge'])->middleware('throttle:admin-mfa')->name('mfa.challenge.submit');
+    Route::get('/mfa/enroll', [\App\Http\Controllers\Admin\MfaController::class, 'showEnroll'])->name('mfa.enroll');
+    Route::post('/mfa/enroll', [\App\Http\Controllers\Admin\MfaController::class, 'enroll'])->middleware('throttle:admin-mfa')->name('mfa.enroll.submit');
+
     Route::middleware('admin')->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+        Route::get('/mfa/recovery', [\App\Http\Controllers\Admin\MfaController::class, 'showRecovery'])->name('mfa.recovery');
+        Route::get('/mfa', [\App\Http\Controllers\Admin\MfaController::class, 'showManage'])->name('mfa.manage');
+        Route::post('/mfa/recovery', [\App\Http\Controllers\Admin\MfaController::class, 'regenerateRecoveryCodes'])->middleware('throttle:admin-mfa')->name('mfa.recovery.regenerate');
+        Route::post('/mfa/disable', [\App\Http\Controllers\Admin\MfaController::class, 'disable'])->middleware('throttle:admin-mfa')->name('mfa.disable');
 
         Route::post('products/reorder', [ProductAdminController::class, 'reorder'])->name('products.reorder');
         Route::resource('products', ProductAdminController::class)->except(['show']);

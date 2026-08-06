@@ -31,11 +31,11 @@ class DatabaseSeeder extends Seeder
 
         if ($user) {
             if (! $user->is_admin) {
-                $user->update(['is_admin' => true]);
+                $user->forceFill(['is_admin' => true])->save();
             }
 
             if (filled(env('ADMIN_PASSWORD'))) {
-                $user->update(['password' => Hash::make(env('ADMIN_PASSWORD'))]);
+                $user->forceFill(['password' => Hash::make(env('ADMIN_PASSWORD'))])->save();
             }
 
             return;
@@ -52,12 +52,13 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-        User::create([
+        User::query()->forceCreate([
             'email' => $email,
             'name' => 'Vyomika Atelier LLP Admin',
             'password' => Hash::make($password),
             'is_admin' => true,
             'is_active' => true,
+            'two_factor_grace_ends_at' => now(), // new admins: enroll MFA immediately
         ]);
     }
 

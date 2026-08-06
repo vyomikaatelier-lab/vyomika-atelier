@@ -19,6 +19,7 @@ class SiteSettingAdminTest extends TestCase
         $admin = User::factory()->admin()->create();
 
         $response = $this->actingAsAdmin($admin)->post(route('admin.settings.update'), [
+            'current_password' => 'password',
             'brand_name' => 'Vyomika Atelier LLP',
             'phone' => '+91 98188 91878',
             'email' => 'hello@vyomikaatelier.com',
@@ -44,6 +45,7 @@ class SiteSettingAdminTest extends TestCase
         $admin = User::factory()->admin()->create();
 
         $payload = [
+            'current_password' => 'password',
             'brand_name' => 'Vyomika Atelier',
             'email' => 'hello@vyomikaatelier.com',
         ];
@@ -78,6 +80,7 @@ class SiteSettingAdminTest extends TestCase
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.settings.update'), [
+                'current_password' => 'password',
                 'brand_name' => 'Vyomika Atelier',
                 'email' => 'hello@vyomikaatelier.com',
                 'hero_slides' => [

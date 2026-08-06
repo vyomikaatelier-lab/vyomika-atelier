@@ -34,7 +34,11 @@ class UserFactory extends Factory
 
     public function admin(): static
     {
-        return $this->state(fn () => ['is_admin' => true]);
+        return $this->state(fn () => [
+            'is_admin' => true,
+            // Default test admins stay within MFA grace so existing login tests keep working.
+            'two_factor_grace_ends_at' => now()->addDays(7),
+        ]);
     }
 
     public function disabled(): static
