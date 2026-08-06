@@ -5,16 +5,21 @@ namespace App\Providers;
 use App\Contracts\WhatsAppProvider;
 use App\Services\WhatsApp\MetaWhatsAppProvider;
 use App\Services\WhatsApp\Msg91WhatsAppProvider;
+use App\Support\AdminMfa;
 use App\Support\CmsSettings;
 use App\View\Composers\StorefrontSeoComposer;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use PDOException;
+use SocialiteProviders\Apple\Provider;
 use SocialiteProviders\Manager\SocialiteWasCalled;
+use Throwable;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -33,25 +38,46 @@ class AppServiceProvider extends ServiceProvider
         $this->configureRateLimiting();
         $this->configureSocialiteProviders();
 
-        try {
-            CmsSettings::hydrate();
-        } catch (\Throwable $e) {
-            // Database may not be ready during install, so a failure here must
-            // not take the site down. It must still be recorded: without this,
-            // a hydration failure silently serves config seed content on every
-            // page while artisan diagnostics that hydrate themselves look fine.
-            CmsSettings::recordHydrationFailure($e);
-
+        // Composer `package:discover` boots the app before a database is
+        // guaranteed. Keep config seed values as the safe fallback there.
+        if (! $this->isComposerPackageDiscovery()) {
             try {
-                Log::warning('CmsSettings::hydrate() failed; storefront is serving config seed content.', [
-                    'exception' => $e->getMessage(),
-                ]);
-            } catch (\Throwable) {
-                // Logging must never break booting.
+                CmsSettings::hydrate();
+            } catch (QueryException|PDOException $e) {
+                // Database may not be ready during install/runtime outages.
+                // Only connection/query failures are deferred; other boot bugs
+                // must still surface.
+                CmsSettings::recordHydrationFailure($e);
+
+                try {
+                    Log::warning('CmsSettings::hydrate() failed; storefront is serving config seed content.', [
+                        'exception' => $e->getMessage(),
+                    ]);
+                } catch (Throwable) {
+                    // Logging must never break booting.
+                }
             }
         }
 
         View::composer('layouts.store', StorefrontSeoComposer::class);
+    }
+
+    /**
+     * True while Composer is running `php artisan package:discover`.
+     */
+    private function isComposerPackageDiscovery(): bool
+    {
+        if (! $this->app->runningInConsole()) {
+            return false;
+        }
+
+        foreach ($_SERVER['argv'] ?? [] as $arg) {
+            if (is_string($arg) && str_contains($arg, 'package:discover')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function configureRateLimiting(): void
@@ -66,7 +92,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('admin-mfa', function (Request $request) {
-            $userId = $request->user()?->id ?? $request->session()->get(\App\Support\AdminMfa::SESSION_PENDING, $request->ip());
+            $userId = $request->user()?->id ?? $request->session()->get(AdminMfa::SESSION_PENDING, $request->ip());
 
             return [
                 Limit::perMinute(8)->by($request->ip()),
@@ -76,11 +102,11 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('otp-send', fn (Request $request) => [
             Limit::perHour(3)->by($request->ip()),
-            Limit::perHour(3)->by('otp-send-session:' . $request->session()->getId()),
+            Limit::perHour(3)->by('otp-send-session:'.$request->session()->getId()),
         ]);
 
         RateLimiter::for('otp-verify', fn (Request $request) => Limit::perHour(5)->by(
-            'otp-verify:' . $request->session()->get('account_pending_verification_id', $request->ip())
+            'otp-verify:'.$request->session()->get('account_pending_verification_id', $request->ip())
         ));
 
         RateLimiter::for('cart', fn (Request $request) => Limit::perMinute(30)->by($request->ip()));
@@ -89,7 +115,7 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('general-enquiry', fn (Request $request) => [
             Limit::perMinutes(15, 3)->by($request->ip()),
-            Limit::perMinutes(15, 3)->by('general-enquiry-session:' . $request->session()->getId()),
+            Limit::perMinutes(15, 3)->by('general-enquiry-session:'.$request->session()->getId()),
         ]);
 
         RateLimiter::for('professional-application', fn (Request $request) => Limit::perHour(2)->by($request->ip()));
@@ -104,7 +130,7 @@ class AppServiceProvider extends ServiceProvider
     private function configureSocialiteProviders(): void
     {
         Event::listen(function (SocialiteWasCalled $event) {
-            $event->extendSocialite('apple', \SocialiteProviders\Apple\Provider::class);
+            $event->extendSocialite('apple', Provider::class);
         });
     }
 }

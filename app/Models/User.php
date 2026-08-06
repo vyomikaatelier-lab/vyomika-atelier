@@ -79,7 +79,7 @@ class User extends Authenticatable
         $code = preg_replace('/\D/', '', $this->mobile_country_code ?? '91');
         $mobile = preg_replace('/\D/', '', $this->mobile ?? '');
 
-        return $code . $mobile;
+        return $code.$mobile;
     }
 
     public function accountTypeLabel(): string

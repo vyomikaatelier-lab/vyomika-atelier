@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Support\AdminAccess;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Log;
 use Tests\Concerns\ActsAsAdmin;
 use Tests\TestCase;
 

@@ -1,0 +1,3 @@
+# Keep PHP / Blade sources on LF for consistent deploys and Pint runs.
+*.php text eol=lf
+*.blade.php text eol=lf

@@ -35,7 +35,7 @@ class SiteSettingAdminTest extends TestCase
 
         $this->assertSame(
             'https://instagram.com/vyomikaatelier',
-            \App\Models\SiteSetting::getValue('social')['instagram'] ?? null
+            SiteSetting::getValue('social')['instagram'] ?? null
         );
     }
 

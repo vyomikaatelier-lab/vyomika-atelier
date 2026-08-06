@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use App\Models\BlogPost;
 use App\Models\Project;
 use App\Models\User;
+use App\Support\BlogContent;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -74,7 +76,7 @@ class DatabaseSeeder extends Seeder
 
         foreach ($posts as $post) {
             $published = ! empty($post['published_at'])
-                ? \Carbon\Carbon::parse($post['published_at'])
+                ? Carbon::parse($post['published_at'])
                 : now()->subDays(rand(5, 60));
 
             BlogPost::create([
@@ -82,7 +84,7 @@ class DatabaseSeeder extends Seeder
                 'published_at' => $published,
                 'is_active' => true,
                 'status' => 'published',
-                'reading_time_minutes' => \App\Support\BlogContent::readingTimeMinutes(
+                'reading_time_minutes' => BlogContent::readingTimeMinutes(
                     $post['content'] ?? '',
                     $post['reading_time_minutes'] ?? null
                 ),
