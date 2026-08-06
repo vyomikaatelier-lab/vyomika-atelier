@@ -1,8 +1,8 @@
 # AUDIT_REPORT.md — Vyomika Atelier administrator security
 
-**Schema task:** audit-first administrator security hardening  
-**Date:** 2026-08-06  
-**Phase:** 0 discovery complete — implementation follows smallest compatible design  
+**Schema task:** audit-first administrator security hardening
+**Date:** 2026-08-06
+**Phase:** 0 discovery complete — implementation follows smallest compatible design
 **Git:** discovery on branch `cursor/deployment-smoke-whatsapp-otp-docs` (no commit/push of security work in Phase 0)
 
 ---
