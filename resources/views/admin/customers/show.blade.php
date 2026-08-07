@@ -23,9 +23,16 @@
         </div>
         <div><label class="block text-sm mb-1">Account status</label>
             <select name="is_active" class="w-full border px-3 py-2 rounded">
-                <option value="1" @selected($customer->is_active)>Enabled</option>
-                <option value="0" @selected(! $customer->is_active)>Disabled</option>
+                <option value="1" @selected(old('is_active', $customer->is_active ? '1' : '0') === '1')>Enabled</option>
+                <option value="0" @selected(old('is_active', $customer->is_active ? '1' : '0') === '0')>Disabled</option>
             </select>
+        </div>
+        <div>
+            <label class="block text-sm mb-1">Admin password (required to disable account)</label>
+            <input type="password" name="current_password" autocomplete="current-password"
+                   class="w-full border px-3 py-2 rounded @error('current_password') border-red-500 @enderror"
+                   placeholder="Only needed when disabling">
+            @error('current_password')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
         </div>
         <button type="submit" class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Save</button>
     </form>

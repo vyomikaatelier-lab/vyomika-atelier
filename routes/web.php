@@ -1,57 +1,58 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\ShopController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\CartController;
-use App\Http\Controllers\CheckoutController;
-use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\Api\RazorpayCheckoutController;
-use App\Http\Controllers\Api\RazorpayWebhookController;
-use App\Http\Controllers\LeadController;
-use App\Http\Controllers\ServiceController;
-use App\Http\Controllers\ProfessionalsController;
-use App\Http\Controllers\ProjectController;
-use App\Http\Controllers\BlogController;
-use App\Http\Controllers\SitemapController;
-use App\Http\Controllers\ContactController;
-use App\Http\Controllers\FormProtectionController;
-use App\Http\Controllers\CatalogueRequestController;
-use App\Http\Controllers\DealerApplicationController;
-use App\Http\Controllers\VendorProposalController;
-use App\Http\Controllers\LegalController;
 use App\Http\Controllers\AboutController;
-use App\Http\Controllers\RailingsController;
-use App\Http\Controllers\StudioController;
-use App\Http\Controllers\ShopPageController;
-use App\Http\Controllers\MirrorFramesController;
-use App\Http\Controllers\CollectionGalleryController;
 use App\Http\Controllers\AccountAuthController;
 use App\Http\Controllers\AccountDashboardController;
-use App\Http\Controllers\SocialAuthController;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\ProductAdminController;
-use App\Http\Controllers\Admin\OrderAdminController;
-use App\Http\Controllers\Admin\LeadAdminController;
-use App\Http\Controllers\Admin\CategoryAdminController;
-use App\Http\Controllers\Admin\ProjectAdminController;
 use App\Http\Controllers\Admin\BlogAdminController;
-use App\Http\Controllers\Admin\ExhibitionAdminController;
-use App\Http\Controllers\Admin\ProfessionalApplicationAdminController;
-use App\Http\Controllers\Admin\RailingQuoteAdminController;
+use App\Http\Controllers\Admin\CategoryAdminController;
+use App\Http\Controllers\Admin\CollectionPageAdminController;
 use App\Http\Controllers\Admin\CustomerAdminController;
-use App\Http\Controllers\Admin\SiteSettingAdminController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ExhibitionAdminController;
+use App\Http\Controllers\Admin\IndependentLandingAdminController;
+use App\Http\Controllers\Admin\LeadAdminController;
 use App\Http\Controllers\Admin\LegalPageAdminController;
 use App\Http\Controllers\Admin\MediaAdminController;
-use App\Http\Controllers\Admin\ServiceAdminController;
-use App\Http\Controllers\Admin\CollectionPageAdminController;
+use App\Http\Controllers\Admin\MfaController;
+use App\Http\Controllers\Admin\OrderAdminController;
 use App\Http\Controllers\Admin\PageHeroAdminController;
-use App\Http\Controllers\Admin\IndependentLandingAdminController;
+use App\Http\Controllers\Admin\ProductAdminController;
+use App\Http\Controllers\Admin\ProfessionalApplicationAdminController;
+use App\Http\Controllers\Admin\ProjectAdminController;
+use App\Http\Controllers\Admin\RailingQuoteAdminController;
+use App\Http\Controllers\Admin\ServiceAdminController;
+use App\Http\Controllers\Admin\SiteSettingAdminController;
 use App\Http\Controllers\Admin\StaticPageSeoAdminController;
 use App\Http\Controllers\Admin\UrlRedirectAdminController;
+use App\Http\Controllers\Api\RazorpayCheckoutController;
+use App\Http\Controllers\Api\RazorpayWebhookController;
+use App\Http\Controllers\BlogController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\CatalogueRequestController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\CollectionGalleryController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CortenSteelController;
+use App\Http\Controllers\DealerApplicationController;
+use App\Http\Controllers\FormProtectionController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LeadController;
+use App\Http\Controllers\LegalController;
+use App\Http\Controllers\MirrorFramesController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ProfessionalsController;
+use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\RailingsController;
+use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\ShopController;
+use App\Http\Controllers\ShopPageController;
+use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\SocialAuthController;
+use App\Http\Controllers\StudioController;
+use App\Http\Controllers\VendorProposalController;
+use App\Support\StorefrontRoutes;
+use Illuminate\Support\Facades\Route;
 
 // Public storefront
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -94,7 +95,7 @@ Route::get('/services/{serviceSlug}/{designSlug}', [ServiceController::class, 'd
 
 Route::get('/studio', [StudioController::class, 'index'])->name('studio.index');
 Route::get('/studio/{slug}', [StudioController::class, 'show'])
-    ->whereIn('slug', \App\Support\StorefrontRoutes::studioUrlSlugs())
+    ->whereIn('slug', StorefrontRoutes::studioUrlSlugs())
     ->name('studio.show');
 
 Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
@@ -183,8 +184,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('/login', [AdminAuthController::class, 'login'])->middleware('throttle:auth')->name('login.submit');
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
 
+    Route::get('/mfa/challenge', [MfaController::class, 'showChallenge'])->name('mfa.challenge');
+    Route::post('/mfa/challenge', [MfaController::class, 'challenge'])->middleware('throttle:admin-mfa')->name('mfa.challenge.submit');
+    Route::get('/mfa/enroll', [MfaController::class, 'showEnroll'])->name('mfa.enroll');
+    Route::post('/mfa/enroll', [MfaController::class, 'enroll'])->middleware('throttle:admin-mfa')->name('mfa.enroll.submit');
+
     Route::middleware('admin')->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+        Route::get('/mfa/recovery', [MfaController::class, 'showRecovery'])->name('mfa.recovery');
+        Route::get('/mfa', [MfaController::class, 'showManage'])->name('mfa.manage');
+        Route::post('/mfa/recovery', [MfaController::class, 'regenerateRecoveryCodes'])->middleware('throttle:admin-mfa')->name('mfa.recovery.regenerate');
+        Route::post('/mfa/disable', [MfaController::class, 'disable'])->middleware('throttle:admin-mfa')->name('mfa.disable');
 
         Route::post('products/reorder', [ProductAdminController::class, 'reorder'])->name('products.reorder');
         Route::resource('products', ProductAdminController::class)->except(['show']);

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Admin\Concerns\HandlesAdminUploads;
 use App\Http\Controllers\Controller;
 use App\Models\SiteSetting;
+use App\Support\FinishSwatches;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -31,7 +32,7 @@ class SiteSettingAdminController extends Controller
             'business' => array_merge(config('legal.business', []), SiteSetting::getValue('business', [])),
             'legalLastUpdated' => SiteSetting::getValue('legal_last_updated', config('legal.last_updated')),
             'finishSwatches' => config('finishes.swatches', []),
-            'finishSwatchImages' => \App\Support\FinishSwatches::imageOverrides(),
+            'finishSwatchImages' => FinishSwatches::imageOverrides(),
             'navJson' => json_encode($nav ?? config('site.nav', []), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             'heroSlides' => $this->heroSlidesForForm($heroOverride, $defaultSlides),
             'announcementText' => data_get($homepage, 'announcement.text', $defaultAnnouncement['text'] ?? ''),
@@ -49,6 +50,10 @@ class SiteSettingAdminController extends Controller
         if ($this->multipartPayloadFailed($request, 'brand_name')) {
             return back()->withInput()->with('error', 'Upload too large for the server limit. Try one image at a time, or ask Hostinger to raise post_max_size.');
         }
+
+        $request->validate([
+            'current_password' => ['required', 'current_password'],
+        ]);
 
         $finishRules = [];
         foreach (config('finishes.swatches', []) as $swatch) {
@@ -164,7 +169,7 @@ class SiteSettingAdminController extends Controller
                 ],
             ]);
 
-            $finishImages = \App\Support\FinishSwatches::imageOverrides();
+            $finishImages = FinishSwatches::imageOverrides();
 
             foreach (config('finishes.swatches', []) as $swatch) {
                 $slug = $swatch['slug'];

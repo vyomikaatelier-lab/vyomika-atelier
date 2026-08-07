@@ -4,9 +4,11 @@
     "description": "VYOMIKA ATELIER - Custom e-commerce and lead management",
     "require": {
         "php": "^8.2",
+        "bacon/bacon-qr-code": "^3.0",
         "laravel/framework": "^11.0",
         "laravel/socialite": "^5.16",
         "laravel/tinker": "^2.9",
+        "pragmarx/google2fa": "^8.0",
         "socialiteproviders/apple": "^5.6"
     },
     "require-dev": {

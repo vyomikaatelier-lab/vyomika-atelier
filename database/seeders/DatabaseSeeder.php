@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use App\Models\BlogPost;
 use App\Models\Project;
 use App\Models\User;
+use App\Support\BlogContent;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -31,11 +33,11 @@ class DatabaseSeeder extends Seeder
 
         if ($user) {
             if (! $user->is_admin) {
-                $user->update(['is_admin' => true]);
+                $user->forceFill(['is_admin' => true])->save();
             }
 
             if (filled(env('ADMIN_PASSWORD'))) {
-                $user->update(['password' => Hash::make(env('ADMIN_PASSWORD'))]);
+                $user->forceFill(['password' => Hash::make(env('ADMIN_PASSWORD'))])->save();
             }
 
             return;
@@ -52,12 +54,13 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-        User::create([
+        User::query()->forceCreate([
             'email' => $email,
             'name' => 'Vyomika Atelier LLP Admin',
             'password' => Hash::make($password),
             'is_admin' => true,
             'is_active' => true,
+            'two_factor_grace_ends_at' => now(), // new admins: enroll MFA immediately
         ]);
     }
 
@@ -73,7 +76,7 @@ class DatabaseSeeder extends Seeder
 
         foreach ($posts as $post) {
             $published = ! empty($post['published_at'])
-                ? \Carbon\Carbon::parse($post['published_at'])
+                ? Carbon::parse($post['published_at'])
                 : now()->subDays(rand(5, 60));
 
             BlogPost::create([
@@ -81,7 +84,7 @@ class DatabaseSeeder extends Seeder
                 'published_at' => $published,
                 'is_active' => true,
                 'status' => 'published',
-                'reading_time_minutes' => \App\Support\BlogContent::readingTimeMinutes(
+                'reading_time_minutes' => BlogContent::readingTimeMinutes(
                     $post['content'] ?? '',
                     $post['reading_time_minutes'] ?? null
                 ),

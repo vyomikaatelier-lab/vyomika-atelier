@@ -9,6 +9,7 @@ use App\Models\Lead;
 use App\Models\LegalPage;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\SiteSetting;
 use App\Models\UrlRedirect;
 use App\Models\User;
 use App\Support\LeadStatus;
@@ -168,6 +169,7 @@ class AdminSaveAuditTest extends TestCase
             'mobile' => $customer->mobile,
             'account_type' => $customer->account_type,
             'is_active' => '0',
+            'current_password' => 'password',
         ])->assertRedirect();
 
         $this->assertFalse($customer->fresh()->is_active);
@@ -294,7 +296,7 @@ class AdminSaveAuditTest extends TestCase
             'hero_title' => 'Hero audit title',
         ])->assertRedirect(route('admin.page-heroes.index'));
 
-        $stored = \App\Models\SiteSetting::getValue('page_heroes', []);
+        $stored = SiteSetting::getValue('page_heroes', []);
         $this->assertSame('Hero audit title', data_get($stored, "{$slug}.title"));
     }
 }

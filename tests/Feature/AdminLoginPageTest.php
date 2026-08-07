@@ -17,8 +17,7 @@ class AdminLoginPageTest extends TestCase
 
     public function test_admin_can_login_with_valid_credentials(): void
     {
-        $admin = User::factory()->create([
-            'is_admin' => true,
+        $admin = User::factory()->admin()->create([
             'is_active' => true,
             'password' => 'password',
         ]);

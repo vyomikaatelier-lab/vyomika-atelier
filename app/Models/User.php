@@ -23,7 +23,6 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'is_admin',
         'mobile_country_code',
         'mobile',
         'whatsapp',
@@ -38,6 +37,8 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
     ];
 
     protected function casts(): array
@@ -45,6 +46,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'phone_verified_at' => 'datetime',
+            'two_factor_confirmed_at' => 'datetime',
+            'two_factor_grace_ends_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
             'is_active' => 'boolean',
@@ -76,7 +79,7 @@ class User extends Authenticatable
         $code = preg_replace('/\D/', '', $this->mobile_country_code ?? '91');
         $mobile = preg_replace('/\D/', '', $this->mobile ?? '');
 
-        return $code . $mobile;
+        return $code.$mobile;
     }
 
     public function accountTypeLabel(): string

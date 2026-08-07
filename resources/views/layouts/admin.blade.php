@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="robots" content="noindex, nofollow">
     <title>@yield('title', 'Admin') — VYOMIKA ATELIER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{{ asset('css/responsive.css') }}">
@@ -52,6 +53,7 @@
                     <p class="text-xs uppercase text-gray-500 mb-1">People & Settings</p>
                     <a href="{{ route('admin.customers.index') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800">Customers</a>
                     <a href="{{ route('admin.settings.edit') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800">Site Settings</a>
+                    <a href="{{ route('admin.mfa.manage') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800">MFA / 2FA</a>
                 </div>
                 <a href="{{ route('home') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800 text-gray-400" target="_blank">View Site</a>
                 <form action="{{ route('admin.logout') }}" method="POST" class="pt-2">

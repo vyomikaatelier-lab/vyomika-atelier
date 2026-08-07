@@ -3,7 +3,9 @@
 namespace App\Support;
 
 use App\Models\SiteSetting;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Schema;
+use PDOException;
 
 class CollectionContent
 {
@@ -34,7 +36,7 @@ class CollectionContent
      */
     public static function storedOverrides(string $slug): array
     {
-        if (! Schema::hasTable('site_settings')) {
+        if (! self::siteSettingsAvailable()) {
             return [];
         }
 
@@ -91,7 +93,7 @@ class CollectionContent
         $configSlugs[] = self::MIRROR_FRAMES_SLUG;
         $overrideSlugs = [];
 
-        if (Schema::hasTable('site_settings')) {
+        if (self::siteSettingsAvailable()) {
             $overrideSlugs = array_keys(self::normalizeStoredPages(SiteSetting::getValue('collection_pages', []) ?? []));
         }
 
@@ -159,7 +161,7 @@ class CollectionContent
     {
         $configLayout = self::configHeroLayout($slug);
 
-        if (Schema::hasTable('site_settings')) {
+        if (self::siteSettingsAvailable()) {
             $pages = SiteSetting::getValue('collection_pages', []) ?? [];
             $canonicalStoredHero = data_get(is_array($pages) ? $pages : [], "{$slug}.hero", []);
 
@@ -198,5 +200,18 @@ class CollectionContent
     public static function withResolvedImages(array $page): array
     {
         return LandingPageContent::withResolvedImages($page);
+    }
+
+    private static function siteSettingsAvailable(): bool
+    {
+        if (PackageDiscovery::running()) {
+            return false;
+        }
+
+        try {
+            return Schema::hasTable('site_settings');
+        } catch (QueryException|PDOException) {
+            return false;
+        }
     }
 }
