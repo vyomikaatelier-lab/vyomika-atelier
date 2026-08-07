@@ -5,7 +5,6 @@ namespace App\Support;
 use App\Models\Exhibition;
 use App\Models\LegalPage;
 use App\Models\SiteSetting;
-use App\Support\MediaUrl;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 
@@ -14,6 +13,7 @@ class CmsSettings
     public const CACHE_KEY = 'cms_settings';
 
     public const CACHE_TTL = 3600;
+
     /**
      * Records what the last hydration actually did. A storefront that renders
      * config seed content is indistinguishable from one that has no saved
@@ -31,6 +31,10 @@ class CmsSettings
             'applied' => [],
             'error' => null,
         ];
+
+        if (PackageDiscovery::running()) {
+            return;
+        }
 
         if (! Schema::hasTable('site_settings')) {
             return;

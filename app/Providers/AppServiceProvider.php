@@ -7,6 +7,7 @@ use App\Services\WhatsApp\MetaWhatsAppProvider;
 use App\Services\WhatsApp\Msg91WhatsAppProvider;
 use App\Support\AdminMfa;
 use App\Support\CmsSettings;
+use App\Support\PackageDiscovery;
 use App\View\Composers\StorefrontSeoComposer;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\QueryException;
@@ -40,7 +41,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Composer `package:discover` boots the app before a database is
         // guaranteed. Keep config seed values as the safe fallback there.
-        if (! $this->isComposerPackageDiscovery()) {
+        if (! PackageDiscovery::running()) {
             try {
                 CmsSettings::hydrate();
             } catch (QueryException|PDOException $e) {
@@ -60,24 +61,6 @@ class AppServiceProvider extends ServiceProvider
         }
 
         View::composer('layouts.store', StorefrontSeoComposer::class);
-    }
-
-    /**
-     * True while Composer is running `php artisan package:discover`.
-     */
-    private function isComposerPackageDiscovery(): bool
-    {
-        if (! $this->app->runningInConsole()) {
-            return false;
-        }
-
-        foreach ($_SERVER['argv'] ?? [] as $arg) {
-            if (is_string($arg) && str_contains($arg, 'package:discover')) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private function configureRateLimiting(): void
