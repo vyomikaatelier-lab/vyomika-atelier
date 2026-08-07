@@ -3,7 +3,9 @@
 namespace App\Support;
 
 use App\Models\SiteSetting;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Schema;
+use PDOException;
 
 class CollectionContent
 {
@@ -202,6 +204,14 @@ class CollectionContent
 
     private static function siteSettingsAvailable(): bool
     {
-        return ! PackageDiscovery::running() && Schema::hasTable('site_settings');
+        if (PackageDiscovery::running()) {
+            return false;
+        }
+
+        try {
+            return Schema::hasTable('site_settings');
+        } catch (QueryException|PDOException) {
+            return false;
+        }
     }
 }
