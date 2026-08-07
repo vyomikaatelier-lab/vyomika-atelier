@@ -54,6 +54,7 @@
                     <a href="{{ route('admin.customers.index') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800">Customers</a>
                     <a href="{{ route('admin.settings.edit') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800">Site Settings</a>
                     <a href="{{ route('admin.mfa.manage') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800">MFA / 2FA</a>
+                    <a href="{{ route('admin.passkeys.manage') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800">Passkeys</a>
                 </div>
                 <a href="{{ route('home') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800 text-gray-400" target="_blank">View Site</a>
                 <form action="{{ route('admin.logout') }}" method="POST" class="pt-2">
@@ -86,5 +87,6 @@
         </main>
     </div>
     <script src="{{ asset('js/responsive.js') }}" defer></script>
+    @stack('scripts')
 </body>
 </html>

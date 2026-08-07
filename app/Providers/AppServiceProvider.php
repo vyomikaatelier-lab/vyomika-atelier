@@ -83,6 +83,15 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        RateLimiter::for('admin-passkey', function (Request $request) {
+            $sessionId = $request->session()->getId();
+
+            return [
+                Limit::perMinute(10)->by($request->ip()),
+                Limit::perMinute(6)->by('admin-passkey-session:'.$sessionId),
+            ];
+        });
+
         RateLimiter::for('otp-send', fn (Request $request) => [
             Limit::perHour(3)->by($request->ip()),
             Limit::perHour(3)->by('otp-send-session:'.$request->session()->getId()),

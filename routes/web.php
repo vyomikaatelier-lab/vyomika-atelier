@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\MediaAdminController;
 use App\Http\Controllers\Admin\MfaController;
 use App\Http\Controllers\Admin\OrderAdminController;
 use App\Http\Controllers\Admin\PageHeroAdminController;
+use App\Http\Controllers\Admin\PasskeyController as AdminPasskeyController;
 use App\Http\Controllers\Admin\ProductAdminController;
 use App\Http\Controllers\Admin\ProfessionalApplicationAdminController;
 use App\Http\Controllers\Admin\ProjectAdminController;
@@ -53,6 +54,7 @@ use App\Http\Controllers\StudioController;
 use App\Http\Controllers\VendorProposalController;
 use App\Support\StorefrontRoutes;
 use Illuminate\Support\Facades\Route;
+use Laravel\Passkeys\Http\Controllers\PasskeyLoginController;
 
 // Public storefront
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -184,6 +186,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('/login', [AdminAuthController::class, 'login'])->middleware('throttle:auth')->name('login.submit');
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
 
+    Route::get('/passkeys/login/options', [PasskeyLoginController::class, 'index'])
+        ->middleware(['guest:web', 'throttle:admin-passkey'])
+        ->name('passkeys.login.options');
+
+    Route::post('/passkeys/login', [PasskeyLoginController::class, 'store'])
+        ->middleware(['guest:web', 'throttle:admin-passkey'])
+        ->name('passkeys.login');
+
     Route::get('/mfa/challenge', [MfaController::class, 'showChallenge'])->name('mfa.challenge');
     Route::post('/mfa/challenge', [MfaController::class, 'challenge'])->middleware('throttle:admin-mfa')->name('mfa.challenge.submit');
     Route::get('/mfa/enroll', [MfaController::class, 'showEnroll'])->name('mfa.enroll');
@@ -194,6 +204,19 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::get('/mfa/recovery', [MfaController::class, 'showRecovery'])->name('mfa.recovery');
         Route::get('/mfa', [MfaController::class, 'showManage'])->name('mfa.manage');
+        Route::get('/passkeys', [AdminPasskeyController::class, 'showManage'])->name('passkeys.manage');
+        Route::post('/passkeys/register/options', [AdminPasskeyController::class, 'registrationOptions'])
+            ->middleware('throttle:admin-passkey')
+            ->name('passkeys.register.options');
+        Route::post('/passkeys/register', [AdminPasskeyController::class, 'store'])
+            ->middleware('throttle:admin-passkey')
+            ->name('passkeys.register');
+        Route::patch('/passkeys/{passkey}', [AdminPasskeyController::class, 'update'])
+            ->middleware('throttle:admin-passkey')
+            ->name('passkeys.update');
+        Route::delete('/passkeys/{passkey}', [AdminPasskeyController::class, 'destroy'])
+            ->middleware('throttle:admin-passkey')
+            ->name('passkeys.destroy');
         Route::post('/mfa/recovery', [MfaController::class, 'regenerateRecoveryCodes'])->middleware('throttle:admin-mfa')->name('mfa.recovery.regenerate');
         Route::post('/mfa/disable', [MfaController::class, 'disable'])->middleware('throttle:admin-mfa')->name('mfa.disable');
 

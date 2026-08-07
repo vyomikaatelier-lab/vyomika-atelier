@@ -6,6 +6,7 @@
         "php": "^8.2",
         "bacon/bacon-qr-code": "^3.0",
         "laravel/framework": "^11.0",
+        "laravel/passkeys": "^0.2",
         "laravel/socialite": "^5.16",
         "laravel/tinker": "^2.9",
         "pragmarx/google2fa": "^8.0",
