@@ -63,7 +63,7 @@ Password + TOTP + recovery codes remain available as fallback sign-in methods.
 | Check | Expected |
 |-------|----------|
 | `GET /admin/login` | “Sign in with a passkey” visible |
-| Passkey login (admin with registered passkey) | Redirect to MFA challenge if TOTP enabled, then dashboard |
+| Passkey login (admin with registered passkey) | Dashboard directly when TOTP enabled (WebAuthn user verification satisfies MFA); password login still requires TOTP |
 | Passkey login (non-admin credential) | Generic failure, no account enumeration |
 | Add / rename / remove passkey | Requires password + TOTP |
 | Remove last passkey without MFA | Blocked |
@@ -74,7 +74,8 @@ Password + TOTP + recovery codes remain available as fallback sign-in methods.
 
 - Only **public keys**, credential IDs, sign counters, transports metadata, names, and timestamps are stored.
 - Origin / RP ID mismatches, replayed challenges, invalid signatures, and expired challenges are rejected by `web-auth/webauthn-lib` via `laravel/passkeys`.
-- Passkey login does **not** bypass admin authorization, rate limits, session regeneration, disabled-account checks, or MFA.
+- Passkey login does **not** bypass admin authorization, rate limits, session regeneration, disabled-account checks, or MFA enrollment when required.
+- When TOTP MFA is already enrolled, passkey sign-in satisfies the second factor (WebAuthn user verification); password sign-in still requires a TOTP or recovery code.
 
 ## Rollback
 

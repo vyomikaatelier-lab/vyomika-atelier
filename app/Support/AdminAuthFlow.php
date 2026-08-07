@@ -42,6 +42,20 @@ class AdminAuthFlow
         $email = strtolower(trim((string) ($emailHint ?? $user->email)));
 
         if ($this->mfa->hasMfaEnabled($user)) {
+            if ($via === 'passkey') {
+                AdminAccess::grant($request);
+
+                Log::info('admin.login_succeeded', [
+                    'user_id' => $user->id,
+                    'email' => $email,
+                    'ip' => $request->ip(),
+                    'mfa' => 'passkey',
+                    'via' => $via,
+                ]);
+
+                return redirect()->intended(route('admin.dashboard'));
+            }
+
             $request->session()->put(AdminMfa::SESSION_PENDING, $user->id);
 
             Log::info('admin.login_ok_mfa_required', [

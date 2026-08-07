@@ -3,8 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Support\AdminAccess;
+use App\Support\AdminAuthFlow;
 use App\Support\AdminMfa;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Laravel\Passkeys\Passkeys;
@@ -275,26 +278,33 @@ class AdminPasskeyTest extends TestCase
         $this->assertSame('wrong.example', $response->json('options.rpId'));
     }
 
-    public function test_passkey_login_still_requires_mfa_before_admin_access(): void
+    public function test_passkey_login_grants_admin_access_without_totp_challenge_when_mfa_enabled(): void
     {
-        $google2fa = new Google2FA;
-        $secret = $google2fa->generateSecretKey();
-        $mfa = app(AdminMfa::class);
+        $admin = $this->adminWithMfa();
+        $request = Request::create('/admin/passkeys/login', 'POST');
+        $request->setLaravelSession($this->app['session.store']);
+
+        $response = app(AdminAuthFlow::class)->completeAdminLogin($request, $admin, 'passkey');
+
+        $this->assertSame(route('admin.dashboard'), $response->getTargetUrl());
+        $this->assertTrue(AdminAccess::verified($request));
+        $this->assertNull($request->session()->get(AdminMfa::SESSION_PENDING));
+    }
+
+    public function test_passkey_login_still_requires_mfa_enrollment_when_grace_expired(): void
+    {
         $admin = User::factory()->admin()->create([
             'password' => 'password',
-            'two_factor_secret' => $mfa->encryptSecret($secret),
-            'two_factor_confirmed_at' => now(),
-            'two_factor_recovery_codes' => $mfa->hashRecoveryCodes(['ABCD-EFGH']),
+            'two_factor_grace_ends_at' => now()->subDay(),
         ]);
+        $request = Request::create('/admin/passkeys/login', 'POST');
+        $request->setLaravelSession($this->app['session.store']);
 
-        $admin->passkeys()->create([
-            'name' => 'Device',
-            'credential_id' => 'device-key',
-            'credential' => ['type' => 'public-key'],
-        ]);
+        $response = app(AdminAuthFlow::class)->completeAdminLogin($request, $admin, 'passkey');
 
-        $passkey = $admin->passkeys()->first();
-        $this->assertTrue(Passkeys::allowsLogin(request(), $passkey));
+        $this->assertSame(route('admin.mfa.enroll'), $response->getTargetUrl());
+        $this->assertFalse(AdminAccess::verified($request));
+        $this->assertSame($admin->id, $request->session()->get(AdminMfa::SESSION_PENDING));
     }
 
     private function adminWithMfa(): User
