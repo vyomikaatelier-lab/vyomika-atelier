@@ -67,6 +67,8 @@ class ProductAdminContentTest extends TestCase
         $this->assertSame('Custom headline for PDP', $product->headline_text);
         $this->assertSame('Custom swatch note for buyers', $product->swatches_note);
         $this->assertSame("Material: Grade 304 stainless\nFinish: PVD coated\nLead time: 3–4 weeks", $product->tab_specifications);
+        $this->assertSame("Custom packaging\nExtra packaging details.", $product->tab_packaging);
+        $this->assertSame("Custom shipping\nExpress metro delivery available.", $product->tab_shipping);
         $this->assertSame([
             'Material: Grade 304 stainless',
             'Finish: PVD coated',

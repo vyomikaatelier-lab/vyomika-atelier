@@ -113,9 +113,12 @@ class ProductAdminController extends Controller
         }
 
         $validated = $this->validateProduct($request, $product);
+        $slugSource = $request->filled('slug')
+            ? $request->input('slug')
+            : ($product->slug ?: $validated['name']);
         $validated['slug'] = $this->resolveUniqueSlug(
             Product::class,
-            $request->input('slug') ?: $validated['name'],
+            $slugSource,
             'slug',
             $product
         );
@@ -306,6 +309,8 @@ class ProductAdminController extends Controller
         }
 
         $validated['tab_specifications'] = Product::normalizeTabLines($validated['tab_specifications'] ?? null);
+        $validated['tab_packaging'] = Product::normalizeTabLines($validated['tab_packaging'] ?? null);
+        $validated['tab_shipping'] = Product::normalizeTabLines($validated['tab_shipping'] ?? null);
 
         return $validated;
     }

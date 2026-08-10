@@ -50,7 +50,12 @@
     </div>
 
     <input type="text" name="name" value="{{ old('name', $product->name ?? '') }}" placeholder="Product Name" required class="w-full border px-3 py-2 rounded">
-    <input type="text" name="slug" value="{{ old('slug', $product->slug ?? '') }}" placeholder="Slug (optional — auto from name)" class="w-full border px-3 py-2 rounded">
+    <div>
+        <label for="product-slug" class="text-sm font-medium text-gray-800 block mb-1">Product URL slug</label>
+        <p class="text-xs text-gray-500 mb-2">Public link: <span class="font-mono">/shop/<em>your-slug</em></span>. Change anytime when you re-enter details — must be unique across all products. Add a URL redirect in admin if an old link should still work.</p>
+        <input id="product-slug" type="text" name="slug" value="{{ old('slug', $product->slug ?? '') }}" placeholder="Leave blank on new product to auto-build from name" class="w-full border px-3 py-2 rounded font-mono text-sm">
+        @error('slug')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+    </div>
 
     <section class="rounded-lg border-2 border-gray-300 bg-gray-50 p-4 space-y-4" aria-labelledby="pdp-content-heading">
         <div>
@@ -147,13 +152,21 @@
                 @error('tab_specifications')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
             </div>
             <div>
-                <label for="tab_packaging" class="text-sm text-gray-700 block mb-1">Packaging tab</label>
-                <textarea id="tab_packaging" name="tab_packaging" rows="5" placeholder="HTML for the Packaging tab" class="w-full border px-3 py-2 rounded font-mono text-sm bg-white">{{ old('tab_packaging', $product->tab_packaging ?? '') }}</textarea>
+                <label for="tab_packaging" class="text-sm font-medium text-gray-800 block mb-1">Packaging tab</label>
+                <p class="text-xs text-gray-500 mb-2">One point per line — shown as a bullet list on the product page (same style as Specifications). Leave blank for built-in defaults.</p>
+                @php
+                    $packagingValue = old('tab_packaging', isset($product) ? implode("\n", \App\Models\Product::linesFromTabText($product->tab_packaging)) : '');
+                @endphp
+                <textarea id="tab_packaging" name="tab_packaging" rows="6" placeholder="Protective foam and corner guards&#10;Plywood crate for Pan-India transit&#10;Film-wrapped PVD surfaces" class="w-full border px-3 py-2 rounded text-sm bg-white leading-relaxed">{{ $packagingValue }}</textarea>
                 @error('tab_packaging')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
             </div>
             <div>
-                <label for="tab_shipping" class="text-sm text-gray-700 block mb-1">Shipping tab</label>
-                <textarea id="tab_shipping" name="tab_shipping" rows="5" placeholder="HTML for the Shipping tab" class="w-full border px-3 py-2 rounded font-mono text-sm bg-white">{{ old('tab_shipping', $product->tab_shipping ?? '') }}</textarea>
+                <label for="tab_shipping" class="text-sm font-medium text-gray-800 block mb-1">Shipping tab</label>
+                <p class="text-xs text-gray-500 mb-2">One point per line — shown as a bullet list on the product page. Leave blank for built-in defaults.</p>
+                @php
+                    $shippingValue = old('tab_shipping', isset($product) ? implode("\n", \App\Models\Product::linesFromTabText($product->tab_shipping)) : '');
+                @endphp
+                <textarea id="tab_shipping" name="tab_shipping" rows="6" placeholder="Lead time: 3–4 weeks from order confirmation&#10;Metro cities: door delivery&#10;Pan-India courier or freight" class="w-full border px-3 py-2 rounded text-sm bg-white leading-relaxed">{{ $shippingValue }}</textarea>
                 @error('tab_shipping')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
             </div>
         </fieldset>
@@ -325,8 +338,17 @@
         @error('size_options.*.compare_price')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
     </fieldset>
     <div class="grid grid-cols-2 gap-4">
-        <input type="text" name="sku" value="{{ old('sku', $product->sku ?? '') }}" placeholder="SKU" class="border px-3 py-2 rounded">
-        <input type="number" name="stock" value="{{ old('stock', $product->stock ?? 0) }}" placeholder="Stock" required class="border px-3 py-2 rounded">
+        <div>
+            <label for="product-sku" class="text-sm font-medium text-gray-800 block mb-1">SKU</label>
+            <p class="text-xs text-gray-500 mb-2">Optional. Change anytime — same SKU on multiple products is allowed.</p>
+            <input id="product-sku" type="text" name="sku" value="{{ old('sku', $product->sku ?? '') }}" placeholder="e.g. CT-NORDIC-01" class="w-full border px-3 py-2 rounded">
+            @error('sku')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+        </div>
+        <div>
+            <label for="product-stock" class="text-sm font-medium text-gray-800 block mb-1">Stock</label>
+            <input id="product-stock" type="number" name="stock" value="{{ old('stock', $product->stock ?? 0) }}" placeholder="Stock" required class="w-full border px-3 py-2 rounded">
+            @error('stock')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+        </div>
     </div>
 
     <div>
