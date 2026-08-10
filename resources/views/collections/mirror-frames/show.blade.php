@@ -75,10 +75,6 @@
 
                 @include('partials.am-pdp-finish-swatches', ['note' => $product->resolvedSwatchesNote()])
 
-                @if($product->description)
-                <div class="am-prose am-pdp__desc">{{ $product->description }}</div>
-                @endif
-
                 <div class="am-pdp__buy-inline" id="buy">
                     @if($product->usesCheckoutFlow())
                     @include('partials.am-pdp-buy-actions', ['product' => $product])

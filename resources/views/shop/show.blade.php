@@ -102,10 +102,6 @@
                     'note' => $product->resolvedSwatchesNote(),
                 ])
 
-                @if($product->description)
-                <div class="am-prose am-pdp__desc">{{ $product->description }}</div>
-                @endif
-
                 @if($showCalculator)
                 <div class="am-pdp__calc-inline" id="buy">
                     @include('partials.am-calculator', [
