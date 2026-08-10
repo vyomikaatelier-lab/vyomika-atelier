@@ -6,6 +6,8 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ProductAdminContentTest extends TestCase
@@ -429,6 +431,130 @@ class ProductAdminContentTest extends TestCase
             ->assertSee('Thickness: 1.2mm', false)
             ->assertSee('Mounting: Wall & ceiling')
             ->assertDontSee('<ul><li>Thickness: 1.2mm</li><li>Mounting:', false);
+    }
+
+    public function test_update_product_without_reupload_preserves_stored_image(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->admin()->create();
+        $category = Category::query()->firstOrCreate(
+            ['slug' => 'mirror-frames'],
+            ['name' => 'Mirror Frames', 'section' => 'shop', 'is_active' => true]
+        );
+
+        $product = Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Image Keeper Mirror',
+            'slug' => 'image-keeper-mirror',
+            'description' => 'Keeps image on text-only save',
+            'price' => 18500,
+            'stock' => 5,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+            'image' => 'products/existing-mirror.jpg',
+        ]);
+
+        Storage::disk('public')->put('products/existing-mirror.jpg', 'existing-image');
+
+        $this->actingAsAdmin($admin)->put(route('admin.products.update', $product), $this->productPayload($category, $product, [
+            'description' => 'Updated copy only',
+            'image' => '',
+        ]))->assertRedirect(route('admin.products.edit', ['product' => $product, 'saved' => 1]));
+
+        $product->refresh();
+
+        $this->assertSame('products/existing-mirror.jpg', $product->image);
+        $this->assertSame('Updated copy only', $product->description);
+        Storage::disk('public')->assertExists('products/existing-mirror.jpg');
+
+        $this->get(route('shop.show', $product->slug))
+            ->assertOk()
+            ->assertSee('storage/products/existing-mirror.jpg', false);
+    }
+
+    public function test_empty_image_file_slot_does_not_replace_stored_image(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->admin()->create();
+        $category = Category::query()->firstOrCreate(
+            ['slug' => 'mirror-frames'],
+            ['name' => 'Mirror Frames', 'section' => 'shop', 'is_active' => true]
+        );
+
+        $product = Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Empty Slot Mirror',
+            'slug' => 'empty-slot-mirror',
+            'price' => 18500,
+            'stock' => 5,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+            'image' => 'products/kept-mirror.jpg',
+        ]);
+
+        Storage::disk('public')->put('products/kept-mirror.jpg', 'kept-image');
+
+        $emptySlot = new UploadedFile('', '', null, UPLOAD_ERR_NO_FILE, true);
+        $zeroByteSlot = UploadedFile::fake()->create('empty.jpg', 0, 'image/jpeg');
+
+        $this->actingAsAdmin($admin)->put(route('admin.products.update', $product), array_merge(
+            $this->productPayload($category, $product),
+            ['image_file' => $emptySlot]
+        ))->assertRedirect(route('admin.products.edit', ['product' => $product, 'saved' => 1]));
+
+        $product->refresh();
+        $this->assertSame('products/kept-mirror.jpg', $product->image);
+        Storage::disk('public')->assertExists('products/kept-mirror.jpg');
+
+        $this->actingAsAdmin($admin)->put(route('admin.products.update', $product), array_merge(
+            $this->productPayload($category, $product),
+            ['image_file' => $zeroByteSlot]
+        ))->assertRedirect(route('admin.products.edit', ['product' => $product, 'saved' => 1]));
+
+        $product->refresh();
+        $this->assertSame('products/kept-mirror.jpg', $product->image);
+        Storage::disk('public')->assertExists('products/kept-mirror.jpg');
+    }
+
+    public function test_admin_can_upload_product_image_and_storefront_shows_it(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->admin()->create();
+        $category = Category::query()->firstOrCreate(
+            ['slug' => 'mirror-frames'],
+            ['name' => 'Mirror Frames', 'section' => 'shop', 'is_active' => true]
+        );
+
+        $product = Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Upload Mirror',
+            'slug' => 'upload-mirror',
+            'price' => 18500,
+            'stock' => 5,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+        ]);
+
+        $this->actingAsAdmin($admin)->put(route('admin.products.update', $product), array_merge(
+            $this->productPayload($category, $product),
+            ['image_file' => UploadedFile::fake()->image('mirror.jpg')]
+        ))->assertRedirect(route('admin.products.edit', ['product' => $product, 'saved' => 1]));
+
+        $product->refresh();
+
+        $this->assertNotNull($product->image);
+        $this->assertStringStartsWith('products/', $product->image);
+        Storage::disk('public')->assertExists($product->image);
+
+        $this->get(route('shop.show', $product->slug))
+            ->assertOk()
+            ->assertSee('storage/'.$product->image, false);
     }
 
     public function test_admin_clears_mirror_dimensions_when_not_mirror_frames(): void

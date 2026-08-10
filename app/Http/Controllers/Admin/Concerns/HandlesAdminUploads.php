@@ -17,6 +17,10 @@ trait HandlesAdminUploads
         }
 
         $file = $request->file($field);
+        if (! $this->isUsableUpload($file)) {
+            return null;
+        }
+
         $path = $file->store($directory, $private ? 'local' : 'public');
 
         MediaFile::create([

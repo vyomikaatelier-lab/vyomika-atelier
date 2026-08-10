@@ -222,7 +222,7 @@ class ProductAdminController extends Controller
             'sku' => 'nullable|string|max:100',
             'stock' => 'required|integer|min:0',
             'image' => 'nullable|string|max:500',
-            'image_file' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:4096',
+            'image_file' => $this->adminImageUploadRules(),
             'section' => ['required', 'in:'.implode(',', Product::SECTIONS)],
             'purchase_mode' => ['required', 'in:'.implode(',', Product::PURCHASE_MODES)],
             'pricing_type' => ['required', 'in:'.implode(',', Product::PRICING_TYPES)],
@@ -233,7 +233,7 @@ class ProductAdminController extends Controller
             'size_options.*.discount_percent' => 'nullable|integer|min:0|max:99',
             'size_options.*.size_inches' => 'nullable|numeric|min:0',
             'size_options.*.sku_suffix' => 'nullable|string|max:20',
-        ]);
+        ], $this->adminImageUploadMessages());
 
         $category = Category::query()->find($validated['category_id']);
         $productSlug = $existing?->slug ?? Str::slug($request->input('slug') ?: $validated['name']);
@@ -270,7 +270,7 @@ class ProductAdminController extends Controller
             }
         }
 
-        $preview = ($existing ?? new Product())->fill([
+        $preview = ($existing ? clone $existing : new Product())->fill([
             ...$validated,
             'slug' => $productSlug,
             'is_active' => $this->checkboxBoolean($request, 'is_active'),

@@ -360,7 +360,7 @@
     </div>
     <div>
         <label class="text-sm text-gray-600 block mb-1">Or Image URL</label>
-        <input type="text" name="image" value="{{ old('image', isset($product) && str_starts_with($product->image ?? '', 'http') ? $product->image : '') }}" placeholder="https://..." class="w-full border px-3 py-2 rounded">
+        <input type="text" name="image" value="{{ old('image', isset($product) ? ($product->image ?? '') : '') }}" placeholder="https://... (uploaded files keep their stored path automatically)" class="w-full border px-3 py-2 rounded">
     </div>
     @if(isset($product) && $product->imageUrl())
         <img src="{{ $product->imageUrl() }}" alt="" class="w-32 h-40 object-contain rounded border bg-gray-50">
