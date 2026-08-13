@@ -2,18 +2,6 @@
 
 @php
     use App\Support\Seo\JsonLd;
-    use App\Support\Seo\PageSeo;
-    use App\Support\MediaUrl;
-
-    $pageSeo = PageSeo::make([
-        'title' => $product->meta_title ?: ($product->name.' — Vyomika Atelier'),
-        'description' => $product->meta_description
-            ?: (\Illuminate\Support\Str::limit(strip_tags((string) $product->description), 155) ?: null),
-        'canonical' => route('shop.show', $product->slug),
-        'og_image' => $product->og_image ?: $product->image,
-        'og_type' => 'product',
-    ]);
-    $productLd = JsonLd::product($product);
 @endphp
 
 @section('title', $pageSeo['title'])
@@ -24,12 +12,18 @@
 @endpush
 @endif
 
+@if($breadcrumbLd)
+@push('jsonld')
+{!! JsonLd::script($breadcrumbLd) !!}
+@endpush
+@endif
+
 @section('content')
 @php
     use App\Models\Service;
     use App\Support\ProductCatalog;
+    use App\Support\Seo\ProductSeo;
     use App\Support\StorefrontRoutes;
-    $mainImage = $product->imageUrl();
     $discount = $product->discountPercent();
     $categorySlug = $product->category?->slug;
     $sectionLabel = StorefrontRoutes::productSectionLabel($product);
@@ -44,14 +38,21 @@
 
 <section class="am-page-body am-page-body--pdp">
     <div class="am-container">
-        @include('partials.am-breadcrumbs', ['items' => StorefrontRoutes::productBreadcrumbs($product)])
+        @include('partials.am-breadcrumbs', ['items' => $breadcrumbs ?? StorefrontRoutes::productBreadcrumbs($product)])
 
         <div class="am-pdp">
             <div class="am-pdp__gallery" data-pdp-gallery>
                 <div class="am-pdp__gallery-inner">
                     <div class="am-pdp__main">
-                        @if($mainImage)
-                            <img src="{{ $mainImage }}" alt="{{ $product->name }}" id="pdp-main-image" class="am-pdp__main-img">
+                        @if($product->image)
+                            @include('partials.am-product-image', [
+                                'path' => $product->image,
+                                'alt' => ProductSeo::imageAlt($product),
+                                'context' => 'pdp',
+                                'priority' => true,
+                                'class' => 'am-pdp__main-img',
+                                'id' => 'pdp-main-image',
+                            ])
                         @else
                             <div class="am-pdp__placeholder">VA</div>
                         @endif

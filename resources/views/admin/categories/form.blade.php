@@ -37,6 +37,7 @@
     <div><label class="block text-sm mb-1">Upload image</label><input type="file" name="image_file" accept="image/*" class="w-full"></div>
     <div><label class="block text-sm mb-1">SEO title</label><input name="meta_title" value="{{ old('meta_title', $category->meta_title ?? '') }}" class="w-full border px-3 py-2 rounded"></div>
     <div><label class="block text-sm mb-1">Meta description</label><textarea name="meta_description" rows="2" class="w-full border px-3 py-2 rounded">{{ old('meta_description', $category->meta_description ?? '') }}</textarea></div>
+    <div><label class="block text-sm mb-1">Open Graph image URL</label><input name="og_image" value="{{ old('og_image', $category->og_image ?? '') }}" placeholder="Social share image (blank = category image)" class="w-full border px-3 py-2 rounded"></div>
     <div><label class="block text-sm mb-1">Display order</label><input type="number" name="sort_order" min="0" value="{{ old('sort_order', $category->sort_order ?? 0) }}" class="w-full border px-3 py-2 rounded"></div>
     <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', $category->is_active ?? true))> Active</label>
     <button type="submit" class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Save</button>

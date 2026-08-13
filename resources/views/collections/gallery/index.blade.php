@@ -1,24 +1,20 @@
 @extends('layouts.store')
 
 @php
-    $hero = $page['hero'] ?? [];
-    $pageCategoryLabel = $pageCategoryLabel ?? (
-        \App\Support\StorefrontRoutes::isShopCategory($slug)
-            ? \App\Support\StorefrontRoutes::shopCategoryLabel($slug)
-            : $category->name
-    );
+    use App\Support\Seo\JsonLd;
 @endphp
 
-@section('title', $page['meta_title'] ?? ($category->name.' — Vyomika Atelier'))
+@section('title', $pageSeo['title'] ?? ($category->name.' — Vyomika Atelier'))
 
-@push('meta')
-<meta name="description" content="{{ $page['meta_description'] ?? '' }}">
-<link rel="canonical" href="{{ route('shop.show', $slug) }}">
+@if(!empty($breadcrumbLd))
+@push('jsonld')
+{!! JsonLd::script($breadcrumbLd) !!}
 @endpush
+@endif
 
 @section('content')
 
-@include('partials.am-shop-category-hero', ['hero' => $hero])
+@include('partials.am-shop-category-hero', ['hero' => $page['hero'] ?? []])
 
 @if(!empty($page['intro']['body']))
 <section class="am-section am-section--white">
@@ -28,6 +24,8 @@
     </div>
 </section>
 @endif
+
+@include('partials.am-breadcrumbs', ['items' => $breadcrumbs ?? []])
 
 @include('partials.am-collection-gallery-grid', [
     'products' => $products,

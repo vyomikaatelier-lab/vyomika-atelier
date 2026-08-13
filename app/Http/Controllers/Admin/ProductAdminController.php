@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Admin\Concerns\HandlesAdminUploads;
 use App\Http\Controllers\Admin\Concerns\ResolvesUniqueSlug;
 use App\Http\Controllers\Controller;
-use App\Models\Product;
 use App\Models\Category;
+use App\Models\Product;
+use App\Models\UrlRedirect;
+use App\Services\ProductImageDerivativeService;
 use App\Support\ProductCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -92,6 +94,7 @@ class ProductAdminController extends Controller
         $validated['sort_order'] = (Product::max('sort_order') ?? 0) + 1;
 
         Product::create($validated);
+        $this->generateImageDerivatives($validated['image'] ?? null);
 
         return redirect()
             ->route('admin.products.index', $this->productIndexParams($request))
@@ -125,7 +128,21 @@ class ProductAdminController extends Controller
         $validated['image'] = $this->resolveImageField($request, 'image_file', 'image', $product->image, 'products');
         $validated = $this->normalizeProductPrices($validated);
 
+        $oldSlug = $product->slug;
+        $oldImage = $product->image;
+
         $product->update($validated);
+
+        if ($validated['slug'] !== $oldSlug) {
+            $this->recordProductSlugRedirect($oldSlug, $validated['slug']);
+        }
+
+        if (($validated['image'] ?? null) !== $oldImage) {
+            $this->generateImageDerivatives($validated['image'] ?? null);
+            if (filled($oldImage)) {
+                app(ProductImageDerivativeService::class)->deleteDerivatives($oldImage);
+            }
+        }
 
         $indexParams = $this->productIndexParams($request);
         if ($indexParams !== []) {
@@ -214,9 +231,24 @@ class ProductAdminController extends Controller
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
             'og_image' => 'nullable|string|max:500',
+            'image_alt' => 'nullable|string|max:255',
+            'material' => 'nullable|string|max:255',
+            'finish' => 'nullable|string|max:255',
+            'color' => 'nullable|string|max:100',
+            'weight_kg' => 'nullable|numeric|min:0|max:99999',
+            'gtin' => 'nullable|string|max:14',
+            'mpn' => 'nullable|string|max:100',
+            'seo_keyword' => 'nullable|string|max:255',
+            'canonical_url' => 'nullable|url|max:500',
+            'robots_index' => 'nullable|boolean',
             'price' => 'required|numeric|min:0',
             'compare_price' => 'nullable|numeric|min:0',
-            'sku' => 'nullable|string|max:100',
+            'sku' => [
+                'nullable',
+                'string',
+                'max:100',
+                Rule::unique('products', 'sku')->ignore($existing?->id),
+            ],
             'stock' => 'required|integer|min:0',
             'image' => 'nullable|string|max:500',
             'image_file' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:4096',
@@ -267,7 +299,7 @@ class ProductAdminController extends Controller
             }
         }
 
-        $preview = ($existing ?? new Product())->fill([
+        $preview = ($existing ? clone $existing : new Product)->fill([
             ...$validated,
             'slug' => $productSlug,
             'is_active' => $this->checkboxBoolean($request, 'is_active'),
@@ -306,8 +338,52 @@ class ProductAdminController extends Controller
         }
 
         $validated['tab_specifications'] = Product::normalizeTabLines($validated['tab_specifications'] ?? null);
+        $validated['tab_packaging'] = Product::normalizeTabLines($validated['tab_packaging'] ?? null);
+        $validated['tab_shipping'] = Product::normalizeTabLines($validated['tab_shipping'] ?? null);
+        $validated['robots_index'] = $request->boolean('robots_index', true);
+        $validated['sku'] = filled($validated['sku'] ?? null)
+            ? trim((string) $validated['sku'])
+            : null;
+
+        if (
+            isset($validated['compare_price'], $validated['price'])
+            && $validated['compare_price'] !== null
+            && (float) $validated['compare_price'] > 0
+            && (float) $validated['price'] > (float) $validated['compare_price']
+        ) {
+            throw ValidationException::withMessages([
+                'price' => 'Selling price cannot be higher than the compare (original) price.',
+            ]);
+        }
 
         return $validated;
+    }
+
+    private function recordProductSlugRedirect(string $oldSlug, string $newSlug): void
+    {
+        if ($oldSlug === '' || $newSlug === '' || $oldSlug === $newSlug) {
+            return;
+        }
+
+        $toUrl = route('shop.show', $newSlug);
+
+        UrlRedirect::query()->updateOrCreate(
+            ['from_path' => UrlRedirect::normalizePath('/shop/'.$oldSlug)],
+            [
+                'to_url' => $toUrl,
+                'status_code' => 301,
+                'is_active' => true,
+            ]
+        );
+    }
+
+    private function generateImageDerivatives(?string $path): void
+    {
+        if (! filled($path) || str_starts_with($path, 'http')) {
+            return;
+        }
+
+        app(ProductImageDerivativeService::class)->generateForPath($path);
     }
 
     /**
@@ -515,7 +591,7 @@ class ProductAdminController extends Controller
     }
 
     /**
-     * @param \Illuminate\Support\Collection<int, Category> $categories
+     * @param  Collection<int, Category>  $categories
      * @return array<int, string>
      */
     private function categorySectionMap($categories): array

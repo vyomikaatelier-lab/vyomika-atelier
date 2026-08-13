@@ -104,8 +104,11 @@ class JsonLd
             return null;
         }
 
-        $url = route('shop.show', $product->slug);
+        $url = filled($product->canonical_url)
+            ? (string) $product->canonical_url
+            : route('shop.show', $product->slug);
         $image = MediaUrl::resolve($product->image) ?? $product->image;
+        $brandName = config('site.brand.name', 'Vyomika Atelier');
 
         $data = [
             '@context' => 'https://schema.org',
@@ -114,22 +117,50 @@ class JsonLd
             'description' => strip_tags((string) ($product->description ?? $product->name)),
             'sku' => $product->sku ?: $product->slug,
             'url' => $url,
+            'brand' => [
+                '@type' => 'Brand',
+                'name' => $brandName,
+            ],
         ];
 
         if (filled($image)) {
             $data['image'] = [$image];
         }
 
-        $price = (float) $product->price;
-        if ($price > 0 && $product->pricing_type !== Product::PRICING_QUOTATION_ONLY) {
+        if (filled($product->material)) {
+            $data['material'] = (string) $product->material;
+        }
+
+        if (filled($product->color)) {
+            $data['color'] = (string) $product->color;
+        }
+
+        if (filled($product->gtin)) {
+            $data['gtin'] = (string) $product->gtin;
+        }
+
+        if (filled($product->mpn)) {
+            $data['mpn'] = (string) $product->mpn;
+        }
+
+        $unitPrice = $product->hasSizeOptions()
+            ? $product->listingPrice()
+            : (float) $product->price;
+
+        if ($unitPrice > 0 && $product->pricing_type !== Product::PRICING_QUOTATION_ONLY) {
             $data['offers'] = [
                 '@type' => 'Offer',
                 'url' => $url,
                 'priceCurrency' => 'INR',
-                'price' => number_format($price, 2, '.', ''),
+                'price' => number_format($unitPrice, 2, '.', ''),
                 'availability' => $product->stock > 0
                     ? 'https://schema.org/InStock'
                     : 'https://schema.org/OutOfStock',
+                'itemCondition' => 'https://schema.org/NewCondition',
+                'seller' => [
+                    '@type' => 'Organization',
+                    'name' => $brandName,
+                ],
             ];
         }
 

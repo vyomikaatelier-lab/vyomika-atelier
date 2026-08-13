@@ -116,6 +116,7 @@ class SitemapController extends Controller
         if (Schema::hasTable('products')) {
             Product::query()
                 ->where('is_active', true)
+                ->where('robots_index', true)
                 ->where('section', Product::SECTION_SHOP)
                 ->get(['slug', 'updated_at'])
                 ->each(function (Product $product) use (&$urls) {

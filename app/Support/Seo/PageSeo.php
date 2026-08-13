@@ -91,9 +91,17 @@ class PageSeo
         }
         $analytics = is_array($analytics) ? $analytics : [];
 
+        $gsc = filled($analytics['gsc_verification'] ?? null)
+            ? (string) $analytics['gsc_verification']
+            : null;
+
+        if ($gsc === null && filled(env('GOOGLE_SITE_VERIFICATION'))) {
+            $gsc = (string) env('GOOGLE_SITE_VERIFICATION');
+        }
+
         return [
             'ga4' => filled($analytics['ga4_measurement_id'] ?? null) ? (string) $analytics['ga4_measurement_id'] : null,
-            'gsc' => filled($analytics['gsc_verification'] ?? null) ? (string) $analytics['gsc_verification'] : null,
+            'gsc' => $gsc,
         ];
     }
 }

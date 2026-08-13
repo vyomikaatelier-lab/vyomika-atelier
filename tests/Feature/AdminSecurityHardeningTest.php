@@ -63,10 +63,10 @@ class AdminSecurityHardeningTest extends TestCase
 
     public function test_robots_txt_disallows_admin(): void
     {
-        $robots = file_get_contents(public_path('robots.txt'));
-
-        $this->assertStringContainsString('Disallow: /admin', $robots);
-        $this->assertStringContainsString('Disallow: /admin/', $robots);
+        $this->get(route('robots'))
+            ->assertOk()
+            ->assertSee('Disallow: /admin', false)
+            ->assertSee('Disallow: /admin/', false);
     }
 
     public function test_settings_update_requires_current_password(): void

@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use App\Support\Seo\PageSeo;
-use Illuminate\Support\Str;
+use App\Support\ProductCatalog;
+use App\Support\Seo\JsonLd;
+use App\Support\Seo\ProductSeo;
+use Illuminate\View\View;
 
 class ProductController extends Controller
 {
-    public function show(string $slug)
+    public function show(string $slug): View
     {
         $product = Product::where('slug', $slug)
             ->where('is_active', true)
@@ -31,15 +33,11 @@ class ProductController extends Controller
             $related = $related->concat($more);
         }
 
-        $pageSeo = PageSeo::make([
-            'title' => $product->meta_title ?: ($product->name.' — Vyomika Atelier'),
-            'description' => $product->meta_description
-                ?: (Str::limit(strip_tags((string) $product->description), 155) ?: null),
-            'canonical' => route('shop.show', $product->slug),
-            'og_image' => $product->og_image ?: $product->image,
-            'og_type' => 'product',
-        ]);
+        $pageSeo = ProductSeo::pageData($product);
+        $breadcrumbs = ProductCatalog::breadcrumbsFor($product);
+        $breadcrumbLd = JsonLd::breadcrumbs($breadcrumbs);
+        $productLd = JsonLd::product($product);
 
-        return view('shop.show', compact('product', 'related', 'pageSeo'));
+        return view('shop.show', compact('product', 'related', 'pageSeo', 'breadcrumbs', 'breadcrumbLd', 'productLd'));
     }
 }

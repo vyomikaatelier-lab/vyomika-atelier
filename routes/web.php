@@ -45,6 +45,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfessionalsController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RailingsController;
+use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\ShopPageController;
@@ -105,6 +106,7 @@ Route::get('/projects/{slug}', [ProjectController::class, 'show'])->name('projec
 
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
+Route::get('/robots.txt', RobotsController::class)->name('robots');
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 Route::get('/custom-order', [LeadController::class, 'create'])->name('leads.create');
