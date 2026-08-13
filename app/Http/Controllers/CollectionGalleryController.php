@@ -6,6 +6,9 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Support\CollectionContent;
 use App\Support\ProductCatalog;
+use App\Support\Seo\JsonLd;
+use App\Support\Seo\PageSeo;
+use App\Support\StorefrontRoutes;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -36,9 +39,9 @@ class CollectionGalleryController extends Controller
         if ($catalogSlugs !== []) {
             $category = Category::query()->where('slug', $slug)->where('is_active', true)->first();
 
-            if (! $category && \App\Support\StorefrontRoutes::isShopCategory($slug)) {
+            if (! $category && StorefrontRoutes::isShopCategory($slug)) {
                 $category = new Category([
-                    'name' => \App\Support\StorefrontRoutes::shopCategoryLabel($slug),
+                    'name' => StorefrontRoutes::shopCategoryLabel($slug),
                     'slug' => $slug,
                     'is_active' => true,
                 ]);
@@ -54,9 +57,24 @@ class CollectionGalleryController extends Controller
 
             $products = self::galleryProductsForCategory($category, $catalogSlugs);
 
-            $pageCategoryLabel = \App\Support\StorefrontRoutes::isShopCategory($slug)
-                ? \App\Support\StorefrontRoutes::shopCategoryLabel($slug)
+            $pageCategoryLabel = StorefrontRoutes::isShopCategory($slug)
+                ? StorefrontRoutes::shopCategoryLabel($slug)
                 : $category->name;
+
+            $pageSeo = PageSeo::make([
+                'title' => $page['meta_title'] ?? ($category->meta_title ?: ($pageCategoryLabel.' — Vyomika Atelier')),
+                'description' => $page['meta_description'] ?? $category->meta_description,
+                'canonical' => route('shop.show', $slug),
+                'og_image' => $page['og_image'] ?? $category->og_image ?? $category->image,
+                'og_type' => 'website',
+            ]);
+
+            $breadcrumbs = [
+                ['label' => 'Home', 'url' => route('home')],
+                ['label' => 'Shop', 'url' => route('shop.index')],
+                ['label' => $pageCategoryLabel],
+            ];
+            $breadcrumbLd = JsonLd::breadcrumbs($breadcrumbs);
 
             return view('collections.gallery.index', [
                 'page' => $page,
@@ -64,6 +82,9 @@ class CollectionGalleryController extends Controller
                 'category' => $category,
                 'pageCategoryLabel' => $pageCategoryLabel,
                 'products' => $products,
+                'pageSeo' => $pageSeo,
+                'breadcrumbs' => $breadcrumbs,
+                'breadcrumbLd' => $breadcrumbLd,
             ]);
         }
 
@@ -78,14 +99,34 @@ class CollectionGalleryController extends Controller
 
         $products = self::galleryProductsForCategory($category);
 
+        $pageCategoryLabel = StorefrontRoutes::isShopCategory($slug)
+            ? StorefrontRoutes::shopCategoryLabel($slug)
+            : $category->name;
+
+        $pageSeo = PageSeo::make([
+            'title' => $page['meta_title'] ?? ($category->meta_title ?: ($pageCategoryLabel.' — Vyomika Atelier')),
+            'description' => $page['meta_description'] ?? $category->meta_description,
+            'canonical' => route('shop.show', $slug),
+            'og_image' => $page['og_image'] ?? $category->og_image ?? $category->image,
+            'og_type' => 'website',
+        ]);
+
+        $breadcrumbs = [
+            ['label' => 'Home', 'url' => route('home')],
+            ['label' => 'Shop', 'url' => route('shop.index')],
+            ['label' => $pageCategoryLabel],
+        ];
+        $breadcrumbLd = JsonLd::breadcrumbs($breadcrumbs);
+
         return view('collections.gallery.index', [
             'page' => $page,
             'slug' => $slug,
             'category' => $category,
-            'pageCategoryLabel' => \App\Support\StorefrontRoutes::isShopCategory($slug)
-                ? \App\Support\StorefrontRoutes::shopCategoryLabel($slug)
-                : $category->name,
+            'pageCategoryLabel' => $pageCategoryLabel,
             'products' => $products,
+            'pageSeo' => $pageSeo,
+            'breadcrumbs' => $breadcrumbs,
+            'breadcrumbLd' => $breadcrumbLd,
         ]);
     }
 

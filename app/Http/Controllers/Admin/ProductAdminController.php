@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\Concerns\ResolvesUniqueSlug;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\UrlRedirect;
 use App\Support\ProductCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -125,7 +126,13 @@ class ProductAdminController extends Controller
         $validated['image'] = $this->resolveImageField($request, 'image_file', 'image', $product->image, 'products');
         $validated = $this->normalizeProductPrices($validated);
 
+        $oldSlug = $product->slug;
+
         $product->update($validated);
+
+        if ($validated['slug'] !== $oldSlug) {
+            $this->recordProductSlugRedirect($oldSlug, $validated['slug']);
+        }
 
         $indexParams = $this->productIndexParams($request);
         if ($indexParams !== []) {
@@ -340,6 +347,24 @@ class ProductAdminController extends Controller
         }
 
         return $validated;
+    }
+
+    private function recordProductSlugRedirect(string $oldSlug, string $newSlug): void
+    {
+        if ($oldSlug === '' || $newSlug === '' || $oldSlug === $newSlug) {
+            return;
+        }
+
+        $toUrl = route('shop.show', $newSlug);
+
+        UrlRedirect::query()->updateOrCreate(
+            ['from_path' => UrlRedirect::normalizePath('/shop/'.$oldSlug)],
+            [
+                'to_url' => $toUrl,
+                'status_code' => 301,
+                'is_active' => true,
+            ]
+        );
     }
 
     /**

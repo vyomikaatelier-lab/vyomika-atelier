@@ -29,6 +29,10 @@ class StorefrontSeoComposer
             $robots = 'noindex,nofollow';
         }
 
+        if ($robots === null && request()->routeIs('shop.index') && (request()->filled('search') || request()->filled('sort'))) {
+            $robots = 'noindex,follow';
+        }
+
         $slug = match ($name) {
             'home' => 'home',
             'shop.index' => 'shop',

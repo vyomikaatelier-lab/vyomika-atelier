@@ -12,4 +12,4 @@ Disallow: /form-protection/
 Disallow: /catalogue/download/
 Disallow: /webhooks/
 
-Sitemap: https://vyomikaatelier.com/sitemap.xml
+Sitemap: {{ $sitemap }}
