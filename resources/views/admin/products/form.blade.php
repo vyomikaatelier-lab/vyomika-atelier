@@ -159,12 +159,54 @@
         </fieldset>
     </section>
 
-    <details class="border rounded p-3 bg-gray-50">
-        <summary class="font-medium cursor-pointer text-sm">SEO</summary>
-        <div class="mt-3 space-y-2">
-            <input name="meta_title" value="{{ old('meta_title', $product->meta_title ?? '') }}" placeholder="SEO title (blank = product name)" class="w-full border px-3 py-2 rounded">
-            <textarea name="meta_description" rows="2" placeholder="Meta description" class="w-full border px-3 py-2 rounded">{{ old('meta_description', $product->meta_description ?? '') }}</textarea>
-            <input name="og_image" value="{{ old('og_image', $product->og_image ?? '') }}" placeholder="Open Graph image URL (blank = product image)" class="w-full border px-3 py-2 rounded">
+    <details class="border rounded p-3 bg-gray-50" open>
+        <summary class="font-medium cursor-pointer text-sm">SEO &amp; search</summary>
+        @php
+            $seoTitle = old('meta_title', $product->meta_title ?? '');
+            $seoDesc = old('meta_description', $product->meta_description ?? '');
+            $previewTitle = $seoTitle !== '' ? $seoTitle : (old('name', $product->name ?? '').' — Vyomika Atelier');
+            $previewUrl = url('/shop/'.old('slug', $product->slug ?? 'your-slug'));
+            $seoWarnings = [];
+            if (blank(old('image', $product->image ?? ''))) { $seoWarnings[] = 'Primary image missing'; }
+            if (blank(old('description', $product->description ?? ''))) { $seoWarnings[] = 'Description missing'; }
+            if (blank(old('sku', $product->sku ?? ''))) { $seoWarnings[] = 'SKU missing'; }
+            if (blank(old('category_id', $product->category_id ?? ''))) { $seoWarnings[] = 'Category missing'; }
+            if (blank(old('image_alt', $product->image_alt ?? ''))) { $seoWarnings[] = 'Image alt text missing (will use product name)'; }
+        @endphp
+        <div class="mt-3 space-y-3">
+            @include('admin.partials.seo-preview', [
+                'title' => $previewTitle,
+                'description' => $seoDesc,
+                'url' => $previewUrl,
+            ])
+            @if($seoWarnings !== [])
+            <ul class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded p-2 list-disc list-inside">
+                @foreach($seoWarnings as $warning)
+                <li>{{ $warning }}</li>
+                @endforeach
+            </ul>
+            @endif
+            <div>
+                <label class="text-sm text-gray-600 block mb-1">SEO title <span class="text-gray-400">({{ strlen($seoTitle) }} chars — aim ~50–60)</span></label>
+                <input name="meta_title" value="{{ $seoTitle }}" placeholder="SEO title (blank = product name)" class="w-full border px-3 py-2 rounded bg-white">
+            </div>
+            <div>
+                <label class="text-sm text-gray-600 block mb-1">Meta description <span class="text-gray-400">({{ strlen($seoDesc) }} chars — aim ~140–160)</span></label>
+                <textarea name="meta_description" rows="2" placeholder="Meta description" class="w-full border px-3 py-2 rounded bg-white">{{ $seoDesc }}</textarea>
+            </div>
+            <input name="og_image" value="{{ old('og_image', $product->og_image ?? '') }}" placeholder="Open Graph image URL (blank = product image)" class="w-full border px-3 py-2 rounded bg-white">
+            <input name="image_alt" value="{{ old('image_alt', $product->image_alt ?? '') }}" placeholder="Primary image alt text (blank = product name)" class="w-full border px-3 py-2 rounded bg-white">
+            <input name="canonical_url" value="{{ old('canonical_url', $product->canonical_url ?? '') }}" placeholder="Canonical URL override (blank = /shop/slug)" class="w-full border px-3 py-2 rounded bg-white">
+            <input name="seo_keyword" value="{{ old('seo_keyword', $product->seo_keyword ?? '') }}" placeholder="Internal target keyword (not shown on site)" class="w-full border px-3 py-2 rounded bg-white">
+            <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="robots_index" value="1" @checked(old('robots_index', $product->robots_index ?? true))> Allow search indexing</label>
+            <div class="grid md:grid-cols-2 gap-2">
+                <input name="material" value="{{ old('material', $product->material ?? '') }}" placeholder="Material (optional, for structured data)" class="w-full border px-3 py-2 rounded bg-white">
+                <input name="finish" value="{{ old('finish', $product->finish ?? '') }}" placeholder="Finish (optional)" class="w-full border px-3 py-2 rounded bg-white">
+                <input name="color" value="{{ old('color', $product->color ?? '') }}" placeholder="Colour (optional)" class="w-full border px-3 py-2 rounded bg-white">
+                <input name="weight_kg" type="number" step="0.001" min="0" value="{{ old('weight_kg', $product->weight_kg ?? '') }}" placeholder="Weight kg (optional)" class="w-full border px-3 py-2 rounded bg-white">
+                <input name="gtin" value="{{ old('gtin', $product->gtin ?? '') }}" placeholder="GTIN (only if genuine)" class="w-full border px-3 py-2 rounded bg-white">
+                <input name="mpn" value="{{ old('mpn', $product->mpn ?? '') }}" placeholder="MPN (only if genuine)" class="w-full border px-3 py-2 rounded bg-white">
+            </div>
         </div>
     </details>
 

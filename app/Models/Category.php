@@ -20,6 +20,7 @@ class Category extends Model
         'image',
         'meta_title',
         'meta_description',
+        'og_image',
         'sort_order',
         'is_active',
     ];

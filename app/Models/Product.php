@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\FinishSwatches;
 use App\Support\ProductCatalog;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -74,6 +75,16 @@ class Product extends Model
         'meta_title',
         'meta_description',
         'og_image',
+        'image_alt',
+        'material',
+        'finish',
+        'color',
+        'weight_kg',
+        'gtin',
+        'mpn',
+        'seo_keyword',
+        'canonical_url',
+        'robots_index',
     ];
 
     protected function casts(): array
@@ -88,6 +99,8 @@ class Product extends Model
             'is_featured' => 'boolean',
             'is_active' => 'boolean',
             'is_gallery_visible' => 'boolean',
+            'weight_kg' => 'decimal:3',
+            'robots_index' => 'boolean',
         ];
     }
 
@@ -109,7 +122,7 @@ class Product extends Model
 
     public function formattedPrice(): string
     {
-        return '₹' . number_format($this->price, 0);
+        return '₹'.number_format($this->price, 0);
     }
 
     public function isDoorHandleProduct(): bool
@@ -657,7 +670,7 @@ class Product extends Model
     /** @return list<array{slug: string, name: string, image: string, hex: string, rate: int, is_black: bool}> */
     public static function finishSwatches(): array
     {
-        return \App\Support\FinishSwatches::all();
+        return FinishSwatches::all();
     }
 
     public static function baseSqFtRate(): int
