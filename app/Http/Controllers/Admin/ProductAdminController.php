@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\UrlRedirect;
+use App\Services\ProductImageDerivativeService;
 use App\Support\ProductCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -93,6 +94,7 @@ class ProductAdminController extends Controller
         $validated['sort_order'] = (Product::max('sort_order') ?? 0) + 1;
 
         Product::create($validated);
+        $this->generateImageDerivatives($validated['image'] ?? null);
 
         return redirect()
             ->route('admin.products.index', $this->productIndexParams($request))
@@ -127,11 +129,19 @@ class ProductAdminController extends Controller
         $validated = $this->normalizeProductPrices($validated);
 
         $oldSlug = $product->slug;
+        $oldImage = $product->image;
 
         $product->update($validated);
 
         if ($validated['slug'] !== $oldSlug) {
             $this->recordProductSlugRedirect($oldSlug, $validated['slug']);
+        }
+
+        if (($validated['image'] ?? null) !== $oldImage) {
+            $this->generateImageDerivatives($validated['image'] ?? null);
+            if (filled($oldImage)) {
+                app(ProductImageDerivativeService::class)->deleteDerivatives($oldImage);
+            }
         }
 
         $indexParams = $this->productIndexParams($request);
@@ -365,6 +375,15 @@ class ProductAdminController extends Controller
                 'is_active' => true,
             ]
         );
+    }
+
+    private function generateImageDerivatives(?string $path): void
+    {
+        if (! filled($path) || str_starts_with($path, 'http')) {
+            return;
+        }
+
+        app(ProductImageDerivativeService::class)->generateForPath($path);
     }
 
     /**

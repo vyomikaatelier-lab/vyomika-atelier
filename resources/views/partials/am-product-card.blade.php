@@ -54,7 +54,15 @@
             <span class="am-product-card__badge {{ $badge === 'NEW' ? 'am-product-card__badge--new' : '' }}">{{ $badge }}</span>
             @endif
             @if($image)
+            @if($isModel && filled($product->image))
+            @include('partials.am-product-image', [
+                'path' => $product->image,
+                'alt' => \App\Support\Seo\ProductSeo::imageAlt($product),
+                'context' => 'card',
+            ])
+            @else
             <img src="{{ $image }}" alt="{{ $name }}" width="400" height="500" loading="lazy" decoding="async">
+            @endif
             @endif
         </a>
         <div class="am-product-card__actions">
