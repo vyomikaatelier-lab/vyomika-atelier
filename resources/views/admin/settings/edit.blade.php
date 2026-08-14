@@ -26,6 +26,13 @@
         <input name="default_meta_title" value="{{ old('default_meta_title', $seo['default_title'] ?? '') }}" placeholder="Default SEO title" class="w-full border px-3 py-2 rounded">
         <textarea name="default_meta_description" rows="2" placeholder="Default meta description" class="w-full border px-3 py-2 rounded">{{ old('default_meta_description', $seo['default_description'] ?? '') }}</textarea>
         <input name="default_og_image" value="{{ old('default_og_image', $seo['default_og_image'] ?? '') }}" placeholder="Default Open Graph image URL" class="w-full border px-3 py-2 rounded">
+        <label class="flex items-start gap-2 text-sm">
+            <input type="checkbox" name="local_business_enabled" value="1" @checked(old('local_business_enabled', $seo['local_business_enabled'] ?? false)) class="mt-1">
+            <span>
+                <span class="font-medium">Emit LocalBusiness structured data</span>
+                <span class="block text-xs text-gray-500 mt-1">Leave unchecked unless you have a verified customer-facing showroom or studio address. When disabled, only Organization schema is emitted (recommended). Requires office address and phone in the Business section above — not a generic “Pan-India” shipping note.</span>
+            </span>
+        </label>
         <textarea name="shipping_note" rows="2" placeholder="Shipping note" class="w-full border px-3 py-2 rounded">{{ old('shipping_note', $store['shipping_note'] ?? '') }}</textarea>
         <input name="warranty_duration" value="{{ old('warranty_duration', $store['warranty_duration'] ?? '') }}" placeholder="Warranty duration" class="w-full border px-3 py-2 rounded">
     </section>

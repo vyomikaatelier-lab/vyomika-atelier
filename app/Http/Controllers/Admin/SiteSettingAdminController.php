@@ -80,6 +80,7 @@ class SiteSettingAdminController extends Controller
                 'default_meta_title' => 'nullable|string|max:255',
                 'default_meta_description' => 'nullable|string|max:500',
                 'default_og_image' => 'nullable|string|max:500',
+                'local_business_enabled' => 'nullable|boolean',
                 'ga4_measurement_id' => 'nullable|string|max:50',
                 'gsc_verification' => 'nullable|string|max:120',
                 'shipping_note' => 'nullable|string|max:2000',
@@ -119,6 +120,7 @@ class SiteSettingAdminController extends Controller
                 'default_title' => $validated['default_meta_title'] ?? null,
                 'default_description' => $validated['default_meta_description'] ?? null,
                 'default_og_image' => $validated['default_og_image'] ?? null,
+                'local_business_enabled' => $request->boolean('local_business_enabled'),
             ]);
 
             SiteSetting::setValue('analytics', [

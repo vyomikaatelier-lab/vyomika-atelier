@@ -28,6 +28,9 @@
 <meta name="google-site-verification" content="{{ $analytics['gsc'] }}">
 @endif
 {!! JsonLd::script(JsonLd::organization()) !!}
+@if($localBusinessLd = JsonLd::localBusiness())
+{!! JsonLd::script($localBusinessLd) !!}
+@endif
 {!! JsonLd::script(JsonLd::website()) !!}
 @stack('jsonld')
 @if(!empty($analytics['ga4']))
