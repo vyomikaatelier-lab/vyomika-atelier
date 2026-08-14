@@ -8,6 +8,78 @@ use App\Support\MediaUrl;
 
 class JsonLd
 {
+    public static function localBusinessEnabled(): bool
+    {
+        $seo = config('site.seo', []);
+
+        return filter_var($seo['local_business_enabled'] ?? false, FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
+     * LocalBusiness schema — only when explicitly enabled in Site Settings
+     * and a verified customer-facing address is available.
+     *
+     * @return array<string, mixed>|null
+     */
+    public static function localBusiness(): ?array
+    {
+        if (! self::localBusinessEnabled()) {
+            return null;
+        }
+
+        $brand = config('site.brand', []);
+        $business = config('legal.business', []);
+        $address = self::verifiedPublicAddress();
+        $name = filled($brand['name'] ?? null)
+            ? (string) $brand['name']
+            : (filled($business['brand_name'] ?? null) ? (string) $business['brand_name'] : null);
+        $phone = filled($business['phone'] ?? null)
+            ? (string) $business['phone']
+            : (filled($brand['phone'] ?? null) ? (string) $brand['phone'] : null);
+
+        if (! filled($name) || ! filled($address) || ! filled($phone)) {
+            return null;
+        }
+
+        $social = config('site.social', []);
+        $sameAs = array_values(array_filter([
+            $social['instagram'] ?? null,
+            $social['facebook'] ?? null,
+            $social['linkedin'] ?? null,
+            $social['youtube'] ?? null,
+        ]));
+
+        $data = [
+            '@context' => 'https://schema.org',
+            '@type' => 'LocalBusiness',
+            'name' => $name,
+            'url' => url('/'),
+            'telephone' => $phone,
+            'address' => [
+                '@type' => 'PostalAddress',
+                'streetAddress' => $address,
+                'addressCountry' => self::countryCode($business['country'] ?? 'India'),
+            ],
+        ];
+
+        $email = filled($business['email'] ?? null)
+            ? (string) $business['email']
+            : (filled($brand['email'] ?? null) ? (string) $brand['email'] : null);
+        if (filled($email)) {
+            $data['email'] = $email;
+        }
+
+        if (filled($brand['logo'] ?? null)) {
+            $data['image'] = MediaUrl::resolve($brand['logo']) ?? $brand['logo'];
+        }
+
+        if ($sameAs !== []) {
+            $data['sameAs'] = $sameAs;
+        }
+
+        return $data;
+    }
+
     /** @return array<string, mixed> */
     public static function organization(): array
     {
@@ -115,7 +187,7 @@ class JsonLd
             '@type' => 'Product',
             'name' => $product->name,
             'description' => strip_tags((string) ($product->description ?? $product->name)),
-            'sku' => $product->sku ?: $product->slug,
+            'sku' => self::normalizeSku($product->sku) ?: $product->slug,
             'url' => $url,
             'brand' => [
                 '@type' => 'Brand',
@@ -205,5 +277,44 @@ class JsonLd
     public static function script(array $data): string
     {
         return '<script type="application/ld+json">'.json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP).'</script>';
+    }
+
+    public static function normalizeSku(?string $sku): string
+    {
+        $sku = trim((string) $sku);
+        if ($sku === '') {
+            return '';
+        }
+
+        return trim((string) preg_replace('/^SKU:\s*/i', '', $sku));
+    }
+
+    private static function verifiedPublicAddress(): ?string
+    {
+        $business = config('legal.business', []);
+        $address = trim((string) ($business['address'] ?? ''));
+
+        if ($address === '' || self::isGenericAddress($address)) {
+            return null;
+        }
+
+        return $address;
+    }
+
+    private static function isGenericAddress(string $address): bool
+    {
+        $lower = strtolower($address);
+
+        return str_contains($lower, 'pan-india')
+            || str_contains($lower, 'fabrication & delivery')
+            || str_contains($lower, 'nationwide');
+    }
+
+    private static function countryCode(string $country): string
+    {
+        return match (strtolower(trim($country))) {
+            'india', 'in' => 'IN',
+            default => strtoupper(strlen($country) === 2 ? $country : 'IN'),
+        };
     }
 }

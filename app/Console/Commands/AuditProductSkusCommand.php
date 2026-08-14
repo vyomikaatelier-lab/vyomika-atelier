@@ -10,7 +10,7 @@ class AuditProductSkusCommand extends Command
 {
     protected $signature = 'products:audit-skus';
 
-    protected $description = 'Audit product SKUs for duplicates and blank values before unique-index migration';
+    protected $description = 'Report product SKU duplicates and blank values (informational; does not block saves)';
 
     public function handle(): int
     {
@@ -51,7 +51,7 @@ class AuditProductSkusCommand extends Command
             return self::SUCCESS;
         }
 
-        $this->error('Duplicate non-empty SKUs found ('.$duplicateSkus->count().' value(s)):');
+        $this->warn('Duplicate non-empty SKUs found ('.$duplicateSkus->count().' value(s)) — informational only:');
 
         foreach ($duplicateSkus as $sku) {
             $this->line('');
@@ -79,9 +79,9 @@ class AuditProductSkusCommand extends Command
         }
 
         $this->line('');
-        $this->error('Resolve duplicate SKUs before running the Google Search SEO migration.');
+        $this->warn('Duplicate SKUs are allowed. Use this report for cleanup only if you want unique values.');
 
-        return self::FAILURE;
+        return self::SUCCESS;
     }
 
     private function productUrl(Product $product): string

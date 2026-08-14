@@ -5,7 +5,7 @@
 @section('content')
 @php
     $listParams = fn (array $extra = []) => array_filter(array_merge(
-        request()->only(['section', 'category_id', 'filter']),
+        request()->only(['section', 'category_id', 'filter', 'q']),
         $extra
     ), fn ($value) => filled($value));
 @endphp
@@ -37,6 +37,19 @@
 </div>
 
 <div class="bg-white rounded-lg shadow p-4 mb-4 space-y-4">
+    <form method="GET" action="{{ route('admin.products.index') }}" class="flex flex-wrap gap-2 text-sm max-w-xl">
+        @foreach(request()->only(['section', 'category_id', 'filter']) as $key => $value)
+            @if(filled($value))
+            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+            @endif
+        @endforeach
+        <input type="search" name="q" value="{{ request('q') }}" placeholder="Search name, slug, or SKU…" class="flex-1 min-w-[12rem] border border-gray-300 rounded px-3 py-2">
+        <button type="submit" class="border px-3 py-2 rounded">Search</button>
+        @if(request()->filled('q'))
+        <a href="{{ route('admin.products.index', $listParams(['q' => null])) }}" class="border px-3 py-2 rounded text-gray-600">Clear</a>
+        @endif
+    </form>
+
     <div>
         <p class="text-xs uppercase tracking-wide text-gray-500 mb-2">Section</p>
         <div class="flex flex-wrap gap-2">
@@ -56,7 +69,7 @@
     <div>
         <p class="text-xs uppercase tracking-wide text-gray-500 mb-2">Parent category</p>
         <form method="GET" action="{{ route('admin.products.index') }}" class="max-w-md">
-            @foreach(request()->only(['section', 'filter']) as $key => $value)
+            @foreach(request()->only(['section', 'filter', 'q']) as $key => $value)
                 @if(filled($value))
                 <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                 @endif

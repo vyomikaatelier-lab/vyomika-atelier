@@ -4108,17 +4108,17 @@ ul { list-style: none; }
   grid-template-columns: 1fr;
   min-height: 0;
 }
-/* Compact sample (coffee-tables): inset card so gutters read clearly */
+/* Compact heroes use the same full-width split as bespoke (no inset card on desktop) */
 .am-shop-category-hero--compact {
-  background: transparent;
-  border-bottom: none;
+  background: var(--am-cream);
+  border-bottom: 1px solid var(--am-border);
 }
 .am-shop-category-hero--compact .am-shop-category-hero__grid {
-  border-radius: var(--am-radius-lg);
-  overflow: hidden;
-  border: 1px solid var(--am-border);
-  box-shadow: var(--am-shadow);
-  background: var(--am-cream);
+  border-radius: 0;
+  overflow: visible;
+  border: none;
+  box-shadow: none;
+  background: transparent;
 }
 @media (min-width: 768px) {
   .am-shop-category-hero--image-right .am-shop-category-hero__grid {
@@ -4296,70 +4296,28 @@ ul { list-style: none; }
   margin-top: 0.25rem;
 }
 
-/* Compact split hero — fixed 600×480 image panel (scales on tablet/mobile) */
+/* Compact split hero — desktop uses same 2fr/3fr split as bespoke (grid rules above) */
 .am-shop-category-hero--compact .am-shop-category-hero__media--fixed {
   overflow: hidden;
-  min-height: 0;
+  min-height: clamp(220px, 52vw, 420px);
   width: 100%;
-  aspect-ratio: 600 / 480;
-  align-items: stretch;
-  justify-content: stretch;
+  align-items: center;
+  justify-content: center;
 }
 .am-shop-category-hero--compact .am-shop-category-hero__media--fixed picture {
   display: block;
   width: 100%;
-  height: 100%;
-  overflow: hidden;
 }
 .am-shop-category-hero--compact .am-shop-category-hero__media--fixed img {
+  display: block;
   width: 100%;
-  max-width: none;
-  height: 100%;
-  min-height: 0;
-  object-fit: cover;
+  height: auto;
+  object-fit: contain;
   object-position: center;
 }
-@media (min-width: 768px) and (max-width: 1023px) {
-  .am-shop-category-hero--compact.am-shop-category-hero--image-right .am-shop-category-hero__grid {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 480px);
-  }
-  .am-shop-category-hero--compact.am-shop-category-hero--image-left .am-shop-category-hero__grid {
-    grid-template-columns: minmax(0, 480px) minmax(0, 1fr);
-  }
-}
-@media (min-width: 1024px) {
-  .am-shop-category-hero--compact.am-shop-category-hero--image-right .am-shop-category-hero__grid {
-    grid-template-columns: minmax(0, 1fr) 600px;
-  }
-  .am-shop-category-hero--compact.am-shop-category-hero--image-left .am-shop-category-hero__grid {
-    grid-template-columns: 600px minmax(0, 1fr);
-  }
-  .am-shop-category-hero--compact .am-shop-category-hero__media--fixed {
-    width: 600px;
-    height: 480px;
-    flex-shrink: 0;
-    aspect-ratio: auto;
-  }
-}
 @media (min-width: 768px) {
-  .am-shop-category-hero--compact .am-shop-category-hero__content {
-    padding: clamp(1.25rem, 2.5vw, 1.75rem) clamp(1.5rem, 3.5vw, 2.5rem);
-  }
-  .am-shop-category-hero--compact .am-shop-category-hero__brand {
-    margin-bottom: 0.55rem;
-  }
-  .am-shop-category-hero--compact .am-shop-category-hero__title-line {
-    font-size: clamp(1.25rem, 2.2vw, 1.65rem);
-  }
-  .am-shop-category-hero--compact .am-shop-category-hero__title-accent {
-    font-size: clamp(1.5rem, 2.8vw, 2.1rem);
-  }
-  .am-shop-category-hero--compact .am-shop-category-hero__highlights {
-    margin-bottom: 0.65rem;
-    font-size: 0.65rem;
-  }
-  .am-shop-category-hero--compact .am-shop-category-hero__footer-tagline {
-    margin-top: 0.5rem;
+  .am-shop-category-hero--compact .am-shop-category-hero__media--fixed {
+    min-height: 0;
   }
 }
 

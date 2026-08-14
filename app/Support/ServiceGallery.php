@@ -49,35 +49,42 @@ class ServiceGallery
     }
 
     /**
-     * The catalog slug list is a curated running order, not an allow-list: any
-     * other product the admin filed under this service's categories is
-     * appended after it.
+     * Products for a studio service gallery, ordered by admin sort_order.
+     * Catalog slugs extend the category scope but no longer dictate order.
      *
      * @return Collection<int, Product>
      */
     public static function productsFor(Service $service): Collection
     {
         $slugs = ProductCatalog::productSlugsForService($service->slug);
-        $fromCategories = static::categoryQueryFor($service)->orderBy('name')->get();
+        $categorySlugs = $service->relatedCategorySlugs();
 
-        if ($slugs === []) {
-            return $fromCategories;
+        if ($slugs === [] && $categorySlugs === []) {
+            return collect();
         }
 
-        $curated = Product::query()
+        $query = Product::query()
             ->with('category')
             ->where('is_active', true)
-            ->where('is_gallery_visible', true)
-            ->whereIn('slug', $slugs)
-            ->get()
-            ->keyBy('slug');
+            ->where('is_gallery_visible', true);
 
-        return collect($slugs)
-            ->map(fn (string $slug) => $curated->get($slug))
-            ->filter()
-            ->concat($fromCategories)
-            ->unique('id')
-            ->values();
+        $query->where(function ($q) use ($slugs, $categorySlugs) {
+            $hasCategories = $categorySlugs !== [];
+
+            if ($hasCategories) {
+                $q->whereHas('category', fn ($c) => $c->whereIn('slug', $categorySlugs));
+            }
+
+            if ($slugs !== []) {
+                if ($hasCategories) {
+                    $q->orWhereIn('slug', $slugs);
+                } else {
+                    $q->whereIn('slug', $slugs);
+                }
+            }
+        });
+
+        return $query->orderedForDisplay()->get();
     }
 
     public static function queryFor(Service $service): Builder

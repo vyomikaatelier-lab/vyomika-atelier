@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -16,12 +17,22 @@ class ProductSkuMigrationTest extends TestCase
 
     private function rollbackSeoMigrationIfApplied(): void
     {
-        if (Schema::hasColumn('products', 'robots_index')) {
+        if (! Schema::hasColumn('products', 'robots_index')) {
+            return;
+        }
+
+        $dropMigration = 'database/migrations/2026_08_14_120000_drop_products_sku_unique_index.php';
+        if (DB::table('migrations')->where('migration', '2026_08_14_120000_drop_products_sku_unique_index')->exists()) {
             $this->artisan('migrate:rollback', [
-                '--path' => 'database/migrations/2026_08_13_180000_google_search_product_seo.php',
+                '--path' => $dropMigration,
                 '--force' => true,
             ])->assertExitCode(0);
         }
+
+        $this->artisan('migrate:rollback', [
+            '--path' => 'database/migrations/2026_08_13_180000_google_search_product_seo.php',
+            '--force' => true,
+        ])->assertExitCode(0);
     }
 
     private function runSeoMigration(): \Illuminate\Testing\PendingCommand
@@ -95,7 +106,37 @@ class ProductSkuMigrationTest extends TestCase
         $this->assertSame('DUPE-SKU', Product::query()->where('slug', 'dupe-b')->value('sku'));
     }
 
-    public function test_audit_command_reports_duplicates_with_non_zero_exit(): void
+    public function test_drop_sku_unique_migration_allows_duplicate_skus(): void
+    {
+        $this->rollbackSeoMigrationIfApplied();
+        $this->createProduct(['sku' => 'SKU-A', 'slug' => 'sku-a']);
+        $this->createProduct(['sku' => 'SKU-B', 'slug' => 'sku-b']);
+
+        $this->runSeoMigration()->assertExitCode(0);
+
+        $this->artisan('migrate', [
+            '--path' => 'database/migrations/2026_08_14_120000_drop_products_sku_unique_index.php',
+            '--force' => true,
+        ])->assertExitCode(0);
+
+        Product::query()->where('slug', 'sku-b')->update(['sku' => 'SKU-A']);
+
+        $this->assertSame(2, Product::query()->where('sku', 'SKU-A')->count());
+    }
+
+    public function test_drop_sku_unique_migration_is_idempotent(): void
+    {
+        $this->rollbackSeoMigrationIfApplied();
+        $this->createProduct(['sku' => 'UNIQUE-A', 'slug' => 'unique-a']);
+
+        $this->runSeoMigration()->assertExitCode(0);
+
+        $path = 'database/migrations/2026_08_14_120000_drop_products_sku_unique_index.php';
+        $this->artisan('migrate', ['--path' => $path, '--force' => true])->assertExitCode(0);
+        $this->artisan('migrate', ['--path' => $path, '--force' => true])->assertExitCode(0);
+    }
+
+    public function test_audit_command_reports_duplicates_info_only(): void
     {
         $this->rollbackSeoMigrationIfApplied();
         $this->createProduct(['sku' => 'AUDIT-DUPE', 'slug' => 'audit-dupe-1']);
@@ -104,7 +145,7 @@ class ProductSkuMigrationTest extends TestCase
         $exitCode = Artisan::call('products:audit-skus');
         $output = Artisan::output();
 
-        $this->assertSame(1, $exitCode);
+        $this->assertSame(0, $exitCode);
         $this->assertStringContainsString('AUDIT-DUPE', $output);
         $this->assertStringContainsString('audit-dupe-1', $output);
         $this->assertStringContainsString('audit-dupe-2', $output);
@@ -175,14 +216,67 @@ class ProductSkuMigrationTest extends TestCase
         $this->assertNull($product->fresh()->sku);
     }
 
-    public function test_admin_update_rejects_duplicate_sku(): void
+    public function test_admin_update_allows_keeping_own_sku(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $product = $this->createProduct(['sku' => 'KEEP-MINE-001', 'slug' => 'keep-mine-product']);
+
+        $this->actingAsAdmin($admin)
+            ->put(route('admin.products.update', $product), [
+                'category_id' => $product->category_id,
+                'name' => $product->name,
+                'slug' => $product->slug,
+                'description' => $product->description ?? 'Desc',
+                'price' => $product->price,
+                'stock' => $product->stock,
+                'section' => $product->section,
+                'purchase_mode' => $product->purchase_mode,
+                'pricing_type' => $product->pricing_type,
+                'sku' => 'KEEP-MINE-001',
+                'is_active' => 1,
+                'is_gallery_visible' => 1,
+                'robots_index' => 1,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('KEEP-MINE-001', $product->fresh()->sku);
+    }
+
+    public function test_admin_update_normalizes_sku_prefix(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $product = $this->createProduct(['sku' => 'SKU: PREFIX-001', 'slug' => 'prefix-sku-product']);
+
+        $this->actingAsAdmin($admin)
+            ->put(route('admin.products.update', $product), [
+                'category_id' => $product->category_id,
+                'name' => $product->name,
+                'slug' => $product->slug,
+                'description' => $product->description ?? 'Desc',
+                'price' => $product->price,
+                'stock' => $product->stock,
+                'section' => $product->section,
+                'purchase_mode' => $product->purchase_mode,
+                'pricing_type' => $product->pricing_type,
+                'sku' => 'SKU: PREFIX-001',
+                'is_active' => 1,
+                'is_gallery_visible' => 1,
+                'robots_index' => 1,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('PREFIX-001', $product->fresh()->sku);
+    }
+
+    public function test_admin_update_allows_duplicate_sku(): void
     {
         $admin = User::factory()->admin()->create();
         $existing = $this->createProduct(['sku' => 'EXISTING-SKU', 'slug' => 'existing-sku-product']);
         $product = $this->createProduct(['sku' => 'OTHER-SKU', 'slug' => 'other-sku-product']);
 
         $this->actingAsAdmin($admin)
-            ->from(route('admin.products.edit', $product))
             ->put(route('admin.products.update', $product), [
                 'category_id' => $product->category_id,
                 'name' => $product->name,
@@ -198,7 +292,9 @@ class ProductSkuMigrationTest extends TestCase
                 'is_gallery_visible' => 1,
                 'robots_index' => 1,
             ])
-            ->assertRedirect(route('admin.products.edit', $product))
-            ->assertSessionHasErrors('sku');
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('EXISTING-SKU', $product->fresh()->sku);
     }
 }

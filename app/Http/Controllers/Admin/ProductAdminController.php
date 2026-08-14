@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\UrlRedirect;
 use App\Services\ProductImageDerivativeService;
 use App\Support\ProductCatalog;
+use App\Support\Seo\JsonLd;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -212,6 +213,11 @@ class ProductAdminController extends Controller
         // Blank template rows from the admin form must not trip required_with.
         $this->stripEmptySizeOptionRows($request);
 
+        if ($request->has('sku')) {
+            $normalizedSku = JsonLd::normalizeSku($request->input('sku'));
+            $request->merge(['sku' => $normalizedSku !== '' ? $normalizedSku : '']);
+        }
+
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
@@ -243,12 +249,7 @@ class ProductAdminController extends Controller
             'robots_index' => 'nullable|boolean',
             'price' => 'required|numeric|min:0',
             'compare_price' => 'nullable|numeric|min:0',
-            'sku' => [
-                'nullable',
-                'string',
-                'max:100',
-                Rule::unique('products', 'sku')->ignore($existing?->id),
-            ],
+            'sku' => ['nullable', 'string', 'max:100'],
             'stock' => 'required|integer|min:0',
             'image' => 'nullable|string|max:500',
             'image_file' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:4096',
@@ -342,7 +343,7 @@ class ProductAdminController extends Controller
         $validated['tab_shipping'] = Product::normalizeTabLines($validated['tab_shipping'] ?? null);
         $validated['robots_index'] = $request->boolean('robots_index', true);
         $validated['sku'] = filled($validated['sku'] ?? null)
-            ? trim((string) $validated['sku'])
+            ? JsonLd::normalizeSku((string) $validated['sku']) ?: null
             : null;
 
         if (
@@ -577,6 +578,15 @@ class ProductAdminController extends Controller
             $query->where('category_id', $categoryFilter->id);
         }
 
+        if ($request->filled('q')) {
+            $q = $request->string('q');
+            $query->where(function ($builder) use ($q) {
+                $builder->where('name', 'like', "%{$q}%")
+                    ->orWhere('slug', 'like', "%{$q}%")
+                    ->orWhere('sku', 'like', "%{$q}%");
+            });
+        }
+
         return $query;
     }
 
@@ -587,6 +597,7 @@ class ProductAdminController extends Controller
             'category_id' => $request->input('_return_category_id') ?: $request->query('category_id'),
             'section' => $request->input('_return_section') ?: $request->query('section'),
             'filter' => $request->input('_return_filter') ?: $request->query('filter'),
+            'q' => $request->input('_return_q') ?: $request->query('q'),
         ], fn ($value) => filled($value));
     }
 

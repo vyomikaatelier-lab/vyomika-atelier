@@ -227,19 +227,20 @@ class GoogleSearchSeoTest extends TestCase
         $this->assertSame(1, UrlRedirect::query()->where('from_path', '/shop/old-slug-name')->count());
     }
 
-    public function test_duplicate_sku_rejected_in_admin(): void
+    public function test_duplicate_sku_allowed_in_admin(): void
     {
         $admin = User::factory()->admin()->create();
         $existing = $this->createShopProduct(['sku' => 'DUPE-SKU-1']);
         $product = $this->createShopProduct(['sku' => 'UNIQUE-SKU-2']);
 
         $this->actingAsAdmin($admin)
-            ->from(route('admin.products.edit', $product))
             ->put(route('admin.products.update', $product), $this->validProductPayload($product, [
                 'sku' => $existing->sku,
             ]))
-            ->assertRedirect(route('admin.products.edit', $product))
-            ->assertSessionHasErrors('sku');
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('DUPE-SKU-1', $product->fresh()->sku);
     }
 
     public function test_product_image_markup_has_dimensions_and_alt(): void
