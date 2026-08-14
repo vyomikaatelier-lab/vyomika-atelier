@@ -147,13 +147,21 @@
                 @error('tab_specifications')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
             </div>
             <div>
-                <label for="tab_packaging" class="text-sm text-gray-700 block mb-1">Packaging tab</label>
-                <textarea id="tab_packaging" name="tab_packaging" rows="5" placeholder="HTML for the Packaging tab" class="w-full border px-3 py-2 rounded font-mono text-sm bg-white">{{ old('tab_packaging', $product->tab_packaging ?? '') }}</textarea>
+                <label for="tab_packaging" class="text-sm font-medium text-gray-800 block mb-1">Packaging tab</label>
+                <p class="text-xs text-gray-500 mb-2">One point per line — shown as a bullet list on the product page (same style as Specifications). Leave blank for built-in defaults.</p>
+                @php
+                    $packagingValue = old('tab_packaging', isset($product) ? implode("\n", \App\Models\Product::linesFromTabText($product->tab_packaging)) : '');
+                @endphp
+                <textarea id="tab_packaging" name="tab_packaging" rows="6" placeholder="Protective foam and corner guards&#10;Plywood crate for Pan-India transit&#10;Film-wrapped PVD surfaces" class="w-full border px-3 py-2 rounded text-sm bg-white leading-relaxed">{{ $packagingValue }}</textarea>
                 @error('tab_packaging')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
             </div>
             <div>
-                <label for="tab_shipping" class="text-sm text-gray-700 block mb-1">Shipping tab</label>
-                <textarea id="tab_shipping" name="tab_shipping" rows="5" placeholder="HTML for the Shipping tab" class="w-full border px-3 py-2 rounded font-mono text-sm bg-white">{{ old('tab_shipping', $product->tab_shipping ?? '') }}</textarea>
+                <label for="tab_shipping" class="text-sm font-medium text-gray-800 block mb-1">Shipping tab</label>
+                <p class="text-xs text-gray-500 mb-2">One point per line — shown as a bullet list on the product page. Leave blank for built-in defaults.</p>
+                @php
+                    $shippingValue = old('tab_shipping', isset($product) ? implode("\n", \App\Models\Product::linesFromTabText($product->tab_shipping)) : '');
+                @endphp
+                <textarea id="tab_shipping" name="tab_shipping" rows="6" placeholder="Lead time: 3–4 weeks from order confirmation&#10;Metro cities: door delivery&#10;Pan-India courier or freight" class="w-full border px-3 py-2 rounded text-sm bg-white leading-relaxed">{{ $shippingValue }}</textarea>
                 @error('tab_shipping')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
             </div>
         </fieldset>

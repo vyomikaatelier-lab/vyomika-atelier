@@ -57,8 +57,8 @@ class ProductAdminContentTest extends TestCase
             'headline_text' => 'Custom headline for PDP',
             'swatches_note' => 'Custom swatch note for buyers',
             'tab_specifications' => "Material: Grade 304 stainless\nFinish: PVD coated\nLead time: 3–4 weeks",
-            'tab_packaging' => '<h3>Custom packaging</h3><p>Extra packaging details.</p>',
-            'tab_shipping' => '<h3>Custom shipping</h3><p>Express metro delivery available.</p>',
+            'tab_packaging' => "Protective foam and corner guards\nPlywood crate for Pan-India transit",
+            'tab_shipping' => "Lead time: 3–4 weeks\nExpress metro delivery available",
         ]))->assertRedirect(route('admin.products.edit', ['product' => $product, 'saved' => 1]));
 
         $product->refresh();
@@ -72,6 +72,8 @@ class ProductAdminContentTest extends TestCase
             'Finish: PVD coated',
             'Lead time: 3–4 weeks',
         ], $product->specificationLines());
+        $this->assertSame("Protective foam and corner guards\nPlywood crate for Pan-India transit", $product->tab_packaging);
+        $this->assertSame("Lead time: 3–4 weeks\nExpress metro delivery available", $product->tab_shipping);
 
         $response = $this->get(route('shop.show', $product->slug));
         $response->assertOk()
@@ -81,8 +83,9 @@ class ProductAdminContentTest extends TestCase
             ->assertSee('Material: Grade 304 stainless', false)
             ->assertSee('Finish: PVD coated', false)
             ->assertSee('Lead time: 3–4 weeks', false)
-            ->assertSee('Extra packaging details.', false)
-            ->assertSee('Express metro delivery available.', false)
+            ->assertSee('Protective foam and corner guards', false)
+            ->assertSee('Plywood crate for Pan-India transit', false)
+            ->assertSee('Express metro delivery available', false)
             ->assertSee('<ul class="am-pdp-tabs__care-list">', false);
     }
 
@@ -174,6 +177,10 @@ class ProductAdminContentTest extends TestCase
             ->assertSee('Note below PVD finish swatches', false)
             ->assertSee('Specifications tab', false)
             ->assertSee('One specification per line', false)
+            ->assertSee('Packaging tab', false)
+            ->assertSee('One point per line', false)
+            ->assertDontSee('HTML for the Packaging tab', false)
+            ->assertDontSee('HTML for the Shipping tab', false)
             ->assertSee('Price &amp; discount (as on website)', false)
             ->assertSee('Compare price', false)
             ->assertSee('Discount %', false)
@@ -392,6 +399,45 @@ class ProductAdminContentTest extends TestCase
             ->assertSee('id="product-discount-pct"', false)
             ->assertSee('Discount %', false)
             ->assertSee('value="25"', false);
+    }
+
+    public function test_admin_normalizes_legacy_html_packaging_and_shipping_to_lines(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $category = Category::query()->firstOrCreate(
+            ['slug' => 'partitions'],
+            ['name' => 'Partitions', 'section' => 'studio', 'is_active' => true]
+        );
+
+        $product = Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Legacy Tabs Product',
+            'slug' => 'legacy-tabs-product',
+            'price' => 1800,
+            'stock' => 2,
+            'section' => Product::SECTION_STUDIO,
+            'purchase_mode' => Product::PURCHASE_MODE_ENQUIRY,
+            'pricing_type' => Product::PRICING_SQUARE_FOOT,
+            'is_active' => true,
+        ]);
+
+        $this->actingAsAdmin($admin)->put(route('admin.products.update', $product), $this->productPayload($category, $product, [
+            'tab_packaging' => '<ul><li>Foam wrapped</li><li>Plywood crate</li></ul>',
+            'tab_shipping' => '<p>Lead time: 3 weeks</p><p>Metro delivery</p>',
+        ]))->assertRedirect(route('admin.products.edit', ['product' => $product, 'saved' => 1]));
+
+        $product->refresh();
+
+        $this->assertSame("Foam wrapped\nPlywood crate", $product->tab_packaging);
+        $this->assertSame("Lead time: 3 weeks\nMetro delivery", $product->tab_shipping);
+
+        $this->get(route('shop.show', $product->slug))
+            ->assertOk()
+            ->assertSee('Foam wrapped', false)
+            ->assertSee('Plywood crate', false)
+            ->assertSee('Lead time: 3 weeks', false)
+            ->assertSee('Metro delivery', false)
+            ->assertDontSee('<ul><li>Foam wrapped</li>', false);
     }
 
     public function test_admin_normalizes_legacy_html_specifications_to_lines(): void

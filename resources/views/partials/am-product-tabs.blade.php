@@ -78,8 +78,18 @@
 
         <div class="am-pdp-tabs__panel" data-am-panel="packaging" role="tabpanel" hidden>
             <div class="am-prose am-pdp-tabs__prose">
-                @if(filled($packagingHtml))
-                    {!! $packagingHtml !!}
+                @php
+                    $packagingLines = \App\Models\Product::linesFromTabText(
+                        is_string($packagingHtml) ? $packagingHtml : null
+                    );
+                @endphp
+                @if(count($packagingLines))
+                <h3>Packaging &amp; Handling</h3>
+                <ul class="am-pdp-tabs__care-list">
+                    @foreach($packagingLines as $line)
+                        <li>{{ $line }}</li>
+                    @endforeach
+                </ul>
                 @else
                 <h3>Packaging &amp; Handling</h3>
                 <p>Every Vyomika Atelier piece is wrapped in protective foam and corner guards, then crated in plywood for transit. PVD surfaces are film-wrapped to prevent scratches during Pan-India shipping.</p>
@@ -96,8 +106,18 @@
 
         <div class="am-pdp-tabs__panel" data-am-panel="shipping" role="tabpanel" hidden>
             <div class="am-prose am-pdp-tabs__prose">
-                @if(filled($shippingHtml))
-                    {!! $shippingHtml !!}
+                @php
+                    $shippingLines = \App\Models\Product::linesFromTabText(
+                        is_string($shippingHtml) ? $shippingHtml : null
+                    );
+                @endphp
+                @if(count($shippingLines))
+                <h3>Shipping</h3>
+                <ul class="am-pdp-tabs__care-list">
+                    @foreach($shippingLines as $line)
+                        <li>{{ $line }}</li>
+                    @endforeach
+                </ul>
                 @else
                 <h3>Shipping</h3>
                 <p>Fabrication from our Delhi studio with secure packaging and delivery to major cities across India.</p>
