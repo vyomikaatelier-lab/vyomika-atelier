@@ -131,41 +131,41 @@ class CollectionGalleryController extends Controller
     }
 
     /**
-     * The catalog slug list is a curated running order, not an allow-list: any
-     * other product the admin filed under this category is appended after it.
+     * Products for a collection gallery page, ordered by admin sort_order.
+     * When catalog slugs are provided they extend the category scope (legacy
+     * rows filed outside the category) but no longer dictate display order.
      *
      * @param  list<string>  $catalogSlugs
      */
     public static function galleryProductsForCategory(Category $category, array $catalogSlugs = []): Collection
     {
-        $fromCategory = $category->exists
-            ? Product::query()
-                ->with('category')
-                ->where('is_active', true)
-                ->where('is_gallery_visible', true)
-                ->where('category_id', $category->id)
-                ->orderByDesc('is_featured')
-                ->orderBy('name')
-                ->get()
-            : collect();
-
-        if ($catalogSlugs === []) {
-            return $fromCategory;
+        if (! $category->exists && $catalogSlugs === []) {
+            return collect();
         }
 
-        $curated = Product::query()
+        $query = Product::query()
             ->with('category')
             ->where('is_active', true)
-            ->where('is_gallery_visible', true)
-            ->whereIn('slug', $catalogSlugs)
-            ->get()
-            ->keyBy('slug');
+            ->where('is_gallery_visible', true);
 
-        return collect($catalogSlugs)
-            ->map(fn (string $slug) => $curated->get($slug))
-            ->filter()
-            ->concat($fromCategory)
-            ->unique('id')
-            ->values();
+        if ($catalogSlugs !== []) {
+            $query->where(function ($q) use ($category, $catalogSlugs) {
+                if ($category->exists) {
+                    $q->where('category_id', $category->id);
+                }
+
+                if ($category->exists) {
+                    $q->orWhereIn('slug', $catalogSlugs);
+                } else {
+                    $q->whereIn('slug', $catalogSlugs);
+                }
+            });
+        } elseif ($category->exists) {
+            $query->where('category_id', $category->id);
+        } else {
+            return collect();
+        }
+
+        return $query->orderedForDisplay()->get();
     }
 }

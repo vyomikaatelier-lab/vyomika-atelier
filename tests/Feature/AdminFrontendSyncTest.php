@@ -14,6 +14,7 @@ use App\Models\Service;
 use App\Models\User;
 use App\Support\CmsSettings;
 use App\Support\ProductCatalog;
+use App\Support\ServiceGallery;
 use App\Support\Seo\PageSeo;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -388,23 +389,33 @@ class AdminFrontendSyncTest extends TestCase
             ->assertSee('Meridian Brass Coffee Table');
     }
 
-    public function test_curated_catalog_order_still_leads_the_collection_page(): void
+    public function test_admin_sort_order_controls_collection_page_order(): void
     {
         $category = $this->shopCategory('Coffee Tables', 'coffee-tables');
 
-        $curatedSlug = ProductCatalog::productSlugsForShopPage('coffee-tables')[0] ?? null;
-        $this->assertNotNull($curatedSlug, 'Expected the static catalog to curate coffee tables.');
+        Product::factory()->shop()->create([
+            'category_id' => $category->id,
+            'name' => 'Lower Priority Table',
+            'slug' => 'lower-priority-table',
+            'sort_order' => 5,
+            'is_gallery_visible' => true,
+        ]);
 
-        $this->createProductAsAdmin($category, 'Curated Original', $curatedSlug);
-        $this->createProductAsAdmin($category, 'Admin Addition', 'admin-addition-coffee-table');
+        Product::factory()->shop()->create([
+            'category_id' => $category->id,
+            'name' => 'Higher Priority Table',
+            'slug' => 'higher-priority-table',
+            'sort_order' => 50,
+            'is_gallery_visible' => true,
+        ]);
 
         $products = CollectionGalleryController::galleryProductsForCategory(
             $category,
             ProductCatalog::productSlugsForShopPage('coffee-tables')
         );
 
-        $this->assertSame('Curated Original', $products->first()->name);
-        $this->assertTrue($products->contains('name', 'Admin Addition'));
+        $this->assertSame('Higher Priority Table', $products->first()->name);
+        $this->assertTrue($products->contains('name', 'Lower Priority Table'));
     }
 
     public function test_products_in_an_admin_created_category_appear_in_the_shop(): void
@@ -439,6 +450,39 @@ class AdminFrontendSyncTest extends TestCase
         $this->get(route('studio.show', 'pvd-partitions'))
             ->assertOk()
             ->assertSee('Cascade Fluted Partition');
+    }
+
+    public function test_admin_sort_order_controls_studio_service_gallery_order(): void
+    {
+        $service = Service::query()->create([
+            'name' => 'PVD Partitions',
+            'slug' => 'partitions',
+            'summary' => 'Precision stainless partitions.',
+            'lead_form' => 'popup',
+            'is_active' => true,
+        ]);
+
+        $category = $this->category('PVD Partitions', 'partitions', 'studio');
+
+        Product::factory()->studio()->create([
+            'category_id' => $category->id,
+            'name' => 'Lower Partition',
+            'slug' => 'lower-partition',
+            'sort_order' => 3,
+            'is_gallery_visible' => true,
+        ]);
+
+        Product::factory()->studio()->create([
+            'category_id' => $category->id,
+            'name' => 'Higher Partition',
+            'slug' => 'higher-partition',
+            'sort_order' => 30,
+            'is_gallery_visible' => true,
+        ]);
+
+        $products = ServiceGallery::productsFor($service);
+
+        $this->assertSame('Higher Partition', $products->first()->name);
     }
 
     public function test_deactivating_a_product_removes_it_from_the_collection_page(): void

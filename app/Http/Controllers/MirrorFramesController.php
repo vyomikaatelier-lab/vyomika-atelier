@@ -19,6 +19,11 @@ class MirrorFramesController extends Controller
 
                 return $design;
             })
+            ->sortByDesc(fn (array $design) => [
+                $design['product']?->sort_order ?? 0,
+                $design['product']?->id ?? 0,
+            ])
+            ->values()
             ->all();
         $page['designs'] = $designs;
 

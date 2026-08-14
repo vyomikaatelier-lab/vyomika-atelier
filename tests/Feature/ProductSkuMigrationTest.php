@@ -175,6 +175,60 @@ class ProductSkuMigrationTest extends TestCase
         $this->assertNull($product->fresh()->sku);
     }
 
+    public function test_admin_update_allows_keeping_own_sku(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $product = $this->createProduct(['sku' => 'KEEP-MINE-001', 'slug' => 'keep-mine-product']);
+
+        $this->actingAsAdmin($admin)
+            ->put(route('admin.products.update', $product), [
+                'category_id' => $product->category_id,
+                'name' => $product->name,
+                'slug' => $product->slug,
+                'description' => $product->description ?? 'Desc',
+                'price' => $product->price,
+                'stock' => $product->stock,
+                'section' => $product->section,
+                'purchase_mode' => $product->purchase_mode,
+                'pricing_type' => $product->pricing_type,
+                'sku' => 'KEEP-MINE-001',
+                'is_active' => 1,
+                'is_gallery_visible' => 1,
+                'robots_index' => 1,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('KEEP-MINE-001', $product->fresh()->sku);
+    }
+
+    public function test_admin_update_normalizes_sku_prefix(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $product = $this->createProduct(['sku' => 'SKU: PREFIX-001', 'slug' => 'prefix-sku-product']);
+
+        $this->actingAsAdmin($admin)
+            ->put(route('admin.products.update', $product), [
+                'category_id' => $product->category_id,
+                'name' => $product->name,
+                'slug' => $product->slug,
+                'description' => $product->description ?? 'Desc',
+                'price' => $product->price,
+                'stock' => $product->stock,
+                'section' => $product->section,
+                'purchase_mode' => $product->purchase_mode,
+                'pricing_type' => $product->pricing_type,
+                'sku' => 'SKU: PREFIX-001',
+                'is_active' => 1,
+                'is_gallery_visible' => 1,
+                'robots_index' => 1,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('PREFIX-001', $product->fresh()->sku);
+    }
+
     public function test_admin_update_rejects_duplicate_sku(): void
     {
         $admin = User::factory()->admin()->create();
