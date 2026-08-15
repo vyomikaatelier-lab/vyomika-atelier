@@ -9,6 +9,22 @@ use Illuminate\Support\Facades\Schema;
 
 class ShopCatalog
 {
+    public static function supportsInventoryHide(): bool
+    {
+        static $ready = null;
+
+        if ($ready !== null) {
+            return $ready;
+        }
+
+        $ready = Schema::hasTable('products')
+            && Schema::hasTable('categories')
+            && Schema::hasColumn('products', 'hide_when_out_of_stock')
+            && Schema::hasColumn('categories', 'hide_when_unavailable');
+
+        return $ready;
+    }
+
     /**
      * Category slugs whose products belong in the shop.
      *
@@ -75,7 +91,13 @@ class ShopCatalog
      */
     public static function applyListingScope(Builder $query): Builder
     {
-        return self::applyShopScope($query)->unlessHiddenForStock();
+        $query = self::applyShopScope($query);
+
+        if (! self::supportsInventoryHide()) {
+            return $query;
+        }
+
+        return $query->unlessHiddenForStock();
     }
 
     /**
@@ -86,6 +108,12 @@ class ShopCatalog
      */
     public static function applyStorefrontCategoryScope(Builder $query): Builder
     {
+        if (! self::supportsInventoryHide()) {
+            return $query->whereHas('products', fn (Builder $productQuery) => self::applyShopScope(
+                $productQuery->where('is_active', true)
+            ));
+        }
+
         $anyShopProduct = fn (Builder $productQuery) => self::applyShopScope(
             $productQuery->where('is_active', true)
         );
@@ -123,7 +151,7 @@ class ShopCatalog
             return false;
         }
 
-        if (! $category->hide_when_unavailable) {
+        if (! self::supportsInventoryHide() || ! $category->hide_when_unavailable) {
             return true;
         }
 

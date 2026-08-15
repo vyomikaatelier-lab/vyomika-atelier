@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Support\FinishSwatches;
 use App\Support\ProductCatalog;
+use App\Support\ShopCatalog;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -130,6 +131,10 @@ class Product extends Model
     /** Hide from storefront listings when opted in and stock is depleted. */
     public function scopeUnlessHiddenForStock($query)
     {
+        if (! ShopCatalog::supportsInventoryHide()) {
+            return $query;
+        }
+
         return $query->where(function ($q) {
             $q->where('hide_when_out_of_stock', false)
                 ->orWhere('stock', '>', 0);
