@@ -223,6 +223,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/mfa/disable', [MfaController::class, 'disable'])->middleware('throttle:admin-mfa')->name('mfa.disable');
 
         Route::post('products/reorder', [ProductAdminController::class, 'reorder'])->name('products.reorder');
+        Route::post('products/bulk', [ProductAdminController::class, 'bulk'])->name('products.bulk');
         Route::resource('products', ProductAdminController::class)->except(['show']);
         Route::resource('orders', OrderAdminController::class)->only(['index', 'show', 'update']);
         Route::resource('leads', LeadAdminController::class)->only(['index', 'show', 'update', 'destroy']);
@@ -235,6 +236,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('leads/{lead}/restore', [LeadAdminController::class, 'restore'])->name('leads.restore');
         Route::get('leads/{lead}/attachment', [LeadAdminController::class, 'downloadAttachment'])->name('leads.attachment');
 
+        Route::post('categories/bulk', [CategoryAdminController::class, 'bulk'])->name('categories.bulk');
         Route::resource('categories', CategoryAdminController::class)->except(['show']);
         Route::post('categories/sync', [CategoryAdminController::class, 'sync'])->name('categories.sync');
         Route::post('categories/reorder', [CategoryAdminController::class, 'reorder'])->name('categories.reorder');

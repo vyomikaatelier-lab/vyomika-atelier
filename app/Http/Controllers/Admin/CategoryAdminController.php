@@ -116,10 +116,59 @@ class CategoryAdminController extends Controller
                 ->update(['category_id' => $request->integer('reassign_category_id')]);
         }
 
-        $this->deleteStoredPath($category->image);
-        $category->delete();
+        $this->deleteCategory($category);
 
         return redirect()->route('admin.categories.index')->with('success', 'Category deleted.');
+    }
+
+    public function bulk(Request $request)
+    {
+        $validated = $request->validate([
+            'action' => 'required|in:activate,deactivate,hide_when_unavailable,show_when_unavailable,delete',
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:categories,id',
+        ]);
+
+        $categories = Category::query()->whereIn('id', $validated['ids'])->get();
+        $count = $categories->count();
+        $skipped = 0;
+
+        match ($validated['action']) {
+            'activate' => Category::query()->whereIn('id', $validated['ids'])->update(['is_active' => true]),
+            'deactivate' => Category::query()->whereIn('id', $validated['ids'])->update(['is_active' => false]),
+            'hide_when_unavailable' => Category::query()->whereIn('id', $validated['ids'])->update(['hide_when_unavailable' => true]),
+            'show_when_unavailable' => Category::query()->whereIn('id', $validated['ids'])->update(['hide_when_unavailable' => false]),
+            'delete' => $categories->each(function (Category $category) use (&$skipped) {
+                if ($category->products()->exists()) {
+                    $skipped++;
+
+                    return;
+                }
+
+                $this->deleteCategory($category);
+            }),
+        };
+
+        $deleted = $count - $skipped;
+        $message = match ($validated['action']) {
+            'activate' => "{$count} category(ies) activated.",
+            'deactivate' => "{$count} category(ies) deactivated.",
+            'hide_when_unavailable' => "{$count} category(ies) set to hide when nothing is in stock.",
+            'show_when_unavailable' => "{$count} category(ies) will stay visible when nothing is in stock.",
+            'delete' => $skipped > 0
+                ? "{$deleted} category(ies) deleted. {$skipped} skipped (still have products — reassign first)."
+                : "{$deleted} category(ies) deleted.",
+        };
+
+        return redirect()
+            ->route('admin.categories.index', $request->only(['q', 'section', 'status']))
+            ->with('success', $message);
+    }
+
+    private function deleteCategory(Category $category): void
+    {
+        $this->deleteStoredPath($category->image);
+        $category->delete();
     }
 
     public function reorder(Request $request)

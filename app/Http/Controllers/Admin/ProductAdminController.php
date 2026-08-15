@@ -161,6 +161,51 @@ class ProductAdminController extends Controller
 
     public function destroy(Request $request, Product $product)
     {
+        $this->deleteProduct($product);
+
+        return redirect()
+            ->route('admin.products.index', $this->productIndexParams($request))
+            ->with('success', 'Product deleted.');
+    }
+
+    public function bulk(Request $request)
+    {
+        $validated = $request->validate([
+            'action' => 'required|in:activate,deactivate,show_gallery,hide_gallery,hide_when_oos,show_when_oos,delete',
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:products,id',
+        ]);
+
+        $products = Product::query()->whereIn('id', $validated['ids'])->get();
+        $count = $products->count();
+
+        match ($validated['action']) {
+            'activate' => Product::query()->whereIn('id', $validated['ids'])->update(['is_active' => true]),
+            'deactivate' => Product::query()->whereIn('id', $validated['ids'])->update(['is_active' => false]),
+            'show_gallery' => Product::query()->whereIn('id', $validated['ids'])->update(['is_gallery_visible' => true]),
+            'hide_gallery' => Product::query()->whereIn('id', $validated['ids'])->update(['is_gallery_visible' => false]),
+            'hide_when_oos' => Product::query()->whereIn('id', $validated['ids'])->update(['hide_when_out_of_stock' => true]),
+            'show_when_oos' => Product::query()->whereIn('id', $validated['ids'])->update(['hide_when_out_of_stock' => false]),
+            'delete' => $products->each(fn (Product $product) => $this->deleteProduct($product)),
+        };
+
+        $message = match ($validated['action']) {
+            'activate' => "{$count} product(s) shown on storefront.",
+            'deactivate' => "{$count} product(s) hidden from storefront.",
+            'show_gallery' => "{$count} product(s) shown in gallery grids.",
+            'hide_gallery' => "{$count} product(s) hidden from gallery grids.",
+            'hide_when_oos' => "{$count} product(s) set to hide when out of stock.",
+            'show_when_oos' => "{$count} product(s) will stay visible when out of stock.",
+            'delete' => "{$count} product(s) deleted.",
+        };
+
+        return redirect()
+            ->route('admin.products.index', $this->productIndexParams($request))
+            ->with('success', $message);
+    }
+
+    private function deleteProduct(Product $product): void
+    {
         $this->deleteStoredPath($product->image);
 
         foreach ($product->gallery ?? [] as $path) {
@@ -168,10 +213,6 @@ class ProductAdminController extends Controller
         }
 
         $product->delete();
-
-        return redirect()
-            ->route('admin.products.index', $this->productIndexParams($request))
-            ->with('success', 'Product deleted.');
     }
 
     public function reorder(Request $request)

@@ -38,12 +38,34 @@
     </select>
     <button class="border px-3 py-2 rounded">Filter</button>
 </form>
+@if(session('success'))
+<div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-4 text-sm">{{ session('success') }}</div>
+@endif
 @if($categories->isEmpty())
     <p class="text-gray-500 bg-white p-6 rounded shadow">No categories yet. Use <strong>Sync canonical categories</strong> to seed defaults.</p>
 @else
+<form method="POST" action="{{ route('admin.categories.bulk') }}" id="category-bulk-form" class="mb-3 flex flex-wrap items-center gap-2 text-sm bg-white rounded-lg shadow px-4 py-3">
+    @csrf
+    <input type="hidden" name="q" value="{{ request('q') }}">
+    <input type="hidden" name="section" value="{{ request('section') }}">
+    <input type="hidden" name="status" value="{{ request('status', 'active') }}">
+    <label class="sr-only" for="category-bulk-action">Bulk action</label>
+    <select id="category-bulk-action" name="action" required class="border border-gray-300 rounded px-3 py-2 bg-white min-w-[12rem]">
+        <option value="">Bulk actions…</option>
+        <option value="activate">Activate</option>
+        <option value="deactivate">Deactivate</option>
+        <option value="hide_when_unavailable">Hide when nothing in stock</option>
+        <option value="show_when_unavailable">Keep visible when nothing in stock</option>
+        <option value="delete">Delete empty categories</option>
+    </select>
+    <button type="submit" class="bg-gray-900 text-white px-4 py-2 rounded">Apply</button>
+    <span id="category-bulk-count" class="text-gray-500">0 selected</span>
+</form>
 <table class="w-full bg-white rounded-lg shadow text-sm">
     <thead class="border-b">
         <tr class="text-left">
+            <th class="p-3 w-10"><input type="checkbox" id="category-select-all" aria-label="Select all categories on this page"></th>
+            <th class="p-3 w-10">#</th>
             <th class="p-3">Order</th>
             <th class="p-3">Name</th>
             <th class="p-3">Section</th>
@@ -57,6 +79,8 @@
     <tbody>
         @foreach($categories as $category)
         <tr class="border-b">
+            <td class="p-3"><input type="checkbox" form="category-bulk-form" name="ids[]" value="{{ $category->id }}" class="category-bulk-check" aria-label="Select {{ $category->name }}"></td>
+            <td class="p-3 text-gray-500 tabular-nums">{{ $categories->firstItem() + $loop->index }}</td>
             <td class="p-3">{{ $category->sort_order }}</td>
             <td class="p-3">{{ $category->name }}</td>
             <td class="p-3">
@@ -94,5 +118,46 @@
     </tbody>
 </table>
 <div class="mt-4">{{ $categories->links() }}</div>
+<script>
+(function () {
+    var bulkForm = document.getElementById('category-bulk-form');
+    var selectAll = document.getElementById('category-select-all');
+    var countEl = document.getElementById('category-bulk-count');
+
+    function updateBulkCount() {
+        if (!countEl) return;
+        var n = document.querySelectorAll('.category-bulk-check:checked').length;
+        countEl.textContent = n + ' selected';
+    }
+
+    if (selectAll) {
+        selectAll.addEventListener('change', function () {
+            document.querySelectorAll('.category-bulk-check').forEach(function (cb) {
+                cb.checked = selectAll.checked;
+            });
+            updateBulkCount();
+        });
+    }
+
+    document.querySelectorAll('.category-bulk-check').forEach(function (cb) {
+        cb.addEventListener('change', updateBulkCount);
+    });
+
+    if (bulkForm) {
+        bulkForm.addEventListener('submit', function (e) {
+            var checked = document.querySelectorAll('.category-bulk-check:checked').length;
+            if (checked === 0) {
+                e.preventDefault();
+                alert('Select at least one category.');
+                return;
+            }
+            var action = bulkForm.querySelector('[name=action]').value;
+            if (action === 'delete' && ! confirm('Delete selected empty categories? Categories with products will be skipped.')) {
+                e.preventDefault();
+            }
+        });
+    }
+})();
+</script>
 @endif
 @endsection

@@ -96,9 +96,39 @@
     </div>
 </div>
 
+@if(session('success'))
+<div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-4 text-sm">{{ session('success') }}</div>
+@endif
+
+@if($products->isNotEmpty())
+<form method="POST" action="{{ route('admin.products.bulk') }}" id="product-bulk-form" class="mb-3 flex flex-wrap items-center gap-2 text-sm bg-white rounded-lg shadow px-4 py-3">
+    @csrf
+    @foreach($listParams() as $key => $value)
+    <input type="hidden" name="_return_{{ $key }}" value="{{ $value }}">
+    @endforeach
+    <label class="sr-only" for="product-bulk-action">Bulk action</label>
+    <select id="product-bulk-action" name="action" required class="border border-gray-300 rounded px-3 py-2 bg-white min-w-[12rem]">
+        <option value="">Bulk actions…</option>
+        <option value="activate">Show on storefront</option>
+        <option value="deactivate">Hide from storefront</option>
+        <option value="show_gallery">Show in gallery grids</option>
+        <option value="hide_gallery">Hide from gallery grids</option>
+        <option value="hide_when_oos">Hide when out of stock</option>
+        <option value="show_when_oos">Keep visible when out of stock</option>
+        <option value="delete">Delete selected</option>
+    </select>
+    <button type="submit" class="bg-gray-900 text-white px-4 py-2 rounded">Apply</button>
+    <span id="product-bulk-count" class="text-gray-500">0 selected</span>
+</form>
+@endif
+
 <table class="w-full bg-white rounded-lg shadow text-sm">
     <thead class="border-b">
         <tr class="text-left">
+            @if($products->isNotEmpty())
+            <th class="p-3 w-10"><input type="checkbox" id="product-select-all" aria-label="Select all products on this page"></th>
+            @endif
+            <th class="p-3 w-10">#</th>
             <th class="p-3 w-10"></th>
             <th class="p-3">Product</th>
             <th class="p-3">Section</th>
@@ -114,6 +144,8 @@
     <tbody id="product-sortable-list">
         @forelse($products as $product)
         <tr class="border-b {{ ! $product->isClassified() ? 'bg-amber-50' : '' }}" data-product-id="{{ $product->id }}">
+            <td class="p-3"><input type="checkbox" form="product-bulk-form" name="ids[]" value="{{ $product->id }}" class="product-bulk-check" aria-label="Select {{ $product->name }}"></td>
+            <td class="p-3 text-gray-500 tabular-nums">{{ $loop->iteration }}</td>
             <td class="p-3 text-gray-400 cursor-grab active:cursor-grabbing select-none product-drag-handle" title="Drag to reorder">⋮⋮</td>
             <td class="p-3">
                 <div class="flex items-center gap-3 min-w-0">
@@ -149,7 +181,7 @@
         </tr>
         @empty
         <tr>
-            <td colspan="10" class="p-6 text-center text-gray-500">No products match this filter.</td>
+            <td colspan="12" class="p-6 text-center text-gray-500">No products match this filter.</td>
         </tr>
         @endforelse
     </tbody>
@@ -157,6 +189,47 @@
 
 @if($products->isNotEmpty())
 <p id="product-reorder-status" class="mt-2 text-sm text-gray-500" aria-live="polite"></p>
+<script>
+(function () {
+    var bulkForm = document.getElementById('product-bulk-form');
+    var selectAll = document.getElementById('product-select-all');
+    var countEl = document.getElementById('product-bulk-count');
+
+    function updateBulkCount() {
+        if (!countEl) return;
+        var n = document.querySelectorAll('.product-bulk-check:checked').length;
+        countEl.textContent = n + ' selected';
+    }
+
+    if (selectAll) {
+        selectAll.addEventListener('change', function () {
+            document.querySelectorAll('.product-bulk-check').forEach(function (cb) {
+                cb.checked = selectAll.checked;
+            });
+            updateBulkCount();
+        });
+    }
+
+    document.querySelectorAll('.product-bulk-check').forEach(function (cb) {
+        cb.addEventListener('change', updateBulkCount);
+    });
+
+    if (bulkForm) {
+        bulkForm.addEventListener('submit', function (e) {
+            var checked = document.querySelectorAll('.product-bulk-check:checked').length;
+            if (checked === 0) {
+                e.preventDefault();
+                alert('Select at least one product.');
+                return;
+            }
+            var action = bulkForm.querySelector('[name=action]').value;
+            if (action === 'delete' && ! confirm('Delete ' + checked + ' product(s)? This cannot be undone.')) {
+                e.preventDefault();
+            }
+        });
+    }
+})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script>
 (function () {
