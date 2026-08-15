@@ -44,6 +44,7 @@
 @if($categories->isEmpty())
     <p class="text-gray-500 bg-white p-6 rounded shadow">No categories yet. Use <strong>Sync canonical categories</strong> to seed defaults.</p>
 @else
+@if(\Illuminate\Support\Facades\Route::has('admin.categories.bulk'))
 <form method="POST" action="{{ route('admin.categories.bulk') }}" id="category-bulk-form" class="mb-3 flex flex-wrap items-center gap-2 text-sm bg-white rounded-lg shadow px-4 py-3">
     @csrf
     <input type="hidden" name="q" value="{{ request('q') }}">
@@ -61,10 +62,13 @@
     <button type="submit" class="bg-gray-900 text-white px-4 py-2 rounded">Apply</button>
     <span id="category-bulk-count" class="text-gray-500">0 selected</span>
 </form>
+@endif
 <table class="w-full bg-white rounded-lg shadow text-sm">
     <thead class="border-b">
         <tr class="text-left">
+            @if(\Illuminate\Support\Facades\Route::has('admin.categories.bulk'))
             <th class="p-3 w-10"><input type="checkbox" id="category-select-all" aria-label="Select all categories on this page"></th>
+            @endif
             <th class="p-3 w-10">#</th>
             <th class="p-3">Order</th>
             <th class="p-3">Name</th>

@@ -100,7 +100,7 @@
 <div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-4 text-sm">{{ session('success') }}</div>
 @endif
 
-@if($products->isNotEmpty())
+@if($products->isNotEmpty() && \Illuminate\Support\Facades\Route::has('admin.products.bulk'))
 <form method="POST" action="{{ route('admin.products.bulk') }}" id="product-bulk-form" class="mb-3 flex flex-wrap items-center gap-2 text-sm bg-white rounded-lg shadow px-4 py-3">
     @csrf
     @foreach($listParams() as $key => $value)
@@ -125,7 +125,7 @@
 <table class="w-full bg-white rounded-lg shadow text-sm">
     <thead class="border-b">
         <tr class="text-left">
-            @if($products->isNotEmpty())
+            @if($products->isNotEmpty() && \Illuminate\Support\Facades\Route::has('admin.products.bulk'))
             <th class="p-3 w-10"><input type="checkbox" id="product-select-all" aria-label="Select all products on this page"></th>
             @endif
             <th class="p-3 w-10">#</th>
@@ -144,7 +144,9 @@
     <tbody id="product-sortable-list">
         @forelse($products as $product)
         <tr class="border-b {{ ! $product->isClassified() ? 'bg-amber-50' : '' }}" data-product-id="{{ $product->id }}">
+            @if(\Illuminate\Support\Facades\Route::has('admin.products.bulk'))
             <td class="p-3"><input type="checkbox" form="product-bulk-form" name="ids[]" value="{{ $product->id }}" class="product-bulk-check" aria-label="Select {{ $product->name }}"></td>
+            @endif
             <td class="p-3 text-gray-500 tabular-nums">{{ $loop->iteration }}</td>
             <td class="p-3 text-gray-400 cursor-grab active:cursor-grabbing select-none product-drag-handle" title="Drag to reorder">⋮⋮</td>
             <td class="p-3">
