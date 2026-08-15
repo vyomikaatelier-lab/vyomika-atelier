@@ -15,7 +15,7 @@ class MirrorFramesController extends Controller
         $designs = collect($page['designs'] ?? [])
             ->map(function (array $design) {
                 $productSlug = $design['product_slug'] ?? $design['slug'];
-                $design['product'] = MirrorFramesContent::resolveProduct($productSlug);
+                $design['product'] = MirrorFramesContent::resolveProduct($productSlug, true);
 
                 return $design;
             })
@@ -45,6 +45,7 @@ class MirrorFramesController extends Controller
 
         $related = Product::query()
             ->where('is_active', true)
+            ->unlessHiddenForStock()
             ->where('id', '!=', $product->id)
             ->when($product->category_id, fn ($q) => $q->where('category_id', $product->category_id))
             ->inRandomOrder()
@@ -54,6 +55,7 @@ class MirrorFramesController extends Controller
         if ($related->count() < 4) {
             $more = Product::query()
                 ->where('is_active', true)
+                ->unlessHiddenForStock()
                 ->where('id', '!=', $product->id)
                 ->whereNotIn('id', $related->pluck('id'))
                 ->take(4 - $related->count())

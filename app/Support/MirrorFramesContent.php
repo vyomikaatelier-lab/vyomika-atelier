@@ -38,13 +38,18 @@ class MirrorFramesContent
         return null;
     }
 
-    public static function resolveProduct(string $productSlug): ?Product
+    public static function resolveProduct(string $productSlug, bool $forListing = false): ?Product
     {
-        return Product::query()
+        $query = Product::query()
             ->where('slug', $productSlug)
             ->where('is_active', true)
-            ->with('category')
-            ->first();
+            ->with('category');
+
+        if ($forListing) {
+            $query->unlessHiddenForStock();
+        }
+
+        return $query->first();
     }
 
     /** @return array{title: string, description: ?string, image: ?string, product: ?Product} */
@@ -53,7 +58,7 @@ class MirrorFramesContent
         $product = $design['product'] ?? null;
         if (! $product instanceof Product) {
             $productSlug = $design['product_slug'] ?? $design['slug'] ?? null;
-            $product = is_string($productSlug) ? self::resolveProduct($productSlug) : null;
+            $product = is_string($productSlug) ? self::resolveProduct($productSlug, true) : null;
         }
 
         return [

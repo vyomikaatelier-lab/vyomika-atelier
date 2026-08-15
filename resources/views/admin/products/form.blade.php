@@ -22,9 +22,10 @@
 @endphp
 
 @php
-    $returnCategoryId = request('category_id', old('_return_category_id'));
+    $returnCategoryId = request('category_id', old('_return_category_id', isset($product) ? $product->category_id : null));
     $returnSection = request('section', old('_return_section'));
     $returnFilter = request('filter', old('_return_filter'));
+    $returnSearch = request('q', old('_return_q'));
 @endphp
 
 @if(request('saved') || session('success'))
@@ -43,6 +44,9 @@
     @endif
     @if(filled($returnFilter))
     <input type="hidden" name="_return_filter" value="{{ $returnFilter }}">
+    @endif
+    @if(filled($returnSearch))
+    <input type="hidden" name="_return_q" value="{{ $returnSearch }}">
     @endif
 
     <div class="rounded border border-gray-200 bg-gray-50 p-3 text-sm">
@@ -378,6 +382,11 @@
         <input type="text" name="sku" value="{{ old('sku', $product->sku ?? '') }}" placeholder="SKU" class="border px-3 py-2 rounded">
         <input type="number" name="stock" value="{{ old('stock', $product->stock ?? 0) }}" placeholder="Stock" required class="border px-3 py-2 rounded">
     </div>
+    <label class="flex items-center gap-2 text-sm">
+        <input type="checkbox" name="hide_when_out_of_stock" value="1" @checked(old('hide_when_out_of_stock', $product->hide_when_out_of_stock ?? false))>
+        Hide from storefront when out of stock
+    </label>
+    <p class="text-xs text-gray-500 -mt-2">When stock is 0, this product is removed from shop listings and category galleries. The product page stays live with an out-of-stock message.</p>
 
     <div>
         <label class="text-sm text-gray-600 block mb-1">Upload Image</label>

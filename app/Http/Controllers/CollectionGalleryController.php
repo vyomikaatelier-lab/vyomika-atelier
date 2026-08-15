@@ -146,7 +146,8 @@ class CollectionGalleryController extends Controller
         $query = Product::query()
             ->with('category')
             ->where('is_active', true)
-            ->where('is_gallery_visible', true);
+            ->where('is_gallery_visible', true)
+            ->unlessHiddenForStock();
 
         if ($catalogSlugs !== []) {
             $query->where(function ($q) use ($category, $catalogSlugs) {

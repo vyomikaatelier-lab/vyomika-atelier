@@ -64,7 +64,120 @@ class ShopCatalog
             ->whereHas('category', fn ($q) => $q
                 ->where('is_active', true)
                 ->whereIn('slug', self::categorySlugs()))
-            ->where('section', \App\Models\Product::SECTION_SHOP)
-            ->where('purchase_mode', \App\Models\Product::PURCHASE_MODE_CHECKOUT);
+            ->where('section', Product::SECTION_SHOP)
+            ->where('purchase_mode', Product::PURCHASE_MODE_CHECKOUT);
+    }
+
+    /**
+     * Shop listings and galleries: also respect per-product out-of-stock hide flags.
+     *
+     * @param Builder<Product> $query
+     */
+    public static function applyListingScope(Builder $query): Builder
+    {
+        return self::applyShopScope($query)->unlessHiddenForStock();
+    }
+
+    /**
+     * Categories shown in shop navigation. When hide_when_unavailable is enabled,
+     * the category is omitted once every product in it is hidden for stock.
+     *
+     * @param Builder<Category> $query
+     */
+    public static function applyStorefrontCategoryScope(Builder $query): Builder
+    {
+        $anyShopProduct = fn (Builder $productQuery) => self::applyShopScope(
+            $productQuery->where('is_active', true)
+        );
+
+        $availableShopProduct = fn (Builder $productQuery) => self::applyListingScope(
+            $productQuery->where('is_active', true)
+        );
+
+        return $query->where(function (Builder $categoryQuery) use ($anyShopProduct, $availableShopProduct) {
+            $categoryQuery
+                ->where(function (Builder $inner) use ($anyShopProduct) {
+                    $inner->where('hide_when_unavailable', false)
+                        ->whereHas('products', $anyShopProduct);
+                })
+                ->orWhere(function (Builder $inner) use ($availableShopProduct) {
+                    $inner->where('hide_when_unavailable', true)
+                        ->whereHas('products', $availableShopProduct);
+                });
+        });
+    }
+
+    public static function isCategoryVisibleInNav(string $slug): bool
+    {
+        if (! Schema::hasTable('categories')) {
+            return true;
+        }
+
+        $category = Category::query()->where('slug', $slug)->first();
+
+        if (! $category) {
+            return true;
+        }
+
+        if (! $category->is_active) {
+            return false;
+        }
+
+        if (! $category->hide_when_unavailable) {
+            return true;
+        }
+
+        return $category->hasStorefrontAvailableProducts();
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $nav
+     * @return array<int, array<string, mixed>>
+     */
+    public static function filterNav(array $nav): array
+    {
+        if (! Schema::hasTable('categories')) {
+            return $nav;
+        }
+
+        return collect($nav)->map(function (array $item) {
+            if (($item['label'] ?? '') !== 'Shop' || empty($item['children']) || ! is_array($item['children'])) {
+                return $item;
+            }
+
+            $item['children'] = self::filterShopLinks($item['children']);
+
+            return $item;
+        })->all();
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $links
+     * @return array<int, array<string, mixed>>
+     */
+    public static function filterShopLinks(array $links): array
+    {
+        if (! Schema::hasTable('categories')) {
+            return $links;
+        }
+
+        return collect($links)
+            ->filter(function (array $link) {
+                $route = $link['route'] ?? '';
+
+                if ($route === 'shop.mirror-frames.index') {
+                    return self::isCategoryVisibleInNav('mirror-frames');
+                }
+
+                if ($route === 'shop.index') {
+                    return true;
+                }
+
+                $slug = $link['params']['slug'] ?? null;
+
+                return is_string($slug) ? self::isCategoryVisibleInNav($slug) : true;
+            })
+            ->values()
+            ->all();
     }
 }

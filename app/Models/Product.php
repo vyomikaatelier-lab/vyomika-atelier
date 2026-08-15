@@ -63,6 +63,7 @@ class Product extends Model
         'compare_price',
         'sku',
         'stock',
+        'hide_when_out_of_stock',
         'image',
         'gallery',
         'is_featured',
@@ -99,6 +100,7 @@ class Product extends Model
             'is_featured' => 'boolean',
             'is_active' => 'boolean',
             'is_gallery_visible' => 'boolean',
+            'hide_when_out_of_stock' => 'boolean',
             'weight_kg' => 'decimal:3',
             'robots_index' => 'boolean',
         ];
@@ -118,6 +120,20 @@ class Product extends Model
     public function inStock(): bool
     {
         return $this->stock > 0;
+    }
+
+    public function isHiddenFromStorefrontForStock(): bool
+    {
+        return $this->hide_when_out_of_stock && ! $this->inStock();
+    }
+
+    /** Hide from storefront listings when opted in and stock is depleted. */
+    public function scopeUnlessHiddenForStock($query)
+    {
+        return $query->where(function ($q) {
+            $q->where('hide_when_out_of_stock', false)
+                ->orWhere('stock', '>', 0);
+        });
     }
 
     public function formattedPrice(): string

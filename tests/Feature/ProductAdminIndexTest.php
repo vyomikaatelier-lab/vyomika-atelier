@@ -338,6 +338,45 @@ class ProductAdminIndexTest extends TestCase
             ->assertSessionHasNoErrors();
     }
 
+    public function test_update_redirects_to_product_category_without_return_context(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $mirrors = Category::query()->firstOrCreate(
+            ['slug' => 'mirror-frames'],
+            ['name' => 'Mirror Frames', 'section' => 'shop', 'is_active' => true]
+        );
+
+        $product = Product::query()->create([
+            'category_id' => $mirrors->id,
+            'name' => 'Direct Edit Mirror',
+            'slug' => 'direct-edit-mirror',
+            'price' => 5000,
+            'stock' => 5,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+        ]);
+
+        $this->actingAsAdmin($admin)
+            ->from(route('admin.products.edit', $product))
+            ->put(route('admin.products.update', $product), [
+                '_page_save' => '1',
+                'category_id' => $mirrors->id,
+                'name' => 'Direct Edit Mirror Updated',
+                'slug' => 'direct-edit-mirror',
+                'price' => 5200,
+                'stock' => 5,
+                'section' => Product::SECTION_SHOP,
+                'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+                'pricing_type' => Product::PRICING_FIXED,
+                'is_active' => '1',
+            ])
+            ->assertRedirect(route('admin.products.index', ['category_id' => $mirrors->id]))
+            ->assertSessionHasNoErrors();
+    }
+
     public function test_update_redirects_back_to_filtered_products_index(): void
     {
         $admin = User::factory()->admin()->create();

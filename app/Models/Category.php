@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\ProductCatalog;
+use App\Support\ShopCatalog;
 use App\Support\StorefrontRoutes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -23,18 +24,29 @@ class Category extends Model
         'og_image',
         'sort_order',
         'is_active',
+        'hide_when_unavailable',
     ];
 
     protected function casts(): array
     {
         return [
             'is_active' => 'boolean',
+            'hide_when_unavailable' => 'boolean',
         ];
     }
 
     public function products(): HasMany
     {
         return $this->hasMany(Product::class);
+    }
+
+    public function hasStorefrontAvailableProducts(): bool
+    {
+        return ShopCatalog::applyListingScope(
+            Product::query()
+                ->where('category_id', $this->id)
+                ->where('is_active', true)
+        )->exists();
     }
 
     public function resolvedSection(): ?string

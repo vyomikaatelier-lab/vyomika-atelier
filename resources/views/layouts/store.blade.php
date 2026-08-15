@@ -52,7 +52,7 @@
     $cartCount = $cartService->count();
     $cartItems = $cartService->all();
     $cartSubtotal = $cartService->subtotal();
-    $nav = config('site.nav', []);
+    $nav = \App\Support\ShopCatalog::filterNav(config('site.nav', []));
     $legalLinks = \App\Support\LegalContent::footerLinks();
     $social = \App\Support\SiteContent::social();
     $storefrontLink = fn (string $name, array $params = [], string $fallback = '#') => StorefrontUrl::to($name, $params, $fallback);

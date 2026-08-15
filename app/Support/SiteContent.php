@@ -72,7 +72,13 @@ class SiteContent
 
     public static function footer(): array
     {
-        return self::arrayValue('footer');
+        $footer = self::arrayValue('footer');
+
+        if (isset($footer['shop_links']) && is_array($footer['shop_links'])) {
+            $footer['shop_links'] = ShopCatalog::filterShopLinks($footer['shop_links']);
+        }
+
+        return $footer;
     }
 
     public static function social(): array

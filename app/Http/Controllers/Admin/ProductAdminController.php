@@ -90,6 +90,7 @@ class ProductAdminController extends Controller
         $validated['is_featured'] = $request->boolean('is_featured');
         $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
         $validated['is_gallery_visible'] = $this->checkboxBoolean($request, 'is_gallery_visible');
+        $validated['hide_when_out_of_stock'] = $this->checkboxBoolean($request, 'hide_when_out_of_stock');
         $validated['image'] = $this->resolveImageField($request, 'image_file', 'image', null, 'products');
         $validated = $this->normalizeProductPrices($validated);
         $validated['sort_order'] = (Product::max('sort_order') ?? 0) + 1;
@@ -126,6 +127,7 @@ class ProductAdminController extends Controller
         $validated['is_featured'] = $request->boolean('is_featured');
         $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
         $validated['is_gallery_visible'] = $this->checkboxBoolean($request, 'is_gallery_visible');
+        $validated['hide_when_out_of_stock'] = $this->checkboxBoolean($request, 'hide_when_out_of_stock');
         $validated['image'] = $this->resolveImageField($request, 'image_file', 'image', $product->image, 'products');
         $validated = $this->normalizeProductPrices($validated);
 
@@ -594,7 +596,10 @@ class ProductAdminController extends Controller
     private function productIndexParams(Request $request): array
     {
         return array_filter([
-            'category_id' => $request->input('_return_category_id') ?: $request->query('category_id'),
+            // Prefer the saved product category from the form; fall back to list context from the edit URL.
+            'category_id' => $request->input('category_id')
+                ?: $request->input('_return_category_id')
+                ?: $request->query('category_id'),
             'section' => $request->input('_return_section') ?: $request->query('section'),
             'filter' => $request->input('_return_filter') ?: $request->query('filter'),
             'q' => $request->input('_return_q') ?: $request->query('q'),

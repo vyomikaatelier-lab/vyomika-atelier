@@ -28,7 +28,7 @@ class ShopController extends Controller
             }
         }
 
-        $query = ShopCatalog::applyShopScope(
+        $query = ShopCatalog::applyListingScope(
             Product::where('is_active', true)->with('category')
         );
 
@@ -64,17 +64,13 @@ class ShopController extends Controller
 
         $products = $query->paginate(12)->withQueryString();
 
-        // A HAVING clause without GROUP BY is a MySQL-only extension; filter the
-        // relation instead so the listing behaves the same on every driver.
         $categories = Category::query()
             ->where('is_active', true)
             ->whereIn('slug', ShopCatalog::categorySlugs())
-            ->withCount(['products' => fn ($q) => ShopCatalog::applyShopScope(
+            ->tap(fn ($q) => ShopCatalog::applyStorefrontCategoryScope($q))
+            ->withCount(['products' => fn ($q) => ShopCatalog::applyListingScope(
                 $q->where('is_active', true)
             )])
-            ->whereHas('products', fn ($q) => ShopCatalog::applyShopScope(
-                $q->where('is_active', true)
-            ))
             ->orderBy('name')
             ->get();
 

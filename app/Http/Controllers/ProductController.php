@@ -18,6 +18,7 @@ class ProductController extends Controller
             ->firstOrFail();
 
         $related = Product::where('is_active', true)
+            ->unlessHiddenForStock()
             ->where('id', '!=', $product->id)
             ->when($product->category_id, fn ($q) => $q->where('category_id', $product->category_id))
             ->inRandomOrder()
@@ -26,6 +27,7 @@ class ProductController extends Controller
 
         if ($related->count() < 4) {
             $more = Product::where('is_active', true)
+                ->unlessHiddenForStock()
                 ->where('id', '!=', $product->id)
                 ->whereNotIn('id', $related->pluck('id'))
                 ->take(4 - $related->count())

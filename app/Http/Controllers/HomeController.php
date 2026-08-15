@@ -15,7 +15,7 @@ class HomeController extends Controller
     public function index()
     {
         $featuredProducts = Schema::hasTable('products')
-            ? \App\Support\ShopCatalog::applyShopScope(
+            ? \App\Support\ShopCatalog::applyListingScope(
                 Product::where('is_active', true)
             )->orderedForDisplay()->take(6)->get()
             : collect();
@@ -46,13 +46,13 @@ class HomeController extends Controller
 
         $trendingSlugs = collect($site['trending']['products'] ?? [])->pluck('slug')->filter();
         $trendingFromDb = ($trendingSlugs->isNotEmpty() && Schema::hasTable('products'))
-            ? \App\Support\ShopCatalog::applyShopScope(
+            ? \App\Support\ShopCatalog::applyListingScope(
                 Product::where('is_active', true)->whereIn('slug', $trendingSlugs)
             )->orderedForDisplay()->get()
             : collect();
         if ($trendingFromDb->count() < 4 && Schema::hasTable('products')) {
             $trendingFromDb = $trendingFromDb->concat(
-                \App\Support\ShopCatalog::applyShopScope(
+                \App\Support\ShopCatalog::applyListingScope(
                     Product::where('is_active', true)
                         ->whereNotIn('id', $trendingFromDb->pluck('id'))
                 )->orderedForDisplay()->take(4 - $trendingFromDb->count())->get()

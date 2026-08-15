@@ -40,6 +40,8 @@
     <div><label class="block text-sm mb-1">Open Graph image URL</label><input name="og_image" value="{{ old('og_image', $category->og_image ?? '') }}" placeholder="Social share image (blank = category image)" class="w-full border px-3 py-2 rounded"></div>
     <div><label class="block text-sm mb-1">Display order</label><input type="number" name="sort_order" min="0" value="{{ old('sort_order', $category->sort_order ?? 0) }}" class="w-full border px-3 py-2 rounded"></div>
     <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', $category->is_active ?? true))> Active</label>
+    <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="hide_when_unavailable" value="1" @checked(old('hide_when_unavailable', $category->hide_when_unavailable ?? false))> Hide category when nothing is in stock</label>
+    <p class="text-xs text-gray-500 -mt-2">When every product in this category is out of stock (and set to hide when out of stock), the category disappears from shop navigation. The category page still loads but shows no products.</p>
     <button type="submit" class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Save</button>
 </form>
 @if(isset($category) && $category->products()->exists())

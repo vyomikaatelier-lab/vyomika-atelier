@@ -118,6 +118,7 @@ class SitemapController extends Controller
                 ->where('is_active', true)
                 ->where('robots_index', true)
                 ->where('section', Product::SECTION_SHOP)
+                ->unlessHiddenForStock()
                 ->get(['slug', 'updated_at'])
                 ->each(function (Product $product) use (&$urls) {
                     $urls[] = [
