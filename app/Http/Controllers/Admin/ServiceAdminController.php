@@ -61,6 +61,7 @@ class ServiceAdminController extends Controller
             'slug'
         );
         $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
+        $validated['hide_from_nav'] = $this->checkboxBoolean($request, 'hide_from_nav');
         $validated['has_calculator'] = $request->boolean('has_calculator');
         $validated['has_designs'] = $request->boolean('has_designs');
         $validated['image'] = $this->resolveServiceHeroImages($request, null)['image'] ?? $this->resolveImageField($request, 'image_file', 'image', null, 'services');
@@ -100,6 +101,7 @@ class ServiceAdminController extends Controller
             $service
         );
         $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
+        $validated['hide_from_nav'] = $this->checkboxBoolean($request, 'hide_from_nav');
         $validated['has_calculator'] = $request->boolean('has_calculator');
         $validated['has_designs'] = $request->boolean('has_designs');
         $validated['image'] = $this->resolveServiceHeroImages($request, $service)['image'] ?? $this->resolveImageField($request, 'image_file', 'image', $service->image, 'services');
@@ -114,6 +116,49 @@ class ServiceAdminController extends Controller
 
     public function destroy(Service $service)
     {
+        $this->destroyService($service);
+
+        return redirect()->route('admin.services.index')->with('success', 'Service deleted.');
+    }
+
+    public function bulk(Request $request)
+    {
+        $validated = $request->validate([
+            'action' => 'required|in:activate,deactivate,hide_from_nav,show_in_nav,delete',
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:services,id',
+        ]);
+
+        $services = Service::query()
+            ->whereIn('id', $validated['ids'])
+            ->whereNotIn('slug', Service::adminHiddenSlugs())
+            ->get();
+
+        $count = $services->count();
+
+        match ($validated['action']) {
+            'activate' => Service::query()->whereIn('id', $services->pluck('id'))->update(['is_active' => true]),
+            'deactivate' => Service::query()->whereIn('id', $services->pluck('id'))->update(['is_active' => false]),
+            'hide_from_nav' => Service::query()->whereIn('id', $services->pluck('id'))->update(['hide_from_nav' => true]),
+            'show_in_nav' => Service::query()->whereIn('id', $services->pluck('id'))->update(['hide_from_nav' => false]),
+            'delete' => $services->each(fn (Service $service) => $this->destroyService($service)),
+        };
+
+        $message = match ($validated['action']) {
+            'activate' => "{$count} service(s) activated.",
+            'deactivate' => "{$count} service(s) deactivated.",
+            'hide_from_nav' => "{$count} service(s) hidden from main menu.",
+            'show_in_nav' => "{$count} service(s) shown in main menu.",
+            'delete' => "{$count} service(s) deleted.",
+        };
+
+        return redirect()
+            ->route('admin.services.index', $request->only('q'))
+            ->with('success', $message);
+    }
+
+    private function destroyService(Service $service): void
+    {
         $this->deleteStoredPath($service->image);
 
         foreach ($service->designs as $design) {
@@ -121,8 +166,6 @@ class ServiceAdminController extends Controller
         }
 
         $service->delete();
-
-        return redirect()->route('admin.services.index')->with('success', 'Service deleted.');
     }
 
     private function validateService(Request $request, ?Service $service = null): array

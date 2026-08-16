@@ -11,7 +11,7 @@ class Service extends Model
     protected $fillable = [
         'name', 'slug', 'summary', 'content', 'image',
         'has_calculator', 'has_designs', 'lead_form', 'rate_per_sqft',
-        'is_active', 'meta_title', 'meta_description',
+        'is_active', 'hide_from_nav', 'meta_title', 'meta_description',
     ];
 
     protected function casts(): array
@@ -20,6 +20,7 @@ class Service extends Model
             'has_calculator' => 'boolean',
             'has_designs' => 'boolean',
             'is_active' => 'boolean',
+            'hide_from_nav' => 'boolean',
             'rate_per_sqft' => 'decimal:2',
         ];
     }

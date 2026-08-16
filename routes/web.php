@@ -256,10 +256,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('exhibitions/{exhibition}/move/{direction}', [ExhibitionAdminController::class, 'move'])->name('exhibitions.move');
 
         Route::resource('services', ServiceAdminController::class)->except(['show']);
+        Route::post('services/bulk', [ServiceAdminController::class, 'bulk'])->name('services.bulk');
 
+        Route::get('collection-pages/create', [CollectionPageAdminController::class, 'create'])->name('collection-pages.create');
+        Route::post('collection-pages', [CollectionPageAdminController::class, 'store'])->name('collection-pages.store');
+        Route::post('collection-pages/bulk', [CollectionPageAdminController::class, 'bulk'])->name('collection-pages.bulk');
         Route::get('collection-pages', [CollectionPageAdminController::class, 'index'])->name('collection-pages.index');
         Route::get('collection-pages/{slug}/edit', [CollectionPageAdminController::class, 'edit'])->name('collection-pages.edit');
         Route::put('collection-pages/{slug}', [CollectionPageAdminController::class, 'update'])->name('collection-pages.update');
+        Route::delete('collection-pages/{slug}', [CollectionPageAdminController::class, 'destroy'])->name('collection-pages.destroy');
 
         Route::get('page-heroes', [PageHeroAdminController::class, 'index'])->name('page-heroes.index');
         Route::get('page-heroes/{slug}/edit', [PageHeroAdminController::class, 'edit'])->name('page-heroes.edit');

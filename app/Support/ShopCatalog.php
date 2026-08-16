@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Service;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Schema;
 
@@ -21,6 +22,22 @@ class ShopCatalog
             && Schema::hasTable('categories')
             && Schema::hasColumn('products', 'hide_when_out_of_stock')
             && Schema::hasColumn('categories', 'hide_when_unavailable');
+
+        return $ready;
+    }
+
+    public static function supportsHideFromNav(): bool
+    {
+        static $ready = null;
+
+        if ($ready !== null) {
+            return $ready;
+        }
+
+        $ready = Schema::hasTable('categories')
+            && Schema::hasTable('services')
+            && Schema::hasColumn('categories', 'hide_from_nav')
+            && Schema::hasColumn('services', 'hide_from_nav');
 
         return $ready;
     }
@@ -151,11 +168,38 @@ class ShopCatalog
             return false;
         }
 
+        if (self::supportsHideFromNav() && $category->hide_from_nav) {
+            return false;
+        }
+
         if (! self::supportsInventoryHide() || ! $category->hide_when_unavailable) {
             return true;
         }
 
         return $category->hasStorefrontAvailableProducts();
+    }
+
+    public static function isServiceVisibleInNav(string $serviceSlug): bool
+    {
+        if (! Schema::hasTable('services')) {
+            return true;
+        }
+
+        $service = Service::query()->where('slug', $serviceSlug)->first();
+
+        if (! $service) {
+            return true;
+        }
+
+        if (! $service->is_active) {
+            return false;
+        }
+
+        if (self::supportsHideFromNav() && $service->hide_from_nav) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -169,11 +213,15 @@ class ShopCatalog
         }
 
         return collect($nav)->map(function (array $item) {
-            if (($item['label'] ?? '') !== 'Shop' || empty($item['children']) || ! is_array($item['children'])) {
-                return $item;
+            $label = $item['label'] ?? '';
+
+            if ($label === 'Shop' && ! empty($item['children']) && is_array($item['children'])) {
+                $item['children'] = self::filterShopLinks($item['children']);
             }
 
-            $item['children'] = self::filterShopLinks($item['children']);
+            if ($label === 'Studio' && ! empty($item['children']) && is_array($item['children'])) {
+                $item['children'] = self::filterStudioLinks($item['children']);
+            }
 
             return $item;
         })->all();
@@ -204,6 +252,32 @@ class ShopCatalog
                 $slug = $link['params']['slug'] ?? null;
 
                 return is_string($slug) ? self::isCategoryVisibleInNav($slug) : true;
+            })
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $links
+     * @return array<int, array<string, mixed>>
+     */
+    public static function filterStudioLinks(array $links): array
+    {
+        if (! Schema::hasTable('services')) {
+            return $links;
+        }
+
+        return collect($links)
+            ->filter(function (array $link) {
+                $urlSlug = $link['params']['slug'] ?? null;
+
+                if (! is_string($urlSlug)) {
+                    return true;
+                }
+
+                $serviceSlug = StorefrontRoutes::serviceSlugForStudioUrl($urlSlug);
+
+                return $serviceSlug ? self::isServiceVisibleInNav($serviceSlug) : true;
             })
             ->values()
             ->all();

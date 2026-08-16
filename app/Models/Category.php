@@ -25,6 +25,7 @@ class Category extends Model
         'sort_order',
         'is_active',
         'hide_when_unavailable',
+        'hide_from_nav',
     ];
 
     protected function casts(): array
@@ -32,6 +33,7 @@ class Category extends Model
         return [
             'is_active' => 'boolean',
             'hide_when_unavailable' => 'boolean',
+            'hide_from_nav' => 'boolean',
         ];
     }
 

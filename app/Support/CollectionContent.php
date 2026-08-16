@@ -100,6 +100,23 @@ class CollectionContent
         return array_values(array_unique(array_merge($configSlugs, $overrideSlugs)));
     }
 
+    public static function isConfigSlug(string $slug): bool
+    {
+        return $slug === self::MIRROR_FRAMES_SLUG || is_array(config("collections.{$slug}"));
+    }
+
+    public static function labelForSlug(string $slug): string
+    {
+        $page = self::page($slug);
+        $heroTitle = HeroAdminFields::displayTitle(data_get(is_array($page) ? $page : [], 'hero', []));
+
+        if ($heroTitle !== '—') {
+            return $heroTitle;
+        }
+
+        return StorefrontRoutes::shopCategoryLabel($slug);
+    }
+
     /** @return array<string, mixed>|null */
     public static function configDefaults(string $slug): ?array
     {

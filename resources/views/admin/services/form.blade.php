@@ -36,6 +36,7 @@
         <label class="flex items-center gap-2"><input type="checkbox" name="has_calculator" value="1" @checked(old('has_calculator', $service->has_calculator ?? false))> Has calculator</label>
         <label class="flex items-center gap-2"><input type="checkbox" name="has_designs" value="1" @checked(old('has_designs', $service->has_designs ?? false))> Has designs</label>
         <label class="flex items-center gap-2"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', $service->is_active ?? true))> Active</label>
+        <label class="flex items-center gap-2"><input type="checkbox" name="hide_from_nav" value="1" @checked(old('hide_from_nav', $service->hide_from_nav ?? false))> Hide from main menu</label>
     </div>
 
     @php
