@@ -98,4 +98,32 @@ class CollectionGalleryRefreshTest extends TestCase
             ->assertSee('Admin mirror gallery description', false)
             ->assertDontSee('Soft-arch profile wall mirror', false);
     }
+
+    public function test_mirror_frames_gallery_includes_new_admin_products(): void
+    {
+        $category = Category::query()->firstOrCreate(
+            ['slug' => 'mirror-frames'],
+            ['name' => 'Mirror Frames', 'section' => 'shop', 'is_active' => true]
+        );
+
+        Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Bespoke Oval Mirror',
+            'slug' => 'bespoke-oval-mirror',
+            'description' => 'Custom oval mirror added from admin',
+            'price' => 15000,
+            'stock' => 5,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+            'is_gallery_visible' => true,
+            'sort_order' => 100,
+        ]);
+
+        $this->get(route('shop.mirror-frames.index'))
+            ->assertOk()
+            ->assertSee('Bespoke Oval Mirror', false)
+            ->assertSee('Custom oval mirror added from admin', false);
+    }
 }
