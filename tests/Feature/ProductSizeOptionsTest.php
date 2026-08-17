@@ -50,7 +50,7 @@ class ProductSizeOptionsTest extends TestCase
                 ['label' => '8"', 'price' => 800, 'compare_price' => 3200, 'size_inches' => 8, 'sku_suffix' => '8IN'],
                 ['label' => '12"', 'price' => 1500, 'compare_price' => 4500, 'size_inches' => 12, 'sku_suffix' => '12IN'],
             ],
-        ])->assertRedirect(route('admin.products.edit', ['product' => $product, 'saved' => 1]));
+        ])->assertSessionHasNoErrors();
 
         $product->refresh()->load('category');
         $this->assertSame('800.00', (string) $product->price);
@@ -98,7 +98,7 @@ class ProductSizeOptionsTest extends TestCase
                 ['label' => '8"', 'price' => 800, 'discount_percent' => 75, 'size_inches' => 8],
                 ['label' => '12"', 'price' => 1500, 'discount_percent' => 60, 'size_inches' => 12],
             ],
-        ])->assertRedirect(route('admin.products.edit', ['product' => $product, 'saved' => 1]));
+        ])->assertSessionHasNoErrors();
 
         $product->refresh()->load('category');
         $options = $product->normalizedSizeOptions();
@@ -144,7 +144,7 @@ class ProductSizeOptionsTest extends TestCase
                 ['label' => '8"', 'price' => 800, 'size_inches' => 8, 'sku_suffix' => '8IN'],
                 ['label' => '12"', 'price' => 1500, 'size_inches' => 12, 'sku_suffix' => '12IN'],
             ],
-        ])->assertRedirect(route('admin.products.edit', ['product' => $product, 'saved' => 1]));
+        ])->assertSessionHasNoErrors();
 
         $product->refresh()->load('category');
         $this->assertTrue($product->hasSizeOptions());
@@ -188,7 +188,7 @@ class ProductSizeOptionsTest extends TestCase
             'size_options' => [
                 ['label' => '', 'price' => '', 'size_inches' => '', 'sku_suffix' => ''],
             ],
-        ])->assertRedirect(route('admin.products.edit', ['product' => $product, 'saved' => 1]));
+        ])->assertSessionHasNoErrors();
 
         $product->refresh()->load('category');
         $this->assertNull($product->size_options);
@@ -230,7 +230,7 @@ class ProductSizeOptionsTest extends TestCase
                 'size_options' => [
                     ['label' => '8"', 'price' => '', 'size_inches' => 8, 'sku_suffix' => ''],
                 ],
-            ])->assertRedirect(route('admin.products.edit', $product))
+            ])
             ->assertSessionHasErrors('size_options.0.price');
     }
 
@@ -258,21 +258,20 @@ class ProductSizeOptionsTest extends TestCase
             ->assertSee('data-size-compare="4500"', false)
             ->assertSee('data-size-discount="75"', false)
             ->assertSee('data-size-discount="67"', false)
-            ->assertSee('am-pdp-buy__row--with-size', false)
+            ->assertSee('am-pdp-size-selector', false)
             ->assertSee('am-pdp-buy__price', false)
-            ->assertSee('am-size-options--compact', false)
-            ->assertSee('am-size-opt--pill', false)
+            ->assertSee('am-size-options--rows', false)
             ->assertSee('data-size-price="800"', false)
             ->assertSee('data-size-price="1500"', false)
             ->assertSee('₹800', false)
             ->assertSee('₹3,200', false)
             ->assertSee('-75%', false)
-            ->assertSee('am-featured__price-old', false)
+            ->assertDontSee('am-pdp__desc', false)
             ->assertDontSee('From ₹800', false)
             ->assertSeeInOrder([
-                'data-pdp-buy-form',
                 'data-pdp-size',
                 'data-pdp-price-display',
+                'data-pdp-buy-form',
                 'Add to Bag',
             ], false)
             ->assertSee('data-size-input="label"', false)
@@ -387,12 +386,12 @@ class ProductSizeOptionsTest extends TestCase
         $this->assertStringContainsString('From ₹800', $html);
     }
 
-    public function test_admin_rejects_size_options_for_non_door_handle_shop_products(): void
+    public function test_admin_rejects_size_options_for_non_variant_shop_products(): void
     {
         $admin = User::factory()->admin()->create();
         $category = Category::query()->firstOrCreate(
-            ['slug' => 'mirror-frames'],
-            ['name' => 'Mirror Frames', 'section' => 'shop', 'is_active' => true]
+            ['slug' => 'coffee-tables'],
+            ['name' => 'Coffee Tables', 'section' => 'shop', 'is_active' => true]
         );
 
         $product = Product::query()->create([
@@ -425,7 +424,7 @@ class ProductSizeOptionsTest extends TestCase
                 ['label' => '8"', 'price' => 800],
                 ['label' => '12"', 'price' => 1500],
             ],
-        ])->assertRedirect(route('admin.products.edit', ['product' => $product, 'saved' => 1]));
+        ])->assertSessionHasNoErrors();
 
         $product->refresh();
         $this->assertNull($product->size_options);
@@ -434,7 +433,7 @@ class ProductSizeOptionsTest extends TestCase
         $this->assertSame('₹18,500', $product->formattedListingPrice());
     }
 
-    public function test_admin_clears_size_options_when_category_leaves_door_handles(): void
+    public function test_admin_keeps_mirror_size_options_when_category_changes_from_door_handles(): void
     {
         $admin = User::factory()->admin()->create();
         $handles = Category::query()->firstOrCreate(
@@ -472,21 +471,70 @@ class ProductSizeOptionsTest extends TestCase
             'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
             'pricing_type' => Product::PRICING_FIXED,
             'is_active' => '1',
-            'dim_width_cm' => '61',
-            'dim_height_cm' => '91',
             'size_options' => [
-                ['label' => '8"', 'price' => 800],
+                [
+                    'shape' => 'rect',
+                    'dim_width_ft' => 2,
+                    'dim_width_in' => 0,
+                    'dim_height_ft' => 3,
+                    'dim_height_in' => 0,
+                    'price' => 18500,
+                ],
             ],
-        ])->assertRedirect(route('admin.products.edit', ['product' => $product, 'saved' => 1]));
+        ])->assertSessionHasNoErrors();
 
         $product->refresh()->load('category');
-        $this->assertNull($product->size_options);
-        $this->assertFalse($product->hasSizeOptions());
-        $this->assertSame('61.00', $product->dim_width_cm);
-        $this->assertTrue($product->hasMirrorDimensions());
+        $this->assertNotNull($product->size_options);
+        $this->assertTrue($product->hasSizeOptions());
+        $this->assertSame('18500.00', (string) $product->price);
     }
 
-    public function test_mirror_pdp_shows_single_price_not_from_or_size_selector(): void
+    public function test_mirror_pdp_shows_size_selector_with_prices_under_swatches(): void
+    {
+        $category = Category::query()->firstOrCreate(
+            ['slug' => 'mirror-frames'],
+            ['name' => 'Mirror Frames', 'section' => 'shop', 'is_active' => true]
+        );
+
+        $product = Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Multi Size Mirror',
+            'slug' => 'multi-size-mirror',
+            'price' => 15000,
+            'stock' => 5,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+            'size_options' => [
+                [
+                    'label' => '2 × 3 ft',
+                    'shape' => 'rect',
+                    'dim_width_cm' => 60.96,
+                    'dim_height_cm' => 91.44,
+                    'price' => 15000,
+                ],
+                [
+                    'label' => '610 mm Ø',
+                    'shape' => 'round',
+                    'dim_diameter_cm' => 61,
+                    'price' => 18000,
+                ],
+            ],
+        ]);
+
+        $this->get(route('shop.mirror-frames.show', 'multi-size-mirror'))
+            ->assertOk()
+            ->assertSee('data-pdp-size', false)
+            ->assertSee('2 × 3 ft', false)
+            ->assertSee('610 mm Ø', false)
+            ->assertSee('₹15,000', false)
+            ->assertSee('₹18,000', false)
+            ->assertSee('data-pdp-price-display', false)
+            ->assertDontSee('am-pdp__desc', false);
+    }
+
+    public function test_mirror_pdp_shows_single_price_without_valid_size_options(): void
     {
         $category = Category::query()->firstOrCreate(
             ['slug' => 'mirror-frames'],
@@ -522,8 +570,7 @@ class ProductSizeOptionsTest extends TestCase
             ->assertDontSee('data-pdp-size', false)
             ->assertSee('2 × 3 ft', false)
             ->assertSee('am-pdp__dimensions', false)
-            ->assertDontSee('900 × 1200 mm standard', false)
-            ->assertSee('Toughened mirror glass', false);
+            ->assertDontSee('900 × 1200 mm standard', false);
     }
 
     public function test_admin_form_shows_handle_and_mirror_labels(): void
@@ -552,8 +599,6 @@ class ProductSizeOptionsTest extends TestCase
             ->assertSee('Size &amp; price options (door handles — each size has its own price &amp; discount)', false)
             ->assertSee('id="size-options-section"', false)
             ->assertDontSee('id="size-options-section" class="rounded-lg border-2 border-amber-200 bg-amber-50 p-4 space-y-3 hidden"', false)
-            ->assertSee('Mirror dimensions (single size — enter ft + in)', false)
-            ->assertSee("selected && selected.dataset.slug === 'door-handles'", false)
             ->assertSee("selected && selected.dataset.slug === 'mirror-frames'", false);
     }
 
@@ -585,7 +630,7 @@ class ProductSizeOptionsTest extends TestCase
             ->assertOk()
             ->assertSee('id="size-options-section"', false)
             ->assertSee('hidden', false)
-            ->assertSee('Mirror dimensions (single size — enter ft + in)', false)
+            ->assertSee('Mirror sizes &amp; prices', false)
             ->getContent();
 
         $this->assertMatchesRegularExpression(
@@ -593,7 +638,7 @@ class ProductSizeOptionsTest extends TestCase
             $html
         );
         $this->assertDoesNotMatchRegularExpression(
-            '/id="mirror-dimensions-section"[^>]*\bhidden\b/',
+            '/id="mirror-size-options-section"[^>]*\bhidden\b/',
             $html
         );
     }

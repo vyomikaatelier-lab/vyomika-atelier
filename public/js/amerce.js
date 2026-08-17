@@ -277,7 +277,7 @@
       return '₹' + Number(amount).toLocaleString('en-IN');
     }
 
-    function applySize(price, label, comparePrice, discountPercent) {
+    function applySize(price, label, comparePrice, discountPercent, dimFeet, dimMm, dimCm) {
       document.querySelectorAll('[data-pdp-price-display]').forEach((el) => {
         el.textContent = formatInr(price);
       });
@@ -307,6 +307,19 @@
       document.querySelectorAll('[data-size-input="price"]').forEach((input) => {
         input.value = price || '';
       });
+
+      if (dimFeet || dimMm || dimCm) {
+        const dimRoot = document.querySelector('[data-mirror-dim-display]');
+        if (dimRoot) {
+          const feetEl = dimRoot.querySelector('[data-mirror-dim-feet]');
+          const mmEl = dimRoot.querySelector('[data-mirror-dim-mm]');
+          const cmEl = dimRoot.querySelector('[data-mirror-dim-cm]');
+          if (feetEl && dimFeet) feetEl.textContent = dimFeet;
+          if (mmEl && dimMm) mmEl.textContent = dimMm;
+          if (cmEl && dimCm) cmEl.textContent = dimCm;
+          dimRoot.hidden = false;
+        }
+      }
     }
 
     function readSizeFromButton(btn) {
@@ -314,7 +327,10 @@
         btn.dataset.sizePrice,
         btn.dataset.sizeLabel || '',
         btn.dataset.sizeCompare || '',
-        btn.dataset.sizeDiscount || ''
+        btn.dataset.sizeDiscount || '',
+        btn.dataset.sizeDimFeet || '',
+        btn.dataset.sizeDimMm || '',
+        btn.dataset.sizeDimCm || ''
       );
     }
 

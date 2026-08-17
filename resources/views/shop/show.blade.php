@@ -103,9 +103,7 @@
                     'note' => $product->resolvedSwatchesNote(),
                 ])
 
-                @if($product->description)
-                <div class="am-prose am-pdp__desc">{{ $product->description }}</div>
-                @endif
+                @include('partials.am-pdp-size-selector', ['product' => $product])
 
                 @if($showCalculator)
                 <div class="am-pdp__calc-inline" id="buy">
@@ -119,7 +117,7 @@
                 </div>
                 @elseif($showCheckoutBuy)
                 <div class="am-pdp__buy-inline" id="buy">
-                    @include('partials.am-pdp-buy-actions', ['product' => $product])
+                    @include('partials.am-pdp-buy-actions', ['product' => $product, 'externalSizeSelector' => $hasSizeOptions])
                     @include('partials.am-pdp-checkout-trust')
                 </div>
                 @else

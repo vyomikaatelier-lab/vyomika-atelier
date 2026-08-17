@@ -153,11 +153,29 @@ class Product extends Model
 
     public function hasSizeOptions(): bool
     {
-        return $this->isDoorHandleProduct() && $this->normalizedSizeOptions() !== [];
+        return ($this->isDoorHandleProduct() || $this->isMirrorFrameProduct())
+            && $this->normalizedSizeOptions() !== [];
+    }
+
+    public function usesMirrorSizeOptions(): bool
+    {
+        return $this->isMirrorFrameProduct() && $this->hasSizeOptions();
     }
 
     /**
-     * @return list<array{label: string, size_inches: ?float, price: float, compare_price: ?float, discount_percent: ?int, sku_suffix: ?string}>
+     * @return list<array{
+     *     label: string,
+     *     size_inches: ?float,
+     *     price: float,
+     *     compare_price: ?float,
+     *     discount_percent: ?int,
+     *     sku_suffix: ?string,
+     *     shape: ?string,
+     *     dim_width_cm: ?float,
+     *     dim_height_cm: ?float,
+     *     dim_diameter_cm: ?float,
+     *     dimension_detail: ?string
+     * }>
      */
     public function normalizedSizeOptions(): array
     {
@@ -175,10 +193,6 @@ class Product extends Model
             $label = trim((string) ($row['label'] ?? ''));
             $price = (float) ($row['price'] ?? 0);
 
-            if ($label === '' || $price < 0) {
-                continue;
-            }
-
             $sizeInches = filled($row['size_inches'] ?? null)
                 ? round((float) $row['size_inches'], 2)
                 : null;
@@ -190,6 +204,28 @@ class Product extends Model
                 : null;
             $discountPercent = self::discountPercentFromPrices($price, $comparePrice);
 
+            $shape = ($row['shape'] ?? 'rect') === 'round' ? 'round' : 'rect';
+            $dimWidthCm = filled($row['dim_width_cm'] ?? null) ? round((float) $row['dim_width_cm'], 2) : null;
+            $dimHeightCm = filled($row['dim_height_cm'] ?? null) ? round((float) $row['dim_height_cm'], 2) : null;
+            $dimDiameterCm = filled($row['dim_diameter_cm'] ?? null) ? round((float) $row['dim_diameter_cm'], 2) : null;
+
+            if ($label === '' && ($dimWidthCm || $dimHeightCm || $dimDiameterCm)) {
+                $label = self::mirrorSizeLabelFromDimensions($shape, $dimWidthCm, $dimHeightCm, $dimDiameterCm);
+            }
+
+            if ($this->isMirrorFrameProduct()) {
+                $hasMirrorDims = ($shape === 'round' && $dimDiameterCm !== null && $dimDiameterCm > 0)
+                    || ($dimWidthCm !== null && $dimHeightCm !== null && $dimWidthCm > 0 && $dimHeightCm > 0);
+
+                if (! $hasMirrorDims) {
+                    continue;
+                }
+            }
+
+            if ($label === '' || $price < 0) {
+                continue;
+            }
+
             $options[] = [
                 'label' => $label,
                 'size_inches' => $sizeInches,
@@ -197,6 +233,11 @@ class Product extends Model
                 'compare_price' => $comparePrice,
                 'discount_percent' => $discountPercent,
                 'sku_suffix' => $skuSuffix,
+                'shape' => $shape,
+                'dim_width_cm' => $dimWidthCm,
+                'dim_height_cm' => $dimHeightCm,
+                'dim_diameter_cm' => $dimDiameterCm,
+                'dimension_detail' => self::mirrorSizeDetailLine($shape, $dimWidthCm, $dimHeightCm, $dimDiameterCm),
             ];
         }
 
@@ -226,7 +267,7 @@ class Product extends Model
         return $this->formattedPrice();
     }
 
-    /** @return array{label: string, size_inches: ?float, price: float, compare_price: ?float, discount_percent: ?int, sku_suffix: ?string}|null */
+    /** @return array{label: string, size_inches: ?float, price: float, compare_price: ?float, discount_percent: ?int, sku_suffix: ?string, shape: ?string, dim_width_cm: ?float, dim_height_cm: ?float, dim_diameter_cm: ?float, dimension_detail: ?string}|null */
     public function resolveSizeOption(?string $label): ?array
     {
         $options = $this->normalizedSizeOptions();
@@ -282,11 +323,94 @@ class Product extends Model
 
     public function hasMirrorDimensions(): bool
     {
+        if ($this->usesMirrorSizeOptions()) {
+            return false;
+        }
+
         return $this->isMirrorFrameProduct()
             && $this->dim_width_cm !== null
             && $this->dim_height_cm !== null
             && (float) $this->dim_width_cm > 0
             && (float) $this->dim_height_cm > 0;
+    }
+
+    /**
+     * @param  array{shape?: ?string, dim_width_cm?: ?float, dim_height_cm?: ?float, dim_diameter_cm?: ?float}|null  $option
+     * @return array{feet: string, mm: string, cm: string}|null
+     */
+    public static function mirrorDimensionDisplaysForOption(?array $option): ?array
+    {
+        if (! is_array($option)) {
+            return null;
+        }
+
+        $shape = ($option['shape'] ?? 'rect') === 'round' ? 'round' : 'rect';
+
+        if ($shape === 'round') {
+            $diameterCm = (float) ($option['dim_diameter_cm'] ?? 0);
+            if ($diameterCm <= 0) {
+                return null;
+            }
+
+            $diameterMm = (int) round($diameterCm * 10);
+            $diameterLabel = self::formatMirrorDimensionNumber($diameterCm);
+
+            return [
+                'feet' => self::formatFeetInchesLabel(self::feetInchesFromCm($diameterCm)).' Ø',
+                'mm' => $diameterMm.' mm Ø',
+                'cm' => $diameterLabel.' cm Ø',
+            ];
+        }
+
+        $widthCm = (float) ($option['dim_width_cm'] ?? 0);
+        $heightCm = (float) ($option['dim_height_cm'] ?? 0);
+
+        if ($widthCm <= 0 || $heightCm <= 0) {
+            return null;
+        }
+
+        return [
+            'feet' => self::formatMirrorDimensionPairInFeet($widthCm, $heightCm),
+            'mm' => self::formatMirrorDimensionPair((int) round($widthCm * 10), (int) round($heightCm * 10), 'mm'),
+            'cm' => self::formatMirrorDimensionPair(
+                self::formatMirrorDimensionNumber($widthCm),
+                self::formatMirrorDimensionNumber($heightCm),
+                'cm'
+            ),
+        ];
+    }
+
+    public static function mirrorSizeLabelFromDimensions(
+        string $shape,
+        ?float $widthCm,
+        ?float $heightCm,
+        ?float $diameterCm
+    ): string {
+        if ($shape === 'round' && $diameterCm !== null && $diameterCm > 0) {
+            return (int) round($diameterCm * 10).' mm Ø';
+        }
+
+        if ($widthCm !== null && $heightCm !== null && $widthCm > 0 && $heightCm > 0) {
+            return self::formatMirrorDimensionPairInFeet($widthCm, $heightCm);
+        }
+
+        return 'Custom size';
+    }
+
+    public static function mirrorSizeDetailLine(
+        string $shape,
+        ?float $widthCm,
+        ?float $heightCm,
+        ?float $diameterCm
+    ): ?string {
+        $displays = self::mirrorDimensionDisplaysForOption([
+            'shape' => $shape,
+            'dim_width_cm' => $widthCm,
+            'dim_height_cm' => $heightCm,
+            'dim_diameter_cm' => $diameterCm,
+        ]);
+
+        return $displays['cm'] ?? null;
     }
 
     /** @return array{feet: string, mm: string, cm: string}|null */

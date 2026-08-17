@@ -44,6 +44,9 @@
                 <p class="am-featured__meta">{{ $headlineMeta }}</p>
                 @endif
 
+                @php $hasSizeOptions = $product->hasSizeOptions(); @endphp
+
+                @if(! $hasSizeOptions)
                 <div class="am-featured__price">
                     <span class="am-featured__price-current">{{ $product->formattedPrice() }}</span>
                     @if($product->hasDisplayComparePrice())
@@ -53,6 +56,11 @@
                     <span class="am-featured__badge">{{ $design['badge'] }}</span>
                     @endif
                 </div>
+                @elseif(!empty($design['badge']))
+                <div class="am-featured__price">
+                    <span class="am-featured__badge">{{ $design['badge'] }}</span>
+                </div>
+                @endif
 
                 <ul class="am-pdp__trust">
                     <li>✓ PVD stainless frame fabrication</li>
@@ -75,13 +83,11 @@
 
                 @include('partials.am-pdp-finish-swatches', ['note' => $product->resolvedSwatchesNote()])
 
-                @if($product->description)
-                <div class="am-prose am-pdp__desc">{{ $product->description }}</div>
-                @endif
+                @include('partials.am-pdp-size-selector', ['product' => $product])
 
                 <div class="am-pdp__buy-inline" id="buy">
                     @if($product->usesCheckoutFlow())
-                    @include('partials.am-pdp-buy-actions', ['product' => $product])
+                    @include('partials.am-pdp-buy-actions', ['product' => $product, 'externalSizeSelector' => $hasSizeOptions])
                     @else
                     @include('partials.am-gallery-order-now-btn', [
                         'name' => $design['name'] ?? $product->name,

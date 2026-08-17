@@ -783,6 +783,19 @@ ul { list-style: none; }
   text-align: left;
 }
 .am-size-opt__label { font-weight: 600; line-height: 1.2; }
+.am-size-opt__dims {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--am-muted, #666);
+  line-height: 1.2;
+  margin-top: 0.15rem;
+}
+.am-pdp-size-selector {
+  margin: 0.75rem 0 1rem;
+}
+.am-pdp-size-selector .am-pdp-size {
+  margin-top: 0;
+}
 .am-size-opt__pricing {
   display: inline-flex;
   align-items: center;

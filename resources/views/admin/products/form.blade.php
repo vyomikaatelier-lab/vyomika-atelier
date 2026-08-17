@@ -18,7 +18,8 @@
     $selectedCategorySlug = $categories->firstWhere('id', (int) $selectedCategoryId)?->slug
         ?? (isset($product) ? $product->category?->slug : null);
     $showDoorHandleSizes = $selectedCategorySlug === 'door-handles';
-    $showMirrorDimensions = $selectedCategorySlug === 'mirror-frames';
+    $showMirrorSizes = $selectedCategorySlug === 'mirror-frames';
+    $showMirrorDimensions = false;
 @endphp
 
 @php
@@ -71,7 +72,7 @@
 
         <div>
             <label for="description" class="text-sm font-medium text-gray-800 block mb-1">Main description</label>
-            <p class="text-xs text-gray-500 mb-2">Body text below price and PVD finish swatches. HTML is allowed.</p>
+            <p class="text-xs text-gray-500 mb-2">Shown in the Description tab on the product page. HTML is allowed.</p>
             <textarea id="description" name="description" rows="5" placeholder="Product description shown on the storefront" class="w-full border px-3 py-2 rounded bg-white">{{ old('description', $product->description ?? '') }}</textarea>
             @error('description')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
         </div>
@@ -83,60 +84,7 @@
             @error('swatches_note')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
         </div>
 
-        <fieldset id="mirror-dimensions-section" class="space-y-3 border-t border-gray-200 pt-4{{ $showMirrorDimensions ? '' : ' hidden' }}" aria-labelledby="mirror-dimensions-heading" @if(! $showMirrorDimensions) inert @endif>
-            <legend id="mirror-dimensions-heading" class="text-sm font-medium text-gray-800 px-1">Mirror dimensions (single size — enter ft + in)</legend>
-            <p class="text-xs text-gray-500 -mt-1 mb-2">Enter size in feet and inches; website shows ft, mm, and cm. Mirrors use the single Price field above — not multiple size/price variants. Leave all blank to hide dimensions.</p>
-            @php
-                $oldWidthCm = old('dim_width_cm', $product->dim_width_cm ?? null);
-                $oldHeightCm = old('dim_height_cm', $product->dim_height_cm ?? null);
-                $widthFtIn = (old('dim_width_ft') !== null || old('dim_width_in') !== null)
-                    ? ['feet' => old('dim_width_ft', ''), 'inches' => old('dim_width_in', '')]
-                    : (is_numeric($oldWidthCm) ? Product::feetInchesFromCm((float) $oldWidthCm) : ['feet' => '', 'inches' => '']);
-                $heightFtIn = (old('dim_height_ft') !== null || old('dim_height_in') !== null)
-                    ? ['feet' => old('dim_height_ft', ''), 'inches' => old('dim_height_in', '')]
-                    : (is_numeric($oldHeightCm) ? Product::feetInchesFromCm((float) $oldHeightCm) : ['feet' => '', 'inches' => '']);
-            @endphp
-            <div class="grid grid-cols-2 gap-4">
-                <div class="space-y-2">
-                    <p class="text-sm text-gray-700 font-medium">Width</p>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label for="dim_width_ft" class="text-xs text-gray-600 block mb-1">Feet</label>
-                            <input id="dim_width_ft" type="number" step="1" min="0" max="50" name="dim_width_ft" value="{{ $widthFtIn['feet'] === '' || $widthFtIn['feet'] === null ? '' : $widthFtIn['feet'] }}" placeholder="2" class="w-full border px-3 py-2 rounded bg-white" data-mirror-dim inputmode="numeric" @disabled(! $showMirrorDimensions)>
-                        </div>
-                        <div>
-                            <label for="dim_width_in" class="text-xs text-gray-600 block mb-1">Inches</label>
-                            <input id="dim_width_in" type="number" step="0.1" min="0" max="11.9" name="dim_width_in" value="{{ $widthFtIn['inches'] === '' || $widthFtIn['inches'] === null ? '' : $widthFtIn['inches'] }}" placeholder="0" class="w-full border px-3 py-2 rounded bg-white" data-mirror-dim inputmode="decimal" @disabled(! $showMirrorDimensions)>
-                        </div>
-                    </div>
-                    @error('dim_width_ft')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
-                    @error('dim_width_in')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
-                </div>
-                <div class="space-y-2">
-                    <p class="text-sm text-gray-700 font-medium">Height</p>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label for="dim_height_ft" class="text-xs text-gray-600 block mb-1">Feet</label>
-                            <input id="dim_height_ft" type="number" step="1" min="0" max="50" name="dim_height_ft" value="{{ $heightFtIn['feet'] === '' || $heightFtIn['feet'] === null ? '' : $heightFtIn['feet'] }}" placeholder="4" class="w-full border px-3 py-2 rounded bg-white" data-mirror-dim inputmode="numeric" @disabled(! $showMirrorDimensions)>
-                        </div>
-                        <div>
-                            <label for="dim_height_in" class="text-xs text-gray-600 block mb-1">Inches</label>
-                            <input id="dim_height_in" type="number" step="0.1" min="0" max="11.9" name="dim_height_in" value="{{ $heightFtIn['inches'] === '' || $heightFtIn['inches'] === null ? '' : $heightFtIn['inches'] }}" placeholder="0" class="w-full border px-3 py-2 rounded bg-white" data-mirror-dim inputmode="decimal" @disabled(! $showMirrorDimensions)>
-                        </div>
-                    </div>
-                    @error('dim_height_ft')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
-                    @error('dim_height_in')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
-                </div>
-            </div>
-            <div id="mirror-dim-preview" class="rounded border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 hidden" aria-live="polite">
-                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Storefront preview</p>
-                <ul class="space-y-0.5">
-                    <li><span class="text-gray-500 inline-block w-8">ft</span> <span data-mirror-preview="feet">—</span></li>
-                    <li><span class="text-gray-500 inline-block w-8">mm</span> <span data-mirror-preview="mm">—</span></li>
-                    <li><span class="text-gray-500 inline-block w-8">cm</span> <span data-mirror-preview="cm">—</span></li>
-                </ul>
-            </div>
-        </fieldset>
+        @include('admin.partials.mirror-size-options', ['showMirrorSizes' => $showMirrorSizes, 'product' => $product ?? null])
 
         <fieldset class="space-y-3 border-t border-gray-200 pt-4">
             <legend class="text-sm font-medium text-gray-800 px-1">Tabs below the buy area</legend>
@@ -283,15 +231,15 @@
     <fieldset id="pricing-discount-section" class="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-3" aria-labelledby="pricing-discount-heading">
         <legend id="pricing-discount-heading" class="text-sm font-semibold text-gray-900 px-1">Price &amp; discount (as on website)</legend>
         <p id="pricing-discount-intro" class="text-xs text-gray-600 -mt-1">On the product page and cards: selling price, optional strikethrough original price, and a <strong>−%</strong> badge when compare price is higher than price. Use Discount % to keep price and compare in sync.</p>
-        <p id="door-handle-price-note" class="text-xs text-amber-800 bg-amber-100 border border-amber-200 rounded px-2 py-1.5{{ $showDoorHandleSizes ? '' : ' hidden' }}">Door handles: set <strong>price &amp; discount per size</strong> in the section below. This Price field syncs to the lowest size price on save.</p>
-        <div id="pricing-discount-grid" class="grid gap-4 {{ $showDoorHandleSizes ? 'grid-cols-1' : 'grid-cols-3' }}">
+        <p id="door-handle-price-note" class="text-xs text-amber-800 bg-amber-100 border border-amber-200 rounded px-2 py-1.5{{ ($showDoorHandleSizes || $showMirrorSizes) ? '' : ' hidden' }}">Door handles &amp; mirror frames: set <strong>price per size</strong> in the section below. This Price field syncs to the lowest size price on save.</p>
+        <div id="pricing-discount-grid" class="grid gap-4 {{ ($showDoorHandleSizes || $showMirrorSizes) ? 'grid-cols-1' : 'grid-cols-3' }}">
             <div>
                 <label for="product-price" class="text-sm font-medium text-gray-800 block mb-1">Price @if($currentPricingType === 'square_foot')<span class="font-normal text-gray-500">(₹ per sq ft)</span>@endif</label>
                 <input id="product-price" type="number" step="0.01" name="price" value="{{ old('price', $product->price ?? '') }}" placeholder="Selling price" required class="w-full border px-3 py-2 rounded bg-white">
                 @error('price')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
                 <p id="product-price-help" class="text-xs text-gray-500 mt-1">{{ $showDoorHandleSizes ? 'Lowest size price syncs here on save.' : 'Selling price shown on the website.' }}</p>
             </div>
-            <div id="product-level-discount-fields" class="contents{{ $showDoorHandleSizes ? ' hidden' : '' }}">
+            <div id="product-level-discount-fields" class="contents{{ ($showDoorHandleSizes || $showMirrorSizes) ? ' hidden' : '' }}">
                 <div>
                     <label for="product-compare-price" class="text-sm font-medium text-gray-800 block mb-1">Compare price <span class="font-normal text-gray-500">(original)</span></label>
                     <input id="product-compare-price" type="number" step="0.01" name="compare_price" value="{{ old('compare_price', $product->compare_price ?? '') }}" placeholder="e.g. 38999" class="w-full border px-3 py-2 rounded bg-white">
@@ -305,7 +253,7 @@
                 </div>
             </div>
         </div>
-        <p id="pricing-discount-footer" class="text-xs text-gray-500{{ $showDoorHandleSizes ? ' hidden' : '' }}">Shop = fixed selling price. Studio = rate per sq ft.</p>
+        <p id="pricing-discount-footer" class="text-xs text-gray-500{{ ($showDoorHandleSizes || $showMirrorSizes) ? ' hidden' : '' }}">Shop = fixed selling price. Studio = rate per sq ft.</p>
         <p id="discount-preview" class="text-sm text-gray-700 hidden" aria-live="polite">
             Website preview: <span class="inline-flex items-center gap-2 flex-wrap">
                 <span id="discount-preview-price" class="font-medium"></span>
@@ -414,7 +362,9 @@
     var sectionSelect = document.getElementById('product-section');
     var categorySelect = document.getElementById('product-category');
     var purchaseModeSelect = document.getElementById('product-purchase-mode');
-    var mirrorDimensionsSection = document.getElementById('mirror-dimensions-section');
+    var mirrorSizeOptionsSection = document.getElementById('mirror-size-options-section');
+    var mirrorSizeOptionsRows = document.getElementById('mirror-size-options-rows');
+    var mirrorSizeAdd = document.getElementById('mirror-size-add');
     var sizeOptionsSection = document.getElementById('size-options-section');
     var sizeOptionsRows = document.getElementById('size-options-rows');
     var sizeOptionAdd = document.getElementById('size-option-add');
@@ -451,22 +401,6 @@
         if (mode) purchaseModeSelect.value = mode;
     }
 
-    function syncMirrorDimensionsSection() {
-        if (!mirrorDimensionsSection) return;
-        var selected = categorySelect.selectedOptions[0];
-        var isMirrorFrames = selected && selected.dataset.slug === 'mirror-frames';
-        mirrorDimensionsSection.classList.toggle('hidden', !isMirrorFrames);
-        if (isMirrorFrames) {
-            mirrorDimensionsSection.removeAttribute('inert');
-        } else {
-            mirrorDimensionsSection.setAttribute('inert', '');
-        }
-        mirrorDimensionsSection.querySelectorAll('input').forEach(function (input) {
-            input.disabled = !isMirrorFrames;
-        });
-        updateMirrorDimPreview();
-    }
-
     function formatDimNumber(value) {
         if (Math.abs(value - Math.round(value)) < 0.05) return String(Math.round(value));
         return String(Math.round(value * 10) / 10);
@@ -477,46 +411,29 @@
         return feet + ' ft ' + formatDimNumber(inches) + ' in';
     }
 
-    function updateMirrorDimPreview() {
-        var preview = document.getElementById('mirror-dim-preview');
-        if (!preview || !mirrorDimensionsSection) return;
-        var wFt = parseFloat(document.getElementById('dim_width_ft') && document.getElementById('dim_width_ft').value);
-        var wIn = parseFloat(document.getElementById('dim_width_in') && document.getElementById('dim_width_in').value);
-        var hFt = parseFloat(document.getElementById('dim_height_ft') && document.getElementById('dim_height_ft').value);
-        var hIn = parseFloat(document.getElementById('dim_height_in') && document.getElementById('dim_height_in').value);
-        var widthInches = (isNaN(wFt) ? 0 : wFt) * 12 + (isNaN(wIn) ? 0 : wIn);
-        var heightInches = (isNaN(hFt) ? 0 : hFt) * 12 + (isNaN(hIn) ? 0 : hIn);
-        var show = widthInches > 0 && heightInches > 0 && !mirrorDimensionsSection.classList.contains('hidden');
-        preview.classList.toggle('hidden', !show);
-        if (!show) return;
-
-        var widthCm = Math.round(widthInches * 2.54 * 100) / 100;
-        var heightCm = Math.round(heightInches * 2.54 * 100) / 100;
-        var widthFeet = Math.floor(widthInches / 12);
-        var widthRemIn = Math.round((widthInches - widthFeet * 12) * 10) / 10;
-        var heightFeet = Math.floor(heightInches / 12);
-        var heightRemIn = Math.round((heightInches - heightFeet * 12) * 10) / 10;
-        var feetLabel = (!widthRemIn && !heightRemIn)
-            ? (widthFeet + ' × ' + heightFeet + ' ft')
-            : (formatFeetInchesLabel(widthFeet, widthRemIn) + ' × ' + formatFeetInchesLabel(heightFeet, heightRemIn));
-
-        var feetEl = preview.querySelector('[data-mirror-preview="feet"]');
-        var mmEl = preview.querySelector('[data-mirror-preview="mm"]');
-        var cmEl = preview.querySelector('[data-mirror-preview="cm"]');
-        if (feetEl) feetEl.textContent = feetLabel;
-        if (mmEl) mmEl.textContent = Math.round(widthCm * 10) + ' × ' + Math.round(heightCm * 10) + ' mm';
-        if (cmEl) cmEl.textContent = formatDimNumber(widthCm) + ' × ' + formatDimNumber(heightCm) + ' cm';
-    }
-
-    if (mirrorDimensionsSection) {
-        mirrorDimensionsSection.querySelectorAll('[data-mirror-dim]').forEach(function (input) {
-            input.addEventListener('input', updateMirrorDimPreview);
-        });
+    function syncMirrorSizeOptionsSection() {
+        if (!mirrorSizeOptionsSection) return;
+        var selected = categorySelect.selectedOptions[0];
+        var isMirrorFrames = selected && selected.dataset.slug === 'mirror-frames';
+        mirrorSizeOptionsSection.classList.toggle('hidden', !isMirrorFrames);
+        if (isMirrorFrames) {
+            mirrorSizeOptionsSection.removeAttribute('inert');
+        } else {
+            mirrorSizeOptionsSection.setAttribute('inert', '');
+        }
+        if (mirrorSizeOptionsRows) {
+            mirrorSizeOptionsRows.querySelectorAll('input, select, button').forEach(function (input) {
+                input.disabled = !isMirrorFrames;
+            });
+        }
+        if (mirrorSizeAdd) mirrorSizeAdd.disabled = !isMirrorFrames;
     }
 
     function syncProductLevelPricing() {
         var selected = categorySelect.selectedOptions[0];
         var isDoorHandles = selected && selected.dataset.slug === 'door-handles';
+        var isMirrorFrames = selected && selected.dataset.slug === 'mirror-frames';
+        var usesSizeRows = isDoorHandles || isMirrorFrames;
         var pricingGrid = document.getElementById('pricing-discount-grid');
         var productDiscountFields = document.getElementById('product-level-discount-fields');
         var doorHandleNote = document.getElementById('door-handle-price-note');
@@ -525,16 +442,20 @@
         var priceHelp = document.getElementById('product-price-help');
         var discountPreview = document.getElementById('discount-preview');
 
-        if (pricingGrid) pricingGrid.classList.toggle('grid-cols-1', isDoorHandles);
-        if (pricingGrid) pricingGrid.classList.toggle('grid-cols-3', !isDoorHandles);
-        if (productDiscountFields) productDiscountFields.classList.toggle('hidden', isDoorHandles);
-        if (doorHandleNote) doorHandleNote.classList.toggle('hidden', !isDoorHandles);
-        if (pricingIntro) pricingIntro.classList.toggle('hidden', isDoorHandles);
-        if (pricingFooter) pricingFooter.classList.toggle('hidden', isDoorHandles);
-        if (priceHelp) priceHelp.textContent = isDoorHandles
+        if (pricingGrid) pricingGrid.classList.toggle('grid-cols-1', usesSizeRows);
+        if (pricingGrid) pricingGrid.classList.toggle('grid-cols-3', !usesSizeRows);
+        if (productDiscountFields) productDiscountFields.classList.toggle('hidden', usesSizeRows);
+        if (doorHandleNote) doorHandleNote.classList.toggle('hidden', !usesSizeRows);
+        if (pricingIntro) pricingIntro.classList.toggle('hidden', usesSizeRows);
+        if (pricingFooter) pricingFooter.classList.toggle('hidden', usesSizeRows);
+        if (priceHelp) priceHelp.textContent = usesSizeRows
             ? 'Lowest size price syncs here on save.'
             : 'Selling price shown on the website.';
-        if (discountPreview && isDoorHandles) discountPreview.classList.add('hidden');
+        if (discountPreview && usesSizeRows) discountPreview.classList.add('hidden');
+    }
+
+    function syncMirrorDimensionsSection() {
+        syncMirrorSizeOptionsSection();
     }
 
     function syncSizeOptionsSection() {
@@ -669,6 +590,91 @@
         });
     }
 
+    function bindMirrorSizeRow(row) {
+        var shapeSelect = row.querySelector('.mirror-shape-select');
+        var rectBlock = row.querySelector('.mirror-size-rect');
+        var roundBlock = row.querySelector('.mirror-size-round');
+        var removeBtn = row.querySelector('.mirror-size-remove');
+
+        function syncShapeFields() {
+            var isRound = shapeSelect && shapeSelect.value === 'round';
+            if (rectBlock) rectBlock.classList.toggle('hidden', isRound);
+            if (roundBlock) roundBlock.classList.toggle('hidden', !isRound);
+            row.dataset.shape = isRound ? 'round' : 'rect';
+        }
+
+        if (shapeSelect) {
+            shapeSelect.addEventListener('change', syncShapeFields);
+            syncShapeFields();
+        }
+
+        if (removeBtn) {
+            removeBtn.addEventListener('click', function () {
+                if (!mirrorSizeOptionsRows) return;
+                if (mirrorSizeOptionsRows.querySelectorAll('.mirror-size-row').length <= 1) {
+                    row.querySelectorAll('input').forEach(function (input) { input.value = ''; });
+                    if (shapeSelect) shapeSelect.value = 'rect';
+                    syncShapeFields();
+                    return;
+                }
+                row.remove();
+                mirrorSizeOptionsRows.querySelectorAll('.mirror-size-remove').forEach(function (btn, index, all) {
+                    btn.hidden = all.length <= 1;
+                });
+            });
+        }
+    }
+
+    if (mirrorSizeOptionsRows) {
+        mirrorSizeOptionsRows.querySelectorAll('.mirror-size-row').forEach(bindMirrorSizeRow);
+    }
+
+    if (mirrorSizeAdd && mirrorSizeOptionsRows) {
+        mirrorSizeAdd.addEventListener('click', function () {
+            var index = mirrorSizeOptionsRows.querySelectorAll('.mirror-size-row').length;
+            var row = document.createElement('div');
+            row.className = 'mirror-size-row bg-gray-50 border rounded p-3 space-y-3';
+            row.dataset.shape = 'rect';
+            row.innerHTML = ''
+                + '<div class="grid grid-cols-12 gap-2 items-end">'
+                + '<div class="col-span-3"><label class="text-xs text-gray-600 block mb-1">Shape</label>'
+                + '<select name="size_options[' + index + '][shape]" class="mirror-shape-select w-full border px-2 py-1 rounded text-sm bg-white">'
+                + '<option value="rect">Rectangle (L × H)</option><option value="round">Round (diameter)</option></select></div>'
+                + '<div class="col-span-3"><label class="text-xs text-gray-600 block mb-1">Label override</label>'
+                + '<input type="text" name="size_options[' + index + '][label]" placeholder="Auto from dimensions" class="w-full border px-2 py-1 rounded text-sm bg-white"></div>'
+                + '<div class="col-span-2"><label class="text-xs text-gray-600 block mb-1">Price (₹)</label>'
+                + '<input type="number" step="0.01" min="0" name="size_options[' + index + '][price]" class="size-opt-price w-full border px-2 py-1 rounded text-sm bg-white"></div>'
+                + '<div class="col-span-2"><label class="text-xs text-gray-600 block mb-1">Compare (₹)</label>'
+                + '<input type="number" step="0.01" min="0" name="size_options[' + index + '][compare_price]" class="size-opt-compare w-full border px-2 py-1 rounded text-sm bg-white"></div>'
+                + '<div class="col-span-1"><label class="text-xs text-gray-600 block mb-1">Disc %</label>'
+                + '<input type="number" step="1" min="0" max="99" name="size_options[' + index + '][discount_percent]" class="size-opt-discount w-full border px-2 py-1 rounded text-sm bg-white"></div>'
+                + '<div class="col-span-1"><button type="button" class="mirror-size-remove text-xs text-red-600 hover:underline">Remove</button></div>'
+                + '</div>'
+                + '<div class="mirror-size-rect grid grid-cols-2 gap-4">'
+                + '<div class="space-y-2"><p class="text-xs font-medium text-gray-700">Length (width)</p>'
+                + '<div class="grid grid-cols-2 gap-2">'
+                + '<input type="number" step="1" min="0" max="50" name="size_options[' + index + '][dim_width_ft]" placeholder="ft" class="w-full border px-2 py-1 rounded text-sm bg-white">'
+                + '<input type="number" step="0.1" min="0" max="11.9" name="size_options[' + index + '][dim_width_in]" placeholder="in" class="w-full border px-2 py-1 rounded text-sm bg-white">'
+                + '</div></div>'
+                + '<div class="space-y-2"><p class="text-xs font-medium text-gray-700">Height</p>'
+                + '<div class="grid grid-cols-2 gap-2">'
+                + '<input type="number" step="1" min="0" max="50" name="size_options[' + index + '][dim_height_ft]" placeholder="ft" class="w-full border px-2 py-1 rounded text-sm bg-white">'
+                + '<input type="number" step="0.1" min="0" max="11.9" name="size_options[' + index + '][dim_height_in]" placeholder="in" class="w-full border px-2 py-1 rounded text-sm bg-white">'
+                + '</div></div></div>'
+                + '<div class="mirror-size-round grid grid-cols-2 gap-4 hidden">'
+                + '<div class="space-y-2"><p class="text-xs font-medium text-gray-700">Diameter</p>'
+                + '<div class="grid grid-cols-2 gap-2">'
+                + '<input type="number" step="1" min="0" max="50" name="size_options[' + index + '][dim_diameter_ft]" placeholder="ft" class="w-full border px-2 py-1 rounded text-sm bg-white">'
+                + '<input type="number" step="0.1" min="0" max="11.9" name="size_options[' + index + '][dim_diameter_in]" placeholder="in" class="w-full border px-2 py-1 rounded text-sm bg-white">'
+                + '</div></div></div>';
+            mirrorSizeOptionsRows.appendChild(row);
+            bindMirrorSizeRow(row);
+            mirrorSizeOptionsRows.querySelectorAll('.mirror-size-remove').forEach(function (btn) {
+                btn.hidden = false;
+            });
+        });
+    }
+
     sectionSelect.addEventListener('change', function () {
         filterCategoryOptions();
         syncPurchaseMode();
@@ -679,6 +685,7 @@
     categorySelect.addEventListener('change', function () {
         syncMirrorDimensionsSection();
         syncSizeOptionsSection();
+        syncProductLevelPricing();
     });
 
     filterCategoryOptions();

@@ -300,12 +300,19 @@ class ProductAdminController extends Controller
             'purchase_mode' => ['required', 'in:'.implode(',', Product::PURCHASE_MODES)],
             'pricing_type' => ['required', 'in:'.implode(',', Product::PRICING_TYPES)],
             'size_options' => 'nullable|array',
-            'size_options.*.label' => 'required|string|max:50',
+            'size_options.*.label' => 'nullable|string|max:50',
             'size_options.*.price' => 'required|numeric|min:0',
             'size_options.*.compare_price' => 'nullable|numeric|min:0',
             'size_options.*.discount_percent' => 'nullable|integer|min:0|max:99',
             'size_options.*.size_inches' => 'nullable|numeric|min:0',
             'size_options.*.sku_suffix' => 'nullable|string|max:20',
+            'size_options.*.shape' => 'nullable|in:rect,round',
+            'size_options.*.dim_width_ft' => 'nullable|integer|min:0|max:50',
+            'size_options.*.dim_width_in' => 'nullable|numeric|min:0|max:11.99',
+            'size_options.*.dim_height_ft' => 'nullable|integer|min:0|max:50',
+            'size_options.*.dim_height_in' => 'nullable|numeric|min:0|max:11.99',
+            'size_options.*.dim_diameter_ft' => 'nullable|integer|min:0|max:50',
+            'size_options.*.dim_diameter_in' => 'nullable|numeric|min:0|max:11.99',
         ]);
 
         $category = Category::query()->find($validated['category_id']);
@@ -358,8 +365,11 @@ class ProductAdminController extends Controller
         if ($category?->slug !== 'mirror-frames') {
             $validated['dim_width_cm'] = null;
             $validated['dim_height_cm'] = null;
-        } else {
+        } elseif ($validated['size_options'] === null) {
             $validated = array_merge($validated, $this->normalizeMirrorDimensionsFromRequest($validated));
+        } else {
+            $validated['dim_width_cm'] = null;
+            $validated['dim_height_cm'] = null;
         }
 
         unset(
@@ -369,15 +379,17 @@ class ProductAdminController extends Controller
             $validated['dim_height_in'],
         );
 
-        $validated['size_options'] = $this->normalizeSizeOptions($validated['size_options'] ?? null);
-        if ($category?->slug === 'door-handles') {
+        $validated['size_options'] = $this->normalizeSizeOptions(
+            $validated['size_options'] ?? null,
+            $category?->slug
+        );
+
+        if (in_array($category?->slug, ['door-handles', 'mirror-frames'], true)) {
             if ($validated['size_options'] !== null) {
                 $validated['price'] = min(array_column($validated['size_options'], 'price'));
-                // Per-size compare/discount lives on size_options — hide product-level sale UI.
                 $validated['compare_price'] = null;
             }
         } else {
-            // Clear so size/price variants never leak onto mirrors or other categories.
             $validated['size_options'] = null;
         }
 
@@ -506,8 +518,15 @@ class ProductAdminController extends Controller
             $inchesBlank = $sizeInches === null || $sizeInches === '';
             $skuBlank = $skuSuffix === null || trim((string) $skuSuffix) === '';
             $discountBlank = $discountPercent === null || $discountPercent === '';
+            $shape = trim((string) ($row['shape'] ?? ''));
+            $mirrorDimBlank = trim((string) ($row['dim_width_ft'] ?? '')) === ''
+                && trim((string) ($row['dim_width_in'] ?? '')) === ''
+                && trim((string) ($row['dim_height_ft'] ?? '')) === ''
+                && trim((string) ($row['dim_height_in'] ?? '')) === ''
+                && trim((string) ($row['dim_diameter_ft'] ?? '')) === ''
+                && trim((string) ($row['dim_diameter_in'] ?? '')) === '';
 
-            if ($label === '' && $priceBlank && $compareBlank && $inchesBlank && $skuBlank && $discountBlank) {
+            if ($label === '' && $priceBlank && $compareBlank && $inchesBlank && $skuBlank && $discountBlank && $mirrorDimBlank && $shape === '') {
                 continue;
             }
 
@@ -523,7 +542,7 @@ class ProductAdminController extends Controller
      * @param  array<int, array<string, mixed>>|null  $rows
      * @return list<array{label: string, size_inches: ?float, price: float, compare_price: ?float, sku_suffix: ?string}>|null
      */
-    private function normalizeSizeOptions(?array $rows): ?array
+    private function normalizeSizeOptions(?array $rows, ?string $categorySlug = null): ?array
     {
         if ($rows === null) {
             return null;
@@ -538,7 +557,7 @@ class ProductAdminController extends Controller
             $label = trim((string) ($row['label'] ?? ''));
             $price = $row['price'] ?? null;
 
-            if ($label === '' || ! is_numeric($price)) {
+            if (! is_numeric($price)) {
                 continue;
             }
 
@@ -558,7 +577,7 @@ class ProductAdminController extends Controller
                 }
             }
 
-            $options[] = [
+            $option = [
                 'label' => $label,
                 'size_inches' => filled($row['size_inches'] ?? null)
                     ? round((float) $row['size_inches'], 2)
@@ -569,6 +588,51 @@ class ProductAdminController extends Controller
                     ? trim((string) $row['sku_suffix'])
                     : null,
             ];
+
+            if ($categorySlug === 'mirror-frames') {
+                $shape = ($row['shape'] ?? 'rect') === 'round' ? 'round' : 'rect';
+                $option['shape'] = $shape;
+
+                if ($shape === 'round') {
+                    $diameterCm = Product::cmFromFeetInches(
+                        (float) ($row['dim_diameter_ft'] ?? 0),
+                        (float) ($row['dim_diameter_in'] ?? 0)
+                    );
+                    if ($diameterCm < 0.1) {
+                        continue;
+                    }
+                    $option['dim_diameter_cm'] = $diameterCm;
+                } else {
+                    $widthCm = Product::cmFromFeetInches(
+                        (float) ($row['dim_width_ft'] ?? 0),
+                        (float) ($row['dim_width_in'] ?? 0)
+                    );
+                    $heightCm = Product::cmFromFeetInches(
+                        (float) ($row['dim_height_ft'] ?? 0),
+                        (float) ($row['dim_height_in'] ?? 0)
+                    );
+                    if ($widthCm < 0.1 || $heightCm < 0.1) {
+                        continue;
+                    }
+                    $option['dim_width_cm'] = $widthCm;
+                    $option['dim_height_cm'] = $heightCm;
+                }
+
+                if ($option['label'] === '') {
+                    $option['label'] = Product::mirrorSizeLabelFromDimensions(
+                        $shape,
+                        $option['dim_width_cm'] ?? null,
+                        $option['dim_height_cm'] ?? null,
+                        $option['dim_diameter_cm'] ?? null
+                    );
+                }
+            }
+
+            if ($option['label'] === '') {
+                continue;
+            }
+
+            $options[] = $option;
         }
 
         return $options === [] ? null : $options;
