@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Service;
 use App\Support\CortenContent;
-use App\Support\Seo\PageSeo;
+use App\Support\Seo\LandingPageSeo;
 
 class CortenSteelController extends Controller
 {
@@ -28,13 +28,7 @@ class CortenSteelController extends Controller
         return view('services.corten-steel', [
             'service' => $service,
             'page' => $page,
-            'pageSeo' => PageSeo::make([
-                'title' => $page['meta_title'] ?? $service->meta_title ?? CortenContent::metaTitle(),
-                'description' => $page['meta_description'] ?? $service->meta_description ?? CortenContent::metaDescription(),
-                'canonical' => route('corten-steel.show'),
-                'og_image' => data_get($page, 'hero.image') ?: $service->image,
-                'primary_keyword' => $page['primary_keyword'] ?? null,
-            ]),
+            'pageSeo' => LandingPageSeo::forSlug('corten-steel'),
         ]);
     }
 }

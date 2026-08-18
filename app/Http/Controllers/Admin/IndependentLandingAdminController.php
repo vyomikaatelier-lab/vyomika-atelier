@@ -98,6 +98,13 @@ class IndependentLandingAdminController extends Controller
         $override = [
             'meta_title' => $request->input('meta_title'),
             'meta_description' => $request->input('meta_description'),
+            'og_title' => $request->input('og_title'),
+            'og_description' => $request->input('og_description'),
+            'og_image' => $request->input('og_image'),
+            'canonical' => $request->input('canonical'),
+            'primary_keyword' => $request->input('primary_keyword'),
+            'seo_keyword' => $request->input('seo_keyword'),
+            'robots' => $request->input('robots', 'index'),
             'hero' => $this->buildHeroPayload($request, $existingOverride, $heroImages),
             'intro' => [
                 'title' => $request->input('intro_title'),

@@ -64,7 +64,7 @@ class LandingPageContent
         $existing = is_array($pages[$slug] ?? null) ? $pages[$slug] : [];
 
         // Keep keys that are not edited in admin forms.
-        foreach (['form', 'primary_keyword'] as $preservedKey) {
+        foreach (['form', 'primary_keyword', 'seo_keyword'] as $preservedKey) {
             if (! array_key_exists($preservedKey, $override) && array_key_exists($preservedKey, $existing)) {
                 $override[$preservedKey] = $existing[$preservedKey];
             }

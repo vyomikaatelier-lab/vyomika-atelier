@@ -7,6 +7,8 @@ return [
     'meta_title' => 'Custom Stainless Steel Railings India | Vyomika Atelier',
     'meta_description' => 'Custom stainless steel, glass and fabricated staircase railings for Indian homes and hospitality — quotation-only fabrication with layout guidance from Vyomika Atelier.',
     'primary_keyword' => 'custom stainless steel railings India',
+    'og_title' => 'Custom Stainless Steel Railings | Vyomika Atelier',
+    'og_description' => 'Designer PVD and stainless railings for luxury spaces — custom fabrication across India.',
 
     'hero' => [
         'hero_layout' => 'compact',

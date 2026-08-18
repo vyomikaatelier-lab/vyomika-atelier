@@ -30,6 +30,7 @@ return [
             'primary_keyword' => 'Vyomika Atelier metal fabrication',
             'meta_title' => 'About Vyomika Atelier | Custom Metal Fabrication India',
             'meta_description' => 'Learn how Vyomika Atelier collaborates with architects and designers on PVD finishes, custom fabrication and project delivery across India.',
+            'og_title' => 'About Vyomika Atelier | Custom Metal Fabrication India',
             'h1' => 'About Vyomika Atelier',
         ],
         'professionals' => [
@@ -47,6 +48,7 @@ return [
             'primary_keyword' => 'architectural metal projects India',
             'meta_title' => 'Projects | Architectural Metalwork Case Studies | Vyomika Atelier',
             'meta_description' => 'Browse selected architectural metalwork projects by Vyomika Atelier — partitions, doors, railings and custom fabrication across India.',
+            'og_title' => 'Projects | Architectural Metalwork | Vyomika Atelier',
             'h1' => 'Selected projects',
         ],
         'blog' => [

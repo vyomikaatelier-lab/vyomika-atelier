@@ -28,13 +28,17 @@
     <input type="hidden" name="_landing_save" value="1">
 
     <details class="bg-white rounded shadow p-4" open>
-        <summary class="font-medium cursor-pointer">SEO</summary>
+        <summary class="font-medium cursor-pointer">SEO &amp; search</summary>
         <div class="mt-4 space-y-3">
             <div class="grid md:grid-cols-2 gap-3">
-                <div><label class="block text-sm mb-1">SEO title</label><input name="meta_title" value="{{ old('meta_title', $page['meta_title'] ?? '') }}" class="w-full border px-3 py-2 rounded"></div>
                 <div><label class="block text-sm mb-1">Slug</label><input value="{{ $slug }}" disabled class="w-full border px-3 py-2 rounded bg-gray-50 text-gray-500"></div>
+                <div><label class="block text-sm mb-1">Public URL</label><input value="{{ $previewUrl }}" disabled class="w-full border px-3 py-2 rounded bg-gray-50 text-gray-500 text-sm"></div>
             </div>
-            <div><label class="block text-sm mb-1">Meta description</label><textarea name="meta_description" rows="2" class="w-full border px-3 py-2 rounded">{{ old('meta_description', $page['meta_description'] ?? '') }}</textarea></div>
+            @include('admin.partials.seo-fields', [
+                'page' => $page,
+                'previewUrl' => $previewUrl,
+                'previewTitleFallback' => data_get($page, 'meta_title') ?: ($label.' — Vyomika Atelier'),
+            ])
         </div>
     </details>
 

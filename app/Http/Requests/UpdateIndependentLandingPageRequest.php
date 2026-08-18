@@ -19,6 +19,13 @@ class UpdateIndependentLandingPageRequest extends FormRequest
         return [
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
+            'og_title' => 'nullable|string|max:255',
+            'og_description' => 'nullable|string|max:500',
+            'og_image' => 'nullable|string|max:500',
+            'canonical' => 'nullable|string|max:500',
+            'primary_keyword' => 'nullable|string|max:120',
+            'seo_keyword' => 'nullable|string|max:120',
+            'robots' => 'nullable|in:index,noindex',
             ...HeroAdminFields::validationRules('hero'),
             'intro_title' => 'nullable|string|max:255',
             'intro_body' => 'nullable|string|max:8000',

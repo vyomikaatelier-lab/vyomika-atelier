@@ -143,6 +143,69 @@ class SeoFoundationTest extends TestCase
         $this->assertSame('Contact SEO Title', data_get(SiteSetting::getValue('static_pages', []), 'contact.meta_title'));
     }
 
+    public function test_admin_can_edit_independent_landing_page_seo(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAsAdmin($admin)
+            ->put(route('admin.independent-pages.update', 'railings'), [
+                '_landing_save' => '1',
+                'meta_title' => 'Railings SEO Title',
+                'meta_description' => 'Railings meta description for testing.',
+                'og_title' => 'Railings OG Title',
+                'og_description' => 'Railings OG description.',
+                'og_image' => 'https://example.com/railings-og.jpg',
+                'canonical' => route('railings.index'),
+                'primary_keyword' => 'stainless railings India',
+                'seo_keyword' => 'internal railings keyword',
+                'robots' => 'index',
+            ])
+            ->assertRedirect();
+
+        $stored = SiteSetting::getValue('landing_pages', [])['railings'] ?? [];
+        $this->assertSame('Railings SEO Title', $stored['meta_title'] ?? null);
+        $this->assertSame('Railings OG Title', $stored['og_title'] ?? null);
+        $this->assertSame('internal railings keyword', $stored['seo_keyword'] ?? null);
+
+        $html = $this->get(route('railings.index'))->assertOk()->getContent();
+
+        $this->assertStringContainsString('<title>Railings SEO Title</title>', $html);
+        $this->assertStringContainsString('name="description" content="Railings meta description for testing."', $html);
+        $this->assertStringContainsString('property="og:title" content="Railings OG Title"', $html);
+        $this->assertStringContainsString('property="og:description" content="Railings OG description."', $html);
+        $this->assertStringContainsString('property="og:image" content="https://example.com/railings-og.jpg"', $html);
+        $this->assertStringContainsString('rel="canonical" href="'.route('railings.index').'"', $html);
+    }
+
+    public function test_about_and_projects_render_full_seo_meta(): void
+    {
+        SiteSetting::setValue('static_pages', [
+            'about' => [
+                'meta_title' => 'About SEO Title',
+                'meta_description' => 'About meta description.',
+                'og_title' => 'About OG Title',
+                'og_description' => 'About OG description.',
+                'og_image' => 'https://example.com/about-og.jpg',
+                'robots' => 'index',
+            ],
+            'projects' => [
+                'meta_title' => 'Projects SEO Title',
+                'meta_description' => 'Projects meta description.',
+                'og_title' => 'Projects OG Title',
+                'robots' => 'index',
+            ],
+        ]);
+
+        $aboutHtml = $this->get(route('about'))->assertOk()->getContent();
+        $this->assertStringContainsString('<title>About SEO Title</title>', $aboutHtml);
+        $this->assertStringContainsString('property="og:title" content="About OG Title"', $aboutHtml);
+        $this->assertStringContainsString('property="og:image" content="https://example.com/about-og.jpg"', $aboutHtml);
+
+        $projectsHtml = $this->get(route('projects.index'))->assertOk()->getContent();
+        $this->assertStringContainsString('<title>Projects SEO Title</title>', $projectsHtml);
+        $this->assertStringContainsString('property="og:title" content="Projects OG Title"', $projectsHtml);
+    }
+
     public function test_draft_blog_is_not_public(): void
     {
         BlogPost::query()->create([
