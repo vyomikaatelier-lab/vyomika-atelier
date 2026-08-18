@@ -206,6 +206,52 @@ class SeoFoundationTest extends TestCase
         $this->assertStringContainsString('property="og:title" content="Projects OG Title"', $projectsHtml);
     }
 
+    public function test_landing_gallery_pages_render_item_list_json_ld(): void
+    {
+        SiteSetting::setValue('landing_pages', [
+            'railings' => [
+                'categories' => [
+                    'title' => 'Railing Designs',
+                    'items' => [
+                        [
+                            'title' => 'Glass Railings',
+                            'text' => 'Frameless glass with stainless posts.',
+                            'meta_title' => 'Glass Railings India',
+                            'meta_description' => 'Designer glass railing fabrication.',
+                            'image' => 'https://example.com/glass.jpg',
+                            'active' => true,
+                        ],
+                    ],
+                ],
+            ],
+            'corten-steel' => [
+                'applications' => [
+                    'title' => 'Corten Applications',
+                    'items' => [
+                        [
+                            'name' => 'Decorative Screens',
+                            'text' => 'Laser-cut corten screens.',
+                            'meta_title' => 'Corten Decorative Screens',
+                            'meta_description' => 'Outdoor corten screen fabrication.',
+                            'image' => 'https://example.com/screen.jpg',
+                            'active' => true,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $railingsHtml = $this->get(route('railings.index'))->assertOk()->getContent();
+        $this->assertStringContainsString('"@type":"ItemList"', $railingsHtml);
+        $this->assertStringContainsString('Glass Railings India', $railingsHtml);
+        $this->assertStringContainsString('Designer glass railing fabrication.', $railingsHtml);
+
+        $cortenHtml = $this->get(route('corten-steel.show'))->assertOk()->getContent();
+        $this->assertStringContainsString('"@type":"ItemList"', $cortenHtml);
+        $this->assertStringContainsString('Corten Decorative Screens', $cortenHtml);
+        $this->assertStringContainsString('Outdoor corten screen fabrication.', $cortenHtml);
+    }
+
     public function test_draft_blog_is_not_public(): void
     {
         BlogPost::query()->create([

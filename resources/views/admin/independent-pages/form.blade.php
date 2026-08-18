@@ -65,10 +65,10 @@
             <textarea name="section_subtitle" rows="2" placeholder="Section subheading" class="w-full border px-3 py-2 rounded">{{ old('section_subtitle', data_get($page, 'categories.subtitle')) }}</textarea>
             <div id="cards-list" class="space-y-4">
                 @foreach(old('cards', data_get($page, 'categories.items', [])) as $i => $item)
-                @include('admin.independent-pages.partials.card-row', ['prefix' => 'cards', 'index' => $i, 'item' => $item, 'titleKey' => 'title', 'textKey' => 'text', 'preview' => $preview, 'showCta' => true, 'imageContext' => 'gallery'])
+                @include('admin.independent-pages.partials.card-row', ['prefix' => 'cards', 'index' => $i, 'item' => $item, 'titleKey' => 'title', 'textKey' => 'text', 'preview' => $preview, 'showCta' => true, 'showSeo' => true, 'imageContext' => 'gallery'])
                 @endforeach
             </div>
-            <button type="button" class="text-sm border px-3 py-1.5 rounded" data-add-row="cards" data-title-key="title" data-text-key="text" data-show-cta="1" data-image-context="gallery">+ Add category card</button>
+            <button type="button" class="text-sm border px-3 py-1.5 rounded" data-add-row="cards" data-title-key="title" data-text-key="text" data-show-cta="1" data-show-seo="1" data-image-context="gallery">+ Add category card</button>
         </div>
     </details>
 
@@ -125,10 +125,10 @@
             <input name="section_title" value="{{ old('section_title', data_get($page, 'applications.title')) }}" placeholder="Section heading" class="w-full border px-3 py-2 rounded">
             <div id="apps-list" class="space-y-4">
                 @foreach(old('apps', data_get($page, 'applications.items', [])) as $i => $item)
-                @include('admin.independent-pages.partials.card-row', ['prefix' => 'apps', 'index' => $i, 'item' => $item, 'titleKey' => 'name', 'textKey' => 'text', 'preview' => $preview, 'showCta' => false, 'imageContext' => 'gallery'])
+                @include('admin.independent-pages.partials.card-row', ['prefix' => 'apps', 'index' => $i, 'item' => $item, 'titleKey' => 'name', 'textKey' => 'text', 'preview' => $preview, 'showCta' => false, 'showSeo' => true, 'imageContext' => 'gallery'])
                 @endforeach
             </div>
-            <button type="button" class="text-sm border px-3 py-1.5 rounded" data-add-row="apps" data-title-key="name" data-text-key="text" data-image-context="gallery">+ Add application</button>
+            <button type="button" class="text-sm border px-3 py-1.5 rounded" data-add-row="apps" data-title-key="name" data-text-key="text" data-show-seo="1" data-image-context="gallery">+ Add application</button>
         </div>
     </details>
 
@@ -273,6 +273,21 @@
             <input data-field="cta_label" placeholder="CTA label (optional)" class="w-full border px-3 py-2 rounded">
             <input data-field="cta_href" placeholder="CTA URL / #anchor (optional)" class="w-full border px-3 py-2 rounded">
         </div>
+        <details class="border rounded p-2 bg-white" data-seo-fields hidden>
+            <summary class="text-sm font-medium cursor-pointer">SEO for this card</summary>
+            <div class="mt-2 space-y-2 text-sm">
+                <input data-field="meta_title" placeholder="SEO title (blank = card title)" class="w-full border px-3 py-2 rounded">
+                <textarea data-field="meta_description" rows="2" placeholder="Meta description (blank = card text)" class="w-full border px-3 py-2 rounded"></textarea>
+                <div class="grid md:grid-cols-2 gap-2">
+                    <input data-field="og_title" placeholder="OG title (blank = SEO title)" class="w-full border px-3 py-2 rounded">
+                    <input data-field="og_image" placeholder="OG image URL (blank = card image)" class="w-full border px-3 py-2 rounded">
+                </div>
+                <textarea data-field="og_description" rows="2" placeholder="OG description (blank = meta description)" class="w-full border px-3 py-2 rounded"></textarea>
+                <input data-field="canonical_url" placeholder="Canonical URL (optional)" class="w-full border px-3 py-2 rounded">
+                <input data-field="seo_keyword" placeholder="Internal target keyword" class="w-full border px-3 py-2 rounded">
+                <label class="inline-flex items-center gap-2 text-xs"><input type="checkbox" data-field="robots_index" value="1" checked> Include in structured data</label>
+            </div>
+        </details>
         <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" data-field="active" value="1" checked> Active</label>
         <button type="button" class="text-red-600 text-sm" data-remove-row>Remove</button>
     </div>
@@ -301,6 +316,7 @@
             var titleKey = btn.getAttribute('data-title-key') || 'title';
             var textKey = btn.getAttribute('data-text-key');
             var showCta = btn.getAttribute('data-show-cta') === '1';
+            var showSeo = btn.getAttribute('data-show-seo') === '1';
             var imageContext = btn.getAttribute('data-image-context');
             var list = document.getElementById(prefix + '-list');
             var tpl = document.getElementById('tpl-card-row');
@@ -313,6 +329,14 @@
             if (!showCta) {
                 var cta = node.querySelector('[data-cta-fields]');
                 if (cta) cta.remove();
+            }
+            var seoFields = node.querySelector('[data-seo-fields]');
+            if (seoFields) {
+                if (showSeo) {
+                    seoFields.hidden = false;
+                } else {
+                    seoFields.remove();
+                }
             }
             var galleryHint = node.querySelector('[data-gallery-image-hint]');
             if (galleryHint) {

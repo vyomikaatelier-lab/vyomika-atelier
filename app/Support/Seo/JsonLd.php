@@ -273,6 +273,17 @@ class JsonLd
         ];
     }
 
+    /**
+     * ItemList JSON-LD for landing-page gallery cards (railings categories, corten applications).
+     *
+     * @param  list<array<string, mixed>>  $cards
+     * @return array<string, mixed>|null
+     */
+    public static function designGalleryItemList(array $cards, string $listName, string $titleKey = 'title', ?string $pageUrl = null): ?array
+    {
+        return GalleryCardSeo::itemList($cards, $listName, $titleKey, $pageUrl);
+    }
+
     /** @param array<string, mixed> $data */
     public static function script(array $data): string
     {

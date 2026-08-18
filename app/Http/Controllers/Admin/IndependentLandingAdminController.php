@@ -322,6 +322,8 @@ class IndependentLandingAdminController extends Controller
                 }
             }
 
+            $item = array_merge($item, $this->cardSeoFields($row));
+
             $items[] = $item;
         }
 
@@ -431,6 +433,31 @@ class IndependentLandingAdminController extends Controller
         }
 
         return $items;
+    }
+
+    /** @return array<string, mixed> */
+    private function cardSeoFields(array $row): array
+    {
+        $fields = [];
+
+        foreach ([
+            'meta_title',
+            'meta_description',
+            'og_title',
+            'og_description',
+            'og_image',
+            'canonical_url',
+            'seo_keyword',
+        ] as $key) {
+            $value = trim((string) ($row[$key] ?? ''));
+            if ($value !== '') {
+                $fields[$key] = $value;
+            }
+        }
+
+        $fields['robots_index'] = ! array_key_exists('robots_index', $row) || ! empty($row['robots_index']);
+
+        return $fields;
     }
 
     /** @param  list<string>  $pendingDeletes */

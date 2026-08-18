@@ -425,6 +425,98 @@ class IndependentLandingAdminTest extends TestCase
             ->assertSee(ProductImageSizes::designGalleryDimensionsLabel(), false);
     }
 
+    public function test_admin_can_save_gallery_card_seo_fields(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAsAdmin($admin)->put(route('admin.independent-pages.update', 'railings'), [
+            'section_title' => 'Railing Categories',
+            'cards' => [
+                [
+                    'title' => 'Glass Railings',
+                    'text' => 'Toughened glass panels',
+                    'image' => 'https://example.com/glass.jpg',
+                    'image_alt' => 'Glass railing photo',
+                    'meta_title' => 'Glass Railings SEO Title',
+                    'meta_description' => 'Custom glass railing systems for modern staircases.',
+                    'og_title' => 'Glass Railings OG',
+                    'og_description' => 'Glass railing OG description.',
+                    'og_image' => 'https://example.com/glass-og.jpg',
+                    'canonical_url' => 'https://vyomikaatelier.com/railings#glass-railings',
+                    'seo_keyword' => 'glass railings India',
+                    'robots_index' => '1',
+                    'active' => '1',
+                ],
+            ],
+            'layouts' => [],
+        ])->assertRedirect(route('admin.independent-pages.index'));
+
+        $storedCard = data_get(SiteSetting::getValue('landing_pages', []), 'railings.categories.items.0');
+        $this->assertSame('Glass Railings SEO Title', $storedCard['meta_title'] ?? null);
+        $this->assertSame('Custom glass railing systems for modern staircases.', $storedCard['meta_description'] ?? null);
+        $this->assertSame('Glass Railings OG', $storedCard['og_title'] ?? null);
+        $this->assertSame('glass railings India', $storedCard['seo_keyword'] ?? null);
+        $this->assertTrue($storedCard['robots_index'] ?? false);
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.independent-pages.edit', 'railings'))
+            ->assertOk()
+            ->assertSee('Glass Railings SEO Title', false)
+            ->assertSee('glass railings India', false)
+            ->assertSee('SEO for this card', false);
+
+        $html = $this->get(route('railings.index'))->assertOk()->getContent();
+        $this->assertStringContainsString('"@type":"ItemList"', $html);
+        $this->assertStringContainsString('Glass Railings SEO Title', $html);
+        $this->assertStringContainsString('Custom glass railing systems for modern staircases.', $html);
+    }
+
+    public function test_admin_can_save_corten_application_card_seo_fields(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAsAdmin($admin)->put(route('admin.independent-pages.update', 'corten-steel'), [
+            'section_title' => 'Applications',
+            'why_title' => 'Why',
+            'why_points' => 'One',
+            'finish_title' => 'Finish',
+            'process_title' => 'Process',
+            'process_steps' => 'Step',
+            'projects_title' => 'Projects',
+            'technical_title' => 'Technical',
+            'technical_options' => 'Option',
+            'considerations_title' => 'Planning',
+            'considerations_points' => 'Note',
+            'faq_title' => 'FAQ',
+            'cta_title' => 'CTA',
+            'cta_body' => 'Body',
+            'apps' => [
+                [
+                    'name' => 'Building Facades',
+                    'text' => 'Weathering steel cladding',
+                    'image' => 'https://example.com/facade.jpg',
+                    'meta_title' => 'Corten Facade SEO',
+                    'meta_description' => 'Corten facade panels for Indian architecture.',
+                    'seo_keyword' => 'corten facade India',
+                    'robots_index' => '1',
+                    'active' => '1',
+                ],
+            ],
+            'stages' => [['label' => 'Raw', 'active' => '1']],
+            'projects' => [['title' => 'Project', 'active' => '1']],
+            'faqs' => [['q' => 'Q', 'a' => 'A', 'active' => '1']],
+        ])->assertRedirect();
+
+        $storedCard = data_get(SiteSetting::getValue('landing_pages', []), 'corten-steel.applications.items.0');
+        $this->assertSame('Corten Facade SEO', $storedCard['meta_title'] ?? null);
+        $this->assertSame('corten facade India', $storedCard['seo_keyword'] ?? null);
+
+        $html = $this->get(route('corten-steel.show'))->assertOk()->getContent();
+        $this->assertStringContainsString('"@type":"ItemList"', $html);
+        $this->assertStringContainsString('Corten Facade SEO', $html);
+        $this->assertStringContainsString('Corten facade panels for Indian architecture.', $html);
+    }
+
     public function test_public_defaults_render_without_site_setting_override(): void
     {
         $this->get(route('railings.index'))

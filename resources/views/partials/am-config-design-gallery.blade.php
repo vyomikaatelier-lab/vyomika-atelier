@@ -1,4 +1,6 @@
 @php
+    use App\Support\Seo\GalleryCardSeo;
+
     $items = $items ?? [];
     $heading = $heading ?? 'Design Gallery';
     $sectionLabel = $sectionLabel ?? 'Design Gallery';
@@ -19,9 +21,9 @@
         @php
             $title = $item['title'] ?? $item['name'] ?? '';
             $slug = $item['slug'] ?? \Illuminate\Support\Str::slug($title);
-            $description = $item['text'] ?? $item['description'] ?? null;
+            $description = GalleryCardSeo::description($item);
             $image = $item['image'] ?? null;
-            $imageAlt = $item['image_alt'] ?? $title;
+            $imageAlt = GalleryCardSeo::imageAlt($item, $title);
             $category = $item['category'] ?? $categoryLabel;
             $ctaHref = $item['cta_href'] ?? null;
             $ctaLabel = $item['cta_label'] ?? 'Learn more';

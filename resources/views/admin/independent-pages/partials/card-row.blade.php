@@ -27,6 +27,18 @@
         <input data-field="cta_href" name="{{ $prefix }}[{{ $index }}][cta_href]" value="{{ $item['cta_href'] ?? '' }}" placeholder="CTA URL / #anchor (optional)" class="w-full border px-3 py-2 rounded">
     </div>
     @endif
+    @if($showSeo ?? false)
+    <details class="border rounded p-2 bg-white">
+        <summary class="text-sm font-medium cursor-pointer">SEO for this card</summary>
+        <div class="mt-2">
+            @include('admin.partials.card-seo-fields', [
+                'prefix' => $prefix.'['.$index.']',
+                'card' => $item,
+                'previewTitleFallback' => $title,
+            ])
+        </div>
+    </details>
+    @endif
     <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" data-field="active" name="{{ $prefix }}[{{ $index }}][active]" value="1" @checked(($item['active'] ?? true) !== false)> Active</label>
     <button type="button" class="text-red-600 text-sm" data-remove-row>Remove</button>
 </div>

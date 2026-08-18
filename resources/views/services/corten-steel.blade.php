@@ -14,9 +14,26 @@
 
 @section('title', $pageSeo['title'] ?? 'Corten Steel — Vyomika Atelier')
 
+@php
+    $galleryLd = ! empty($apps)
+        ? JsonLd::designGalleryItemList(
+            $apps,
+            $page['applications']['title'] ?? 'Corten Steel Applications',
+            'name',
+            route('corten-steel.show')
+        )
+        : null;
+@endphp
+
 @if($faqs)
 @push('jsonld')
 {!! JsonLd::script(JsonLd::faqPage($faqs)) !!}
+@endpush
+@endif
+
+@if($galleryLd)
+@push('jsonld')
+{!! JsonLd::script($galleryLd) !!}
 @endpush
 @endif
 
@@ -52,12 +69,10 @@
 @if(!empty($apps))
 @php
     $applicationGalleryItems = array_map(static function (array $app): array {
-        return [
+        return array_merge($app, [
             'title' => $app['name'] ?? '',
             'text' => $app['text'] ?? null,
-            'image' => $app['image'] ?? null,
-            'image_alt' => $app['image_alt'] ?? ($app['name'] ?? ''),
-        ];
+        ]);
     }, $apps);
 @endphp
 <section class="am-section am-section--dark" id="corten-applications">

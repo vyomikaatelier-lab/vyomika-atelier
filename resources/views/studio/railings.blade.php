@@ -16,9 +16,26 @@
 
 @section('title', $pageSeo['title'] ?? 'Railings — Vyomika Atelier')
 
+@php
+    $galleryLd = ! empty($categoryItems)
+        ? JsonLd::designGalleryItemList(
+            $categoryItems,
+            $page['categories']['title'] ?? 'Railing Designs',
+            'title',
+            route('railings.index')
+        )
+        : null;
+@endphp
+
 @if($faqs)
 @push('jsonld')
 {!! JsonLd::script(JsonLd::faqPage($faqs)) !!}
+@endpush
+@endif
+
+@if($galleryLd)
+@push('jsonld')
+{!! JsonLd::script($galleryLd) !!}
 @endpush
 @endif
 
