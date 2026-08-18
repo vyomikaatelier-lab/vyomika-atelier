@@ -16,6 +16,9 @@
     <textarea data-field="text" name="{{ $prefix }}[{{ $index }}][{{ $textKey }}]" rows="2" placeholder="Description" class="w-full border px-3 py-2 rounded">{{ $text }}</textarea>
     @endif
     <input data-field="image_alt" name="{{ $prefix }}[{{ $index }}][image_alt]" value="{{ $item['image_alt'] ?? '' }}" placeholder="Image alt text" class="w-full border px-3 py-2 rounded">
+    @if(($imageContext ?? null) === 'gallery')
+    <p class="text-xs text-gray-500">{{ \App\Support\ProductImageSizes::designGalleryAdminHint() }}</p>
+    @endif
     <input data-field="image" name="{{ $prefix }}[{{ $index }}][image]" value="{{ $image }}" placeholder="Image URL" class="w-full border px-3 py-2 rounded">
     <input type="file" data-field="image_file" name="{{ $prefix }}[{{ $index }}][image_file]" accept="image/jpeg,image/png,image/webp">
     @if($showCta)

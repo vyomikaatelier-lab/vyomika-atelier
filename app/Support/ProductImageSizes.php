@@ -9,6 +9,11 @@ class ProductImageSizes
 
     public const GALLERY_HEIGHT = 1067;
 
+    /** Design gallery cards (railings categories, corten applications). */
+    public const DESIGN_GALLERY_WIDTH = 900;
+
+    public const DESIGN_GALLERY_HEIGHT = 1200;
+
     public const GALLERY_LARGE = 1200;
 
     public const GALLERY_LARGE_HEIGHT = 1600;
@@ -58,12 +63,28 @@ class ProductImageSizes
         );
     }
 
+    public static function designGalleryDimensionsLabel(): string
+    {
+        return sprintf('%d×%d px', self::DESIGN_GALLERY_WIDTH, self::DESIGN_GALLERY_HEIGHT);
+    }
+
     public static function galleryAdminHint(): string
     {
         return sprintf(
             'Gallery cards display as %s portraits with cover — upload %s or %s (%s) so images fill the frame edge to edge.',
             self::GALLERY_RATIO,
             self::galleryDimensionsLabel(),
+            self::galleryLargeDimensionsLabel(),
+            self::GALLERY_RATIO
+        );
+    }
+
+    public static function designGalleryAdminHint(): string
+    {
+        return sprintf(
+            'Storefront gallery crop: %s portrait with object-fit cover — upload %s or %s (%s) so images fill the frame edge to edge.',
+            self::GALLERY_RATIO,
+            self::designGalleryDimensionsLabel(),
             self::galleryLargeDimensionsLabel(),
             self::GALLERY_RATIO
         );

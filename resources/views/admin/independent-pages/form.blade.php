@@ -65,10 +65,10 @@
             <textarea name="section_subtitle" rows="2" placeholder="Section subheading" class="w-full border px-3 py-2 rounded">{{ old('section_subtitle', data_get($page, 'categories.subtitle')) }}</textarea>
             <div id="cards-list" class="space-y-4">
                 @foreach(old('cards', data_get($page, 'categories.items', [])) as $i => $item)
-                @include('admin.independent-pages.partials.card-row', ['prefix' => 'cards', 'index' => $i, 'item' => $item, 'titleKey' => 'title', 'textKey' => 'text', 'preview' => $preview, 'showCta' => true])
+                @include('admin.independent-pages.partials.card-row', ['prefix' => 'cards', 'index' => $i, 'item' => $item, 'titleKey' => 'title', 'textKey' => 'text', 'preview' => $preview, 'showCta' => true, 'imageContext' => 'gallery'])
                 @endforeach
             </div>
-            <button type="button" class="text-sm border px-3 py-1.5 rounded" data-add-row="cards" data-title-key="title" data-text-key="text" data-show-cta="1">+ Add category card</button>
+            <button type="button" class="text-sm border px-3 py-1.5 rounded" data-add-row="cards" data-title-key="title" data-text-key="text" data-show-cta="1" data-image-context="gallery">+ Add category card</button>
         </div>
     </details>
 
@@ -125,10 +125,10 @@
             <input name="section_title" value="{{ old('section_title', data_get($page, 'applications.title')) }}" placeholder="Section heading" class="w-full border px-3 py-2 rounded">
             <div id="apps-list" class="space-y-4">
                 @foreach(old('apps', data_get($page, 'applications.items', [])) as $i => $item)
-                @include('admin.independent-pages.partials.card-row', ['prefix' => 'apps', 'index' => $i, 'item' => $item, 'titleKey' => 'name', 'textKey' => 'text', 'preview' => $preview, 'showCta' => false])
+                @include('admin.independent-pages.partials.card-row', ['prefix' => 'apps', 'index' => $i, 'item' => $item, 'titleKey' => 'name', 'textKey' => 'text', 'preview' => $preview, 'showCta' => false, 'imageContext' => 'gallery'])
                 @endforeach
             </div>
-            <button type="button" class="text-sm border px-3 py-1.5 rounded" data-add-row="apps" data-title-key="name" data-text-key="text">+ Add application</button>
+            <button type="button" class="text-sm border px-3 py-1.5 rounded" data-add-row="apps" data-title-key="name" data-text-key="text" data-image-context="gallery">+ Add application</button>
         </div>
     </details>
 
@@ -266,6 +266,7 @@
         <input data-field="title" placeholder="Title" class="w-full border px-3 py-2 rounded">
         <textarea data-field="text" rows="2" placeholder="Description" class="w-full border px-3 py-2 rounded"></textarea>
         <input data-field="image_alt" placeholder="Image alt text" class="w-full border px-3 py-2 rounded">
+        <p class="text-xs text-gray-500" data-gallery-image-hint hidden>{{ \App\Support\ProductImageSizes::designGalleryAdminHint() }}</p>
         <input data-field="image" placeholder="Image URL" class="w-full border px-3 py-2 rounded">
         <input type="file" data-field="image_file" accept="image/jpeg,image/png,image/webp">
         <div class="grid md:grid-cols-2 gap-2" data-cta-fields>
@@ -300,6 +301,7 @@
             var titleKey = btn.getAttribute('data-title-key') || 'title';
             var textKey = btn.getAttribute('data-text-key');
             var showCta = btn.getAttribute('data-show-cta') === '1';
+            var imageContext = btn.getAttribute('data-image-context');
             var list = document.getElementById(prefix + '-list');
             var tpl = document.getElementById('tpl-card-row');
             if (!list || !tpl) return;
@@ -311,6 +313,14 @@
             if (!showCta) {
                 var cta = node.querySelector('[data-cta-fields]');
                 if (cta) cta.remove();
+            }
+            var galleryHint = node.querySelector('[data-gallery-image-hint]');
+            if (galleryHint) {
+                if (imageContext === 'gallery') {
+                    galleryHint.hidden = false;
+                } else {
+                    galleryHint.remove();
+                }
             }
             list.appendChild(node);
             reindex(list, prefix, titleKey, textKey);

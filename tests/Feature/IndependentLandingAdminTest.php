@@ -8,6 +8,7 @@ use App\Support\AdminAccess;
 use App\Support\CortenContent;
 use App\Support\LandingPageContent;
 use App\Support\MediaUrl;
+use App\Support\ProductImageSizes;
 use App\Support\RailingsContent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -404,6 +405,24 @@ class IndependentLandingAdminTest extends TestCase
         $page = CortenContent::all();
         $this->assertSame('Second Title', data_get($page, 'hero.title'));
         $this->assertSame('Keep Me', data_get($page, 'applications.items.0.name'));
+    }
+
+    public function test_gallery_card_rows_show_portrait_upload_hints(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $hint = ProductImageSizes::designGalleryAdminHint();
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.independent-pages.edit', 'railings'))
+            ->assertOk()
+            ->assertSee($hint, false)
+            ->assertSee(ProductImageSizes::designGalleryDimensionsLabel(), false);
+
+        $this->actingAsAdmin($admin)
+            ->get(route('admin.independent-pages.edit', 'corten-steel'))
+            ->assertOk()
+            ->assertSee($hint, false)
+            ->assertSee(ProductImageSizes::designGalleryDimensionsLabel(), false);
     }
 
     public function test_public_defaults_render_without_site_setting_override(): void
