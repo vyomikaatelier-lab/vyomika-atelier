@@ -3,27 +3,18 @@
 @php
     use App\Support\LandingPageContent;
     use App\Support\Seo\JsonLd;
-    use App\Support\Seo\PageSeo;
 
     $page = LandingPageContent::withResolvedImages($page ?? []);
     $hero = $page['hero'] ?? [];
-    $heroImg = $hero['image'] ?? '';
     $categoryItems = LandingPageContent::activeItems($page['categories']['items'] ?? []);
     $layoutItems = LandingPageContent::activeItems($page['layouts']['items'] ?? []);
     $whyItems = $page['why']['items'] ?? [];
     $quote = $page['quote'] ?? [];
     $faqs = LandingPageContent::activeItems($page['faq']['items'] ?? []);
     $processSteps = $page['process']['steps'] ?? [];
-    $pageSeo = PageSeo::make([
-        'title' => $page['meta_title'] ?? 'Railings — Vyomika Atelier',
-        'description' => $page['meta_description'] ?? '',
-        'canonical' => route('railings.index'),
-        'og_image' => $heroImg,
-        'primary_keyword' => $page['primary_keyword'] ?? null,
-    ]);
 @endphp
 
-@section('title', $pageSeo['title'])
+@section('title', $pageSeo['title'] ?? 'Railings — Vyomika Atelier')
 
 @if($faqs)
 @push('jsonld')

@@ -21,11 +21,26 @@
     if (! is_array($rows) || $rows === []) {
         $rows = [['shape' => 'rect', 'label' => '', 'price' => '', 'compare_price' => '']];
     }
+
+    $hasFilledMirrorSizes = collect($rows)->contains(function ($row) {
+        $price = $row['price'] ?? null;
+
+        return filled($price) && is_numeric($price);
+    });
+
+    $mirrorListingPrice = old('price', $product->price ?? '');
 @endphp
 
 <fieldset id="mirror-size-options-section" class="space-y-3 border-t border-gray-200 pt-4{{ $showMirrorSizes ? '' : ' hidden' }}" aria-labelledby="mirror-size-options-heading" @if(! $showMirrorSizes) inert @endif data-only-category="mirror-frames">
     <legend id="mirror-size-options-heading" class="text-sm font-medium text-gray-800 px-1">Mirror sizes &amp; prices</legend>
     <p class="text-xs text-gray-500 -mt-1 mb-2">Add one row per size. Rectangular mirrors use length × height; round designs use diameter. Each size has its own price. Leave all rows blank to hide the size selector on the website.</p>
+    <div id="mirror-listing-price-wrap" class="rounded border border-gray-200 bg-white p-3 space-y-1{{ $hasFilledMirrorSizes ? ' hidden' : '' }}">
+        <label for="mirror-listing-price" class="text-sm font-medium text-gray-800 block">Listing price (₹)</label>
+        <p class="text-xs text-gray-500">Use when the mirror is sold at one price with no size selector. Add size rows below to set price per size instead.</p>
+        <input type="number" step="0.01" min="0" id="mirror-listing-price" @if($showMirrorSizes && ! $hasFilledMirrorSizes) name="price" required @endif value="{{ $mirrorListingPrice }}" class="w-full border px-3 py-2 rounded text-sm bg-white" @disabled(! $showMirrorSizes)>
+        @error('price')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+    </div>
+    <input type="hidden" id="mirror-sync-price" @if($showMirrorSizes && $hasFilledMirrorSizes) name="price" @endif value="{{ $mirrorListingPrice }}">
     <div id="mirror-size-options-rows" class="space-y-3">
         @foreach($rows as $index => $row)
         @php

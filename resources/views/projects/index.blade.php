@@ -4,11 +4,7 @@
     $hero = $page['hero'] ?? [];
 @endphp
 
-@section('title', $page['meta_title'] ?? 'Projects — Vyomika Atelier')
-
-@push('meta')
-<meta name="description" content="{{ $page['meta_description'] ?? '' }}">
-@endpush
+@section('title', $pageSeo['title'] ?? 'Projects — Vyomika Atelier')
 
 @section('content')
 

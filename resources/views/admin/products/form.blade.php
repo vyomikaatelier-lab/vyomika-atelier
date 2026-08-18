@@ -228,18 +228,18 @@
             $adminDiscountPct = (string) (int) round((1 - ((float) $adminPrice / (float) $adminCompare)) * 100);
         }
     @endphp
-    <fieldset id="pricing-discount-section" class="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-3" aria-labelledby="pricing-discount-heading">
+    <fieldset id="pricing-discount-section" class="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-3{{ $showMirrorSizes ? ' hidden' : '' }}" aria-labelledby="pricing-discount-heading">
         <legend id="pricing-discount-heading" class="text-sm font-semibold text-gray-900 px-1">Price &amp; discount (as on website)</legend>
         <p id="pricing-discount-intro" class="text-xs text-gray-600 -mt-1">On the product page and cards: selling price, optional strikethrough original price, and a <strong>−%</strong> badge when compare price is higher than price. Use Discount % to keep price and compare in sync.</p>
-        <p id="door-handle-price-note" class="text-xs text-amber-800 bg-amber-100 border border-amber-200 rounded px-2 py-1.5{{ ($showDoorHandleSizes || $showMirrorSizes) ? '' : ' hidden' }}">Door handles &amp; mirror frames: set <strong>price per size</strong> in the section below. This Price field syncs to the lowest size price on save.</p>
-        <div id="pricing-discount-grid" class="grid gap-4 {{ ($showDoorHandleSizes || $showMirrorSizes) ? 'grid-cols-1' : 'grid-cols-3' }}">
+        <p id="door-handle-price-note" class="text-xs text-amber-800 bg-amber-100 border border-amber-200 rounded px-2 py-1.5{{ $showDoorHandleSizes ? '' : ' hidden' }}">Door handles: set <strong>price per size</strong> in the section below. This Price field syncs to the lowest size price on save.</p>
+        <div id="pricing-discount-grid" class="grid gap-4 {{ $showDoorHandleSizes ? 'grid-cols-1' : 'grid-cols-3' }}">
             <div>
                 <label for="product-price" class="text-sm font-medium text-gray-800 block mb-1">Price @if($currentPricingType === 'square_foot')<span class="font-normal text-gray-500">(₹ per sq ft)</span>@endif</label>
-                <input id="product-price" type="number" step="0.01" name="price" value="{{ old('price', $product->price ?? '') }}" placeholder="Selling price" required class="w-full border px-3 py-2 rounded bg-white">
+                <input id="product-price" type="number" step="0.01" @unless($showMirrorSizes) name="price" required @endunless value="{{ old('price', $product->price ?? '') }}" placeholder="Selling price" class="w-full border px-3 py-2 rounded bg-white">
                 @error('price')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
                 <p id="product-price-help" class="text-xs text-gray-500 mt-1">{{ $showDoorHandleSizes ? 'Lowest size price syncs here on save.' : 'Selling price shown on the website.' }}</p>
             </div>
-            <div id="product-level-discount-fields" class="contents{{ ($showDoorHandleSizes || $showMirrorSizes) ? ' hidden' : '' }}">
+            <div id="product-level-discount-fields" class="contents{{ $showDoorHandleSizes ? ' hidden' : '' }}">
                 <div>
                     <label for="product-compare-price" class="text-sm font-medium text-gray-800 block mb-1">Compare price <span class="font-normal text-gray-500">(original)</span></label>
                     <input id="product-compare-price" type="number" step="0.01" name="compare_price" value="{{ old('compare_price', $product->compare_price ?? '') }}" placeholder="e.g. 38999" class="w-full border px-3 py-2 rounded bg-white">
@@ -253,7 +253,7 @@
                 </div>
             </div>
         </div>
-        <p id="pricing-discount-footer" class="text-xs text-gray-500{{ ($showDoorHandleSizes || $showMirrorSizes) ? ' hidden' : '' }}">Shop = fixed selling price. Studio = rate per sq ft.</p>
+        <p id="pricing-discount-footer" class="text-xs text-gray-500{{ $showDoorHandleSizes ? ' hidden' : '' }}">Shop = fixed selling price. Studio = rate per sq ft.</p>
         <p id="discount-preview" class="text-sm text-gray-700 hidden" aria-live="polite">
             Website preview: <span class="inline-flex items-center gap-2 flex-wrap">
                 <span id="discount-preview-price" class="font-medium"></span>
@@ -433,7 +433,7 @@
         var selected = categorySelect.selectedOptions[0];
         var isDoorHandles = selected && selected.dataset.slug === 'door-handles';
         var isMirrorFrames = selected && selected.dataset.slug === 'mirror-frames';
-        var usesSizeRows = isDoorHandles || isMirrorFrames;
+        var pricingSection = document.getElementById('pricing-discount-section');
         var pricingGrid = document.getElementById('pricing-discount-grid');
         var productDiscountFields = document.getElementById('product-level-discount-fields');
         var doorHandleNote = document.getElementById('door-handle-price-note');
@@ -441,17 +441,65 @@
         var pricingFooter = document.getElementById('pricing-discount-footer');
         var priceHelp = document.getElementById('product-price-help');
         var discountPreview = document.getElementById('discount-preview');
+        var priceInput = document.getElementById('product-price');
 
-        if (pricingGrid) pricingGrid.classList.toggle('grid-cols-1', usesSizeRows);
-        if (pricingGrid) pricingGrid.classList.toggle('grid-cols-3', !usesSizeRows);
-        if (productDiscountFields) productDiscountFields.classList.toggle('hidden', usesSizeRows);
-        if (doorHandleNote) doorHandleNote.classList.toggle('hidden', !usesSizeRows);
-        if (pricingIntro) pricingIntro.classList.toggle('hidden', usesSizeRows);
-        if (pricingFooter) pricingFooter.classList.toggle('hidden', usesSizeRows);
-        if (priceHelp) priceHelp.textContent = usesSizeRows
+        if (pricingSection) pricingSection.classList.toggle('hidden', isMirrorFrames);
+        if (pricingGrid) pricingGrid.classList.toggle('grid-cols-1', isDoorHandles);
+        if (pricingGrid) pricingGrid.classList.toggle('grid-cols-3', !isDoorHandles && !isMirrorFrames);
+        if (productDiscountFields) productDiscountFields.classList.toggle('hidden', isDoorHandles);
+        if (doorHandleNote) doorHandleNote.classList.toggle('hidden', !isDoorHandles);
+        if (pricingIntro) pricingIntro.classList.toggle('hidden', isDoorHandles);
+        if (pricingFooter) pricingFooter.classList.toggle('hidden', isDoorHandles);
+        if (priceHelp) priceHelp.textContent = isDoorHandles
             ? 'Lowest size price syncs here on save.'
             : 'Selling price shown on the website.';
-        if (discountPreview && usesSizeRows) discountPreview.classList.add('hidden');
+        if (discountPreview && (isDoorHandles || isMirrorFrames)) discountPreview.classList.add('hidden');
+        if (priceInput) {
+            if (isMirrorFrames) {
+                priceInput.removeAttribute('name');
+                priceInput.removeAttribute('required');
+            } else {
+                priceInput.setAttribute('name', 'price');
+                priceInput.setAttribute('required', 'required');
+            }
+        }
+
+        syncMirrorPriceFields();
+    }
+
+    function mirrorSizePrices() {
+        if (!mirrorSizeOptionsRows) return [];
+        return Array.from(mirrorSizeOptionsRows.querySelectorAll('.size-opt-price'))
+            .map(function (input) { return parseFloat(input.value); })
+            .filter(function (price) { return !isNaN(price) && price >= 0; });
+    }
+
+    function syncMirrorPriceFields() {
+        var selected = categorySelect.selectedOptions[0];
+        var isMirrorFrames = selected && selected.dataset.slug === 'mirror-frames';
+        var listingWrap = document.getElementById('mirror-listing-price-wrap');
+        var listingInput = document.getElementById('mirror-listing-price');
+        var syncInput = document.getElementById('mirror-sync-price');
+        if (!isMirrorFrames || !listingWrap || !listingInput || !syncInput) return;
+
+        var prices = mirrorSizePrices();
+        var usesSizeRows = prices.length > 0;
+
+        listingWrap.classList.toggle('hidden', usesSizeRows);
+
+        if (usesSizeRows) {
+            listingInput.removeAttribute('name');
+            listingInput.removeAttribute('required');
+            syncInput.setAttribute('name', 'price');
+            syncInput.value = String(Math.min.apply(null, prices));
+        } else {
+            syncInput.removeAttribute('name');
+            listingInput.setAttribute('name', 'price');
+            listingInput.setAttribute('required', 'required');
+            if (!listingInput.value && syncInput.value) {
+                listingInput.value = syncInput.value;
+            }
+        }
     }
 
     function syncMirrorDimensionsSection() {
@@ -615,14 +663,20 @@
                     row.querySelectorAll('input').forEach(function (input) { input.value = ''; });
                     if (shapeSelect) shapeSelect.value = 'rect';
                     syncShapeFields();
+                    syncMirrorPriceFields();
                     return;
                 }
                 row.remove();
                 mirrorSizeOptionsRows.querySelectorAll('.mirror-size-remove').forEach(function (btn, index, all) {
                     btn.hidden = all.length <= 1;
                 });
+                syncMirrorPriceFields();
             });
         }
+
+        row.querySelectorAll('.size-opt-price').forEach(function (priceEl) {
+            priceEl.addEventListener('input', syncMirrorPriceFields);
+        });
     }
 
     if (mirrorSizeOptionsRows) {
@@ -672,6 +726,7 @@
             mirrorSizeOptionsRows.querySelectorAll('.mirror-size-remove').forEach(function (btn) {
                 btn.hidden = false;
             });
+            syncMirrorPriceFields();
         });
     }
 
@@ -757,6 +812,7 @@
                     }
                 });
             }
+            syncMirrorPriceFields();
         });
     }
 })();

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Support\Seo\ProjectSeo;
+use App\Support\Seo\StaticPageSeo;
 use Illuminate\Http\Request;
 
 class ProjectController extends Controller
@@ -24,13 +26,22 @@ class ProjectController extends Controller
         $projects = $query->paginate(12)->withQueryString();
         $page = config('projects', []);
 
-        return view('projects.index', compact('projects', 'activeCategory', 'categories', 'page'));
+        return view('projects.index', [
+            'projects' => $projects,
+            'activeCategory' => $activeCategory,
+            'categories' => $categories,
+            'page' => $page,
+            'pageSeo' => StaticPageSeo::forSlug('projects'),
+        ]);
     }
 
     public function show(string $slug)
     {
         $project = Project::where('slug', $slug)->where('is_active', true)->firstOrFail();
 
-        return view('projects.show', compact('project'));
+        return view('projects.show', [
+            'project' => $project,
+            'pageSeo' => ProjectSeo::pageData($project),
+        ]);
     }
 }

@@ -631,14 +631,68 @@ class ProductSizeOptionsTest extends TestCase
             ->assertSee('id="size-options-section"', false)
             ->assertSee('hidden', false)
             ->assertSee('Mirror sizes &amp; prices', false)
+            ->assertSee('id="mirror-listing-price"', false)
+            ->assertDontSee('Door handles &amp; mirror frames: set', false)
             ->getContent();
 
         $this->assertMatchesRegularExpression(
             '/id="size-options-section"[^>]*\bhidden\b/',
             $html
         );
+        $this->assertMatchesRegularExpression(
+            '/id="pricing-discount-section"[^>]*\bhidden\b/',
+            $html
+        );
         $this->assertDoesNotMatchRegularExpression(
             '/id="mirror-size-options-section"[^>]*\bhidden\b/',
+            $html
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/id="product-price"[^>]*\bname="price"/',
+            $html
+        );
+    }
+
+    public function test_admin_mirror_product_with_sizes_hides_listing_price_field(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $mirrors = Category::query()->firstOrCreate(
+            ['slug' => 'mirror-frames'],
+            ['name' => 'Mirror Frames', 'section' => 'shop', 'is_active' => true]
+        );
+
+        $product = Product::query()->create([
+            'category_id' => $mirrors->id,
+            'name' => 'Sized Mirror',
+            'slug' => 'sized-mirror-admin',
+            'price' => 15000,
+            'stock' => 2,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+            'size_options' => [
+                [
+                    'label' => '2 × 3 ft',
+                    'shape' => 'rect',
+                    'dim_width_cm' => 60.96,
+                    'dim_height_cm' => 91.44,
+                    'price' => 15000,
+                ],
+            ],
+        ]);
+
+        $html = $this->actingAsAdmin($admin)
+            ->get(route('admin.products.edit', $product))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertMatchesRegularExpression(
+            '/id="mirror-listing-price-wrap"[^>]*\bhidden\b/',
+            $html
+        );
+        $this->assertMatchesRegularExpression(
+            '/id="mirror-sync-price"[^>]*\bname="price"/',
             $html
         );
     }

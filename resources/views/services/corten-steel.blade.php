@@ -3,25 +3,16 @@
 @php
     use App\Support\LandingPageContent;
     use App\Support\Seo\JsonLd;
-    use App\Support\Seo\PageSeo;
 
     $page = LandingPageContent::withResolvedImages($page ?? \App\Support\CortenContent::all());
     $hero = $page['hero'] ?? [];
-    $heroImg = $hero['image'] ?? ($service->image ? \App\Support\MediaUrl::resolve($service->image) : '');
     $apps = LandingPageContent::activeItems($page['applications']['items'] ?? []);
     $stages = LandingPageContent::activeItems($page['finish_evolution']['stages'] ?? []);
     $projects = LandingPageContent::activeItems($page['featured_projects']['items'] ?? []);
     $faqs = LandingPageContent::activeItems($page['faq']['items'] ?? []);
-    $pageSeo = PageSeo::make([
-        'title' => $page['meta_title'] ?? $service->meta_title ?? \App\Support\CortenContent::metaTitle(),
-        'description' => $page['meta_description'] ?? $service->meta_description ?? \App\Support\CortenContent::metaDescription(),
-        'canonical' => route('corten-steel.show'),
-        'og_image' => $heroImg,
-        'primary_keyword' => $page['primary_keyword'] ?? null,
-    ]);
 @endphp
 
-@section('title', $pageSeo['title'])
+@section('title', $pageSeo['title'] ?? 'Corten Steel — Vyomika Atelier')
 
 @if($faqs)
 @push('jsonld')

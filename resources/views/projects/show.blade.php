@@ -1,10 +1,6 @@
 @extends('layouts.store')
 
-@section('title', $project->seoTitle())
-
-@push('meta')
-<meta name="description" content="{{ $project->seoDescription() }}">
-@endpush
+@section('title', $pageSeo['title'] ?? $project->seoTitle())
 
 @section('content')
 

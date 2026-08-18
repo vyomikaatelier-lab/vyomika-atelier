@@ -3,7 +3,7 @@
 namespace App\View\Composers;
 
 use App\Support\Seo\PageSeo;
-use App\Support\StaticPageContent;
+use App\Support\Seo\StaticPageSeo;
 use Illuminate\View\View;
 
 class StorefrontSeoComposer
@@ -49,17 +49,12 @@ class StorefrontSeoComposer
             return;
         }
 
-        $page = $slug ? StaticPageContent::page($slug) : [];
+        if ($slug === null) {
+            $view->with('pageSeo', PageSeo::make(['robots' => $robots]));
 
-        $view->with('pageSeo', PageSeo::make([
-            'title' => $page['meta_title'] ?? null,
-            'description' => $page['meta_description'] ?? null,
-            'canonical' => $page['canonical'] ?? url()->current(),
-            'robots' => $robots ?? (($page['robots'] ?? null) === 'noindex' ? 'noindex,follow' : null),
-            'og_title' => $page['og_title'] ?? null,
-            'og_description' => $page['og_description'] ?? null,
-            'og_image' => $page['og_image'] ?? null,
-            'primary_keyword' => $page['primary_keyword'] ?? null,
-        ]));
+            return;
+        }
+
+        $view->with('pageSeo', StaticPageSeo::forSlug($slug, $robots));
     }
 }
