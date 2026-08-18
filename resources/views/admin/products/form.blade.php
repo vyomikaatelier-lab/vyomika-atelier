@@ -33,7 +33,7 @@
 <div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-4 text-sm max-w-2xl">{{ session('success') ?: 'Product saved successfully.' }}</div>
 @endif
 
-<form method="POST" enctype="multipart/form-data" action="{{ isset($product) ? route('admin.products.update', $product) : route('admin.products.store') }}" class="bg-white p-6 rounded-lg shadow max-w-2xl space-y-4">
+<form method="POST" enctype="multipart/form-data" action="{{ isset($product) ? route('admin.products.update', $product) : route('admin.products.store') }}" class="bg-white p-6 rounded-lg shadow max-w-2xl space-y-4" data-show-mirror-sizes="{{ $showMirrorSizes ? '1' : '0' }}">
     @csrf
     @if(isset($product)) @method('PUT') @endif
     <input type="hidden" name="_page_save" value="1">
@@ -430,9 +430,17 @@
     }
 
     function syncProductLevelPricing() {
+        var form = document.querySelector('form[action*="products"]');
         var selected = categorySelect.selectedOptions[0];
         var isDoorHandles = selected && selected.dataset.slug === 'door-handles';
         var isMirrorFrames = selected && selected.dataset.slug === 'mirror-frames';
+        if (form) {
+            if (selected && selected.value) {
+                form.dataset.showMirrorSizes = isMirrorFrames ? '1' : '0';
+            } else if (form.dataset.showMirrorSizes === '1') {
+                isMirrorFrames = true;
+            }
+        }
         var pricingSection = document.getElementById('pricing-discount-section');
         var pricingGrid = document.getElementById('pricing-discount-grid');
         var productDiscountFields = document.getElementById('product-level-discount-fields');

@@ -105,7 +105,11 @@ class ProductAdminController extends Controller
 
     public function edit(Product $product)
     {
+        $product->load('category');
         $categories = Category::where('is_active', true)->get();
+        if ($product->category_id && ! $categories->contains('id', $product->category_id) && $product->category) {
+            $categories->push($product->category);
+        }
         $categorySections = $this->categorySectionMap($categories);
 
         return view('admin.products.form', compact('product', 'categories', 'categorySections'));

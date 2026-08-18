@@ -696,4 +696,42 @@ class ProductSizeOptionsTest extends TestCase
             $html
         );
     }
+
+    public function test_admin_mirror_product_with_inactive_category_keeps_pricing_hidden(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $mirrors = Category::query()->firstOrCreate(
+            ['slug' => 'mirror-frames'],
+            ['name' => 'Mirror Frames', 'section' => 'shop', 'is_active' => false]
+        );
+        $mirrors->update(['is_active' => false]);
+
+        $product = Product::query()->create([
+            'category_id' => $mirrors->id,
+            'name' => 'Inactive Category Mirror',
+            'slug' => 'inactive-category-mirror-admin',
+            'price' => 18500,
+            'stock' => 2,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'is_active' => true,
+        ]);
+
+        $html = $this->actingAsAdmin($admin)
+            ->get(route('admin.products.edit', $product))
+            ->assertOk()
+            ->assertSee('data-show-mirror-sizes="1"', false)
+            ->assertSee('Mirror sizes &amp; prices', false)
+            ->getContent();
+
+        $this->assertMatchesRegularExpression(
+            '/id="pricing-discount-section"[^>]*\bhidden\b/',
+            $html
+        );
+        $this->assertMatchesRegularExpression(
+            '/value="' . $mirrors->id . '"[^>]*data-slug="mirror-frames"/',
+            $html
+        );
+    }
 }
