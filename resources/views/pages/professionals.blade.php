@@ -197,16 +197,16 @@
         </div>
         <div class="am-project-grid">
             @foreach($featuredProjects as $project)
-            <a href="{{ route('projects.show', $project->slug) }}" class="am-project-card">
+            <a href="{{ route('projects.index') }}" class="am-project-card">
                 <div class="am-project-card__media">
-                    @if($project->image)<img src="{{ $project->image }}" alt="{{ $project->title }}" loading="lazy">@endif
+                    @if($project->imageUrl())<img src="{{ $project->imageUrl() }}" alt="{{ $project->displayAlt() }}" loading="lazy">@endif
                 </div>
                 <div class="am-project-card__body">
                     <p class="am-project-card__meta">
-                        @if($project->categoryLabel())<span>{{ $project->categoryLabel() }}</span>@endif
-                        @if($project->location)<span>{{ $project->location }}</span>@endif
+                        @if($project->work_type)<span>{{ $project->work_type }}</span>@endif
+                        @if($project->city)<span>{{ $project->city }}</span>@endif
                     </p>
-                    <h3 class="am-project-card__title">{{ $project->title }}</h3>
+                    <h3 class="am-project-card__title">{{ $project->project_name }}</h3>
                 </div>
             </a>
             @endforeach

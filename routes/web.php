@@ -102,7 +102,9 @@ Route::get('/studio/{slug}', [StudioController::class, 'show'])
     ->name('studio.show');
 
 Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
-Route::get('/projects/{slug}', [ProjectController::class, 'show'])->name('projects.show');
+Route::get('/projects/{slug}', [ProjectController::class, 'redirectLegacy'])
+    ->where('slug', '[A-Za-z0-9\-]+')
+    ->name('projects.legacy');
 
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');

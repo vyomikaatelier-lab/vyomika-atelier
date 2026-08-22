@@ -55,7 +55,7 @@ class BlogAdminController extends Controller
         $validated['gallery'] = $this->resolveGalleryField($request, 'gallery_files', 'gallery_urls', null, 'blog');
         $validated['faq'] = $this->parseFaq($request);
         $validated['related_product_slugs'] = $this->parseRelatedSlugs($request, 'related_product_slugs');
-        $validated['related_project_slugs'] = $this->parseRelatedSlugs($request, 'related_project_slugs');
+        $validated['related_project_ids'] = $this->parseRelatedIds($request, 'related_project_ids');
         $validated['related_service_slugs'] = $this->parseRelatedSlugs($request, 'related_service_slugs');
 
         BlogPost::create($validated);
@@ -83,7 +83,7 @@ class BlogAdminController extends Controller
         $validated['gallery'] = $this->resolveGalleryField($request, 'gallery_files', 'gallery_urls', $post->gallery, 'blog');
         $validated['faq'] = $this->parseFaq($request);
         $validated['related_product_slugs'] = $this->parseRelatedSlugs($request, 'related_product_slugs');
-        $validated['related_project_slugs'] = $this->parseRelatedSlugs($request, 'related_project_slugs');
+        $validated['related_project_ids'] = $this->parseRelatedIds($request, 'related_project_ids');
         $validated['related_service_slugs'] = $this->parseRelatedSlugs($request, 'related_service_slugs');
 
         $post->update($validated);
@@ -109,7 +109,7 @@ class BlogAdminController extends Controller
     {
         return [
             'products' => Product::query()->orderBy('name')->pluck('name', 'slug'),
-            'projects' => Project::query()->orderBy('title')->pluck('title', 'slug'),
+            'projects' => Project::query()->orderBy('project_name')->pluck('project_name', 'id'),
             'services' => Service::query()->orderBy('name')->pluck('name', 'slug'),
         ];
     }
@@ -143,8 +143,8 @@ class BlogAdminController extends Controller
             'faq_answers.*' => 'nullable|string|max:5000',
             'related_product_slugs' => 'nullable|array',
             'related_product_slugs.*' => ['string', Rule::exists('products', 'slug')],
-            'related_project_slugs' => 'nullable|array',
-            'related_project_slugs.*' => ['string', Rule::exists('projects', 'slug')],
+            'related_project_ids' => 'nullable|array',
+            'related_project_ids.*' => ['integer', Rule::exists('projects', 'id')],
             'related_service_slugs' => 'nullable|array',
             'related_service_slugs.*' => ['string', Rule::exists('services', 'slug')],
         ]);
@@ -173,6 +173,14 @@ class BlogAdminController extends Controller
     private function parseRelatedSlugs(Request $request, string $field): ?array
     {
         $items = array_values(array_filter((array) $request->input($field, [])));
+
+        return $items !== [] ? $items : null;
+    }
+
+    /** @return array<int, int>|null */
+    private function parseRelatedIds(Request $request, string $field): ?array
+    {
+        $items = array_values(array_filter(array_map('intval', (array) $request->input($field, []))));
 
         return $items !== [] ? $items : null;
     }

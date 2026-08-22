@@ -3,45 +3,32 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
-use App\Support\Seo\ProjectSeo;
 use App\Support\Seo\StaticPageSeo;
-use Illuminate\Http\Request;
+use App\Support\StaticPageContent;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class ProjectController extends Controller
 {
-    public function index(Request $request)
+    public function index(): View
     {
-        $activeCategory = $request->query('category', '');
-        $categories = config('projects.categories', []);
-
-        $query = Project::query()
+        $projects = Project::query()
             ->where('is_active', true)
             ->orderBy('display_order')
-            ->latest('completed_at');
+            ->orderByDesc('id')
+            ->get();
 
-        if ($activeCategory !== '' && array_key_exists($activeCategory, Project::categoryLabels())) {
-            $query->where('category', $activeCategory);
-        }
-
-        $projects = $query->paginate(12)->withQueryString();
-        $page = config('projects', []);
+        $pageContent = StaticPageContent::page('projects');
 
         return view('projects.index', [
             'projects' => $projects,
-            'activeCategory' => $activeCategory,
-            'categories' => $categories,
-            'page' => $page,
+            'pageContent' => $pageContent,
             'pageSeo' => StaticPageSeo::forSlug('projects'),
         ]);
     }
 
-    public function show(string $slug)
+    public function redirectLegacy(string $slug): RedirectResponse
     {
-        $project = Project::where('slug', $slug)->where('is_active', true)->firstOrFail();
-
-        return view('projects.show', [
-            'project' => $project,
-            'pageSeo' => ProjectSeo::pageData($project),
-        ]);
+        return redirect()->route('projects.index', status: 301);
     }
 }

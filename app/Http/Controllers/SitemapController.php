@@ -100,17 +100,13 @@ class SitemapController extends Controller
         }
 
         if (Schema::hasTable('projects')) {
-            Project::query()
-                ->where('is_active', true)
-                ->get(['slug', 'updated_at'])
-                ->each(function (Project $project) use (&$urls) {
-                    $urls[] = [
-                        'loc' => route('projects.show', $project->slug),
-                        'lastmod' => $project->updated_at?->toAtomString(),
-                        'changefreq' => 'monthly',
-                        'priority' => '0.6',
-                    ];
-                });
+            $lastmod = Project::query()->where('is_active', true)->latest('updated_at')->value('updated_at');
+            $urls[] = [
+                'loc' => route('projects.index'),
+                'lastmod' => $lastmod ? \Illuminate\Support\Carbon::parse($lastmod)->toAtomString() : null,
+                'changefreq' => 'monthly',
+                'priority' => '0.7',
+            ];
         }
 
         if (Schema::hasTable('products')) {

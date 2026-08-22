@@ -541,6 +541,49 @@
     });
   }
 
+  function initWorkLightbox() {
+    const modal = document.getElementById('am-work-lightbox');
+    if (!modal || modal.dataset.bound === '1') return;
+    modal.dataset.bound = '1';
+
+    const imgEl = document.getElementById('am-work-lightbox-img');
+    const captionEl = document.getElementById('am-work-lightbox-caption');
+
+    function close() {
+      modal.classList.remove('is-open');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      if (imgEl) imgEl.src = '';
+    }
+
+    document.addEventListener('click', (e) => {
+      const trigger = e.target.closest('[data-work-lightbox]');
+      if (trigger) {
+        e.preventDefault();
+        if (imgEl) {
+          imgEl.src = trigger.getAttribute('data-work-lightbox-src') || '';
+          imgEl.alt = trigger.getAttribute('data-work-lightbox-caption') || '';
+        }
+        if (captionEl) {
+          captionEl.textContent = trigger.getAttribute('data-work-lightbox-caption') || '';
+        }
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        return;
+      }
+      if (e.target.closest('[data-work-lightbox-close]') || e.target === modal) {
+        e.preventDefault();
+        close();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (!modal.classList.contains('is-open')) return;
+      if (e.key === 'Escape') close();
+    });
+  }
+
   function initPopupFormModal() {
     const modal = document.getElementById('va-order-modal');
     if (!modal || modal.dataset.bound === '1') return;
@@ -816,6 +859,7 @@
     initFinishSwatches();
     initAboutReveal();
     initAboutLightbox();
+    initWorkLightbox();
     initCheckoutPayMethods();
     initAddressForms();
   });
@@ -833,6 +877,7 @@
     initFinishSwatches();
     initAboutReveal();
     initAboutLightbox();
+    initWorkLightbox();
     initCheckoutPayMethods();
     initAddressForms();
   });

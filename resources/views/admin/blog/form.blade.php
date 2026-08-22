@@ -30,14 +30,14 @@
     <div><label class="block text-sm mb-1">Meta description</label><textarea name="meta_description" rows="2" class="w-full border px-3 py-2 rounded">{{ old('meta_description', $post->meta_description ?? '') }}</textarea></div>
     @php
         $selectedProducts = old('related_product_slugs', isset($post) ? ($post->related_product_slugs ?? []) : []);
-        $selectedProjects = old('related_project_slugs', isset($post) ? ($post->related_project_slugs ?? []) : []);
+        $selectedProjects = old('related_project_ids', isset($post) ? ($post->related_project_ids ?? []) : []);
         $selectedServices = old('related_service_slugs', isset($post) ? ($post->related_service_slugs ?? []) : []);
         $faqItems = old('faq_questions') !== null
             ? collect(old('faq_questions', []))->map(fn ($q, $i) => ['question' => $q, 'answer' => old('faq_answers.'.$i)])
             : collect(isset($post) ? $post->faqItems() : []);
     @endphp
     <div><label class="block text-sm mb-1">Related products</label><select name="related_product_slugs[]" multiple class="w-full border px-3 py-2 rounded min-h-[120px]">@foreach($products as $slug => $name)<option value="{{ $slug }}" @selected(in_array($slug, (array) $selectedProducts, true))>{{ $name }} ({{ $slug }})</option>@endforeach</select></div>
-    <div><label class="block text-sm mb-1">Related projects</label><select name="related_project_slugs[]" multiple class="w-full border px-3 py-2 rounded min-h-[120px]">@foreach($projects as $slug => $title)<option value="{{ $slug }}" @selected(in_array($slug, (array) $selectedProjects, true))>{{ $title }} ({{ $slug }})</option>@endforeach</select></div>
+    <div><label class="block text-sm mb-1">Related projects</label><select name="related_project_ids[]" multiple class="w-full border px-3 py-2 rounded min-h-[120px]">@foreach($projects as $id => $name)<option value="{{ $id }}" @selected(in_array((int) $id, array_map('intval', (array) $selectedProjects), true))>{{ $name }}</option>@endforeach</select></div>
     <div><label class="block text-sm mb-1">Related services</label><select name="related_service_slugs[]" multiple class="w-full border px-3 py-2 rounded min-h-[120px]">@foreach($services as $slug => $name)<option value="{{ $slug }}" @selected(in_array($slug, (array) $selectedServices, true))>{{ $name }} ({{ $slug }})</option>@endforeach</select></div>
     <div class="space-y-3 border rounded p-4 bg-gray-50">
         <p class="text-sm font-medium">FAQ items</p>

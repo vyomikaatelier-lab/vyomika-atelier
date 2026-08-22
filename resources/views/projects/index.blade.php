@@ -1,66 +1,69 @@
 @extends('layouts.store')
 
-@php
-    $hero = $page['hero'] ?? [];
-@endphp
-
 @section('title', $pageSeo['title'] ?? 'Projects — Vyomika Atelier')
 
 @section('content')
 
 @include('partials.am-page-hero', [
-    'label' => $hero['label'] ?? 'Our Work',
-    'title' => $hero['title'] ?? 'Projects',
-    'subtitle' => $hero['subtitle'] ?? null,
+    'label' => $pageContent['hero']['label'] ?? 'Our Work',
+    'title' => $pageContent['h1'] ?? ($pageContent['hero']['title'] ?? 'Projects'),
+    'subtitle' => $pageContent['intro'] ?? ($pageContent['hero']['subtitle'] ?? null),
 ])
 
 <section class="am-page-body am-projects-index">
     <div class="am-container">
-        @if(count($categories))
-        <nav class="am-project-filters" aria-label="Filter projects by category">
-            @foreach($categories as $cat)
-            <a href="{{ route('projects.index', $cat['slug'] ? ['category' => $cat['slug']] : []) }}"
-               class="am-project-filters__btn {{ $activeCategory === ($cat['slug'] ?? '') ? 'is-active' : '' }}">
-                {{ $cat['label'] }}
-            </a>
-            @endforeach
-        </nav>
-        @endif
-
         @if($projects->isNotEmpty())
-        <div class="am-project-grid">
+        <div class="am-work-gallery">
             @foreach($projects as $project)
-            <a href="{{ route('projects.show', $project->slug) }}" class="am-project-card">
-                <div class="am-project-card__media">
-                    @if($project->image)
-                    <img src="{{ $project->image }}" alt="{{ $project->title }}" loading="lazy">
+            <article class="am-work-gallery__item">
+                @if($project->imageUrl())
+                <button type="button"
+                    class="am-work-gallery__media"
+                    data-work-lightbox
+                    data-work-lightbox-src="{{ $project->imageUrl() }}"
+                    data-work-lightbox-caption="{{ $project->displayAlt() }}"
+                    aria-label="View larger image: {{ $project->project_name }}">
+                    <img src="{{ $project->imageUrl() }}" alt="{{ $project->displayAlt() }}" loading="lazy">
+                </button>
+                @else
+                <div class="am-work-gallery__media am-work-gallery__media--empty" aria-hidden="true"></div>
+                @endif
+                <div class="am-work-gallery__body">
+                    <h2 class="am-work-gallery__name">{{ $project->project_name }}</h2>
+                    <dl class="am-work-gallery__meta">
+                        @if($project->work_type)
+                        <div><dt>Work</dt><dd>{{ $project->work_type }}</dd></div>
+                        @endif
+                        @if($project->city)
+                        <div><dt>City</dt><dd>{{ $project->city }}</dd></div>
+                        @endif
+                        @if($project->client)
+                        <div><dt>Client</dt><dd>{{ $project->client }}</dd></div>
+                        @endif
+                        @if($project->size)
+                        <div><dt>Size</dt><dd>{{ $project->size }}</dd></div>
+                        @endif
+                        @if($project->price)
+                        <div><dt>Price</dt><dd>{{ $project->price }}</dd></div>
+                        @endif
+                    </dl>
+                    @if($project->description)
+                    <p class="am-work-gallery__desc">{{ $project->description }}</p>
                     @endif
                 </div>
-                <div class="am-project-card__body">
-                    <p class="am-project-card__meta">
-                        @if($project->categoryLabel())<span>{{ $project->categoryLabel() }}</span>@endif
-                        @if($project->location)<span>{{ $project->location }}</span>@endif
-                    </p>
-                    <h2 class="am-project-card__title">{{ $project->title }}</h2>
-                    @if($project->summary)
-                    <p class="am-project-card__excerpt">{{ $project->summary }}</p>
-                    @endif
-                    <span class="am-project-card__link">View project →</span>
-                </div>
-            </a>
+            </article>
             @endforeach
         </div>
-        <div class="am-pagination">{{ $projects->links() }}</div>
         @else
         <div class="am-empty" style="text-align:center;padding:3rem 0">
-            <p style="color:var(--am-muted);margin-bottom:1.5rem">No projects in this category yet.</p>
-            <a href="{{ route('projects.index') }}" class="am-btn am-btn--outline">View all projects</a>
+            <p style="color:var(--am-muted);margin-bottom:1.5rem">Project gallery items will appear here once published.</p>
+            <button type="button" class="am-btn am-btn--outline" data-open-contact-studio data-contact-context="Project enquiry">Contact Studio</button>
         </div>
         @endif
     </div>
 </section>
 
-@php $cta = $page['footer_cta'] ?? []; @endphp
+@php $cta = config('projects.footer_cta', []); @endphp
 @if(!empty($cta['title']))
 <section class="am-section am-section--dark am-projects-cta">
     <div class="am-container am-projects-cta__inner">
@@ -75,5 +78,13 @@
     </div>
 </section>
 @endif
+
+<div class="am-work-lightbox" id="am-work-lightbox" aria-hidden="true" role="dialog" aria-label="Project image">
+    <button type="button" class="am-work-lightbox__close" data-work-lightbox-close aria-label="Close">&times;</button>
+    <figure class="am-work-lightbox__figure">
+        <img src="" alt="" class="am-work-lightbox__img" id="am-work-lightbox-img">
+        <figcaption class="am-work-lightbox__caption" id="am-work-lightbox-caption"></figcaption>
+    </figure>
+</div>
 
 @endsection

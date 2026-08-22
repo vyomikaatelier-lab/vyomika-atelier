@@ -145,17 +145,17 @@
             <div class="am-blog-related-grid">
                 @foreach($relatedProjects as $project)
                 <article class="am-blog-related-card">
-                    <a href="{{ route('projects.show', $project->slug) }}">
-                        @if($project->image)
+                    <a href="{{ route('projects.index') }}">
+                        @if($project->imageUrl())
                         <div class="am-blog-related-card__thumb">
-                            <img src="{{ $project->image }}" alt="{{ $project->title }} — Vyomika Atelier project" loading="lazy">
+                            <img src="{{ $project->imageUrl() }}" alt="{{ $project->displayAlt() }}" loading="lazy">
                         </div>
                         @endif
-                        <h3 class="am-blog-related-card__title">{{ $project->title }}</h3>
-                        @if($project->summary)
-                        <p class="am-blog-related-card__text">{{ $project->summary }}</p>
+                        <h3 class="am-blog-related-card__title">{{ $project->project_name }}</h3>
+                        @if($project->description)
+                        <p class="am-blog-related-card__text">{{ \Illuminate\Support\Str::limit($project->description, 120) }}</p>
                         @endif
-                        <span class="am-blog-related-card__link">View project →</span>
+                        <span class="am-blog-related-card__link">View projects →</span>
                     </a>
                 </article>
                 @endforeach

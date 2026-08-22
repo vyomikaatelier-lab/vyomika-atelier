@@ -3,28 +3,21 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Admin\Concerns\HandlesAdminUploads;
-use App\Http\Controllers\Admin\Concerns\ResolvesUniqueSlug;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class ProjectAdminController extends Controller
 {
     use HandlesAdminUploads;
-    use ResolvesUniqueSlug;
 
     public function index(Request $request)
     {
-        $query = Project::query()->orderBy('display_order')->orderByDesc('completed_at');
+        $query = Project::query()->orderBy('display_order')->orderByDesc('id');
 
         if ($request->filled('q')) {
             $q = $request->string('q');
-            $query->where('title', 'like', "%{$q}%");
-        }
-
-        if ($request->filled('category')) {
-            $query->where('category', $request->category);
+            $query->where('project_name', 'like', "%{$q}%");
         }
 
         if ($request->filled('status')) {
@@ -44,26 +37,17 @@ class ProjectAdminController extends Controller
     public function store(Request $request)
     {
         if ($this->multipartPayloadFailed($request)) {
-            return back()->withInput()->with('error', 'Upload too large for the server limit. Save text changes first, then upload images in smaller batches (max 5 MB each).');
+            return back()->withInput()->with('error', 'Upload too large for the server limit. Save text changes first, then upload the image (max 5 MB).');
         }
 
         $validated = $this->validateProject($request);
-        $validated['slug'] = $this->resolveUniqueSlug(
-            Project::class,
-            $request->input('slug') ?: $validated['title'],
-            'slug'
-        );
-        $validated['is_featured'] = $request->boolean('is_featured');
         $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
-        $validated['display_order'] = $request->integer('display_order', Project::max('display_order') + 1);
-        $validated['image'] = $this->resolveImageField($request, 'image_file', 'image', null, 'projects');
-        $validated['gallery'] = $this->resolveGalleryField($request, 'gallery_files', 'gallery_urls', null, 'projects');
-        $validated['materials'] = $this->parseMultilineUrls($request->input('materials_list'));
-        $validated['finishes'] = $this->parseMultilineUrls($request->input('finishes_list'));
+        $validated['display_order'] = $request->integer('display_order', (int) Project::max('display_order') + 1);
+        $validated['image_path'] = $this->resolveImageField($request, 'image_file', 'image_path', null, 'projects');
 
         Project::create($validated);
 
-        return redirect()->route('admin.projects.index')->with('success', 'Project created.');
+        return redirect()->route('admin.projects.index')->with('success', 'Project work item created.');
     }
 
     public function edit(Project $project)
@@ -74,73 +58,40 @@ class ProjectAdminController extends Controller
     public function update(Request $request, Project $project)
     {
         if ($this->multipartPayloadFailed($request)) {
-            return back()->withInput()->with('error', 'Upload too large for the server limit. Save text changes first, then upload images in smaller batches (max 5 MB each).');
+            return back()->withInput()->with('error', 'Upload too large for the server limit. Save text changes first, then upload the image (max 5 MB).');
         }
 
-        $validated = $this->validateProject($request, $project);
-        $validated['slug'] = $this->resolveUniqueSlug(
-            Project::class,
-            $request->input('slug') ?: $validated['title'],
-            'slug',
-            $project
-        );
-        $validated['is_featured'] = $request->boolean('is_featured');
+        $validated = $this->validateProject($request);
         $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
-        $validated['image'] = $this->resolveImageField($request, 'image_file', 'image', $project->image, 'projects');
-        $validated['gallery'] = $this->resolveGalleryField($request, 'gallery_files', 'gallery_urls', $project->gallery, 'projects');
-        $validated['materials'] = $this->parseMultilineUrls($request->input('materials_list'));
-        $validated['finishes'] = $this->parseMultilineUrls($request->input('finishes_list'));
         $validated['display_order'] = $request->integer('display_order', $project->display_order);
+        $validated['image_path'] = $this->resolveImageField($request, 'image_file', 'image_path', $project->image_path, 'projects');
 
         $project->update($validated);
 
-        return redirect()->route('admin.projects.index')->with('success', 'Project updated.');
+        return redirect()->route('admin.projects.index')->with('success', 'Project work item updated.');
     }
 
     public function destroy(Project $project)
     {
-        $this->deleteStoredPath($project->image);
-
-        foreach ($project->gallery ?? [] as $path) {
-            $this->deleteStoredPath($path);
-        }
-
+        $this->deleteStoredPath($project->image_path);
         $project->delete();
 
-        return redirect()->route('admin.projects.index')->with('success', 'Project deleted.');
+        return redirect()->route('admin.projects.index')->with('success', 'Project work item deleted.');
     }
 
-    private function validateProject(Request $request, ?Project $project = null): array
+    private function validateProject(Request $request): array
     {
         return $request->validate([
-            'title' => 'required|string|max:255',
-            'slug' => ['nullable', 'string', 'max:255', Rule::unique('projects', 'slug')->ignore($project?->id)],
-            'summary' => 'nullable|string|max:1000',
-            'content' => 'nullable|string',
-            'location' => 'nullable|string|max:255',
-            'year' => 'nullable|integer|min:1990|max:2100',
-            'category' => 'nullable|string|max:50',
+            'project_name' => 'required|string|max:255',
+            'work_type' => 'nullable|string|max:120',
+            'city' => 'nullable|string|max:255',
             'client' => 'nullable|string|max:255',
-            'design_details' => 'nullable|string',
-            'scope' => 'nullable|string',
-            'challenges' => 'nullable|string',
-            'testimonial_quote' => 'nullable|string|max:2000',
-            'testimonial_author' => 'nullable|string|max:255',
-            'testimonial_role' => 'nullable|string|max:255',
-            'completed_at' => 'nullable|date',
-            'meta_title' => 'nullable|string|max:255',
-            'meta_description' => 'nullable|string|max:500',
-            'image' => 'nullable|string|max:500',
+            'size' => 'nullable|string|max:120',
+            'price' => 'nullable|string|max:120',
+            'description' => 'nullable|string',
+            'image_path' => 'nullable|string|max:500',
+            'image_alt' => 'nullable|string|max:255',
             'image_file' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
-            'gallery_urls' => 'nullable|string',
-            'gallery_files' => 'nullable|array',
-            'gallery_files.*' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
-            'gallery_replace' => 'nullable|array',
-            'gallery_replace.*' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
-            'gallery_existing' => 'nullable|array',
-            'gallery_existing.*' => 'string|max:500',
-            'materials_list' => 'nullable|string',
-            'finishes_list' => 'nullable|string',
             'display_order' => 'nullable|integer|min:0',
         ]);
     }

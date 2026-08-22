@@ -193,11 +193,10 @@ class AdminSlugCollisionTest extends TestCase
         $this->assertSame(1, Product::query()->where('slug', 'slim-partition')->count());
     }
 
-    public function test_project_create_with_duplicate_title_returns_validation_error(): void
+    public function test_project_create_with_duplicate_name_is_allowed(): void
     {
         Project::query()->create([
-            'title' => 'Bandra Penthouse',
-            'slug' => 'bandra-penthouse',
+            'project_name' => 'Bandra Penthouse',
             'is_active' => true,
         ]);
 
@@ -205,12 +204,11 @@ class AdminSlugCollisionTest extends TestCase
             ->from(route('admin.projects.create'))
             ->post(route('admin.projects.store'), [
                 '_page_save' => '1',
-                'title' => 'Bandra Penthouse',
+                'project_name' => 'Bandra Penthouse',
             ])
-            ->assertRedirect(route('admin.projects.create'))
-            ->assertSessionHasErrors('slug');
+            ->assertRedirect(route('admin.projects.index'));
 
-        $this->assertSame(1, Project::query()->where('slug', 'bandra-penthouse')->count());
+        $this->assertSame(2, Project::query()->where('project_name', 'Bandra Penthouse')->count());
     }
 
     public function test_service_create_with_duplicate_name_returns_validation_error(): void

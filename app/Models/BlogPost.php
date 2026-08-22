@@ -24,6 +24,7 @@ class BlogPost extends Model
         'gallery',
         'related_product_slugs',
         'related_project_slugs',
+        'related_project_ids',
         'related_service_slugs',
         'canonical_url',
         'faq',
@@ -45,6 +46,7 @@ class BlogPost extends Model
             'gallery' => 'array',
             'related_product_slugs' => 'array',
             'related_project_slugs' => 'array',
+            'related_project_ids' => 'array',
             'related_service_slugs' => 'array',
             'faq' => 'array',
         ];
@@ -111,6 +113,12 @@ class BlogPost extends Model
     public function relatedProjectSlugs(): array
     {
         return is_array($this->related_project_slugs) ? $this->related_project_slugs : [];
+    }
+
+    /** @return array<int, int> */
+    public function relatedProjectIds(): array
+    {
+        return is_array($this->related_project_ids) ? $this->related_project_ids : [];
     }
 
     public function imageUrl(): ?string

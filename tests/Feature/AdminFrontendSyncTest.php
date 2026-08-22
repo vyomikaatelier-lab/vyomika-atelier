@@ -72,14 +72,13 @@ class AdminFrontendSyncTest extends TestCase
             ->assertSessionHasNoErrors();
     }
 
-    public function test_project_edit_appears_on_the_public_project_page(): void
+    public function test_project_edit_appears_on_the_public_projects_gallery(): void
     {
         Storage::fake('public');
 
         $project = Project::query()->create([
-            'title' => 'Andheri Loft',
-            'slug' => 'andheri-loft',
-            'summary' => 'Old summary',
+            'project_name' => 'Andheri Loft',
+            'description' => 'Old summary',
             'is_active' => true,
             'display_order' => 1,
         ]);
@@ -87,27 +86,25 @@ class AdminFrontendSyncTest extends TestCase
         $this->actingAsAdmin($this->admin())
             ->put(route('admin.projects.update', $project), [
                 '_page_save' => '1',
-                'title' => 'Andheri Loft',
-                'summary' => 'A brass and glass mezzanine study.',
-                'location' => 'Mumbai',
+                'project_name' => 'Andheri Loft',
+                'description' => 'A brass and glass mezzanine study.',
+                'city' => 'Mumbai',
                 'is_active' => '1',
                 'display_order' => 1,
             ])
             ->assertRedirect(route('admin.projects.index'))
             ->assertSessionHasNoErrors();
 
-        $this->get(route('projects.show', 'andheri-loft'))
+        $this->get(route('projects.index'))
             ->assertOk()
-            ->assertSee('A brass and glass mezzanine study.', false);
-
-        $this->get(route('projects.index'))->assertOk()->assertSee('Andheri Loft');
+            ->assertSee('A brass and glass mezzanine study.', false)
+            ->assertSee('Andheri Loft');
     }
 
     public function test_deactivating_a_project_removes_it_from_the_storefront(): void
     {
         $project = Project::query()->create([
-            'title' => 'Andheri Loft',
-            'slug' => 'andheri-loft',
+            'project_name' => 'Andheri Loft',
             'is_active' => true,
             'display_order' => 1,
         ]);
@@ -115,13 +112,13 @@ class AdminFrontendSyncTest extends TestCase
         $this->actingAsAdmin($this->admin())
             ->put(route('admin.projects.update', $project), [
                 '_page_save' => '1',
-                'title' => 'Andheri Loft',
+                'project_name' => 'Andheri Loft',
                 'display_order' => 1,
             ])
             ->assertRedirect(route('admin.projects.index'));
 
         $this->assertFalse($project->fresh()->is_active);
-        $this->get(route('projects.show', 'andheri-loft'))->assertNotFound();
+        $this->get('/projects/andheri-loft')->assertStatus(301)->assertRedirect(route('projects.index'));
         $this->get(route('projects.index'))->assertOk()->assertDontSee('Andheri Loft');
     }
 
@@ -635,10 +632,8 @@ class AdminFrontendSyncTest extends TestCase
     public function test_hiding_every_project_empties_the_homepage_portfolio(): void
     {
         Project::query()->create([
-            'title' => 'Andheri Loft',
-            'slug' => 'andheri-loft',
+            'project_name' => 'Andheri Loft',
             'is_active' => false,
-            'is_featured' => true,
             'display_order' => 1,
         ]);
 

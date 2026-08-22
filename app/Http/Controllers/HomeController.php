@@ -29,7 +29,7 @@ class HomeController extends Controller
             : collect();
 
         $featuredProjects = Schema::hasTable('projects')
-            ? Project::where('is_active', true)->where('is_featured', true)->latest('completed_at')->take(4)->get()
+            ? Project::where('is_active', true)->orderBy('display_order')->take(4)->get()
             : collect();
 
         $latestPosts = Schema::hasTable('blog_posts')

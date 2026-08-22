@@ -67,9 +67,30 @@ class DatabaseSeeder extends Seeder
     private function seedProjectsAndBlog(): void
     {
         $projects = require database_path('data/projects-catalog.php');
+        $slugToId = [];
 
-        foreach ($projects as $project) {
-            Project::create([...$project, 'completed_at' => now()->subMonths(rand(2, 24)), 'is_active' => true]);
+        foreach ($projects as $index => $project) {
+            $description = collect([
+                $project['summary'] ?? null,
+                filled($project['content'] ?? null) ? strip_tags((string) $project['content']) : null,
+                $project['design_details'] ?? null,
+            ])->filter()->implode("\n\n");
+
+            $created = Project::create([
+                'project_name' => $project['title'],
+                'work_type' => $project['category'] ?? null,
+                'city' => $project['location'] ?? null,
+                'client' => $project['client'] ?? null,
+                'description' => $description !== '' ? $description : null,
+                'image_path' => $project['image'] ?? null,
+                'image_alt' => $project['title'],
+                'display_order' => $index + 1,
+                'is_active' => true,
+            ]);
+
+            if (! empty($project['slug'])) {
+                $slugToId[$project['slug']] = $created->id;
+            }
         }
 
         $posts = require database_path('data/blog-catalog.php');
@@ -79,8 +100,15 @@ class DatabaseSeeder extends Seeder
                 ? Carbon::parse($post['published_at'])
                 : now()->subDays(rand(5, 60));
 
+            $relatedProjectIds = collect($post['related_project_slugs'] ?? [])
+                ->map(fn ($slug) => $slugToId[$slug] ?? null)
+                ->filter()
+                ->values()
+                ->all();
+
             BlogPost::create([
                 ...$post,
+                'related_project_ids' => $relatedProjectIds !== [] ? $relatedProjectIds : null,
                 'published_at' => $published,
                 'is_active' => true,
                 'status' => 'published',

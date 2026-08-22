@@ -170,14 +170,8 @@
         </div>
         <div class="am-grid-4 am-corten-projects">
             @foreach($projects as $project)
-            @php
-                $href = !empty($project['slug']) ? route('projects.show', $project['slug']) : null;
-            @endphp
-            @if($href)
+            @php $href = route('projects.index'); @endphp
             <a href="{{ $href }}" class="am-card am-corten-project">
-            @else
-            <article class="am-card am-corten-project am-corten-project--static">
-            @endif
                 <div class="am-card__thumb">
                     @if(!empty($project['image']))
                     <img src="{{ $project['image'] }}" alt="{{ $project['image_alt'] ?? $project['title'] ?? '' }}" loading="lazy">
@@ -187,7 +181,7 @@
                     <p class="am-card__label">{{ $project['category'] ?? '' }}@if(!empty($project['location'])) · {{ $project['location'] }}@endif</p>
                     <h3 class="am-card__title">{{ $project['title'] ?? '' }}</h3>
                 </div>
-            @if($href)</a>@else</article>@endif
+            </a>
             @endforeach
         </div>
     </div>

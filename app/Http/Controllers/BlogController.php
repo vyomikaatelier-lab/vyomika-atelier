@@ -37,7 +37,7 @@ class BlogController extends Controller
             ->get();
 
         $relatedProjects = Project::query()
-            ->whereIn('slug', $post->relatedProjectSlugs())
+            ->whereIn('id', $post->relatedProjectIds())
             ->where('is_active', true)
             ->get();
 
