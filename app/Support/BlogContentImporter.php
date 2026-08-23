@@ -308,10 +308,6 @@ class BlogContentImporter
         $statusAfter = $payload['status'];
         $publishedAtAfter = $payload['published_at'];
 
-        if ($existing && in_array($existing->slug, array_keys(self::LEGACY_SLUG_MAP), true)) {
-            $payload['slug'] = $finalSlug;
-        }
-
         if ($existing) {
             if ($this->shouldSkip($existing, $article)) {
                 $this->report['skip'][] = $finalSlug;
@@ -321,9 +317,14 @@ class BlogContentImporter
                 return ['action' => 'skip', 'slug' => $finalSlug, 'flagged' => $flagged, 'messages' => $messages];
             }
 
+            $updatePayload = $this->stripPreservedFieldsFromUpdate($payload, $existing);
+
             if (! $dryRun) {
-                $existing->update($payload);
+                $existing->update($updatePayload);
             }
+
+            $statusAfter = $statusBefore ?? $statusAfter;
+            $publishedAtAfter = $publishedAtBefore ?? $publishedAtAfter;
 
             $this->report['update'][] = $finalSlug;
             $this->reportRecord($article, $existing, $finalSlug, 'update', $statusBefore, $statusAfter, $publishedAtBefore, $publishedAtAfter, $messages);
@@ -498,16 +499,8 @@ class BlogContentImporter
 
     private function resolveStatus(array $article, ?BlogPost $existing, bool $flagged): string
     {
-        $finalSlug = $this->resolveFinalSlug($article);
-
-        if ($existing && (
-            in_array($existing->slug, self::PRESERVE_PUBLISHED_SLUGS, true)
-            || in_array($finalSlug, self::PRESERVE_PUBLISHED_SLUGS, true)
-            || array_key_exists($existing->slug, self::LEGACY_SLUG_MAP)
-        )) {
-            if ($existing->status === BlogPost::STATUS_PUBLISHED || $existing->isPublished()) {
-                return BlogPost::STATUS_PUBLISHED;
-            }
+        if ($existing !== null) {
+            return $existing->status;
         }
 
         if ($flagged) {
@@ -523,17 +516,12 @@ class BlogContentImporter
 
     private function resolvePublishedAt(array $article, ?BlogPost $existing, string $status): ?Carbon
     {
-        if ($status === BlogPost::STATUS_DRAFT) {
-            return null;
+        if ($existing !== null) {
+            return $existing->published_at;
         }
 
-        $finalSlug = $this->resolveFinalSlug($article);
-
-        if ($existing?->published_at && (
-            in_array($existing->slug, self::PRESERVE_PUBLISHED_SLUGS, true)
-            || in_array($finalSlug, self::PRESERVE_PUBLISHED_SLUGS, true)
-        )) {
-            return $existing->published_at;
+        if ($status === BlogPost::STATUS_DRAFT) {
+            return null;
         }
 
         if (! empty($article['published_at'])) {
@@ -549,6 +537,23 @@ class BlogContentImporter
         }
 
         return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    private function stripPreservedFieldsFromUpdate(array $payload, BlogPost $existing): array
+    {
+        unset($payload['status'], $payload['published_at']);
+
+        if (array_key_exists($existing->slug, self::LEGACY_SLUG_MAP)) {
+            $payload['slug'] = $this->resolveFinalSlug(['slug' => $existing->slug]);
+        } else {
+            unset($payload['slug']);
+        }
+
+        return $payload;
     }
 
     /** @param  array<int, mixed>  $items */

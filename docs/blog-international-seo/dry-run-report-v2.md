@@ -1,9 +1,23 @@
 # Blog Import Dry-Run Report v2
 
 **Date:** 23 August 2026  
-**Command:** `php artisan blog:import-content --dry-run --global-only --force`  
+**Command:** `php artisan blog:import-content --dry-run --global-only`  
 **Database changes:** None (dry-run rolled back)  
-**Apply command:** NOT RUN (correction pass only)
+**Production apply:** NOT RUN (correction pass only)
+
+> **Superseded by [dry-run-report-v3.md](dry-run-report-v3.md)** for the final correction pass.
+
+## Before any production import
+
+Inspect your environment safely — do not assume branch names or server paths:
+
+1. `git status` — review uncommitted and untracked files
+2. `git branch -vv` — confirm current branch and remote tracking
+3. `git fetch` then compare local vs remote if deploying from git
+4. Export or verify a database backup through your hosting panel or approved backup tooling
+5. Run `php artisan blog:import-content --dry-run --global-only` locally first
+
+Never use `git reset --hard`, `git checkout --` on production trees, or database wipe commands as part of blog content updates.
 
 ## Summary
 
@@ -24,9 +38,9 @@
 
 | DB ID | Legacy DB slug | Manifest key | Final slug | Action | Status before → after | published_at before → after |
 |---|---|---|---|---|---|---|
-| 14 | `glass-partitions-open-plan-without-compromise` | `glass-partitions-open-plan` | `glass-partitions-open-plan` | UPDATE | published → published | 2026-06-15 → 2026-06-15 |
-| 15 | `pvd-coating-explained-durable-metal-finishes` | `pvd-coating-explained` | `pvd-coating-explained` | UPDATE | published → published | 2026-06-10 → 2026-06-10 |
-| 16 | `why-corten-steel-is-perfect-for-modern-facades` | `corten-steel-modern-facades` | `corten-steel-modern-facades` | UPDATE | published → published | 2026-06-05 → 2026-06-05 |
+| 14 | `glass-partitions-open-plan-without-compromise` | `glass-partitions-open-plan` | `glass-partitions-open-plan` | UPDATE | published → published | PRESERVE DESTINATION DATABASE VALUE |
+| 15 | `pvd-coating-explained-durable-metal-finishes` | `pvd-coating-explained` | `pvd-coating-explained` | UPDATE | published → published | PRESERVE DESTINATION DATABASE VALUE |
+| 16 | `why-corten-steel-is-perfect-for-modern-facades` | `corten-steel-modern-facades` | `corten-steel-modern-facades` | UPDATE | published → published | PRESERVE DESTINATION DATABASE VALUE |
 
 **LEGACY_SLUG_MAP** in `BlogContentImporter` maps manifest/content keys to verified live slugs. No longer slugs are created. On apply, legacy DB slugs are renamed to final slugs in-place (no duplicates, no redirects).
 
@@ -115,13 +129,8 @@ php artisan test --filter=BlogContentImportTest
 
 ## Gate before apply
 
-1. Expand 9 articles below 900 words (or accept draft downgrade)
-2. Owner confirms export copy per `owner-confirmation-required.md`
-3. Run apply only after approval:
+1. Owner confirms export copy per `owner-confirmation-required.md`
+2. Re-run dry-run after any manifest or article edits
+3. Obtain explicit owner approval before any production import
 
-```bash
-# DO NOT RUN YET
-php artisan blog:import-content --global-only --force
-```
-
-Backup is mandatory in production (`--no-backup` blocked).
+**Awaiting owner review — no production action taken.**

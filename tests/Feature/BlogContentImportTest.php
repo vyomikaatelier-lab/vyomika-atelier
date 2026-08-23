@@ -28,12 +28,13 @@ class BlogContentImportTest extends TestCase
         return count($importer->filterArticles($manifest));
     }
 
-    private function seedLivePublishedPosts(): void
+    /** @return array<string, Carbon> */
+    private function seedLivePublishedPostsWithArbitraryDates(): array
     {
         $dates = [
-            'glass-partitions-open-plan' => '2026-06-15',
-            'pvd-coating-explained' => '2026-06-10',
-            'corten-steel-modern-facades' => '2026-06-05',
+            'glass-partitions-open-plan' => Carbon::parse('2017-11-03 09:41:22'),
+            'pvd-coating-explained' => Carbon::parse('2018-04-27 16:08:55'),
+            'corten-steel-modern-facades' => Carbon::parse('2019-09-14 11:23:07'),
         ];
 
         foreach ($this->livePublishedSlugs as $slug) {
@@ -43,11 +44,13 @@ class BlogContentImportTest extends TestCase
                 'content' => '<p>Live content</p>',
                 'excerpt' => str_repeat('x', 150),
                 'status' => BlogPost::STATUS_PUBLISHED,
-                'published_at' => Carbon::parse($dates[$slug]),
+                'published_at' => $dates[$slug],
                 'hero_image_alt' => 'Alt',
                 'is_active' => true,
             ]);
         }
+
+        return $dates;
     }
 
     public function test_dry_run_global_only_processes_25_articles_without_writing(): void
@@ -57,7 +60,6 @@ class BlogContentImportTest extends TestCase
         $exit = Artisan::call('blog:import-content', [
             '--dry-run' => true,
             '--global-only' => true,
-            '--force' => true,
         ]);
         $output = Artisan::output();
 
@@ -72,7 +74,6 @@ class BlogContentImportTest extends TestCase
         Artisan::call('blog:import-content', [
             '--dry-run' => true,
             '--global-only' => true,
-            '--force' => true,
         ]);
         $output = Artisan::output();
 
@@ -96,12 +97,11 @@ class BlogContentImportTest extends TestCase
 
     public function test_live_published_slugs_update_existing_records_not_create(): void
     {
-        $this->seedLivePublishedPosts();
+        $this->seedLivePublishedPostsWithArbitraryDates();
 
         Artisan::call('blog:import-content', [
             '--dry-run' => true,
             '--global-only' => true,
-            '--force' => true,
         ]);
         $output = Artisan::output();
 
@@ -124,13 +124,9 @@ class BlogContentImportTest extends TestCase
         }
     }
 
-    public function test_published_live_slugs_remain_published_with_preserved_dates(): void
+    public function test_existing_published_records_preserve_exact_published_at(): void
     {
-        $this->seedLivePublishedPosts();
-        $originalDates = BlogPost::query()
-            ->whereIn('slug', $this->livePublishedSlugs)
-            ->pluck('published_at', 'slug')
-            ->all();
+        $originalDates = $this->seedLivePublishedPostsWithArbitraryDates();
 
         Artisan::call('blog:import-content', [
             '--force' => true,
@@ -143,17 +139,40 @@ class BlogContentImportTest extends TestCase
             $this->assertNotNull($post, "Missing live slug: {$slug}");
             $this->assertSame(BlogPost::STATUS_PUBLISHED, $post->status);
             $this->assertTrue($post->isPublished());
-            $this->assertSame(
-                $originalDates[$slug]->toDateString(),
-                $post->published_at->toDateString(),
-                "published_at changed for {$slug}"
+            $this->assertTrue(
+                $originalDates[$slug]->equalTo($post->published_at),
+                "published_at changed for {$slug}: expected {$originalDates[$slug]->toIso8601String()}, got {$post->published_at->toIso8601String()}"
             );
         }
     }
 
+    public function test_existing_records_never_auto_change_status(): void
+    {
+        $draft = BlogPost::create([
+            'title' => 'Draft stays draft',
+            'slug' => 'pvd-door-handles-finishes-sizes-selection-guide',
+            'content' => '<p>Old</p>',
+            'excerpt' => str_repeat('x', 150),
+            'status' => BlogPost::STATUS_DRAFT,
+            'published_at' => null,
+            'hero_image_alt' => 'Alt',
+            'is_active' => true,
+        ]);
+
+        Artisan::call('blog:import-content', [
+            '--force' => true,
+            '--global-only' => true,
+            '--no-backup' => true,
+        ]);
+
+        $draft->refresh();
+        $this->assertSame(BlogPost::STATUS_DRAFT, $draft->status);
+        $this->assertNull($draft->published_at);
+    }
+
     public function test_live_published_urls_return_http_200(): void
     {
-        $this->seedLivePublishedPosts();
+        $this->seedLivePublishedPostsWithArbitraryDates();
 
         foreach ($this->livePublishedSlugs as $slug) {
             $this->get(route('blog.show', $slug))->assertOk();
@@ -245,7 +264,7 @@ class BlogContentImportTest extends TestCase
 
     public function test_force_does_not_bypass_published_slug_preservation(): void
     {
-        $this->seedLivePublishedPosts();
+        $this->seedLivePublishedPostsWithArbitraryDates();
 
         Artisan::call('blog:import-content', [
             '--force' => true,
