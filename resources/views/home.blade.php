@@ -49,6 +49,7 @@
 </section>
 
 {{-- Best sellers --}}
+@if(SiteContent::homepageSectionEnabled('best_sellers'))
 <section class="am-section am-section--white am-section--edge">
     <div class="am-section__intro">
         <div class="am-section-head am-section-head--row">
@@ -76,8 +77,10 @@
         </div>
     </div>
 </section>
+@endif
 
 {{-- Category banners --}}
+@if(SiteContent::homepageSectionEnabled('category_banners'))
 <section class="am-section am-section--edge">
     <div class="am-section__body">
         <div class="am-cat-grid">
@@ -92,8 +95,10 @@
         </div>
     </div>
 </section>
+@endif
 
 {{-- Trending --}}
+@if(SiteContent::homepageSectionEnabled('trending'))
 <section class="am-section am-section--white am-section--edge">
     <div class="am-section__intro">
         <div class="am-section-head">
@@ -109,8 +114,10 @@
         </div>
     </div>
 </section>
+@endif
 
 {{-- Spotlights --}}
+@if(SiteContent::homepageSectionEnabled('spotlights'))
 <section class="am-section am-section--edge">
     <div class="am-section__intro">
         <div class="am-section-head">
@@ -136,15 +143,19 @@
         </div>
     </div>
 </section>
+@endif
 
 {{-- CTA band --}}
+@if(SiteContent::homepageSectionEnabled('cta_band'))
 <section class="am-cta-band">
     <h2>{{ $ctaBand['title'] ?? '' }}</h2>
     <p>{{ $ctaBand['description'] ?? '' }}</p>
     <a href="{{ url($ctaBand['cta_href'] ?? '/shop') }}" class="am-btn am-btn--primary am-btn--lg">{{ $ctaBand['cta_label'] ?? 'View All Products' }}</a>
 </section>
+@endif
 
 {{-- Testimonials --}}
+@if(SiteContent::homepageSectionEnabled('testimonials'))
 <section class="am-section am-testimonials">
     <div class="am-container">
         <div class="am-section-head">
@@ -167,8 +178,10 @@
         </div>
     </div>
 </section>
+@endif
 
 {{-- Blog --}}
+@if(SiteContent::homepageSectionEnabled('blog'))
 <section class="am-section am-section--white am-section--edge">
     <div class="am-section__intro">
         <div class="am-section-head">
@@ -211,8 +224,10 @@
         </div>
     </div>
 </section>
+@endif
 
 {{-- Trust badges --}}
+@if(SiteContent::homepageSectionEnabled('trust_badges'))
 <section class="am-trust">
     <div class="am-trust-grid">
             @foreach($trustBadges as $badge)
@@ -234,5 +249,6 @@
             @endforeach
     </div>
 </section>
+@endif
 
 @endsection

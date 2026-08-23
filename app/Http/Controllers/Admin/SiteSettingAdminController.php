@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\Concerns\HandlesAdminUploads;
 use App\Http\Controllers\Controller;
 use App\Models\SiteSetting;
 use App\Support\FinishSwatches;
+use App\Support\SiteContent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -38,6 +39,7 @@ class SiteSettingAdminController extends Controller
             'announcementText' => data_get($homepage, 'announcement.text', $defaultAnnouncement['text'] ?? ''),
             'announcementLinkLabel' => data_get($homepage, 'announcement.link_label', $defaultAnnouncement['link_label'] ?? ''),
             'announcementLinkHref' => data_get($homepage, 'announcement.link_href', $defaultAnnouncement['link_href'] ?? ''),
+            'homepageSections' => $this->homepageSectionsForForm($homepage),
         ]);
     }
 
@@ -163,13 +165,16 @@ class SiteSettingAdminController extends Controller
 
             // Keep cleared fields as explicit nulls so hydration can tell
             // "admin removed the announcement" from "admin never set one".
-            SiteSetting::setValue('homepage', [
+            $existingHomepage = SiteSetting::getValue('homepage', []);
+
+            SiteSetting::setValue('homepage', array_merge($existingHomepage, [
                 'announcement' => [
                     'text' => $validated['announcement_text'] ?? null,
                     'link_label' => $validated['announcement_link_label'] ?? null,
                     'link_href' => $validated['announcement_link_href'] ?? null,
                 ],
-            ]);
+                'sections' => $this->buildHomepageSectionsFromRequest($request),
+            ]));
 
             $finishImages = FinishSwatches::imageOverrides();
 
@@ -330,5 +335,43 @@ class SiteSettingAdminController extends Controller
         }
 
         return filter_var($value, FILTER_VALIDATE_URL) ? $value : null;
+    }
+
+    /** @param  array<string, mixed>  $homepage
+     * @return array<string, bool>
+     */
+    private function homepageSectionsForForm(array $homepage): array
+    {
+        $stored = is_array($homepage['sections'] ?? null) ? $homepage['sections'] : [];
+        $sections = [];
+
+        foreach (array_keys(SiteContent::homepageSectionLabels()) as $key) {
+            $sections[$key] = array_key_exists($key, $stored)
+                ? ($stored[$key] !== false)
+                : true;
+        }
+
+        return $sections;
+    }
+
+    /** @return array<string, bool> */
+    private function buildHomepageSectionsFromRequest(Request $request): array
+    {
+        $existing = SiteSetting::getValue('homepage', [])['sections'] ?? [];
+        $sections = [];
+
+        foreach (array_keys(SiteContent::homepageSectionLabels()) as $key) {
+            $field = 'homepage_section_'.$key;
+
+            if ($request->has($field)) {
+                $sections[$key] = $request->boolean($field);
+            } else {
+                $sections[$key] = array_key_exists($key, $existing)
+                    ? ($existing[$key] !== false)
+                    : true;
+            }
+        }
+
+        return $sections;
     }
 }

@@ -51,6 +51,20 @@
         </div>
     </section>
 
+    <section class="space-y-3">
+        <h2 class="font-medium">Homepage sections</h2>
+        <p class="text-xs text-gray-500">Turn sections on or off without deleting content. Announcement and hero carousel are controlled separately above.</p>
+        <div class="grid sm:grid-cols-2 gap-2">
+            @foreach(\App\Support\SiteContent::homepageSectionLabels() as $key => $label)
+                <label class="flex items-start gap-2 text-sm border rounded px-3 py-2 bg-gray-50">
+                    <input type="hidden" name="homepage_section_{{ $key }}" value="0">
+                    <input type="checkbox" name="homepage_section_{{ $key }}" value="1" @checked(old('homepage_section_'.$key, $homepageSections[$key] ?? true)) class="mt-1">
+                    <span>{{ $label }}</span>
+                </label>
+            @endforeach
+        </div>
+    </section>
+
     <section class="space-y-4">
         <div>
             <h2 class="font-medium">Homepage hero carousel</h2>

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\SiteSetting;
 use App\Models\User;
 use App\Support\CmsSettings;
+use App\Support\SiteContent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -134,5 +135,38 @@ class SiteSettingAdminTest extends TestCase
         SiteSetting::setValue('brand', ['name' => 'Cached Brand Two']);
         CmsSettings::hydrate();
         $this->assertSame('Cached Brand Two', config('site.brand.name'));
+    }
+
+    public function test_homepage_section_hidden_when_toggled_off(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $trendingTitle = config('site.trending.title', 'Trending Metal Finds');
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.settings.update'), [
+                'current_password' => 'password',
+                'brand_name' => 'Vyomika Atelier',
+                'email' => 'hello@vyomikaatelier.com',
+                'homepage_section_trending' => '0',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $sections = SiteSetting::getValue('homepage')['sections'] ?? [];
+        $this->assertFalse($sections['trending'] ?? true);
+
+        CmsSettings::hydrate();
+        $this->assertFalse(SiteContent::homepageSectionEnabled('trending'));
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertDontSee($trendingTitle, false);
+    }
+
+    public function test_homepage_sections_default_to_visible_before_admin_save(): void
+    {
+        foreach (array_keys(SiteContent::homepageSectionLabels()) as $key) {
+            $this->assertTrue(SiteContent::homepageSectionEnabled($key));
+        }
     }
 }

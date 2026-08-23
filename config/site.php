@@ -22,6 +22,19 @@ return [
         'link_href' => '/shop',
     ],
 
+    'homepage' => [
+        'sections' => [
+            'category_banners' => true,
+            'best_sellers' => true,
+            'trending' => true,
+            'spotlights' => true,
+            'cta_band' => true,
+            'testimonials' => true,
+            'blog' => true,
+            'trust_badges' => true,
+        ],
+    ],
+
     'nav' => [
         ['label' => 'Home', 'route' => 'home'],
         [

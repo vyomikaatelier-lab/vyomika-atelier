@@ -4,6 +4,32 @@ namespace App\Support;
 
 class SiteContent
 {
+    /** @return array<string, string> */
+    public static function homepageSectionLabels(): array
+    {
+        return [
+            'category_banners' => 'Category banners',
+            'best_sellers' => 'Best sellers product grid',
+            'trending' => 'Trending products',
+            'spotlights' => 'Spotlights',
+            'cta_band' => 'CTA band',
+            'testimonials' => 'Testimonials',
+            'blog' => 'Blog strip',
+            'trust_badges' => 'Trust badges',
+        ];
+    }
+
+    public static function homepageSectionEnabled(string $key): bool
+    {
+        $sections = self::get('homepage.sections', []);
+
+        if (! is_array($sections)) {
+            return true;
+        }
+
+        return ($sections[$key] ?? true) !== false;
+    }
+
     public static function get(?string $key = null, mixed $default = null): mixed
     {
         $data = config('site', []);

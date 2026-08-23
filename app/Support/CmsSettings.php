@@ -96,15 +96,25 @@ class CmsSettings
         }
 
         $homepage = $settings['homepage'] ?? null;
-        if (is_array($homepage) && is_array($homepage['announcement'] ?? null)) {
-            // The stored announcement is authoritative: once an admin has saved
-            // the homepage, blanking the text must hide the bar rather than fall
-            // back to the config default.
-            config(['site.announcement' => array_merge(
-                ['text' => null, 'link_label' => null, 'link_href' => null],
-                $homepage['announcement']
-            )]);
-            self::$status['applied'][] = 'homepage.announcement';
+        if (is_array($homepage)) {
+            if (is_array($homepage['announcement'] ?? null)) {
+                // The stored announcement is authoritative: once an admin has saved
+                // the homepage, blanking the text must hide the bar rather than fall
+                // back to the config default.
+                config(['site.announcement' => array_merge(
+                    ['text' => null, 'link_label' => null, 'link_href' => null],
+                    $homepage['announcement']
+                )]);
+                self::$status['applied'][] = 'homepage.announcement';
+            }
+
+            if (is_array($homepage['sections'] ?? null)) {
+                config(['site.homepage.sections' => array_merge(
+                    config('site.homepage.sections', []),
+                    $homepage['sections']
+                )]);
+                self::$status['applied'][] = 'homepage.sections';
+            }
         }
 
         $collectionPages = $settings['collection_pages'] ?? null;
