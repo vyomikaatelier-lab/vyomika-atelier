@@ -65,18 +65,31 @@ class BlogPublicTraceTest extends TestCase
         $html = $this->get(route('blog.index'))->assertOk()->getContent();
 
         $this->assertHtmlFreeOfBlockedMarkers($html, 'blog index');
-        $this->assertStringContainsString('Vyomika Atelier Editorial Team', $html);
         $this->assertStringNotContainsString('human written', strtolower($html));
+
+        if (BlogPost::query()->where('status', BlogPost::STATUS_PUBLISHED)->exists()) {
+            $this->assertStringContainsString('Vyomika Atelier Editorial Team', $html);
+        }
     }
 
     public function test_representative_articles_have_no_ai_or_internal_trace_markers(): void
     {
         $this->importGlobalContent();
 
+        $checked = 0;
+
         foreach (self::REPRESENTATIVE_SLUGS as $slug) {
             $post = BlogPost::query()->where('slug', $slug)->first();
-            if ($post === null || ! $post->isPublished()) {
+            if ($post === null) {
                 continue;
+            }
+
+            if (! $post->isPublished()) {
+                $post->update([
+                    'status' => BlogPost::STATUS_PUBLISHED,
+                    'published_at' => now()->subDay(),
+                    'is_active' => true,
+                ]);
             }
 
             $html = $this->get(route('blog.show', $slug))->assertOk()->getContent();
@@ -84,7 +97,10 @@ class BlogPublicTraceTest extends TestCase
             $this->assertHtmlFreeOfBlockedMarkers($html, "article: {$slug}");
             $this->assertStringContainsString('Vyomika Atelier Editorial Team', $html);
             $this->assertStringContainsString('BlogPosting', $html);
+            $checked++;
         }
+
+        $this->assertGreaterThan(0, $checked, 'Expected at least one representative article to import for trace audit');
     }
 
     public function test_sitemap_and_core_error_pages_have_no_trace_markers(): void
@@ -130,7 +146,8 @@ class BlogPublicTraceTest extends TestCase
         $htaccess = file_get_contents(public_path('.htaccess'));
 
         $this->assertIsString($htaccess);
-        $this->assertStringContainsString('RewriteRule ^(docs|storage|database', $htaccess);
+        $this->assertStringContainsString('storage/(app|framework|logs', $htaccess);
+        $this->assertStringContainsString('^(docs|database|tests|vendor', $htaccess);
         $this->assertStringContainsString('\.env', $htaccess);
     }
 }

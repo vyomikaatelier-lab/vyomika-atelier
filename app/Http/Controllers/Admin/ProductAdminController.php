@@ -369,7 +369,7 @@ class ProductAdminController extends Controller
         if ($category?->slug !== 'mirror-frames') {
             $validated['dim_width_cm'] = null;
             $validated['dim_height_cm'] = null;
-        } elseif ($validated['size_options'] === null) {
+        } elseif (($validated['size_options'] ?? null) === null) {
             $validated = array_merge($validated, $this->normalizeMirrorDimensionsFromRequest($validated));
         } else {
             $validated['dim_width_cm'] = null;
@@ -704,15 +704,18 @@ class ProductAdminController extends Controller
     /** @return array<string, mixed> */
     private function productIndexParams(Request $request): array
     {
-        return array_filter([
-            // Prefer the saved product category from the form; fall back to list context from the edit URL.
-            'category_id' => $request->input('category_id')
-                ?: $request->input('_return_category_id')
-                ?: $request->query('category_id'),
+        $params = array_filter([
+            'category_id' => $request->input('_return_category_id') ?: $request->query('category_id'),
             'section' => $request->input('_return_section') ?: $request->query('section'),
             'filter' => $request->input('_return_filter') ?: $request->query('filter'),
             'q' => $request->input('_return_q') ?: $request->query('q'),
         ], fn ($value) => filled($value));
+
+        if ($params === [] && $request->boolean('_page_save') && filled($request->input('category_id'))) {
+            $params['category_id'] = $request->input('category_id');
+        }
+
+        return $params;
     }
 
     /**

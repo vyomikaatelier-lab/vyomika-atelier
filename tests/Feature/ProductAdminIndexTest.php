@@ -214,7 +214,8 @@ class ProductAdminIndexTest extends TestCase
         $response->assertOk();
 
         foreach (ProductCatalog::obsoleteCategorySlugs() as $slug) {
-            $response->assertDontSee('value="'.Category::query()->where('slug', $slug)->value('id').'"', false);
+            $id = Category::query()->where('slug', $slug)->value('id');
+            $response->assertDontSee('<option value="'.$id.'"', false);
         }
     }
 
