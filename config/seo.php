@@ -7,10 +7,11 @@
 return [
     'static_pages' => [
         'home' => [
-            'primary_keyword' => 'architectural metalwork India',
-            'meta_title' => 'Vyomika Atelier | PVD Partitions & Architectural Metalwork India',
-            'meta_description' => 'Premium PVD partitions, slim profile doors, entrance doors, railings, Corten Steel and bespoke metal furniture — designed and fabricated for projects across India.',
-            'og_title' => 'Vyomika Atelier — Architectural Metalwork India',
+            'primary_keyword' => 'bespoke PVD partitions and metalwork India',
+            'meta_title' => 'Vyomika Atelier | Bespoke PVD Partitions, Metalwork & Interiors',
+            'meta_description' => 'Bespoke PVD partitions, slim profile doors, entrance doors, railings, Corten Steel and custom metal furniture — designed and fabricated for architects, designers and projects across India.',
+            'og_title' => 'Vyomika Atelier | Bespoke PVD Partitions, Metalwork & Interiors',
+            'og_description' => 'Bespoke PVD partitions, slim profile doors, entrance doors, railings, Corten Steel and custom metal furniture — designed and fabricated for architects, designers and projects across India.',
             'h1' => 'Architectural metalwork and PVD fabrication for India',
             'intro' => 'Vyomika Atelier designs and fabricates precision metalwork for architects, interior designers, hospitality and residential projects across India — from PVD partitions and slim profile doors to railings, Corten Steel and bespoke furniture.',
         ],

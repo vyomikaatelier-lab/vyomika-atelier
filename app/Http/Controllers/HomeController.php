@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Models\Project;
 use App\Models\Service;
+use App\Support\Seo\StaticPageSeo;
 use App\Support\SiteContent;
 use Illuminate\Support\Facades\Schema;
 
@@ -59,19 +60,20 @@ class HomeController extends Controller
             )->unique('id')->sortByDesc(fn (Product $product) => [$product->sort_order, $product->id])->values();
         }
 
-        return view('home', compact(
-            'featuredProducts',
-            'categories',
-            'featuredServices',
-            'featuredProjects',
-            'latestPosts',
-            'site',
-            'portfolio',
-            'services',
-            'shopItems',
-            'blogItems',
-            'trendingFromDb',
-        ));
+        return view('home', [
+            'featuredProducts' => $featuredProducts,
+            'categories' => $categories,
+            'featuredServices' => $featuredServices,
+            'featuredProjects' => $featuredProjects,
+            'latestPosts' => $latestPosts,
+            'site' => $site,
+            'portfolio' => $portfolio,
+            'services' => $services,
+            'shopItems' => $shopItems,
+            'blogItems' => $blogItems,
+            'trendingFromDb' => $trendingFromDb,
+            'pageSeo' => StaticPageSeo::forSlug('home'),
+        ]);
     }
 
     /**

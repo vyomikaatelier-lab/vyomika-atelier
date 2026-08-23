@@ -1,6 +1,6 @@
 @extends('layouts.store')
 
-@section('title', 'Vyomika Atelier — PVD Partitions & Metal Furniture')
+@section('title', $pageSeo['title'] ?? 'Vyomika Atelier | PVD Partitions & Architectural Metalwork India')
 
 @section('content')
 

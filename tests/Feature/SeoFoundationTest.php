@@ -180,6 +180,15 @@ class SeoFoundationTest extends TestCase
     public function test_about_and_projects_render_full_seo_meta(): void
     {
         SiteSetting::setValue('static_pages', [
+            'home' => [
+                'meta_title' => 'Home SEO Title',
+                'meta_description' => 'Home meta description.',
+                'og_title' => 'Home OG Title',
+                'og_description' => 'Home OG description.',
+                'og_image' => 'https://example.com/home-og.jpg',
+                'canonical' => route('home'),
+                'robots' => 'index',
+            ],
             'about' => [
                 'meta_title' => 'About SEO Title',
                 'meta_description' => 'About meta description.',
@@ -195,6 +204,16 @@ class SeoFoundationTest extends TestCase
                 'robots' => 'index',
             ],
         ]);
+
+        $homeHtml = $this->get(route('home'))->assertOk()->getContent();
+        $this->assertStringContainsString('<title>Home SEO Title</title>', $homeHtml);
+        $this->assertStringContainsString('name="description" content="Home meta description."', $homeHtml);
+        $this->assertStringContainsString('property="og:title" content="Home OG Title"', $homeHtml);
+        $this->assertStringContainsString('property="og:description" content="Home OG description."', $homeHtml);
+        $this->assertStringContainsString('property="og:image" content="https://example.com/home-og.jpg"', $homeHtml);
+        $this->assertStringContainsString('rel="canonical" href="'.route('home').'"', $homeHtml);
+        $this->assertSame(1, substr_count($homeHtml, 'rel="canonical"'), 'Homepage should have a single canonical tag');
+        $this->assertSame(1, substr_count($homeHtml, 'name="description"'), 'Homepage should have a single meta description');
 
         $aboutHtml = $this->get(route('about'))->assertOk()->getContent();
         $this->assertStringContainsString('<title>About SEO Title</title>', $aboutHtml);
