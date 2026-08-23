@@ -24,7 +24,7 @@ return array (
     'is_featured' => true,
     'image' => '/images/blog/heroes/glass-partitions-open-plan-hero.jpg',
     'hero_image_alt' => 'Gold-finished metal and glass partition installed in a Vyomika Atelier living-room project',
-    'og_image' => '/images/blog/heroes/glass-partitions-open-plan-hero.jpg',
+    'og_image' => '/images/blog/heroes/glass-partitions-open-plan-hero-card.jpg',
     'meta_title' => 'Glass Partitions: Open Plan Without Compromise | Vyomika Atelier',
     'meta_description' => 'Plan glass and metal partitions that keep open-plan light and flow while defining zones — materials, privacy levels and coordination for Indian homes and offices.',
     'related_service_slugs' => 
@@ -62,7 +62,7 @@ return array (
     'published_at' => '2026-06-10',
     'image' => '/images/blog/heroes/pvd-coating-explained-hero.jpg',
     'hero_image_alt' => 'Close-up of a brushed gold PVD-coated metal plaque stencilled LED PROFILE PVD PARTITION, reflected on a glossy surface',
-    'og_image' => '/images/blog/heroes/pvd-coating-explained-hero.jpg',
+    'og_image' => '/images/blog/heroes/pvd-coating-explained-hero-card.jpg',
     'meta_title' => 'PVD Coating Explained: Durable Metal Finishes | Vyomika Atelier',
     'meta_description' => 'What PVD coating is, how it differs from plating and powder coat, and how architects specify durable gold, champagne and black finishes on stainless metalwork.',
     'related_service_slugs' => 

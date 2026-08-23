@@ -71,7 +71,12 @@
 
     @if($post->imageUrl())
     <figure class="am-blog-article__hero">
-        <img src="{{ $post->imageUrl() }}" alt="{{ $post->heroAlt() }}" width="1280" height="720" itemprop="image" loading="eager" decoding="async">
+        @include('partials.am-blog-picture', [
+            'variant' => $post->heroImageVariant(),
+            'alt' => $post->heroAlt(),
+            'lazy' => false,
+            'attrs' => 'itemprop="image"',
+        ])
         @if($post->hero_image_caption)
         <figcaption class="am-blog-article__hero-caption">{{ $post->hero_image_caption }}</figcaption>
         @endif
@@ -209,7 +214,11 @@
                     <a href="{{ route('blog.show', $article->slug) }}" class="am-blog-card__link">
                         @if($article->imageUrl())
                         <div class="am-blog-card__thumb">
-                            <img src="{{ $article->imageUrl() }}" alt="{{ $article->heroAlt() }}" width="640" height="400" loading="lazy">
+                            @include('partials.am-blog-picture', [
+                                'variant' => $article->cardImageVariant(),
+                                'alt' => $article->heroAlt(),
+                                'lazy' => true,
+                            ])
                         </div>
                         @endif
                         <div class="am-blog-card__body">

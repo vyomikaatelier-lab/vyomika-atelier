@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\BlogContent;
+use App\Support\BlogHeroImage;
 use App\Support\MediaUrl;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
@@ -210,6 +211,25 @@ class BlogPost extends Model
     public function imageUrl(): ?string
     {
         return MediaUrl::resolve($this->image);
+    }
+
+    /** @return array{jpeg: ?string, webp: ?string, width: int, height: int} */
+    public function heroImageVariant(): array
+    {
+        return BlogHeroImage::heroVariant($this->image);
+    }
+
+    /** @return array{jpeg: ?string, webp: ?string, width: int, height: int} */
+    public function cardImageVariant(): array
+    {
+        return BlogHeroImage::cardVariant($this->image);
+    }
+
+    public function ogImageUrl(): ?string
+    {
+        $path = BlogHeroImage::ogPath($this->image, $this->og_image);
+
+        return MediaUrl::resolve($path);
     }
 
     /** @return array<int, string> */

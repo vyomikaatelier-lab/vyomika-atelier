@@ -18,7 +18,11 @@
             <a href="{{ route('blog.show', $featured->slug) }}" class="am-blog-featured__link">
                 <div class="am-blog-featured__media">
                     @if($featured->imageUrl())
-                    <img src="{{ $featured->imageUrl() }}" alt="{{ $featured->heroAlt() }}" width="960" height="600" loading="eager" decoding="async">
+                    @include('partials.am-blog-picture', [
+                        'variant' => $featured->cardImageVariant(),
+                        'alt' => $featured->heroAlt(),
+                        'lazy' => false,
+                    ])
                     @endif
                 </div>
                 <div class="am-blog-featured__body">
@@ -71,7 +75,11 @@
                 <a href="{{ route('blog.show', $post->slug) }}" class="am-blog-card__link">
                     @if($post->imageUrl())
                     <div class="am-blog-card__thumb">
-                        <img src="{{ $post->imageUrl() }}" alt="{{ $post->heroAlt() }}" width="640" height="400" loading="lazy" decoding="async">
+                        @include('partials.am-blog-picture', [
+                            'variant' => $post->cardImageVariant(),
+                            'alt' => $post->heroAlt(),
+                            'lazy' => true,
+                        ])
                     </div>
                     @endif
                     <div class="am-blog-card__body">
