@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-24  
 **Branch:** `hotfix/production-regressions`  
-**Commit SHA:** `ff74eab`  
+**Commit SHA:** `94c68db`  
 **Status:** **LOCAL VISUALLY APPROVED**
 
 ## Problem
