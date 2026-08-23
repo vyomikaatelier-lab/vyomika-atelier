@@ -18,6 +18,7 @@
 !/bootstrap/cache/.gitignore
 /database/backups/*
 !/database/backups/.gitignore
+/storage/app/blog-backups/*
 /diagnostics/*
 !/diagnostics/audit_checks.php
 /vendor

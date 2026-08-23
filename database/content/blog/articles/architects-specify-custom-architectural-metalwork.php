@@ -1,0 +1,33 @@
+<?php
+
+return array (
+  'content' => '<p>Custom architectural metalwork — PVD partitions, entrance doors, railings, Corten screens and furniture — requires clearer specifications than catalogue joinery. Indian architects who document finish samples, fixing assumptions and coordination milestones reduce site conflict and change orders. This guide outlines what to put on drawings and when to involve the fabricator.</p><h2>Early engagement vs late procurement</h2><p>Involve metal fabricator during schematic design when floor plates, double-height volumes and entrance axes are set. Late addition of full-height PVD partitions often conflicts with already cast slab edges or MEP drops.</p><p>Vyomika Atelier collaborates with architects from our Delhi studio on pan-India projects via the <a href="/professionals">professionals page</a>.</p><h2>Drawing set essentials</h2><p>Plan dimensions to finished surfaces, elevation heights, opening widths, swing directions, glass type notes, PVD finish sample reference, fixing method (floor/ceiling/wall), and coordination with electrical for door interfaces.</p><p>Reference studio pages for scope language: <a href="/studio/pvd-partitions">PVD partitions</a>, <a href="/studio/main-entrance-pvd-doors">entrance doors</a>, <a href="/railings">railings</a>, <a href="/corten-steel">Corten</a>.</p><h2>Finish schedules</h2><p>One line per visible metal element: location, substrate, PVD colour name from approved sample, surface prep (hairline/mirror), orientation of brush direction on adjacent panels.</p><p>Cross-link hardware on <a href="/shop/door-handles">door handles</a> with same finish code.</p><h2>Structural and MEP coordination</h2><p>Confirm slab penetration policy with structural engineer. Ceiling-mounted partition tracks need clear services path in BOQ stage.</p><p>Floor drain locations near entrance frames affect threshold detail — note on door schedule.</p><h2>Performance language without overclaiming</h2><p>State required glass safety type, guard height intent and exposure class (interior/exterior) without inventing test certificates. Refer compliance to project consultant of record.</p><h2>Tender and substitution</h2><p>Define approved fabricator or performance spec to prevent low bids that omit PVD batch matching or correct glass thickness. Substitution clause should require sample approval.</p><p>Process overview: <a href="/blog/drawing-to-installation-custom-metal-fabrication-process">drawing to installation</a>.</p><h2>Site measurement and documentation</h2><p>Accurate field dimensions prevent costly remakes. For Delhi NCR projects, Vyomika Atelier can coordinate site visits when scope includes measurement-dependent metalwork.</p><p>Photograph adjacent finishes — stone, paint, veneer — alongside PVD samples so clients approve contrast in real conditions, not only on screen.</p><p>Record floor levelness and ceiling plane deviations; slim frames show gaps quickly if substrates are out of tolerance.</p><h2>Packaging, delivery and installation sequencing</h2><p>Custom metalwork ships labelled by room and orientation. Plan installation after primary wet trades and before final soft furnishings where possible.</p><p>Protect finished PVD faces with film until handover; construction dust in Indian sites is abrasive.</p><p>Pan-India delivery is routine from our Delhi studio — allow realistic lead time for fabrication, QC photography and crating rather than assuming ready-stock timelines.</p><h2>Questions to ask your fabricator early</h2><p>Which substrate grade and finish sample batch applies to the order?</p><p>Are shop drawings included and how many revision rounds are anticipated?</p><p>What installation support is available in your city versus supply-only delivery?</p><p>How are transport damage and transit insurance handled for large glass-and-metal panels?</p><h2>Drawing packages that fabricators need</h2><p>Plan, elevation and section at meaningful scale plus interface details to adjacent trades. Photographs help but do not replace dimensions on irregular existing buildings.</p><p>Note tolerances realistically — site-built openings in older Delhi colonies may be out of plumb; allow adjustment shims in design.</p><p>Identify visible versus concealed faces so grinding effort focuses where occupants see quality.</p><h2>Professional collaboration workflow</h2><p>Vyomika Atelier supports architects through drawing review, finish sampling and labelled delivery from our Delhi studio to sites across India.</p><p>Early involvement reduces RFIs during civil works — especially for embedded tracks, conduits behind Corten screens and floor inserts for pivot doors.</p><p>Use the <a href="/professionals">professionals page</a> to share practice details and receive specification support on active tenders.</p><h2>Conclusion</h2><p>Architects specify custom metalwork successfully with early fabricator input, finish schedules tied to physical samples, and drawings that show fixing and glass — not just elevation aesthetics. Treat metal as primary architecture, not a shop drawing afterthought.</p><p>Start at <a href="/professionals">professionals</a>.</p><p>See process in <a href="/blog/drawing-to-installation-custom-metal-fabrication-process">fabrication process guide</a>.</p><p>Browse <a href="/projects">projects</a> for specification references.</p><p>For a project-specific quotation, share floor plans or photos through our <a href="/contact">contact page</a>. Architects and interior designers may also begin from the <a href="/professionals">professionals collaboration page</a>.</p>',
+  'faq' => 
+  array (
+    0 => 
+    array (
+      'question' => 'When to issue finish sample to client?',
+      'answer' => 'Before bulk fabrication — typically at shop drawing approval with 300 mm sample or project-specific mock-up.',
+    ),
+    1 => 
+    array (
+      'question' => 'Who measures site?',
+      'answer' => 'Fabricator site measure after finishes are near complete, or architect provides as-built dimensions with tolerance notes.',
+    ),
+    2 => 
+    array (
+      'question' => 'Can one spec cover all metal?',
+      'answer' => 'Use one finish schedule; separate sheets for partitions, doors, railings and Corten with item-specific fixing notes.',
+    ),
+    3 => 
+    array (
+      'question' => 'How to specify Corten without run-off surprise?',
+      'answer' => 'Include drip detail reference and paving note — link landscape architect to metal shop drawings.',
+    ),
+    4 => 
+    array (
+      'question' => 'Do you accept NBS-style specs?',
+      'answer' => 'Share your template — we map to our fabrication scope and clarify exclusions in quotation.',
+    ),
+  ),
+);

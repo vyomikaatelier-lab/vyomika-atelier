@@ -1,0 +1,33 @@
+<?php
+
+return array (
+  'content' => '<p>The rich patina that makes Corten desirable also produces iron oxide run-off during early weathering — particularly through the first monsoon cycles in India. Stained sandstone, white marble plinths and light concrete pavers below Corten can look neglected even when the metal itself is performing correctly. Mitigation is geometric and procedural, not a mystery chemical.</p><h2>Why run-off happens</h2><p>Until the patina stabilises, rain washes loose oxide particles off the surface. Vertical façades shed downward; canopies drip concentrated streams at edges. This is normal — not a sign of defective steel if detailing follows weathering steel guidance.</p><h2>Detailing prevention</h2><p>Drip grooves, outward-sloping sills and kerb gaps prevent run-off from tracking across sensitive stone. Avoid Corten overhangs directly above porous paving without drip edge throw.</p><p>Elevate planters and panel bases above finished grade on hidden supports so splash does not soak into tile joints.</p><p>Full façade guidance: <a href="/blog/corten-steel-facades-design-drainage-weathering">Corten façades design and drainage</a>.</p><h2>Landscape and paving sequencing</h2><p>Install final paving after Corten has initial weathering where programme allows — or mask and wash paving during first season. Light granite and limestone show stains fastest.</p><p>Dark basalt hides run-off better but is not a substitute for drip detail. Direct downpipes away from mixed-material junctions.</p><h2>Maintenance during maturation</h2><p>Gentle water rinse of stained paving early may reduce deep absorption — avoid aggressive acid cleaners on natural stone without specialist advice.</p><p>Do not wire-brush Corten to stop run-off — you reset patina and worsen short-term shedding.</p><h2>Material pairings</h2><p>Pair Corten with tolerant materials at ground zone — concrete, dark aggregate, gravel strips — and keep delicate stone higher or set back.</p><p>Upper façades in Corten above glass railings or <a href="/railings">stainless railings</a> reduce ground staining while keeping warmth at eye level.</p><h2>Project communication</h2><p>Tell clients run-off eases after patina matures — typically one to two monsoon cycles in many North Indian sites, variable elsewhere.</p><p>Vyomika Atelier includes drip recommendations on shop drawings from our Delhi studio for pan-India Corten installs.</p><h2>Site measurement and documentation</h2><p>Accurate field dimensions prevent costly remakes. For Delhi NCR projects, Vyomika Atelier can coordinate site visits when scope includes measurement-dependent metalwork.</p><p>Photograph adjacent finishes — stone, paint, veneer — alongside PVD samples so clients approve contrast in real conditions, not only on screen.</p><p>Record floor levelness and ceiling plane deviations; slim frames show gaps quickly if substrates are out of tolerance.</p><h2>Packaging, delivery and installation sequencing</h2><p>Custom metalwork ships labelled by room and orientation. Plan installation after primary wet trades and before final soft furnishings where possible.</p><p>Protect finished PVD faces with film until handover; construction dust in Indian sites is abrasive.</p><p>Pan-India delivery is routine from our Delhi studio — allow realistic lead time for fabrication, QC photography and crating rather than assuming ready-stock timelines.</p><h2>Questions to ask your fabricator early</h2><p>Which substrate grade and finish sample batch applies to the order?</p><p>Are shop drawings included and how many revision rounds are anticipated?</p><p>What installation support is available in your city versus supply-only delivery?</p><p>How are transport damage and transit insurance handled for large glass-and-metal panels?</p><h2>Client communication during weathering</h2><p>Set expectations that Corten will look uneven for the first season. Share reference photos of early, mid and mature patina rather than only hero shots of fully weathered European projects.</p><p>Explain that runoff staining on paving is temporary if detailing is correct — but not zero-risk on porous sandstone.</p><p>Interior Corten feature walls do not need full weathering cycles but may still carry metallic odour briefly after installation; ventilate during snagging.</p><h2>Fabrication quality markers</h2><p>Look for clean fold radii without micro-cracking on outer faces, consistent weld grinding and labelled panel orientation for site crews.</p><p>Request material certificates and gauge confirmation on delivery — thickness affects stiffness on tall fins.</p><p>Pre-weathered panels may be specified for visible courtyards where adjacent finishes cannot tolerate any run-off period.</p><h2>Conclusion</h2><p>Reduce Corten run-off staining with drip edges, sensible paving sequence and realistic client briefing — not by fighting the weathering process. Plan ground-level materials to tolerate early oxide wash, then maintain paving lightly through the maturation period.</p><p>See <a href="/corten-steel">Corten steel</a>.</p><p>Understand patina in <a href="/blog/what-is-corten-steel-and-how-does-it-weather">how Corten weathers</a>.</p><p>Design façades via <a href="/blog/why-corten-steel-is-perfect-for-modern-facades">modern façade guide</a>.</p><p>For a project-specific quotation, share floor plans or photos through our <a href="/contact">contact page</a>. Architects and interior designers may also begin from the <a href="/professionals">professionals collaboration page</a>.</p>',
+  'faq' => 
+  array (
+    0 => 
+    array (
+      'question' => 'Can sealant stop all run-off?',
+      'answer' => 'Exterior sealants alter appearance and may fail unevenly. Geometric drip detail is the primary architectural solution.',
+    ),
+    1 => 
+    array (
+      'question' => 'How to clean stained sandstone?',
+      'answer' => 'Consult stone specialist — wrong acids etch stone. Prevention through detail beats remediation.',
+    ),
+    2 => 
+    array (
+      'question' => 'Does run-off harm plants?',
+      'answer' => 'Iron oxide runoff is mostly cosmetic for paving; soil chemistry effects vary — avoid direct drip on delicate planted borders if concerned.',
+    ),
+    3 => 
+    array (
+      'question' => 'Is first monsoon the worst?',
+      'answer' => 'Often yes for visible staining, then decreases as patina stabilises.',
+    ),
+    4 => 
+    array (
+      'question' => 'Should gutters be metal matched to Corten?',
+      'answer' => 'Compatible drainage metals or concealed PVC with careful colour choice avoids galvanic issues — detail with fabricator.',
+    ),
+  ),
+);
