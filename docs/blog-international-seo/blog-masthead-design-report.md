@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-24  
 **Branch:** `hotfix/production-regressions`  
-**Base:** `d34949d` → new commit (masthead refinement beyond `ece9cef`)  
+**Base:** `d34949d` → `9954f6b` (masthead refinement beyond `ece9cef`)  
 **Status:** **LOCAL COMPLETE — PRODUCTION BLOCKED (SSH)**
 
 ---
@@ -103,8 +103,8 @@ Screenshot paths: not captured (browser tools not used this session).
 
 ```
 Branch:  hotfix/production-regressions
-Base:    d34949d
-Remote:  push pending this commit
+SHA:     9954f6b
+Remote:  pushed to origin/hotfix/production-regressions
 ```
 
 Temp files **not committed:** `serve-vyomika.ps1`, `PROJECT_AUDIT_REPORT.md`, `WORKER_CHANGE_AUDIT.md`
@@ -175,7 +175,7 @@ Confirm: compact masthead vertical image beside title, no full-width hero, warm 
 | CSS + reading grid | ✓ Complete |
 | Tests | ✓ All pass |
 | Dry-run | ✓ Pass |
-| Commit + push | Pending |
+| Commit + push | ✓ `9954f6b` on origin |
 | Production deploy | **BLOCKED** — SSH key/password required |
 | Live verification | Pending owner deploy |
 
