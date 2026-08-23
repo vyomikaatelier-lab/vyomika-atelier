@@ -3,8 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\BlogPost;
+use App\Models\Product;
 use App\Support\BlogContentImporter;
 use Carbon\Carbon;
+use Database\Seeders\CatalogSyncSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Tests\TestCase;
@@ -12,6 +14,16 @@ use Tests\TestCase;
 class BlogContentImportTest extends TestCase
 {
     use RefreshDatabase;
+
+    /** @var list<string> Partition-gallery placeholders absent from production DB. */
+    private const UNVERIFIED_PRODUCT_SLUGS = [
+        'champagne-wave-partition',
+        'rose-gold-room-divider',
+        'veil-fluted-panel',
+        'laser-cut-partition',
+        'matte-black-pvd-partition',
+        'brushed-brass-coffee-table',
+    ];
 
     /** @var list<string> */
     private array $livePublishedSlugs = [
@@ -288,5 +300,130 @@ class BlogContentImportTest extends TestCase
         $this->assertNotNull($ukCorten);
         $this->assertContains('corten-steel', $ukCorten['related_service_slugs'] ?? []);
         $this->assertNotContains('corten-steel-facade', $ukCorten['related_service_slugs'] ?? []);
+    }
+
+    public function test_manifest_excludes_unverified_product_slugs(): void
+    {
+        $importer = new BlogContentImporter(database_path('content/blog'));
+        $articles = $importer->filterArticles(require database_path('content/blog/manifest.php'));
+
+        foreach ($articles as $article) {
+            foreach ($article['related_product_slugs'] ?? [] as $slug) {
+                $this->assertNotContains(
+                    $slug,
+                    self::UNVERIFIED_PRODUCT_SLUGS,
+                    "Manifest article {$article['slug']} references unverified product {$slug}"
+                );
+            }
+        }
+    }
+
+    public function test_manifest_related_product_slugs_resolve_or_empty(): void
+    {
+        $this->seed(CatalogSyncSeeder::class);
+
+        $importer = new BlogContentImporter(database_path('content/blog'));
+        $articles = $importer->filterArticles(require database_path('content/blog/manifest.php'));
+
+        foreach ($articles as $article) {
+            $slugs = $article['related_product_slugs'] ?? [];
+
+            if ($slugs === []) {
+                continue;
+            }
+
+            foreach ($slugs as $slug) {
+                $this->assertTrue(
+                    Product::query()->where('slug', $slug)->exists(),
+                    "Product slug {$slug} on {$article['slug']} does not resolve in database"
+                );
+            }
+        }
+    }
+
+    public function test_global_manifest_has_three_published_twenty_two_drafts_zero_scheduled(): void
+    {
+        $importer = new BlogContentImporter(database_path('content/blog'));
+        $articles = $importer->filterArticles(require database_path('content/blog/manifest.php'));
+
+        $published = collect($articles)->where('status', BlogPost::STATUS_PUBLISHED)->count();
+        $draft = collect($articles)->where('status', BlogPost::STATUS_DRAFT)->count();
+        $scheduled = collect($articles)->where('status', BlogPost::STATUS_SCHEDULED)->count();
+
+        $this->assertSame(25, count($articles));
+        $this->assertSame(3, $published);
+        $this->assertSame(22, $draft);
+        $this->assertSame(0, $scheduled);
+        $this->assertEqualsCanonicalizing(
+            BlogContentImporter::PRESERVE_PUBLISHED_SLUGS,
+            collect($articles)->where('status', BlogPost::STATUS_PUBLISHED)->pluck('slug')->all()
+        );
+    }
+
+    public function test_global_manifest_has_no_duplicate_slugs(): void
+    {
+        $importer = new BlogContentImporter(database_path('content/blog'));
+        $articles = $importer->filterArticles(require database_path('content/blog/manifest.php'));
+        $slugs = array_map(fn (array $a) => $a['slug'], $articles);
+
+        $this->assertSame(count($slugs), count(array_unique($slugs)));
+    }
+
+    public function test_published_pillar_articles_meet_word_count_target(): void
+    {
+        $importer = new BlogContentImporter(database_path('content/blog'));
+        $articles = $importer->loadManifest();
+
+        foreach (BlogContentImporter::PRESERVE_PUBLISHED_SLUGS as $slug) {
+            $article = collect($articles)->firstWhere('slug', $slug);
+            $this->assertNotNull($article, "Missing pillar article: {$slug}");
+
+            $words = str_word_count(strip_tags((string) ($article['content'] ?? '')));
+            $this->assertGreaterThanOrEqual(900, $words, "Pillar {$slug} below 900 words ({$words})");
+            $this->assertLessThanOrEqual(1100, $words, "Pillar {$slug} above 1100 words ({$words})");
+        }
+    }
+
+    public function test_dry_run_has_no_invalid_relationship_flags(): void
+    {
+        $this->seed(CatalogSyncSeeder::class);
+        $this->seedLivePublishedPostsWithArbitraryDates();
+
+        $importer = new BlogContentImporter(database_path('content/blog'));
+        $articles = $importer->filterArticles(require database_path('content/blog/manifest.php'));
+
+        foreach ($articles as $article) {
+            if (in_array($article['slug'], $this->livePublishedSlugs, true)) {
+                continue;
+            }
+
+            BlogPost::query()->create([
+                'title' => (string) ($article['title'] ?? $article['slug']),
+                'slug' => $article['slug'],
+                'content' => '<p>Legacy simulation</p>',
+                'excerpt' => str_repeat('x', 150),
+                'status' => BlogPost::STATUS_DRAFT,
+                'published_at' => null,
+                'hero_image_alt' => 'Alt',
+                'is_active' => true,
+            ]);
+        }
+
+        Artisan::call('blog:import-content', [
+            '--dry-run' => true,
+            '--global-only' => true,
+        ]);
+        $output = Artisan::output();
+
+        foreach ([
+            'Invalid product relationship',
+            'Invalid project relationship',
+            'Invalid service relationship',
+            'Invalid related article',
+            'Hero image is placeholder',
+            'Excerpt length',
+        ] as $flag) {
+            $this->assertStringNotContainsString($flag, $output, $output);
+        }
     }
 }

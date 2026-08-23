@@ -31,12 +31,6 @@ return array (
     array (
       0 => 'partitions',
     ),
-    'related_product_slugs' => 
-    array (
-      0 => 'champagne-wave-partition',
-      1 => 'rose-gold-room-divider',
-      2 => 'veil-fluted-panel',
-    ),
     'related_project_slugs' => 
     array (
       0 => 'champagne-wave-office-lobby',
@@ -73,7 +67,6 @@ return array (
     'related_product_slugs' => 
     array (
       0 => 'pvd-door-pull-handle',
-      1 => 'champagne-wave-partition',
     ),
     'related_article_slugs' => 
     array (
@@ -128,11 +121,6 @@ return array (
     array (
       0 => 'partitions',
     ),
-    'related_product_slugs' => 
-    array (
-      0 => 'veil-fluted-panel',
-      1 => 'laser-cut-partition',
-    ),
     'related_article_slugs' => 
     array (
       0 => 'glass-partitions-open-plan',
@@ -159,10 +147,6 @@ return array (
     array (
       0 => 'partitions',
     ),
-    'related_product_slugs' => 
-    array (
-      0 => 'champagne-wave-partition',
-    ),
     'related_article_slugs' => 
     array (
       0 => 'pvd-partitions-materials-finishes-applications-cost-factors',
@@ -187,10 +171,6 @@ return array (
     'related_service_slugs' => 
     array (
       0 => 'partitions',
-    ),
-    'related_product_slugs' => 
-    array (
-      0 => 'matte-black-pvd-partition',
     ),
     'related_article_slugs' => 
     array (
@@ -217,10 +197,6 @@ return array (
     'related_service_slugs' => 
     array (
       0 => 'partitions',
-    ),
-    'related_product_slugs' => 
-    array (
-      0 => 'rose-gold-room-divider',
     ),
     'related_project_slugs' => 
     array (
@@ -565,7 +541,6 @@ return array (
     'related_product_slugs' => 
     array (
       0 => 'gold-fluted-console',
-      1 => 'brushed-brass-coffee-table',
     ),
     'related_article_slugs' => 
     array (
@@ -590,8 +565,7 @@ return array (
     'meta_description' => 'Proportion, finish and glass options for metal coffee tables in luxury living rooms — with customisation notes for Indian homes.',
     'related_product_slugs' => 
     array (
-      0 => 'brushed-brass-coffee-table',
-      1 => 'rose-gold-glass-side-table',
+      0 => 'rose-gold-glass-side-table',
     ),
     'related_article_slugs' => 
     array (
@@ -617,11 +591,6 @@ return array (
     'related_service_slugs' => 
     array (
       0 => 'partitions',
-    ),
-    'related_product_slugs' => 
-    array (
-      0 => 'champagne-wave-partition',
-      1 => 'matte-black-pvd-partition',
     ),
     'related_article_slugs' => 
     array (
