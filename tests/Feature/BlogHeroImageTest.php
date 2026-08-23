@@ -10,7 +10,7 @@ class BlogHeroImageTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @return array<string, array{image: string, og_image: string, alt: string, hero_wh: string, card_wh: string}> */
+    /** @return array<string, array{image: string, og_image: string, alt: string, hero_wh: string}> */
     private function pillarFixtures(): array
     {
         return [
@@ -19,26 +19,23 @@ class BlogHeroImageTest extends TestCase
                 'og_image' => '/images/blog/heroes/glass-partitions-open-plan-hero-card.jpg',
                 'alt' => 'Gold-finished metal and glass partition installed in a Vyomika Atelier living-room project',
                 'hero_wh' => '768×1024',
-                'card_wh' => '768×432',
             ],
             'pvd-coating-explained' => [
                 'image' => '/images/blog/heroes/pvd-coating-explained-hero.jpg',
                 'og_image' => '/images/blog/heroes/pvd-coating-explained-hero-card.jpg',
                 'alt' => 'Close-up of a brushed gold PVD-coated metal plaque stencilled LED PROFILE PVD PARTITION, reflected on a glossy surface',
                 'hero_wh' => '1024×682',
-                'card_wh' => '1024×576',
             ],
             'corten-steel-modern-facades' => [
                 'image' => '/images/blog/heroes/corten-steel-modern-facades-hero.jpg',
                 'og_image' => '/images/blog/heroes/corten-steel-modern-facades-hero.jpg',
                 'alt' => 'Representative contemporary Indian building visualised with weathered Corten steel façade panels and perforated screens',
                 'hero_wh' => '1024×576',
-                'card_wh' => '1024×576',
             ],
         ];
     }
 
-    public function test_pillar_article_pages_render_webp_picture_hero_with_explicit_dimensions(): void
+    public function test_pillar_articles_expose_hero_in_meta_and_schema_not_visible_banner(): void
     {
         foreach ($this->pillarFixtures() as $slug => $fixture) {
             BlogPost::create([
@@ -56,24 +53,24 @@ class BlogHeroImageTest extends TestCase
 
             $html = $this->get(route('blog.show', $slug))->assertOk()->getContent();
 
-            $this->assertStringContainsString('<picture>', $html, $slug);
-            $this->assertStringContainsString('type="image/webp"', $html, $slug);
-            $this->assertStringContainsString('.webp', $html, $slug);
-            [$heroW, $heroH] = array_map('trim', explode('×', $fixture['hero_wh']));
-            $this->assertStringContainsString('width="'.$heroW.'"', $html, $slug);
-            $this->assertStringContainsString('height="'.$heroH.'"', $html, $slug);
-            $this->assertStringContainsString('loading="eager"', $html, $slug);
-            $this->assertStringContainsString('fetchpriority="high"', $html, $slug);
-            $this->assertStringContainsString($fixture['alt'], $html, $slug);
+            $this->assertStringNotContainsString('am-blog-article__hero', $html, $slug);
+            $this->assertStringNotContainsString('loading="eager"', $html, $slug.' should not render visible hero');
+            $this->assertStringContainsString('property="og:image"', $html, $slug);
             $this->assertStringContainsString(
                 asset(ltrim($fixture['og_image'], '/')),
                 $html,
                 $slug.' og:image'
             );
+            $this->assertStringContainsString('BlogPosting', $html, $slug);
+            $this->assertStringContainsString(
+                ltrim($fixture['og_image'], '/'),
+                $html,
+                $slug.' schema image path'
+            );
         }
     }
 
-    public function test_blog_index_uses_card_crops_with_lazy_webp_pictures(): void
+    public function test_blog_index_uses_vertical_frames_with_lazy_webp_pictures(): void
     {
         foreach ($this->pillarFixtures() as $slug => $fixture) {
             BlogPost::create([
@@ -91,8 +88,8 @@ class BlogHeroImageTest extends TestCase
 
         $html = $this->get(route('blog.index'))->assertOk()->getContent();
 
-        $this->assertStringContainsString('-hero-card.jpg', $html);
-        $this->assertStringContainsString('-hero-card.webp', $html);
+        $this->assertStringContainsString('blog-image-frame', $html);
+        $this->assertStringContainsString('-hero.jpg', $html);
         $this->assertStringContainsString('loading="lazy"', $html);
         $this->assertGreaterThan(0, substr_count($html, 'type="image/webp"'));
     }
@@ -114,8 +111,8 @@ class BlogHeroImageTest extends TestCase
 
         $html = $this->get(route('blog.show', 'corten-steel-modern-facades'))->assertOk()->getContent();
 
-        $this->assertStringContainsString('Representative', $html);
-        $this->assertStringContainsString('visualised', $html);
         $this->assertStringNotContainsString('Vyomika project', strtolower($html));
+        $this->assertStringContainsString('BlogPosting', $html);
+        $this->assertStringNotContainsString('am-blog-article__hero', $html);
     }
 }

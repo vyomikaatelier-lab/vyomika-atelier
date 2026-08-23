@@ -19,7 +19,7 @@
                 <div class="am-blog-featured__media">
                     @if($featured->imageUrl())
                     @include('partials.am-blog-picture', [
-                        'variant' => $featured->cardImageVariant(),
+                        'variant' => $featured->heroImageVariant(),
                         'alt' => $featured->heroAlt(),
                         'lazy' => false,
                     ])
@@ -76,7 +76,7 @@
                     @if($post->imageUrl())
                     <div class="am-blog-card__thumb">
                         @include('partials.am-blog-picture', [
-                            'variant' => $post->cardImageVariant(),
+                            'variant' => $post->heroImageVariant(),
                             'alt' => $post->heroAlt(),
                             'lazy' => true,
                         ])
