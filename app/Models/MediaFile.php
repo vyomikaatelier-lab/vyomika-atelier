@@ -41,7 +41,7 @@ class MediaFile extends Model
 
         $count += Product::query()->where('image', $path)->orWhere('gallery', 'like', '%' . $path . '%')->count();
         $count += Category::query()->where('image', $path)->count();
-        $count += Project::query()->where('image', $path)->orWhere('gallery', 'like', '%' . $path . '%')->count();
+        $count += Project::query()->where('image_path', $path)->count();
         $count += BlogPost::query()->where('image', $path)->orWhere('gallery', 'like', '%' . $path . '%')->count();
         $count += Exhibition::query()->where('cover_image', $path)->orWhere('gallery', 'like', '%' . $path . '%')->count();
         $count += Service::query()->where('image', $path)->count();
