@@ -9,7 +9,7 @@ $articlesDir = dirname(__DIR__).'/content/blog/articles';
 $manifestPath = dirname(__DIR__).'/content/blog/manifest.php';
 
 $extraSections = [
-    'glass-partitions-open-plan-without-compromise' => [
+    'glass-partitions-open-plan' => [
         ['Coordinating with MEP and ceiling design', [
             'Open-plan partitions often sit beneath exposed ductwork or feature ceilings. Confirm headroom for top tracks and whether sprinklers need repositioning before fixing ceiling anchors.',
             'Lighting designers frequently graze PVD frames with linear LED — coordinate diffuser placement so you do not cast harsh stripes across fluted glass at night.',
@@ -46,9 +46,9 @@ $extraSections = [
 ];
 
 $excerpts = [
-    'glass-partitions-open-plan-without-compromise' => 'Zone open-plan Indian homes and offices with glass and PVD metal partitions that keep daylight, flow and privacy in balance — materials, fixings and maintenance guidance.',
-    'pvd-coating-explained-durable-metal-finishes' => 'What PVD coating is on stainless metalwork, how it differs from powder coat and plating, and how architects specify durable champagne, gold and black finishes in India.',
-    'why-corten-steel-is-perfect-for-modern-facades' => 'Why weathering steel suits contemporary Indian façades — patina character, design applications, drainage detailing and specification notes for architects and developers.',
+    'glass-partitions-open-plan' => 'Zone open-plan Indian homes and offices with glass and PVD metal partitions that keep daylight, flow and privacy in balance — materials, fixings and maintenance guidance.',
+    'pvd-coating-explained' => 'What PVD coating is on stainless metalwork, how it differs from powder coat and plating, and how architects specify durable champagne, gold and black finishes in India.',
+    'corten-steel-modern-facades' => 'Why weathering steel suits contemporary Indian façades — patina character, design applications, drainage detailing and specification notes for architects and developers.',
     'pvd-partitions-materials-finishes-applications-cost-factors' => 'Specify PVD metal partitions with confidence: materials, finish options, living-room and office applications, and the factors that shape a project quotation in India.',
     'pvd-partition-price-in-india-what-determines-final-cost' => 'Understand PVD partition pricing in India — size, glass, hardware, finish and site conditions — without relying on misleading online list prices.',
     'pvd-partitions-vs-powder-coated-metal-partitions' => 'Compare PVD and powder-coated metal partitions for appearance, touch durability and maintenance when specifying Indian interior metalwork.',

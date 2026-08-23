@@ -15,15 +15,37 @@ class BlogContentImporter
 {
     public const SOURCE = 'blog-content-v1';
 
-    /** @var list<string> */
-    public const PRESERVE_PUBLISHED_SLUGS = [
-        'glass-partitions-open-plan-without-compromise',
-        'pvd-coating-explained-durable-metal-finishes',
-        'why-corten-steel-is-perfect-for-modern-facades',
+    /** Manifest/content keys that map to verified live published slugs. */
+    public const LEGACY_SLUG_MAP = [
+        'glass-partitions-open-plan-without-compromise' => 'glass-partitions-open-plan',
+        'pvd-coating-explained-durable-metal-finishes' => 'pvd-coating-explained',
+        'why-corten-steel-is-perfect-for-modern-facades' => 'corten-steel-modern-facades',
     ];
+
+    /** @var list<string> Verified live published slugs — status and published_at must be preserved. */
+    public const PRESERVE_PUBLISHED_SLUGS = [
+        'glass-partitions-open-plan',
+        'pvd-coating-explained',
+        'corten-steel-modern-facades',
+    ];
+
+    /** Service slugs stored on blog posts that resolve to landing pages, not DB services. */
+    public const LANDING_SERVICE_SLUGS = [
+        'corten-steel',
+        'railings',
+    ];
+
+    /** @var array<string, string> Normalize invalid historical service references. */
+    public const SERVICE_SLUG_ALIASES = [
+        'corten-steel-facade' => 'corten-steel',
+    ];
+
+    /** @var list<string>|null */
+    private ?array $manifestFinalSlugs = null;
 
     /** @var array<string, mixed> */
     private array $report = [
+        'rows' => [],
         'create' => [],
         'update' => [],
         'skip' => [],
@@ -31,9 +53,45 @@ class BlogContentImporter
         'errors' => [],
     ];
 
+    private bool $globalOnly = true;
+
+    private bool $regionalOnly = false;
+
+    private bool $publishedOnly = false;
+
+    private bool $draftsOnly = false;
+
     public function __construct(
         private readonly string $contentPath,
     ) {}
+
+    public function setGlobalOnly(bool $globalOnly): self
+    {
+        $this->globalOnly = $globalOnly;
+
+        return $this;
+    }
+
+    public function setRegionalOnly(bool $regionalOnly): self
+    {
+        $this->regionalOnly = $regionalOnly;
+
+        return $this;
+    }
+
+    public function setPublishedOnly(bool $publishedOnly): self
+    {
+        $this->publishedOnly = $publishedOnly;
+
+        return $this;
+    }
+
+    public function setDraftsOnly(bool $draftsOnly): self
+    {
+        $this->draftsOnly = $draftsOnly;
+
+        return $this;
+    }
 
     /** @return array<string, mixed> */
     public function report(): array
@@ -63,17 +121,59 @@ class BlogContentImporter
      * @param  list<array<string, mixed>>  $articles
      * @return list<array<string, mixed>>
      */
+    public function filterArticles(array $articles): array
+    {
+        return array_values(array_filter($articles, function (array $article) {
+            $isRegional = isset($article['locale']) && filled($article['locale']);
+            $importEligible = (bool) ($article['import_eligible'] ?? ! $isRegional);
+
+            if ($this->regionalOnly && ! $isRegional) {
+                return false;
+            }
+
+            if ($this->globalOnly && $isRegional) {
+                return false;
+            }
+
+            if (! $importEligible && ! $this->regionalOnly) {
+                return false;
+            }
+
+            $status = (string) ($article['status'] ?? BlogPost::STATUS_DRAFT);
+
+            if ($this->publishedOnly && $status !== BlogPost::STATUS_PUBLISHED) {
+                return false;
+            }
+
+            if ($this->draftsOnly && $status !== BlogPost::STATUS_DRAFT) {
+                return false;
+            }
+
+            return true;
+        }));
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $articles
+     * @return list<array<string, mixed>>
+     */
     private function hydrateArticles(array $articles): array
     {
         $hydrated = [];
 
         foreach ($articles as $article) {
-            $slug = (string) ($article['slug'] ?? '');
-            if ($slug === '') {
+            $manifestKey = (string) ($article['manifest_key'] ?? $article['slug'] ?? '');
+            $finalSlug = $this->resolveFinalSlug($article);
+
+            if ($manifestKey === '' && $finalSlug === '') {
                 continue;
             }
 
-            $contentFile = $this->contentPath.'/articles/'.$slug.'.php';
+            $contentFile = $this->contentPath.'/articles/'.$manifestKey.'.php';
+            if (! File::exists($contentFile) && $manifestKey !== $finalSlug) {
+                $contentFile = $this->contentPath.'/articles/'.$finalSlug.'.php';
+            }
+
             if (File::exists($contentFile)) {
                 $loaded = require $contentFile;
                 if (is_array($loaded)) {
@@ -82,6 +182,9 @@ class BlogContentImporter
                     $article['content'] = $loaded;
                 }
             }
+
+            $article['manifest_key'] = $manifestKey;
+            $article['slug'] = $finalSlug;
 
             $hydrated[] = $article;
         }
@@ -104,11 +207,11 @@ class BlogContentImporter
     }
 
     /**
-     * @return array{created: int, updated: int, skipped: int, flagged: int}
+     * @return array{created: int, updated: int, skipped: int, flagged: int, processed: int}
      */
     public function import(bool $dryRun = false): array
     {
-        $articles = $this->loadManifest();
+        $articles = $this->filterArticles($this->loadManifest());
         $created = 0;
         $updated = 0;
         $skipped = 0;
@@ -142,7 +245,40 @@ class BlogContentImporter
             throw $e;
         }
 
-        return compact('created', 'updated', 'skipped', 'flagged');
+        return [
+            'created' => $created,
+            'updated' => $updated,
+            'skipped' => $skipped,
+            'flagged' => $flagged,
+            'processed' => count($articles),
+        ];
+    }
+
+    public function resolveFinalSlug(array $article): string
+    {
+        $slug = (string) ($article['slug'] ?? '');
+
+        return self::LEGACY_SLUG_MAP[$slug] ?? $slug;
+    }
+
+    private function findExistingPost(string $finalSlug): ?BlogPost
+    {
+        $existing = BlogPost::query()->where('slug', $finalSlug)->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        foreach (self::LEGACY_SLUG_MAP as $legacy => $live) {
+            if ($live === $finalSlug) {
+                $legacyPost = BlogPost::query()->where('slug', $legacy)->first();
+                if ($legacyPost) {
+                    return $legacyPost;
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -151,43 +287,101 @@ class BlogContentImporter
      */
     private function importOne(array $article, bool $dryRun): array
     {
-        $slug = (string) $article['slug'];
+        $manifestKey = (string) ($article['manifest_key'] ?? $article['slug']);
+        $finalSlug = $this->resolveFinalSlug($article);
         $messages = [];
         $flagged = false;
 
-        $existing = BlogPost::query()->where('slug', $slug)->first();
+        if (array_key_exists($finalSlug, self::LEGACY_SLUG_MAP)) {
+            $messages[] = 'Refusing to create record with deprecated legacy slug';
+            $this->report['errors'][] = "{$manifestKey}: deprecated legacy slug target";
+            $this->reportRecord($article, null, $finalSlug, 'error', BlogPost::STATUS_DRAFT, BlogPost::STATUS_DRAFT, null, null, $messages);
+
+            return ['action' => 'skip', 'slug' => $finalSlug, 'flagged' => true, 'messages' => $messages];
+        }
+
+        $existing = $this->findExistingPost($finalSlug);
+        $statusBefore = $existing?->status;
+        $publishedAtBefore = $existing?->published_at;
+
         $payload = $this->buildPayload($article, $existing, $messages, $flagged);
+        $statusAfter = $payload['status'];
+        $publishedAtAfter = $payload['published_at'];
+
+        if ($existing && in_array($existing->slug, array_keys(self::LEGACY_SLUG_MAP), true)) {
+            $payload['slug'] = $finalSlug;
+        }
 
         if ($existing) {
             if ($this->shouldSkip($existing, $article)) {
-                $this->report['skip'][] = $slug;
-                $this->report['flag'] = array_merge($this->report['flag'], array_map(fn ($m) => "{$slug}: {$m}", $messages));
+                $this->report['skip'][] = $finalSlug;
+                $this->reportRecord($article, $existing, $finalSlug, 'skip', $statusBefore, $statusAfter, $publishedAtBefore, $publishedAtAfter, $messages);
+                $this->appendFlags($finalSlug, $messages);
 
-                return ['action' => 'skip', 'slug' => $slug, 'flagged' => $flagged, 'messages' => $messages];
+                return ['action' => 'skip', 'slug' => $finalSlug, 'flagged' => $flagged, 'messages' => $messages];
             }
 
             if (! $dryRun) {
                 $existing->update($payload);
             }
 
-            $this->report['update'][] = $slug;
-            if ($messages !== []) {
-                $this->report['flag'] = array_merge($this->report['flag'], array_map(fn ($m) => "{$slug}: {$m}", $messages));
-            }
+            $this->report['update'][] = $finalSlug;
+            $this->reportRecord($article, $existing, $finalSlug, 'update', $statusBefore, $statusAfter, $publishedAtBefore, $publishedAtAfter, $messages);
+            $this->appendFlags($finalSlug, $messages);
 
-            return ['action' => 'update', 'slug' => $slug, 'flagged' => $flagged, 'messages' => $messages];
+            return ['action' => 'update', 'slug' => $finalSlug, 'flagged' => $flagged, 'messages' => $messages];
         }
 
         if (! $dryRun) {
             BlogPost::query()->create($payload);
         }
 
-        $this->report['create'][] = $slug;
-        if ($messages !== []) {
-            $this->report['flag'] = array_merge($this->report['flag'], array_map(fn ($m) => "{$slug}: {$m}", $messages));
-        }
+        $this->report['create'][] = $finalSlug;
+        $this->reportRecord($article, null, $finalSlug, 'create', null, $statusAfter, null, $publishedAtAfter, $messages);
+        $this->appendFlags($finalSlug, $messages);
 
-        return ['action' => 'create', 'slug' => $slug, 'flagged' => $flagged, 'messages' => $messages];
+        return ['action' => 'create', 'slug' => $finalSlug, 'flagged' => $flagged, 'messages' => $messages];
+    }
+
+    /**
+     * @param  list<string>  $messages
+     */
+    private function reportRecord(
+        array $article,
+        ?BlogPost $existing,
+        string $finalSlug,
+        string $action,
+        ?string $statusBefore,
+        string $statusAfter,
+        mixed $publishedAtBefore,
+        mixed $publishedAtAfter,
+        array $messages,
+    ): void {
+        $this->report['rows'][] = [
+            'db_id' => $existing?->id,
+            'slug' => $existing?->slug ?? $finalSlug,
+            'manifest_key' => (string) ($article['manifest_key'] ?? $article['slug'] ?? ''),
+            'final_slug' => $finalSlug,
+            'action' => $action,
+            'status_before' => $statusBefore,
+            'status_after' => $statusAfter,
+            'published_at_before' => $publishedAtBefore instanceof Carbon ? $publishedAtBefore->toIso8601String() : $publishedAtBefore,
+            'published_at_after' => $publishedAtAfter instanceof Carbon ? $publishedAtAfter->toIso8601String() : $publishedAtAfter,
+            'word_count' => str_word_count(strip_tags((string) ($article['content'] ?? ''))),
+            'excerpt_length' => strlen((string) ($article['excerpt'] ?? '')),
+            'messages' => $messages,
+        ];
+    }
+
+    /** @param  list<string>  $messages */
+    private function appendFlags(string $slug, array $messages): void
+    {
+        if ($messages !== []) {
+            $this->report['flag'] = array_merge(
+                $this->report['flag'],
+                array_map(fn ($m) => "{$slug}: {$m}", $messages)
+            );
+        }
     }
 
     /**
@@ -197,7 +391,7 @@ class BlogContentImporter
      */
     private function buildPayload(array $article, ?BlogPost $existing, array &$messages, bool &$flagged): array
     {
-        $slug = (string) $article['slug'];
+        $finalSlug = $this->resolveFinalSlug($article);
         $content = (string) ($article['content'] ?? '');
 
         if ($content === '') {
@@ -213,37 +407,45 @@ class BlogContentImporter
 
         $excerpt = (string) ($article['excerpt'] ?? '');
         $excerptLen = strlen($excerpt);
-        if ($excerptLen > 0 && ($excerptLen < 140 || $excerptLen > 165)) {
+        $excerptInvalid = $excerptLen > 0 && ($excerptLen < 140 || $excerptLen > 165);
+        if ($excerptInvalid) {
             $messages[] = "Excerpt length {$excerptLen} chars (target 140–165)";
+            $flagged = true;
         }
 
         $image = $article['image'] ?? null;
-        if ($this->isPlaceholderImage($image)) {
-            $messages[] = 'Hero image is placeholder or unsuitable — replace before publishing';
+        $imageUnsuitable = $this->isPlaceholderImage($image);
+        if ($imageUnsuitable) {
+            $messages[] = 'Hero image is placeholder or unsuitable — article stays draft until replaced';
             $flagged = true;
         }
 
         $requestedProducts = $this->normalizeStringList($article['related_product_slugs'] ?? []) ?? [];
-        $requestedServices = $this->normalizeStringList($article['related_service_slugs'] ?? []) ?? [];
+        $requestedServices = $this->normalizeServiceSlugs($article['related_service_slugs'] ?? []);
         $requestedProjects = $this->normalizeStringList($article['related_project_slugs'] ?? []) ?? [];
+        $requestedArticles = $this->normalizeRelatedArticleSlugs($article['related_article_slugs'] ?? []);
 
         [$productSlugs, $invalidProducts] = $this->resolveProductSlugs($requestedProducts);
         [$serviceSlugs, $invalidServices] = $this->resolveServiceSlugs($requestedServices);
         [$projectSlugs, $projectIds, $invalidProjects] = $this->resolveProjects($requestedProjects);
+        [$articleSlugs, $invalidArticles] = $this->resolveArticleSlugs($requestedArticles);
 
         foreach ($invalidProducts as $invalid) {
-            $messages[] = "Product slug not yet in database: {$invalid} (stored for when catalogue syncs)";
+            $messages[] = "Invalid product relationship: {$invalid}";
+            $flagged = true;
         }
         foreach ($invalidServices as $invalid) {
-            $messages[] = "Service slug not yet in database: {$invalid} (stored for when catalogue syncs)";
+            $messages[] = "Invalid service relationship: {$invalid}";
+            $flagged = true;
         }
         foreach ($invalidProjects as $invalid) {
-            $messages[] = "Project slug not yet in database: {$invalid} (stored for when projects seed)";
+            $messages[] = "Invalid project relationship: {$invalid}";
+            $flagged = true;
         }
-
-        $productSlugs = $requestedProducts !== [] ? $requestedProducts : $productSlugs;
-        $serviceSlugs = $requestedServices !== [] ? $requestedServices : $serviceSlugs;
-        $projectSlugs = $requestedProjects !== [] ? $requestedProjects : $projectSlugs;
+        foreach ($invalidArticles as $invalid) {
+            $messages[] = "Invalid related article: {$invalid}";
+            $flagged = true;
+        }
 
         $status = $this->resolveStatus($article, $existing, $flagged);
         $publishedAt = $this->resolvePublishedAt($article, $existing, $status);
@@ -252,8 +454,8 @@ class BlogContentImporter
 
         return [
             'title' => (string) $article['title'],
-            'slug' => $slug,
-            'excerpt' => (string) ($article['excerpt'] ?? ''),
+            'slug' => $finalSlug,
+            'excerpt' => $excerpt,
             'content' => $content,
             'image' => $image,
             'hero_image_alt' => (string) ($article['hero_image_alt'] ?? $article['title'].' — Vyomika Atelier'),
@@ -274,7 +476,7 @@ class BlogContentImporter
             'related_project_slugs' => $projectSlugs !== [] ? $projectSlugs : null,
             'related_project_ids' => $projectIds !== [] ? $projectIds : null,
             'related_service_slugs' => $serviceSlugs !== [] ? $serviceSlugs : null,
-            'related_article_slugs' => $this->normalizeStringList($article['related_article_slugs'] ?? []),
+            'related_article_slugs' => $articleSlugs !== [] ? $articleSlugs : null,
             'faq' => $faq !== [] ? $faq : null,
             'is_featured' => (bool) ($article['is_featured'] ?? false),
             'is_active' => (bool) ($article['is_active'] ?? in_array($status, [
@@ -296,17 +498,20 @@ class BlogContentImporter
 
     private function resolveStatus(array $article, ?BlogPost $existing, bool $flagged): string
     {
-        if ($existing?->isPublished() && ! in_array($existing->slug, self::PRESERVE_PUBLISHED_SLUGS, true)) {
-            // Preserve any other published posts not in our library
-            return BlogPost::STATUS_PUBLISHED;
+        $finalSlug = $this->resolveFinalSlug($article);
+
+        if ($existing && (
+            in_array($existing->slug, self::PRESERVE_PUBLISHED_SLUGS, true)
+            || in_array($finalSlug, self::PRESERVE_PUBLISHED_SLUGS, true)
+            || array_key_exists($existing->slug, self::LEGACY_SLUG_MAP)
+        )) {
+            if ($existing->status === BlogPost::STATUS_PUBLISHED || $existing->isPublished()) {
+                return BlogPost::STATUS_PUBLISHED;
+            }
         }
 
-        if ($existing && in_array($existing->slug, self::PRESERVE_PUBLISHED_SLUGS, true)) {
-            return BlogPost::STATUS_PUBLISHED;
-        }
-
-        if (in_array($article['slug'], self::PRESERVE_PUBLISHED_SLUGS, true) && ! $flagged) {
-            return BlogPost::STATUS_PUBLISHED;
+        if ($flagged) {
+            return BlogPost::STATUS_DRAFT;
         }
 
         if (! empty($article['status'])) {
@@ -322,7 +527,12 @@ class BlogContentImporter
             return null;
         }
 
-        if ($existing?->published_at && in_array($existing->slug, self::PRESERVE_PUBLISHED_SLUGS, true)) {
+        $finalSlug = $this->resolveFinalSlug($article);
+
+        if ($existing?->published_at && (
+            in_array($existing->slug, self::PRESERVE_PUBLISHED_SLUGS, true)
+            || in_array($finalSlug, self::PRESERVE_PUBLISHED_SLUGS, true)
+        )) {
             return $existing->published_at;
         }
 
@@ -376,6 +586,30 @@ class BlogContentImporter
         return $values !== [] ? $values : null;
     }
 
+    /** @param  array<int, mixed>  $items */
+    private function normalizeServiceSlugs(array $items): array
+    {
+        return array_values(array_filter(array_map(function ($item) {
+            if (! is_string($item)) {
+                return null;
+            }
+
+            return self::SERVICE_SLUG_ALIASES[$item] ?? $item;
+        }, $items)));
+    }
+
+    /** @param  array<int, mixed>  $items */
+    private function normalizeRelatedArticleSlugs(array $items): array
+    {
+        return array_values(array_filter(array_map(function ($item) {
+            if (! is_string($item)) {
+                return null;
+            }
+
+            return self::LEGACY_SLUG_MAP[$item] ?? $item;
+        }, $items)));
+    }
+
     /** @return array{0: list<string>, 1: list<string>} */
     private function resolveProductSlugs(array $slugs): array
     {
@@ -400,8 +634,11 @@ class BlogContentImporter
         $invalid = [];
 
         foreach ($this->normalizeStringList($slugs) ?? [] as $slug) {
-            if (Service::query()->where('slug', $slug)->exists()) {
-                $valid[] = $slug;
+            $normalized = self::SERVICE_SLUG_ALIASES[$slug] ?? $slug;
+
+            if (Service::query()->where('slug', $normalized)->exists()
+                || in_array($normalized, self::LANDING_SERVICE_SLUGS, true)) {
+                $valid[] = $normalized;
             } else {
                 $invalid[] = $slug;
             }
@@ -418,9 +655,6 @@ class BlogContentImporter
         $invalid = [];
 
         foreach ($this->normalizeStringList($slugs) ?? [] as $slug) {
-            $project = Project::query()->where('project_name', 'like', '%'.$slug.'%')->first();
-
-            // Projects table no longer has slug column after simplification — match by related slugs from catalog if stored elsewhere
             $catalog = collect(require database_path('data/projects-catalog.php'));
             $catalogMatch = $catalog->firstWhere('slug', $slug);
 
@@ -438,6 +672,39 @@ class BlogContentImporter
         }
 
         return [$validSlugs, $ids, $invalid];
+    }
+
+    /** @return list<string> */
+    private function manifestFinalSlugs(): array
+    {
+        if ($this->manifestFinalSlugs === null) {
+            $this->manifestFinalSlugs = collect(require $this->contentPath.'/manifest.php')
+                ->map(fn (array $a) => $this->resolveFinalSlug($a))
+                ->all();
+        }
+
+        return $this->manifestFinalSlugs;
+    }
+
+    /** @return array{0: list<string>, 1: list<string>} */
+    private function resolveArticleSlugs(array $slugs): array
+    {
+        $valid = [];
+        $invalid = [];
+        $manifestSlugs = $this->manifestFinalSlugs();
+
+        foreach ($this->normalizeStringList($slugs) ?? [] as $slug) {
+            $normalized = self::LEGACY_SLUG_MAP[$slug] ?? $slug;
+
+            if (BlogPost::query()->where('slug', $normalized)->exists()
+                || in_array($normalized, $manifestSlugs, true)) {
+                $valid[] = $normalized;
+            } else {
+                $invalid[] = $slug;
+            }
+        }
+
+        return [$valid, $invalid];
     }
 
     private function isPlaceholderImage(?string $image): bool

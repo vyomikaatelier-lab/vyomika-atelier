@@ -4,13 +4,14 @@
  * Blog content library manifest — global + regional articles for blog:import-content.
  *
  * Body HTML lives in database/content/blog/articles/{slug}.php
+ * Regional entries (locale set) require --regional flag; default import is global-only.
  *
  * @return list<array<string, mixed>>
  */
 return array (
   0 => 
   array (
-    'slug' => 'glass-partitions-open-plan-without-compromise',
+    'slug' => 'glass-partitions-open-plan',
     'title' => 'Glass Partitions: Open Plan Without Compromise',
     'category' => 'PVD Partitions',
     'cluster' => 'PVD PARTITIONS',
@@ -43,11 +44,12 @@ return array (
       1 => 'how-to-select-metal-partition-for-living-room',
       2 => 'pvd-partitions-vs-powder-coated-metal-partitions',
     ),
-    'excerpt' => 'Zone open-plan Indian homes and offices with glass and PVD metal partitions that keep daylight, flow and privacy in balance — materials, fixings and maintenance…',
+    'excerpt' => 'Zone open-plan Indian homes and offices with glass and PVD metal partitions that keep daylight, flow and privacy in balance — materials, fixings and maintenance.',
+    'import_eligible' => true,
   ),
   1 => 
   array (
-    'slug' => 'pvd-coating-explained-durable-metal-finishes',
+    'slug' => 'pvd-coating-explained',
     'title' => 'PVD Coating Explained: Durable Metal Finishes',
     'category' => 'PVD Finishes',
     'cluster' => 'PVD HARDWARE/FURNITURE',
@@ -74,11 +76,12 @@ return array (
       1 => 'pvd-partitions-vs-powder-coated-metal-partitions',
       2 => 'pvd-door-handles-finishes-sizes-selection-guide',
     ),
-    'excerpt' => 'What PVD coating is on stainless metalwork, how it differs from powder coat and plating, and how architects specify durable champagne, gold and black finishes in…',
+    'excerpt' => 'What PVD coating is on stainless metalwork, how it differs from powder coat and plating, and how architects specify durable champagne, gold and black finishes.',
+    'import_eligible' => true,
   ),
   2 => 
   array (
-    'slug' => 'why-corten-steel-is-perfect-for-modern-facades',
+    'slug' => 'corten-steel-modern-facades',
     'title' => 'Why Corten Steel Is Perfect for Modern Façades',
     'category' => 'Corten Steel',
     'cluster' => 'CORTEN STEEL',
@@ -99,7 +102,8 @@ return array (
       1 => 'corten-steel-facades-design-drainage-weathering',
       2 => 'corten-steel-cladding-vs-conventional-painted-steel',
     ),
-    'excerpt' => 'Why weathering steel suits modern Indian facades: patina character, design uses, drainage detailing and specification notes for architects.',
+    'excerpt' => 'Why weathering steel suits modern Indian facades: patina character, design uses, drainage detailing and specification notes for architects and developers.',
+    'import_eligible' => true,
   ),
   3 => 
   array (
@@ -125,11 +129,12 @@ return array (
     ),
     'related_article_slugs' => 
     array (
-      0 => 'glass-partitions-open-plan-without-compromise',
+      0 => 'glass-partitions-open-plan',
       1 => 'pvd-partition-price-in-india-what-determines-final-cost',
       2 => 'pvd-partitions-vs-powder-coated-metal-partitions',
     ),
-    'excerpt' => 'Specify PVD metal partitions with confidence: materials, finish options, living-room and office applications, and the factors that shape a project quotation in In…',
+    'excerpt' => 'Specify PVD metal partitions with confidence: materials, finish options, living-room and office applications, and factors that shape a project quotation in India.',
+    'import_eligible' => true,
   ),
   4 => 
   array (
@@ -156,9 +161,10 @@ return array (
     array (
       0 => 'pvd-partitions-materials-finishes-applications-cost-factors',
       1 => 'how-to-select-metal-partition-for-living-room',
-      2 => 'pvd-coating-explained-durable-metal-finishes',
+      2 => 'pvd-coating-explained',
     ),
-    'excerpt' => 'Understand PVD partition pricing in India — size, glass, hardware, finish and site conditions — without relying on misleading online list prices.',
+    'excerpt' => 'Understand PVD partition pricing in India — size, glass, hardware, finish and site conditions — without misleading online list prices for bespoke metalwork.',
+    'import_eligible' => true,
   ),
   5 => 
   array (
@@ -183,11 +189,12 @@ return array (
     ),
     'related_article_slugs' => 
     array (
-      0 => 'pvd-coating-explained-durable-metal-finishes',
-      1 => 'glass-partitions-open-plan-without-compromise',
+      0 => 'pvd-coating-explained',
+      1 => 'glass-partitions-open-plan',
       2 => 'pvd-finish-selection-guide-gold-rose-gold-champagne-black',
     ),
-    'excerpt' => 'Compare PVD and powder-coated metal partitions for appearance, touch durability and maintenance when specifying Indian interior metalwork.',
+    'excerpt' => 'Compare PVD and powder-coated metal partitions for appearance, touch durability and maintenance when specifying interior metalwork for Indian homes and offices.',
+    'import_eligible' => true,
   ),
   6 => 
   array (
@@ -216,11 +223,12 @@ return array (
     ),
     'related_article_slugs' => 
     array (
-      0 => 'glass-partitions-open-plan-without-compromise',
+      0 => 'glass-partitions-open-plan',
       1 => 'pvd-partitions-materials-finishes-applications-cost-factors',
       2 => 'pvd-partition-price-in-india-what-determines-final-cost',
     ),
     'excerpt' => 'Plan a living-room metal partition for privacy, light and proportion — glass choices, PVD finishes and circulation clearances for Indian apartments and villas.',
+    'import_eligible' => true,
   ),
   7 => 
   array (
@@ -249,7 +257,8 @@ return array (
       1 => 'how-to-choose-luxury-main-entrance-door',
       2 => 'stainless-steel-glass-etched-entrance-doors-compared',
     ),
-    'excerpt' => 'Compare slim profile hinged, sliding and telescopic door systems for Indian homes — space planning, glass options and hardware selection.',
+    'excerpt' => 'Compare slim profile hinged, sliding and telescopic door systems for Indian homes — space planning, glass options and hardware selection for interior openings.',
+    'import_eligible' => true,
   ),
   8 => 
   array (
@@ -271,10 +280,11 @@ return array (
     'related_article_slugs' => 
     array (
       0 => 'slim-profile-doors-hinged-sliding-telescopic-compared',
-      1 => 'glass-partitions-open-plan-without-compromise',
+      1 => 'glass-partitions-open-plan',
       2 => 'how-to-choose-luxury-main-entrance-door',
     ),
-    'excerpt' => 'Use fluted and reeded glass with slim profile doors for privacy and light diffusion in bathrooms, bedrooms and office cabins across Indian interiors.',
+    'excerpt' => 'Use fluted and reeded glass with slim profile doors for privacy and light diffusion in bathrooms, bedrooms and office cabins across Indian interior projects.',
+    'import_eligible' => true,
   ),
   9 => 
   array (
@@ -306,9 +316,10 @@ return array (
     array (
       0 => 'stainless-steel-glass-etched-entrance-doors-compared',
       1 => 'select-pull-handle-length-for-main-door',
-      2 => 'pvd-coating-explained-durable-metal-finishes',
+      2 => 'pvd-coating-explained',
     ),
-    'excerpt' => 'Choose a luxury main entrance door for Indian residences — proportion, PVD finishes, security hardware and coordination with the building façade.',
+    'excerpt' => 'Choose a luxury main entrance door for Indian residences — proportion, PVD finishes, security hardware and coordination with the building facade and landscape.',
+    'import_eligible' => true,
   ),
   10 => 
   array (
@@ -333,7 +344,8 @@ return array (
       1 => 'fluted-glass-slim-profile-doors-design-privacy-guide',
       2 => 'slim-profile-doors-hinged-sliding-telescopic-compared',
     ),
-    'excerpt' => 'Compare stainless, glass-forward and etched entrance doors for Indian homes — visual weight, privacy levels and long-term maintenance.',
+    'excerpt' => 'Compare stainless, glass-forward and etched entrance doors for Indian homes — visual weight, privacy levels and long-term maintenance in varied climates.',
+    'import_eligible' => true,
   ),
   11 => 
   array (
@@ -352,9 +364,10 @@ return array (
     array (
       0 => 'glass-railings-staircases-balconies-planning-checklist',
       1 => 'interior-vs-exterior-railings-material-finish',
-      2 => 'pvd-coating-explained-durable-metal-finishes',
+      2 => 'pvd-coating-explained',
     ),
     'excerpt' => 'Select stainless steel railings for staircases and balconies — glass, bar and panel systems with finish guidance for Indian residential and commercial projects.',
+    'import_eligible' => true,
   ),
   12 => 
   array (
@@ -376,6 +389,7 @@ return array (
       2 => 'how-to-choose-luxury-main-entrance-door',
     ),
     'excerpt' => 'Plan glass staircase and balcony railings with a practical checklist — site measurements, posts, glass type and installation sequencing for Indian homes.',
+    'import_eligible' => true,
   ),
   13 => 
   array (
@@ -396,7 +410,8 @@ return array (
       1 => 'glass-railings-staircases-balconies-planning-checklist',
       2 => 'pvd-partitions-vs-powder-coated-metal-partitions',
     ),
-    'excerpt' => 'Interior and exterior railings face different exposure in Indian climates — grades, coatings and detailing compared for a coherent specification.',
+    'excerpt' => 'Interior and exterior railings face different exposure in Indian climates — grades, coatings and detailing compared for a coherent specification on one project.',
+    'import_eligible' => true,
   ),
   14 => 
   array (
@@ -417,11 +432,12 @@ return array (
     ),
     'related_article_slugs' => 
     array (
-      0 => 'why-corten-steel-is-perfect-for-modern-facades',
+      0 => 'corten-steel-modern-facades',
       1 => 'corten-steel-facades-design-drainage-weathering',
       2 => 'reduce-rust-run-off-staining-around-corten-steel',
     ),
-    'excerpt' => 'Learn what Corten weathering steel is, how its protective patina forms, and what to expect during the first seasons on Indian architectural projects.',
+    'excerpt' => 'Learn what Corten weathering steel is, how its protective patina forms, and what to expect during the first seasons on Indian architectural and landscape projects.',
+    'import_eligible' => true,
   ),
   15 => 
   array (
@@ -439,10 +455,11 @@ return array (
     'related_article_slugs' => 
     array (
       0 => 'what-is-corten-steel-and-how-does-it-weather',
-      1 => 'why-corten-steel-is-perfect-for-modern-facades',
+      1 => 'corten-steel-modern-facades',
       2 => 'corten-steel-cladding-vs-conventional-painted-steel',
     ),
-    'excerpt' => 'Design Corten steel façades for Indian sites with correct drainage, panel joints and runoff control — practical notes for architects and contractors.',
+    'excerpt' => 'Design Corten steel facades for Indian sites with correct drainage, panel joints and runoff control — practical notes for architects, contractors and developers.',
+    'import_eligible' => true,
   ),
   16 => 
   array (
@@ -459,11 +476,12 @@ return array (
     'meta_description' => 'Compare weathering steel cladding with conventional painted steel for appearance, upkeep and runoff detailing on architectural projects in India.',
     'related_article_slugs' => 
     array (
-      0 => 'why-corten-steel-is-perfect-for-modern-facades',
+      0 => 'corten-steel-modern-facades',
       1 => 'corten-steel-facades-design-drainage-weathering',
       2 => 'pvd-partitions-vs-powder-coated-metal-partitions',
     ),
-    'excerpt' => 'Corten cladding versus painted steel — compare appearance, upkeep, runoff behaviour and when each suits Indian architectural metalwork.',
+    'excerpt' => 'Corten cladding versus painted steel — compare appearance, upkeep, runoff behaviour and when each suits Indian architectural metalwork on facades and features.',
+    'import_eligible' => true,
   ),
   17 => 
   array (
@@ -482,9 +500,10 @@ return array (
     array (
       0 => 'what-is-corten-steel-and-how-does-it-weather',
       1 => 'corten-steel-facades-design-drainage-weathering',
-      2 => 'why-corten-steel-is-perfect-for-modern-facades',
+      2 => 'corten-steel-modern-facades',
     ),
-    'excerpt' => 'Reduce early rust run-off staining near Corten steel with drip edges, landscape buffers and temporary protection on stone and paving.',
+    'excerpt' => 'Reduce early rust run-off staining near Corten steel with drip edges, landscape buffers and temporary protection on stone, paving and adjacent finishes.',
+    'import_eligible' => true,
   ),
   18 => 
   array (
@@ -505,10 +524,11 @@ return array (
     'related_article_slugs' => 
     array (
       0 => 'select-pull-handle-length-for-main-door',
-      1 => 'pvd-coating-explained-durable-metal-finishes',
+      1 => 'pvd-coating-explained',
       2 => 'pvd-finish-selection-guide-gold-rose-gold-champagne-black',
     ),
-    'excerpt' => 'Select PVD door handles for main doors and interiors — finish colours, pull lengths, backplate options and daily maintenance in Indian homes.',
+    'excerpt' => 'Select PVD door handles for main doors and interiors — finish colours, pull lengths, backplate options and daily maintenance in Indian homes and offices.',
+    'import_eligible' => true,
   ),
   19 => 
   array (
@@ -533,7 +553,8 @@ return array (
       1 => 'how-to-choose-luxury-main-entrance-door',
       2 => 'pvd-finish-selection-guide-gold-rose-gold-champagne-black',
     ),
-    'excerpt' => 'Match pull handle length to main door height and visual balance — ergonomic grip zones and proportion rules for Indian entrance doors.',
+    'excerpt' => 'Match pull handle length to main door height and visual balance — ergonomic grip zones and proportion rules for Indian entrance doors and villa gates.',
+    'import_eligible' => true,
   ),
   20 => 
   array (
@@ -555,10 +576,11 @@ return array (
     'related_article_slugs' => 
     array (
       0 => 'choosing-metal-coffee-table-luxury-interior',
-      1 => 'pvd-coating-explained-durable-metal-finishes',
+      1 => 'pvd-coating-explained',
       2 => 'pvd-finish-selection-guide-gold-rose-gold-champagne-black',
     ),
-    'excerpt' => 'Care for PVD metal furniture and brief custom consoles and tables — finish handling, cleaning and customisation options from our Delhi studio.',
+    'excerpt' => 'Care for PVD metal furniture and brief custom consoles and tables — finish handling, cleaning and customisation options from our Delhi manufacturing studio.',
+    'import_eligible' => true,
   ),
   21 => 
   array (
@@ -583,7 +605,8 @@ return array (
       1 => 'how-to-select-metal-partition-for-living-room',
       2 => 'pvd-finish-selection-guide-gold-rose-gold-champagne-black',
     ),
-    'excerpt' => 'Choose a metal coffee table for luxury living rooms — scale, PVD finish, glass tops and circulation clearances in Indian homes.',
+    'excerpt' => 'Choose a metal coffee table for luxury living rooms — scale, PVD finish, glass tops and circulation clearances in Indian homes and hospitality lounges.',
+    'import_eligible' => true,
   ),
   22 => 
   array (
@@ -608,11 +631,12 @@ return array (
     ),
     'related_article_slugs' => 
     array (
-      0 => 'pvd-coating-explained-durable-metal-finishes',
+      0 => 'pvd-coating-explained',
       1 => 'pvd-partitions-vs-powder-coated-metal-partitions',
       2 => 'pvd-door-handles-finishes-sizes-selection-guide',
     ),
-    'excerpt' => 'Compare gold, rose gold, champagne and black PVD finishes for partitions, doors and furniture — keep colour consistent across one Indian project.',
+    'excerpt' => 'Compare gold, rose gold, champagne and black PVD finishes for partitions, doors and furniture — keep colour consistent across one Indian interior project.',
+    'import_eligible' => true,
   ),
   23 => 
   array (
@@ -630,9 +654,10 @@ return array (
     array (
       0 => 'drawing-to-installation-custom-metal-fabrication-process',
       1 => 'pvd-partitions-materials-finishes-applications-cost-factors',
-      2 => 'why-corten-steel-is-perfect-for-modern-facades',
+      2 => 'corten-steel-modern-facades',
     ),
-    'excerpt' => 'A specification workflow for architects briefing custom metal fabrication in India — drawings, finishes, tolerances and site coordination.',
+    'excerpt' => 'A specification workflow for architects briefing custom metal fabrication in India — drawings, finishes, tolerances, site coordination and handover documentation.',
+    'import_eligible' => true,
   ),
   24 => 
   array (
@@ -650,9 +675,10 @@ return array (
     array (
       0 => 'architects-specify-custom-architectural-metalwork',
       1 => 'pvd-partition-price-in-india-what-determines-final-cost',
-      2 => 'glass-partitions-open-plan-without-compromise',
+      2 => 'glass-partitions-open-plan',
     ),
-    'excerpt' => 'From approved drawings to site installation — how custom metal packages move through measurement, fabrication, QC and delivery in India.',
+    'excerpt' => 'From approved drawings to site installation — how custom metal packages move through measurement, fabrication, QC and delivery from our Delhi studio.',
+    'import_eligible' => true,
   ),
   25 => 
   array (
@@ -676,8 +702,9 @@ return array (
       0 => 'pvd-partition-price-in-india-what-determines-final-cost',
       1 => 'pvd-partitions-materials-finishes-applications-cost-factors',
     ),
-    'excerpt' => 'Understand PVD partition pricing in India: materials, panel size, glass specification, PVD finish and installation factors that shape a fair quotation.',
+    'excerpt' => 'Understand PVD partition pricing in India: materials, panel size, glass specification, PVD finish and installation factors that shape a fair project quotation.',
     'robots_index' => false,
+    'import_eligible' => false,
   ),
   26 => 
   array (
@@ -698,8 +725,9 @@ return array (
       0 => 'glass-railings-staircases-balconies-planning-checklist',
       1 => 'stainless-steel-railings-types-finishes-selection-guide',
     ),
-    'excerpt' => 'Glass railing prices in India depend on run length, glass type, post system, PVD finish and site access — factors to prepare before requesting a quote.',
+    'excerpt' => 'Glass railing prices in India depend on run length, glass type, post system, PVD finish and site access — factors to prepare before requesting a project quote.',
     'robots_index' => false,
+    'import_eligible' => false,
   ),
   27 => 
   array (
@@ -721,10 +749,11 @@ return array (
     'related_article_slugs' => 
     array (
       0 => 'how-to-select-metal-partition-for-living-room',
-      1 => 'glass-partitions-open-plan-without-compromise',
+      1 => 'glass-partitions-open-plan',
     ),
-    'excerpt' => 'Select metal partitions for Indian homes and apartments: open-plan zoning, PVD finishes, glass privacy and circulation clearances that suit local layouts.',
+    'excerpt' => 'Select metal partitions for Indian homes and apartments: open-plan zoning, PVD finishes, glass privacy and circulation clearances that suit local apartment layouts.',
     'robots_index' => false,
+    'import_eligible' => false,
   ),
   28 => 
   array (
@@ -745,11 +774,12 @@ return array (
     ),
     'related_article_slugs' => 
     array (
-      0 => 'glass-partitions-open-plan-without-compromise',
-      1 => 'pvd-coating-explained-durable-metal-finishes',
+      0 => 'glass-partitions-open-plan',
+      1 => 'pvd-coating-explained',
     ),
     'excerpt' => 'Design and specify metal room dividers for UK interiors — glazed partition walls, PVD finishes and coordination notes for India-manufactured bespoke metalwork.',
     'robots_index' => false,
+    'import_eligible' => false,
   ),
   29 => 
   array (
@@ -773,8 +803,9 @@ return array (
       0 => 'slim-profile-doors-hinged-sliding-telescopic-compared',
       1 => 'fluted-glass-slim-profile-doors-design-privacy-guide',
     ),
-    'excerpt' => 'Compare slimline internal glass doors for UK homes — hinged, sliding and fixed glazed panels with minimal PVD metal frames.',
+    'excerpt' => 'Compare slimline internal glass doors for UK homes — hinged, sliding and fixed glazed panels with minimal PVD metal frames from an India-based fabricator.',
     'robots_index' => false,
+    'import_eligible' => false,
   ),
   30 => 
   array (
@@ -791,15 +822,16 @@ return array (
     'meta_description' => 'Corten steel cladding notes for UK projects — weathering behaviour, runoff control and detailing for India-manufactured panels.',
     'related_service_slugs' => 
     array (
-      0 => 'corten-steel-facade',
+      0 => 'corten-steel',
     ),
     'related_article_slugs' => 
     array (
       0 => 'what-is-corten-steel-and-how-does-it-weather',
       1 => 'corten-steel-facades-design-drainage-weathering',
     ),
-    'excerpt' => 'Corten steel cladding for UK projects: patina development, drainage detailing and runoff control — specification notes from an India-based fabricator.',
+    'excerpt' => 'Corten steel cladding for UK projects: patina development, drainage detailing and runoff control — notes from an India-based fabricator, subject to export review.',
     'robots_index' => false,
+    'import_eligible' => false,
   ),
   31 => 
   array (
@@ -821,11 +853,12 @@ return array (
     ),
     'related_article_slugs' => 
     array (
-      0 => 'pvd-coating-explained-durable-metal-finishes',
+      0 => 'pvd-coating-explained',
       1 => 'pvd-finish-selection-guide-gold-rose-gold-champagne-black',
     ),
-    'excerpt' => 'PVD stainless steel for UAE interiors: finish options, high-touch applications and specification notes for India-manufactured metalwork.',
+    'excerpt' => 'PVD stainless steel for UAE interiors: finish options, high-touch applications and specification notes for India-manufactured metalwork, subject to project review.',
     'robots_index' => false,
+    'import_eligible' => false,
   ),
   32 => 
   array (
@@ -846,11 +879,12 @@ return array (
     ),
     'related_article_slugs' => 
     array (
-      0 => 'glass-partitions-open-plan-without-compromise',
+      0 => 'glass-partitions-open-plan',
       1 => 'uae-pvd-stainless-steel-interiors-finishes-applications',
     ),
-    'excerpt' => 'Glass and metal partitions for Dubai offices and villas — open-plan zoning, PVD frames and export supply considerations.',
+    'excerpt' => 'Glass and metal partitions for Dubai offices and villas — open-plan zoning, PVD frames and export supply considerations from an India-based manufacturer.',
     'robots_index' => false,
+    'import_eligible' => false,
   ),
   33 => 
   array (
@@ -867,14 +901,15 @@ return array (
     'meta_description' => 'Corten steel in UAE heat, humidity and coastal air — patina behaviour, detailing and export supply notes.',
     'related_service_slugs' => 
     array (
-      0 => 'corten-steel-facade',
+      0 => 'corten-steel',
     ),
     'related_article_slugs' => 
     array (
       0 => 'what-is-corten-steel-and-how-does-it-weather',
       1 => 'corten-steel-facades-design-drainage-weathering',
     ),
-    'excerpt' => 'Specify Corten steel for UAE projects with realistic expectations for heat, humidity, coastal salt and patina behaviour.',
+    'excerpt' => 'Specify Corten steel for UAE projects with realistic expectations for heat, humidity, coastal salt and patina — subject to project review and export terms.',
     'robots_index' => false,
+    'import_eligible' => false,
   ),
 );
