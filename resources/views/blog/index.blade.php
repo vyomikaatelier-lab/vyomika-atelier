@@ -1,11 +1,6 @@
 @extends('layouts.store')
 
-@section('title', \App\Support\BlogContent::metaTitle())
-
-@push('meta')
-<meta name="description" content="{{ \App\Support\BlogContent::metaDescription() }}">
-<link rel="canonical" href="{{ route('blog.index') }}">
-@endpush
+@section('title', $pageSeo['title'] ?? 'Blog — Vyomika Atelier LLP')
 
 @section('content')
 

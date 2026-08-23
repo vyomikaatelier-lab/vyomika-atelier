@@ -33,6 +33,10 @@ class StorefrontSeoComposer
             $robots = 'noindex,follow';
         }
 
+        if ($robots === null && request()->routeIs('blog.index') && request()->filled('category')) {
+            $robots = 'noindex,follow';
+        }
+
         $slug = match ($name) {
             'home' => 'home',
             'shop.index' => 'shop',

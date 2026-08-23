@@ -1,23 +1,14 @@
 @extends('layouts.store')
 
-@section('title', $post->seoTitle())
+@section('title', $pageSeo['title'] ?? $post->seoTitle())
 
 @push('meta')
-<meta name="description" content="{{ $post->seoDescription() }}">
-<link rel="canonical" href="{{ $post->canonicalUrl() }}">
-<meta property="og:title" content="{{ $post->seoTitle() }}">
-<meta property="og:description" content="{{ $post->seoDescription() }}">
-<meta property="og:type" content="article">
-<meta property="og:url" content="{{ $post->canonicalUrl() }}">
-@if($post->image)
-<meta property="og:image" content="{{ $post->image }}">
-@endif
 @if($post->published_at)
 <meta property="article:published_time" content="{{ $post->published_at->toAtomString() }}">
 @endif
 @endpush
 
-@push('styles')
+@push('jsonld')
 @php
     $articleLd = [
         '@context' => 'https://schema.org',

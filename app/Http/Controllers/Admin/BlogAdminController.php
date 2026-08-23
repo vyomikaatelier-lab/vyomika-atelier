@@ -47,6 +47,8 @@ class BlogAdminController extends Controller
         }
 
         $validated = $this->validatePost($request);
+        $validated['canonical_url'] = $validated['canonical'] ?? null;
+        unset($validated['canonical']);
         $validated['slug'] = $this->resolveUniqueSlug(BlogPost::class, $validated['title'], 'title');
         $validated['is_featured'] = $request->boolean('is_featured');
         $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
@@ -57,6 +59,7 @@ class BlogAdminController extends Controller
         $validated['related_product_slugs'] = $this->parseRelatedSlugs($request, 'related_product_slugs');
         $validated['related_project_ids'] = $this->parseRelatedIds($request, 'related_project_ids');
         $validated['related_service_slugs'] = $this->parseRelatedSlugs($request, 'related_service_slugs');
+        $validated['robots_index'] = $request->input('robots', 'index') !== 'noindex';
 
         BlogPost::create($validated);
 
@@ -75,6 +78,8 @@ class BlogAdminController extends Controller
         }
 
         $validated = $this->validatePost($request);
+        $validated['canonical_url'] = $validated['canonical'] ?? null;
+        unset($validated['canonical']);
         $validated['slug'] = $this->resolveUniqueSlug(BlogPost::class, $validated['title'], 'title', $post);
         $validated['is_featured'] = $request->boolean('is_featured');
         $validated['is_active'] = $this->checkboxBoolean($request, 'is_active');
@@ -85,6 +90,7 @@ class BlogAdminController extends Controller
         $validated['related_product_slugs'] = $this->parseRelatedSlugs($request, 'related_product_slugs');
         $validated['related_project_ids'] = $this->parseRelatedIds($request, 'related_project_ids');
         $validated['related_service_slugs'] = $this->parseRelatedSlugs($request, 'related_service_slugs');
+        $validated['robots_index'] = $request->input('robots', 'index') !== 'noindex';
 
         $post->update($validated);
 
@@ -125,7 +131,12 @@ class BlogAdminController extends Controller
             'published_at' => 'nullable|date',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
-            'canonical_url' => 'nullable|url|max:500',
+            'canonical' => 'nullable|url|max:500',
+            'primary_keyword' => 'nullable|string|max:120',
+            'og_title' => 'nullable|string|max:255',
+            'og_description' => 'nullable|string|max:500',
+            'og_image' => 'nullable|string|max:500',
+            'robots' => 'nullable|in:index,noindex',
             'hero_image_alt' => 'nullable|string|max:255',
             'status' => 'required|in:draft,published',
             'image' => 'nullable|string|max:500',

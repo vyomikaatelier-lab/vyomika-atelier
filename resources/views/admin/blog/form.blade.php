@@ -23,11 +23,29 @@
         <div><label class="block text-sm mb-1">Hero alt text</label><input name="hero_image_alt" value="{{ old('hero_image_alt', $post->hero_image_alt ?? '') }}" class="w-full border px-3 py-2 rounded"></div>
     </div>
     @include('admin.partials.gallery-upload-fields', ['gallery' => isset($post) ? $post->gallery : null, 'directory' => 'blog'])
-    <div class="grid md:grid-cols-2 gap-4">
-        <div><label class="block text-sm mb-1">SEO title</label><input name="meta_title" value="{{ old('meta_title', $post->meta_title ?? '') }}" class="w-full border px-3 py-2 rounded"></div>
-        <div><label class="block text-sm mb-1">Canonical URL</label><input name="canonical_url" value="{{ old('canonical_url', $post->canonical_url ?? '') }}" class="w-full border px-3 py-2 rounded"></div>
-    </div>
-    <div><label class="block text-sm mb-1">Meta description</label><textarea name="meta_description" rows="2" class="w-full border px-3 py-2 rounded">{{ old('meta_description', $post->meta_description ?? '') }}</textarea></div>
+    <section class="space-y-3 border rounded p-4 bg-gray-50">
+        <p class="text-sm font-medium">SEO</p>
+        @php
+            $seoPage = [
+                'meta_title' => old('meta_title', $post->meta_title ?? ''),
+                'meta_description' => old('meta_description', $post->meta_description ?? ''),
+                'primary_keyword' => old('primary_keyword', $post->primary_keyword ?? ''),
+                'og_title' => old('og_title', $post->og_title ?? ''),
+                'og_description' => old('og_description', $post->og_description ?? ''),
+                'og_image' => old('og_image', $post->og_image ?? ''),
+                'canonical' => old('canonical', $post->canonical_url ?? ''),
+                'robots' => old('robots', ($post->robots_index ?? true) ? 'index' : 'noindex'),
+            ];
+            $previewSlug = isset($post) ? $post->slug : 'new-post';
+        @endphp
+        @include('admin.partials.seo-fields', [
+            'page' => $seoPage,
+            'previewUrl' => isset($post) ? route('blog.show', $post->slug) : route('blog.index'),
+            'previewTitleFallback' => old('title', $post->title ?? 'Blog post'),
+            'showSeoKeyword' => false,
+        ])
+        <p class="text-xs text-gray-500">Draft posts are never public. Published posts with status Draft remain noindex until published.</p>
+    </section>
     @php
         $selectedProducts = old('related_product_slugs', isset($post) ? ($post->related_product_slugs ?? []) : []);
         $selectedProjects = old('related_project_ids', isset($post) ? ($post->related_project_ids ?? []) : []);

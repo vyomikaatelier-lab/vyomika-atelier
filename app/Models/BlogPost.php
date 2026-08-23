@@ -34,7 +34,10 @@ class BlogPost extends Model
         'status',
         'seo_source',
         'og_image',
+        'og_title',
+        'og_description',
         'primary_keyword',
+        'robots_index',
     ];
 
     protected function casts(): array
@@ -43,6 +46,7 @@ class BlogPost extends Model
             'published_at' => 'datetime',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
+            'robots_index' => 'boolean',
             'gallery' => 'array',
             'related_product_slugs' => 'array',
             'related_project_slugs' => 'array',

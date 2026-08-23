@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\SavesStaticPageSeoFields;
 use App\Http\Controllers\Controller;
-use App\Models\SiteSetting;
 use App\Support\StaticPageContent;
 use Illuminate\Http\Request;
 
 class StaticPageSeoAdminController extends Controller
 {
+    use SavesStaticPageSeoFields;
     public function index()
     {
         $pages = [];
@@ -38,21 +39,12 @@ class StaticPageSeoAdminController extends Controller
     {
         abort_unless(in_array($slug, StaticPageContent::slugs(), true), 404);
 
-        $validated = $request->validate([
-            'meta_title' => 'nullable|string|max:255',
-            'meta_description' => 'nullable|string|max:500',
-            'og_title' => 'nullable|string|max:255',
-            'og_description' => 'nullable|string|max:500',
-            'og_image' => 'nullable|string|max:500',
-            'canonical' => 'nullable|string|max:500',
-            'primary_keyword' => 'nullable|string|max:120',
-            'seo_keyword' => 'nullable|string|max:120',
+        $validated = $request->validate(array_merge($this->staticPageSeoValidationRules(), [
             'h1' => 'nullable|string|max:255',
             'intro' => 'nullable|string|max:8000',
-            'robots' => 'nullable|in:index,noindex',
             'faq_q' => 'nullable|array',
             'faq_a' => 'nullable|array',
-        ]);
+        ]));
 
         $faqs = [];
         foreach ($validated['faq_q'] ?? [] as $i => $q) {
@@ -64,22 +56,11 @@ class StaticPageSeoAdminController extends Controller
             $faqs[] = ['q' => $q, 'a' => $a];
         }
 
-        $all = SiteSetting::getValue('static_pages', []) ?? [];
-        $all[$slug] = [
-            'meta_title' => $validated['meta_title'] ?? null,
-            'meta_description' => $validated['meta_description'] ?? null,
-            'og_title' => $validated['og_title'] ?? null,
-            'og_description' => $validated['og_description'] ?? null,
-            'og_image' => $validated['og_image'] ?? null,
-            'canonical' => $validated['canonical'] ?? null,
-            'primary_keyword' => $validated['primary_keyword'] ?? null,
-            'seo_keyword' => $validated['seo_keyword'] ?? null,
+        $this->persistStaticPageSeoFields($slug, $validated, [
             'h1' => $validated['h1'] ?? null,
             'intro' => $validated['intro'] ?? null,
-            'robots' => $validated['robots'] ?? 'index',
             'faqs' => $faqs,
-        ];
-        SiteSetting::setValue('static_pages', $all);
+        ]);
 
         return redirect()
             ->route('admin.static-pages.index')

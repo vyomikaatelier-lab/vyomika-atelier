@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Project;
 use App\Support\BlogContent;
+use App\Support\Seo\BlogSeo;
+use App\Support\Seo\StaticPageSeo;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -21,8 +23,9 @@ class BlogController extends Controller
             $featured
         );
         $index = BlogContent::indexMeta();
+        $pageSeo = StaticPageSeo::forSlug('blog');
 
-        return view('blog.index', compact('posts', 'categories', 'activeCategory', 'featured', 'index'));
+        return view('blog.index', compact('posts', 'categories', 'activeCategory', 'featured', 'index', 'pageSeo'));
     }
 
     public function show(string $slug): View
@@ -42,12 +45,14 @@ class BlogController extends Controller
             ->get();
 
         $relatedArticles = BlogContent::relatedPosts($post, 3);
+        $pageSeo = BlogSeo::pageData($post);
 
         return view('blog.show', compact(
             'post',
             'relatedProducts',
             'relatedProjects',
-            'relatedArticles'
+            'relatedArticles',
+            'pageSeo'
         ));
     }
 }

@@ -285,4 +285,92 @@ class SeoFoundationTest extends TestCase
 
         $this->get(route('blog.show', 'hidden-draft'))->assertNotFound();
     }
+
+    public function test_admin_can_edit_homepage_seo_via_site_settings(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.settings.update'), [
+                'current_password' => 'password',
+                'brand_name' => 'Vyomika Atelier',
+                'meta_title' => 'Site Settings Home Title',
+                'meta_description' => 'Homepage description from site settings.',
+                'og_title' => 'Site Settings Home OG',
+                'og_description' => 'Homepage OG description from site settings.',
+                'og_image' => 'https://example.com/site-settings-home.jpg',
+                'canonical' => route('home'),
+                'robots' => 'index',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $stored = SiteSetting::getValue('static_pages', [])['home'] ?? [];
+        $this->assertSame('Site Settings Home Title', $stored['meta_title'] ?? null);
+        $this->assertSame('Site Settings Home OG', $stored['og_title'] ?? null);
+
+        $html = $this->get(route('home'))->assertOk()->getContent();
+        $this->assertStringContainsString('<title>Site Settings Home Title</title>', $html);
+        $this->assertStringContainsString('name="description" content="Homepage description from site settings."', $html);
+        $this->assertStringContainsString('property="og:title" content="Site Settings Home OG"', $html);
+        $this->assertStringContainsString('property="og:image" content="https://example.com/site-settings-home.jpg"', $html);
+        $this->assertSame(1, substr_count($html, 'rel="canonical"'));
+        $this->assertSame(1, substr_count($html, 'name="description"'));
+    }
+
+    public function test_blog_index_renders_static_page_seo_without_duplicate_meta(): void
+    {
+        SiteSetting::setValue('static_pages', [
+            'blog' => [
+                'meta_title' => 'Blog SEO Title',
+                'meta_description' => 'Blog index meta description.',
+                'og_title' => 'Blog OG Title',
+                'og_description' => 'Blog OG description.',
+                'canonical' => route('blog.index'),
+                'robots' => 'index',
+            ],
+        ]);
+
+        $html = $this->get(route('blog.index'))->assertOk()->getContent();
+
+        $this->assertStringContainsString('<title>Blog SEO Title</title>', $html);
+        $this->assertStringContainsString('name="description" content="Blog index meta description."', $html);
+        $this->assertStringContainsString('property="og:title" content="Blog OG Title"', $html);
+        $this->assertStringContainsString('rel="canonical" href="'.route('blog.index').'"', $html);
+        $this->assertSame(1, substr_count($html, 'rel="canonical"'));
+        $this->assertSame(1, substr_count($html, 'name="description"'));
+    }
+
+    public function test_published_blog_post_renders_full_seo_meta(): void
+    {
+        BlogPost::query()->create([
+            'title' => 'PVD Partition Guide',
+            'slug' => 'pvd-partition-guide',
+            'excerpt' => 'How to specify PVD partitions for Indian projects.',
+            'content' => '<p>Guide content.</p>',
+            'meta_title' => 'PVD Partition Guide | Vyomika Atelier',
+            'meta_description' => 'Specify PVD partitions with confidence.',
+            'og_title' => 'PVD Partition Guide OG',
+            'og_description' => 'OG description for PVD guide.',
+            'og_image' => 'https://example.com/pvd-guide.jpg',
+            'canonical_url' => route('blog.show', 'pvd-partition-guide'),
+            'status' => 'published',
+            'is_active' => true,
+            'published_at' => now()->subDay(),
+            'robots_index' => true,
+        ]);
+
+        $html = $this->get(route('blog.show', 'pvd-partition-guide'))->assertOk()->getContent();
+
+        $this->assertStringContainsString('<title>PVD Partition Guide | Vyomika Atelier</title>', $html);
+        $this->assertStringContainsString('name="description" content="Specify PVD partitions with confidence."', $html);
+        $this->assertStringContainsString('property="og:title" content="PVD Partition Guide OG"', $html);
+        $this->assertStringContainsString('property="og:description" content="OG description for PVD guide."', $html);
+        $this->assertStringContainsString('property="og:image" content="https://example.com/pvd-guide.jpg"', $html);
+        $this->assertStringContainsString('property="og:type" content="article"', $html);
+        $this->assertStringContainsString('rel="canonical" href="'.route('blog.show', 'pvd-partition-guide').'"', $html);
+        $this->assertStringContainsString('property="article:published_time"', $html);
+        $this->assertSame(1, substr_count($html, 'rel="canonical"'));
+        $this->assertSame(1, substr_count($html, 'name="description"'));
+    }
 }

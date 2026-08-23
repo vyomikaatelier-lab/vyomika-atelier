@@ -26,7 +26,9 @@
     <textarea name="meta_description" rows="3" placeholder="Meta description" class="w-full border px-3 py-2 rounded">{{ $seoDesc }}</textarea>
 </div>
 <input name="primary_keyword" value="{{ old('primary_keyword', $page['primary_keyword'] ?? '') }}" placeholder="Primary keyword (editorial only — not a meta keywords tag)" class="w-full border px-3 py-2 rounded">
+@if($showSeoKeyword ?? true)
 <input name="seo_keyword" value="{{ old('seo_keyword', $page['seo_keyword'] ?? '') }}" placeholder="Internal target keyword (not shown on site)" class="w-full border px-3 py-2 rounded">
+@endif
 <div class="grid md:grid-cols-2 gap-3">
     <input name="og_title" value="{{ old('og_title', $page['og_title'] ?? '') }}" placeholder="OG title (blank = SEO title)" class="w-full border px-3 py-2 rounded">
     <input name="og_image" value="{{ old('og_image', $page['og_image'] ?? '') }}" placeholder="OG image URL (blank = hero image)" class="w-full border px-3 py-2 rounded">

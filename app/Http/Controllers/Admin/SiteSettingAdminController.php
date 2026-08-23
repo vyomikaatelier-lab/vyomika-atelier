@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Admin\Concerns\HandlesAdminUploads;
+use App\Http\Controllers\Admin\Concerns\SavesStaticPageSeoFields;
 use App\Http\Controllers\Controller;
 use App\Models\SiteSetting;
 use App\Support\FinishSwatches;
 use App\Support\SiteContent;
+use App\Support\StaticPageContent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -15,6 +17,7 @@ use Illuminate\Validation\ValidationException;
 class SiteSettingAdminController extends Controller
 {
     use HandlesAdminUploads;
+    use SavesStaticPageSeoFields;
 
     public function edit()
     {
@@ -40,6 +43,7 @@ class SiteSettingAdminController extends Controller
             'announcementLinkLabel' => data_get($homepage, 'announcement.link_label', $defaultAnnouncement['link_label'] ?? ''),
             'announcementLinkHref' => data_get($homepage, 'announcement.link_href', $defaultAnnouncement['link_href'] ?? ''),
             'homepageSections' => $this->homepageSectionsForForm($homepage),
+            'homepageSeo' => StaticPageContent::page('home'),
         ]);
     }
 
@@ -95,7 +99,7 @@ class SiteSettingAdminController extends Controller
                 'announcement_text' => 'nullable|string|max:500',
                 'announcement_link_label' => 'nullable|string|max:120',
                 'announcement_link_href' => 'nullable|string|max:500',
-            ], $finishRules, $this->heroSlideValidationRules()));
+            ], $finishRules, $this->heroSlideValidationRules(), $this->staticPageSeoValidationRules()));
         } catch (ValidationException $e) {
             return back()->withInput()->withErrors($e->errors());
         }
@@ -175,6 +179,8 @@ class SiteSettingAdminController extends Controller
                 ],
                 'sections' => $this->buildHomepageSectionsFromRequest($request),
             ]));
+
+            $this->persistStaticPageSeoFields('home', $validated);
 
             $finishImages = FinishSwatches::imageOverrides();
 

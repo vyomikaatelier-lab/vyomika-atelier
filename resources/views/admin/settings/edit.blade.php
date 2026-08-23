@@ -42,6 +42,18 @@
         <input name="ga4_measurement_id" value="{{ old('ga4_measurement_id', $analytics['ga4_measurement_id'] ?? '') }}" placeholder="GA4 Measurement ID (G-XXXXXXXX)" class="w-full border px-3 py-2 rounded">
         <input name="gsc_verification" value="{{ old('gsc_verification', $analytics['gsc_verification'] ?? '') }}" placeholder="Google Search Console verification token" class="w-full border px-3 py-2 rounded">
     </section>
+    <section class="space-y-4">
+        <div>
+            <h2 class="font-medium">Homepage SEO</h2>
+            <p class="text-xs text-gray-500 mt-1">Controls the live homepage title, description, Open Graph tags, and canonical URL. Same data as <a href="{{ route('admin.static-pages.edit', 'home') }}" class="text-blue-600 underline">Static Pages → Homepage</a>.</p>
+        </div>
+        @include('admin.partials.seo-fields', [
+            'page' => $homepageSeo,
+            'previewUrl' => route('home'),
+            'previewTitleFallback' => 'Homepage',
+        ])
+    </section>
+
     <section class="space-y-3">
         <h2 class="font-medium">Homepage announcement</h2>
         <input name="announcement_text" value="{{ old('announcement_text', $announcementText) }}" placeholder="Announcement bar text" class="w-full border px-3 py-2 rounded">
