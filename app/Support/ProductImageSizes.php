@@ -90,6 +90,17 @@ class ProductImageSizes
         );
     }
 
+    public static function projectGalleryAdminHint(): string
+    {
+        return sprintf(
+            'Projects gallery crop: %s portrait with object-fit cover — upload %s or %s (%s) so images fill the frame edge to edge.',
+            self::GALLERY_RATIO,
+            self::designGalleryDimensionsLabel(),
+            self::galleryLargeDimensionsLabel(),
+            self::GALLERY_RATIO
+        );
+    }
+
     public static function pdpAdminHint(): string
     {
         return sprintf(

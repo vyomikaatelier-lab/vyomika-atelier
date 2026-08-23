@@ -3465,7 +3465,7 @@ ul { list-style: none; }
   border: 0;
   background: var(--am-cream);
   cursor: zoom-in;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 3 / 4;
   overflow: hidden;
 }
 .am-work-gallery__media--empty {

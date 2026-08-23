@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Project;
 use App\Models\User;
+use App\Support\ProductImageSizes;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -78,5 +79,24 @@ class AdminProjectGalleryTest extends TestCase
         $this->assertSame('Gallery Project Updated', $project->project_name);
         $this->assertSame('projects/photo-a.jpg', $project->image_path);
     }
+
+    public function test_admin_project_form_shows_portrait_upload_hint(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAsAdmin($admin)->get(route('admin.projects.create'))
+            ->assertOk()
+            ->assertSee(ProductImageSizes::projectGalleryAdminHint(), false)
+            ->assertSee(ProductImageSizes::designGalleryDimensionsLabel(), false);
+
+        $project = Project::query()->create([
+            'project_name' => 'Hint Test',
+            'is_active' => true,
+        ]);
+
+        $this->actingAsAdmin($admin)->get(route('admin.projects.edit', $project))
+            ->assertOk()
+            ->assertSee(ProductImageSizes::projectGalleryAdminHint(), false);
+    }
 }
-
+

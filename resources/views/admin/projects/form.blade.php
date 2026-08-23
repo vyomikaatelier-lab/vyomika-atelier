@@ -18,8 +18,9 @@
     <div class="space-y-3 border rounded p-4 bg-gray-50">
         <p class="text-sm font-medium">Project image</p>
         @if(isset($project) && $project->imageUrl())
-            <img src="{{ $project->imageUrl() }}" alt="" class="w-48 aspect-[4/3] object-cover rounded border">
+            <img src="{{ $project->imageUrl() }}" alt="" class="w-48 aspect-[3/4] object-cover rounded border">
         @endif
+        <p class="text-xs text-gray-500">{{ \App\Support\ProductImageSizes::projectGalleryAdminHint() }}</p>
         <div><label class="block text-sm mb-1">Image URL</label><input name="image_path" value="{{ old('image_path', $project->image_path ?? '') }}" class="w-full border px-3 py-2 rounded"></div>
         <div><label class="block text-sm mb-1">Upload image</label><input type="file" name="image_file" accept="image/*"></div>
         <div><label class="block text-sm mb-1">Image alt text</label><input name="image_alt" value="{{ old('image_alt', $project->image_alt ?? '') }}" class="w-full border px-3 py-2 rounded"></div>

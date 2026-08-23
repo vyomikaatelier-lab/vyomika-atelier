@@ -46,6 +46,14 @@ class ProductGalleryImageLayoutTest extends TestCase
             '/\.am-design-gallery--portrait \.am-design-gallery__media\s*\{[^}]*aspect-ratio:\s*3\s*\/\s*4/',
             $css
         );
+        $this->assertMatchesRegularExpression(
+            '/\.am-work-gallery__media\s*\{[^}]*aspect-ratio:\s*3\s*\/\s*4/',
+            $css
+        );
+        $this->assertMatchesRegularExpression(
+            '/\.am-work-gallery__media img\s*\{[^}]*object-fit:\s*cover/',
+            $css
+        );
     }
 
     public function test_stylesheet_defines_collection_gallery_three_column_grid(): void
