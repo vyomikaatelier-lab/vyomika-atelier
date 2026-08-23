@@ -88,8 +88,8 @@ return array (
     'primary_keyword' => 'Corten steel facade',
     'status' => 'draft',
     'published_at' => '2026-06-05',
-    'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg',
-    'hero_image_alt' => 'Corten steel entrance screen with warm rust patina on a contemporary building facade',
+    'image' => '/images/blog/heroes/corten-steel-modern-facades-hero.jpg',
+    'hero_image_alt' => 'Modern building with weathered Corten steel cladding panels, concrete volumes and perforated Corten sunscreens in a paved courtyard',
     'meta_title' => 'Why Corten Steel Suits Modern Façades | Vyomika Atelier',
     'meta_description' => 'How weathering steel brings warmth and depth to modern Indian façades — patina behaviour, design applications and practical specification notes for architects.',
     'related_project_slugs' => 
