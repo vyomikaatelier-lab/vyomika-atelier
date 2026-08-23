@@ -12,9 +12,17 @@ class BlogContentImportTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function manifestArticleCount(): int
+    {
+        $manifest = require database_path('content/blog/manifest.php');
+
+        return count($manifest);
+    }
+
     public function test_dry_run_reports_all_manifest_slugs_without_writing(): void
     {
         $before = BlogPost::count();
+        $expectedCount = $this->manifestArticleCount();
 
         $exit = Artisan::call('blog:import-content', ['--dry-run' => true, '--force' => true]);
         $output = Artisan::output();
@@ -22,20 +30,22 @@ class BlogContentImportTest extends TestCase
         $this->assertSame(0, $exit);
         $this->assertSame($before, BlogPost::count());
         $this->assertStringContainsString('dry-run', strtolower($output));
-        $this->assertStringContainsString('25', $output);
+        $this->assertStringContainsString((string) $expectedCount, $output);
     }
 
-    public function test_import_creates_twenty_five_posts_idempotently_by_slug(): void
+    public function test_import_creates_all_manifest_posts_idempotently_by_slug(): void
     {
+        $expectedCount = $this->manifestArticleCount();
+
         Artisan::call('blog:import-content', ['--force' => true, '--no-backup' => true]);
 
-        $this->assertSame(25, BlogPost::count());
+        $this->assertSame($expectedCount, BlogPost::count());
 
         $firstRunIds = BlogPost::query()->orderBy('id')->pluck('id', 'slug')->all();
 
         Artisan::call('blog:import-content', ['--force' => true, '--no-backup' => true]);
 
-        $this->assertSame(25, BlogPost::count());
+        $this->assertSame($expectedCount, BlogPost::count());
         $this->assertSame($firstRunIds, BlogPost::query()->orderBy('id')->pluck('id', 'slug')->all());
     }
 
