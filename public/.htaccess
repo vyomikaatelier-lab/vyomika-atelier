@@ -5,6 +5,12 @@
 
     RewriteEngine On
 
+    # Block requests for private repo paths if document root is misconfigured
+    RewriteRule (^|/)\.(env|git|gitignore|gitattributes|cursor) - [F,L,NC]
+    RewriteRule ^(docs|storage|database|tests|vendor|bootstrap|node_modules|scripts)(/|$) - [F,L,NC]
+    RewriteRule \.(sql|md|log|lock|map|bak|backup|jsonl)$ - [F,L,NC]
+    RewriteRule ^(composer\.(json|lock|phar)|artisan|phpunit\.xml(\.dist)?|\.env\.example)$ - [F,L,NC]
+
     RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
     RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
 
