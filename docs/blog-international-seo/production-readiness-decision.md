@@ -61,8 +61,8 @@ Verified local assets: `public/images/shop-heroes/*.png` (railings, slim-profile
 | # | Slug | Proposed asset | Subject | Ownership | Dims | Match | Ready |
 |---|---|---|---|---|---|---|---|
 | 1 | glass-partitions-open-plan | **OWNER IMAGE REQUIRED** | PVD glass partition | Vyomika | — | — | No — broken `campaign-partitions.jpeg` 404 |
-| 2 | pvd-coating-explained | **OWNER IMAGE REQUIRED** | PVD finish close-up | Vyomika | ≥1200w | Good if PVD macro | No — remove delhiduniya hotlink |
-| 3 | corten-steel-modern-facades | **OWNER IMAGE REQUIRED** | Corten façade patina | Vyomika | ≥1200w | Wrong image today (PVD) | No |
+| 2 | pvd-coating-explained | `/images/blog/heroes/pvd-coating-explained-hero.jpg` | PVD plaque close-up | Vyomika (self-hosted) | 1024×682 | Good — on-product labelling | **Mapped — 1024px; upgrade to ≥1200w for derivatives** |
+| 3 | corten-steel-modern-facades | **OWNER IMAGE REQUIRED** | Corten façade patina | Vyomika | ≥1200w | Grok candidate rejected; manifest still delhiduniya PVD placeholder | No |
 | 4 | pvd-partitions-materials-finishes-applications-cost-factors | **OWNER IMAGE REQUIRED** | Fluted PVD partition | Vyomika | ≥1200w | Good if partition | No — delhiduniya |
 | 5 | pvd-partition-price-in-india-what-determines-final-cost | **OWNER IMAGE REQUIRED** | Partition site measure | Vyomika | ≥1200w | Partial | No — delhiduniya |
 | 6 | pvd-partitions-vs-powder-coated-metal-partitions | **OWNER IMAGE REQUIRED** | PVD vs powder partition | Vyomika | ≥1200w | Good if partition | No — broken campaign URL |
@@ -187,6 +187,16 @@ Product-admin fixes (same branch, not blog scope):
 3. **Self-host PVD coating macro** — replace delhiduniya `372645.jpeg` without upscaling
 4. **Confirm shop-hero PNGs** — category heroes are acceptable interim or replace with project photography
 5. **Re-run** `php artisan blog:import-content --dry-run --global-only` after hero upload (do not run live import until staging sign-off)
+
+### 8.1 Owner candidate review (2026-08-23)
+
+Three uploaded candidates were assessed. Full table: [owner-image-assessment.md](./owner-image-assessment.md).
+
+| Slug | Result | Notes |
+|---|---|---|
+| `pvd-coating-explained` | **USE** — manifest updated | Self-hosted `/images/blog/heroes/pvd-coating-explained-hero.jpg`; 1024px — upgrade to ≥1200px before derivatives |
+| `glass-partitions-open-plan` | **OWNER VERIFY** | Good subject match; 768px portrait; stock-style filename |
+| `corten-steel-modern-facades` | **REJECT / OWNER VERIFY** | Grok watermark; AI/licence risk; pavilion not façade |
 
 ---
 

@@ -56,8 +56,8 @@ return array (
     'primary_keyword' => 'PVD coating',
     'status' => 'draft',
     'published_at' => '2026-06-10',
-    'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg',
-    'hero_image_alt' => 'Close view of champagne PVD-coated stainless steel partition profile',
+    'image' => '/images/blog/heroes/pvd-coating-explained-hero.jpg',
+    'hero_image_alt' => 'Close-up of a brushed gold PVD-coated metal plaque stencilled LED PROFILE PVD PARTITION, reflected on a glossy surface',
     'meta_title' => 'PVD Coating Explained: Durable Metal Finishes | Vyomika Atelier',
     'meta_description' => 'What PVD coating is, how it differs from plating and powder coat, and how architects specify durable gold, champagne and black finishes on stainless metalwork.',
     'related_service_slugs' => 
