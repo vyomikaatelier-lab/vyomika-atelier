@@ -32,9 +32,17 @@ class BlogDesignTest extends TestCase
         $this->assertStringContainsString('blog-image-frame', $html);
         $this->assertStringContainsString('fetchpriority="high"', $html);
         $this->assertStringContainsString('am-blog-article__layout', $html);
+        $this->assertStringContainsString('am-blog-article__main', $html);
+        $this->assertStringContainsString('am-blog-article__sidebar', $html);
+        $this->assertStringContainsString('am-blog-article__content', $html);
         $this->assertStringContainsString('am-blog-article__divider', $html);
         $this->assertStringContainsString('am-breadcrumbs--compact', $html);
         $this->assertStringContainsString('In this article', $html);
+
+        $css = file_get_contents(public_path('css/amerce.css'));
+        $this->assertStringContainsString('grid-template-areas: "body toc"', $css);
+        $this->assertStringContainsString('.am-blog-article__main { grid-area: body;', $css);
+        $this->assertStringContainsString('.am-blog-article__sidebar { grid-area: toc;', $css);
     }
 
     public function test_blog_index_renders_vertical_image_frames(): void
