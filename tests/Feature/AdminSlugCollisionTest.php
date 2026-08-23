@@ -125,7 +125,7 @@ class AdminSlugCollisionTest extends TestCase
                 'status' => 'draft',
             ])
             ->assertRedirect(route('admin.blog.create'))
-            ->assertSessionHasErrors('title');
+            ->assertSessionHasErrors('slug');
 
         $this->assertSame(1, BlogPost::query()->where('slug', 'steel-trends')->count());
     }
@@ -152,9 +152,10 @@ class AdminSlugCollisionTest extends TestCase
                 '_page_save' => '1',
                 'title' => 'Steel Trends',
                 'status' => 'published',
+                'hero_image_alt' => 'Steel Trends — Vyomika Atelier editorial',
             ])
             ->assertRedirect(route('admin.blog.edit', $post))
-            ->assertSessionHasErrors('title');
+            ->assertSessionHasErrors('slug');
 
         $this->assertSame('brass-care', $post->fresh()->slug);
     }

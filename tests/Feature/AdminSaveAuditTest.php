@@ -98,6 +98,7 @@ class AdminSaveAuditTest extends TestCase
             '_page_save' => '1',
             'title' => 'Audit Post',
             'status' => 'published',
+            'hero_image_alt' => 'Audit Post — Vyomika Atelier editorial',
         ])->assertRedirect(route('admin.blog.index'));
 
         $this->assertFalse($post->fresh()->is_active);
