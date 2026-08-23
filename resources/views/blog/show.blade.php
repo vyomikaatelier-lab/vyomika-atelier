@@ -43,26 +43,43 @@
 <article class="am-blog-article" itemscope itemtype="https://schema.org/BlogPosting">
     <header class="am-blog-article__header am-container am-container--blog">
         @include('partials.am-breadcrumbs', ['items' => $breadcrumbItems, 'class' => 'am-breadcrumbs--compact'])
-        @if($post->categoryLabel())
-        <p class="am-blog-article__category">
-            <a href="{{ route('blog.index', ['category' => $post->categorySlug()]) }}">{{ $post->categoryLabel() }}</a>
-        </p>
-        @endif
-        <h1 class="am-blog-article__title" itemprop="headline">{{ $post->title }}</h1>
-        @if($post->excerpt)
-        <p class="am-blog-article__excerpt" itemprop="description">{{ $post->excerpt }}</p>
-        @endif
-        <div class="am-blog-meta am-blog-article__meta">
-            <span itemprop="author" itemscope itemtype="https://schema.org/Organization">
-                <span itemprop="name">{{ $post->author ?? 'Vyomika Atelier Editorial Team' }}</span>
-            </span>
-            @if($post->published_at)
-            <time datetime="{{ $post->published_at->toAtomString() }}" itemprop="datePublished">{{ $post->published_at->format('j F Y') }}</time>
+        <div class="article-masthead">
+            <div class="article-masthead__content">
+                @if($post->categoryLabel())
+                <p class="am-blog-article__category">
+                    <a href="{{ route('blog.index', ['category' => $post->categorySlug()]) }}">{{ $post->categoryLabel() }}</a>
+                </p>
+                @endif
+                <h1 class="am-blog-article__title" itemprop="headline">{{ $post->title }}</h1>
+                @if($post->excerpt)
+                <p class="am-blog-article__excerpt" itemprop="description">{{ $post->excerpt }}</p>
+                @endif
+                <div class="am-blog-meta am-blog-article__meta">
+                    <span itemprop="author" itemscope itemtype="https://schema.org/Organization">
+                        <span itemprop="name">{{ $post->author ?? 'Vyomika Atelier Editorial Team' }}</span>
+                    </span>
+                    @if($post->published_at)
+                    <time datetime="{{ $post->published_at->toAtomString() }}" itemprop="datePublished">{{ $post->published_at->format('j F Y') }}</time>
+                    @endif
+                    @if($post->lastUpdatedAt())
+                    <time datetime="{{ $post->lastUpdatedAt()->toAtomString() }}" itemprop="dateModified">Updated {{ $post->lastUpdatedAt()->format('j F Y') }}</time>
+                    @endif
+                    <span>{{ $post->readingTime() }} min read</span>
+                </div>
+            </div>
+            @if($post->imageUrl())
+            <figure class="article-masthead__media">
+                @include('partials.am-blog-picture', [
+                    'variant' => $post->heroImageVariant(),
+                    'alt' => $post->heroAlt(),
+                    'lazy' => false,
+                    'attrs' => 'itemprop="image"',
+                ])
+                @if($post->hero_image_caption)
+                <figcaption class="article-masthead__caption">{{ $post->hero_image_caption }}</figcaption>
+                @endif
+            </figure>
             @endif
-            @if($post->lastUpdatedAt())
-            <time datetime="{{ $post->lastUpdatedAt()->toAtomString() }}" itemprop="dateModified">Updated {{ $post->lastUpdatedAt()->format('j F Y') }}</time>
-            @endif
-            <span>{{ $post->readingTime() }} min read</span>
         </div>
         <hr class="am-blog-article__divider" aria-hidden="true">
     </header>

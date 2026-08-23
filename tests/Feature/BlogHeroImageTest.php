@@ -35,7 +35,7 @@ class BlogHeroImageTest extends TestCase
         ];
     }
 
-    public function test_pillar_articles_expose_hero_in_meta_and_schema_not_visible_banner(): void
+    public function test_pillar_articles_expose_masthead_image_and_meta_not_full_width_banner(): void
     {
         foreach ($this->pillarFixtures() as $slug => $fixture) {
             BlogPost::create([
@@ -54,7 +54,9 @@ class BlogHeroImageTest extends TestCase
             $html = $this->get(route('blog.show', $slug))->assertOk()->getContent();
 
             $this->assertStringNotContainsString('am-blog-article__hero', $html, $slug);
-            $this->assertStringNotContainsString('loading="eager"', $html, $slug.' should not render visible hero');
+            $this->assertStringContainsString('article-masthead__media', $html, $slug.' masthead image');
+            $this->assertStringContainsString('blog-image-frame', $html, $slug.' vertical frame');
+            $this->assertStringContainsString('fetchpriority="high"', $html, $slug.' eager masthead load');
             $this->assertStringContainsString('property="og:image"', $html, $slug);
             $this->assertStringContainsString(
                 asset(ltrim($fixture['og_image'], '/')),
@@ -114,5 +116,7 @@ class BlogHeroImageTest extends TestCase
         $this->assertStringNotContainsString('Vyomika project', strtolower($html));
         $this->assertStringContainsString('BlogPosting', $html);
         $this->assertStringNotContainsString('am-blog-article__hero', $html);
+        $this->assertStringContainsString('article-masthead__media', $html);
+        $this->assertStringContainsString('blog-image-frame', $html);
     }
 }

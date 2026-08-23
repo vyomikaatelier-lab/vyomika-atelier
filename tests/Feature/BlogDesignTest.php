@@ -10,7 +10,7 @@ class BlogDesignTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_article_page_has_no_full_width_hero_banner(): void
+    public function test_article_page_has_compact_masthead_not_full_width_hero(): void
     {
         $post = BlogPost::create([
             'title' => 'Design Test Article',
@@ -27,6 +27,10 @@ class BlogDesignTest extends TestCase
         $html = $this->get(route('blog.show', $post->slug))->assertOk()->getContent();
 
         $this->assertStringNotContainsString('am-blog-article__hero', $html);
+        $this->assertStringContainsString('article-masthead', $html);
+        $this->assertStringContainsString('article-masthead__media', $html);
+        $this->assertStringContainsString('blog-image-frame', $html);
+        $this->assertStringContainsString('fetchpriority="high"', $html);
         $this->assertStringContainsString('am-blog-article__layout', $html);
         $this->assertStringContainsString('am-blog-article__divider', $html);
         $this->assertStringContainsString('am-breadcrumbs--compact', $html);
