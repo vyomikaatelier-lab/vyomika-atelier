@@ -24,7 +24,7 @@ class BlogContent
 
     public static function metaTitle(): string
     {
-        return self::all()['meta_title'] ?? 'Blog — Vyomika Atelier LLP';
+        return self::all()['meta_title'] ?? 'Blog — Vyomika Atelier';
     }
 
     public static function metaDescription(): string
@@ -68,30 +68,59 @@ class BlogContent
         return Str::slug($category);
     }
 
+    /** Categories that have at least one publicly visible post. */
+    /** @return array<int, array{slug: string, label: string, count: int}> */
+    public static function categoriesWithPublishedPosts(): array
+    {
+        $counts = self::allPosts()
+            ->groupBy(fn (BlogPost $post) => self::categorySlug($post->category))
+            ->map->count();
+
+        return collect(self::categories())
+            ->map(function (array $cat) use ($counts) {
+                $count = (int) ($counts[$cat['slug']] ?? 0);
+
+                return [...$cat, 'count' => $count];
+            })
+            ->filter(fn (array $cat) => $cat['count'] > 0)
+            ->values()
+            ->all();
+    }
+
     public static function usesDatabase(): bool
     {
         if (! Schema::hasTable('blog_posts')) {
             return false;
         }
 
-        // Config posts are a first-deploy preview only. Once rows exist the
-        // admin owns the blog, so unpublishing everything has to empty the index
-        // rather than resurrect the seeded posts — and an edit to an unpublished
-        // post must never be shadowed by a config entry with the same slug.
         return BlogPost::query()->exists();
+    }
+
+    public static function publicQuery(): Builder
+    {
+        return BlogPost::query()
+            ->where('is_active', true)
+            ->where(function ($query) {
+                $query->where('status', BlogPost::STATUS_PUBLISHED)
+                    ->orWhere(function ($query) {
+                        $query->where('status', BlogPost::STATUS_SCHEDULED)
+                            ->whereNotNull('published_at')
+                            ->where('published_at', '<=', now());
+                    })
+                    ->orWhere(function ($query) {
+                        $query->whereNull('status')
+                            ->whereNotNull('published_at')
+                            ->where('published_at', '<=', now());
+                    });
+            })
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', now());
     }
 
     public static function query(): Builder
     {
         if (self::usesDatabase()) {
-            return BlogPost::query()
-                ->where('is_active', true)
-                ->whereNotNull('published_at')
-                ->where(function ($query) {
-                    $query->whereNull('status')
-                        ->orWhere('status', 'published');
-                })
-                ->latest('published_at');
+            return self::publicQuery()->latest('published_at');
         }
 
         return BlogPost::query()->whereRaw('0 = 1');
@@ -111,14 +140,7 @@ class BlogContent
     public static function findBySlug(string $slug): ?BlogPost
     {
         if (self::usesDatabase()) {
-            return BlogPost::query()
-                ->where('slug', $slug)
-                ->where('is_active', true)
-                ->where(function ($query) {
-                    $query->whereNull('status')
-                        ->orWhere('status', 'published');
-                })
-                ->first();
+            return self::publicQuery()->where('slug', $slug)->first();
         }
 
         $data = collect(self::all()['posts'] ?? [])
@@ -127,11 +149,23 @@ class BlogContent
         return $data ? self::hydrateFromConfig($data) : null;
     }
 
-    public static function featuredPost(): ?BlogPost
+    public static function featuredPost(?string $categorySlug = null): ?BlogPost
     {
+        $posts = self::allPosts();
+
+        if ($categorySlug) {
+            $label = self::categoryLabel($categorySlug);
+            $posts = $posts->filter(function (BlogPost $post) use ($categorySlug, $label) {
+                $slug = self::categorySlug($post->category);
+
+                return $slug === $categorySlug || $post->category === $label;
+            });
+        }
+
         if (self::usesDatabase()) {
-            return self::query()->where('is_featured', true)->first()
-                ?? self::query()->first();
+            $featured = $posts->firstWhere('is_featured', true);
+
+            return $featured ?? $posts->sortByDesc(fn (BlogPost $p) => $p->published_at?->timestamp ?? 0)->first();
         }
 
         $data = collect(self::all()['posts'] ?? [])
@@ -141,8 +175,12 @@ class BlogContent
         return $data ? self::hydrateFromConfig($data) : null;
     }
 
-    public static function paginate(?string $categorySlug = null, int $perPage = 9, ?BlogPost $exclude = null): LengthAwarePaginator
-    {
+    public static function paginate(
+        ?string $categorySlug = null,
+        ?string $search = null,
+        int $perPage = 9,
+        ?BlogPost $exclude = null
+    ): LengthAwarePaginator {
         $posts = self::allPosts();
 
         if ($exclude) {
@@ -155,6 +193,19 @@ class BlogContent
                 $slug = self::categorySlug($post->category);
 
                 return $slug === $categorySlug || $post->category === $label;
+            });
+        }
+
+        if ($search !== null && trim($search) !== '') {
+            $needle = Str::lower(trim($search));
+            $posts = $posts->filter(function (BlogPost $post) use ($needle) {
+                $haystack = Str::lower(implode(' ', [
+                    $post->title,
+                    strip_tags((string) $post->excerpt),
+                    strip_tags((string) $post->content),
+                ]));
+
+                return str_contains($haystack, $needle);
             });
         }
 
@@ -176,22 +227,51 @@ class BlogContent
     /** @return Collection<int, BlogPost> */
     public static function relatedPosts(BlogPost $post, int $limit = 3): Collection
     {
-        return self::allPosts()
+        $selected = collect($post->relatedArticleSlugs())
+            ->map(fn (string $slug) => self::findBySlug($slug))
+            ->filter()
             ->reject(fn (BlogPost $p) => $p->slug === $post->slug)
+            ->take($limit);
+
+        if ($selected->count() >= $limit) {
+            return $selected->values();
+        }
+
+        $fallback = self::allPosts()
+            ->reject(fn (BlogPost $p) => $p->slug === $post->slug)
+            ->reject(fn (BlogPost $p) => $selected->contains(fn (BlogPost $s) => $s->slug === $p->slug))
             ->sortByDesc(function (BlogPost $p) use ($post) {
                 $sameCategory = self::categorySlug($p->category) === self::categorySlug($post->category) ? 10 : 0;
 
                 return $sameCategory + ($p->published_at?->timestamp ?? 0) / 1_000_000_000;
             })
-            ->take($limit)
+            ->take($limit - $selected->count());
+
+        return $selected->merge($fallback)->values();
+    }
+
+    /** @return array{prev: ?BlogPost, next: ?BlogPost} */
+    public static function adjacentPosts(BlogPost $post): array
+    {
+        $ordered = self::allPosts()
+            ->sortByDesc(fn (BlogPost $p) => $p->published_at?->timestamp ?? 0)
             ->values();
+
+        $index = $ordered->search(fn (BlogPost $p) => $p->slug === $post->slug);
+
+        if ($index === false) {
+            return ['prev' => null, 'next' => null];
+        }
+
+        return [
+            'prev' => $index > 0 ? $ordered[$index - 1] : null,
+            'next' => $index < $ordered->count() - 1 ? $ordered[$index + 1] : null,
+        ];
     }
 
     public static function readingTimeMinutes(?string $content, ?int $stored = null): int
     {
-        if ($stored !== null && $stored > 0) {
-            return $stored;
-        }
+        unset($stored);
 
         $text = trim(strip_tags($content ?? ''));
         if ($text === '') {
@@ -215,24 +295,20 @@ class BlogContent
             'meta_title' => $data['meta_title'] ?? null,
             'meta_description' => $data['meta_description'] ?? null,
             'category' => $data['category'] ?? null,
-            'author' => $data['author'] ?? 'Vyomika Atelier LLP',
-            'reading_time_minutes' => $data['reading_time_minutes'] ?? null,
+            'author' => $data['author'] ?? BlogPost::DEFAULT_AUTHOR,
             'gallery' => $data['gallery'] ?? null,
             'related_product_slugs' => $data['related_product_slugs'] ?? null,
             'related_project_slugs' => $data['related_project_slugs'] ?? null,
+            'related_article_slugs' => $data['related_article_slugs'] ?? null,
             'faq' => $data['faq'] ?? null,
             'is_featured' => (bool) ($data['is_featured'] ?? false),
             'is_active' => true,
+            'status' => BlogPost::STATUS_PUBLISHED,
         ]);
 
         if (! empty($data['published_at'])) {
             $post->published_at = Carbon::parse($data['published_at']);
         }
-
-        $post->reading_time_minutes = self::readingTimeMinutes(
-            $post->content,
-            $post->reading_time_minutes
-        );
 
         return $post;
     }
@@ -255,10 +331,7 @@ class BlogContent
                 return [
                     ...$post,
                     'date' => $published,
-                    'reading_time_minutes' => self::readingTimeMinutes(
-                        $post['content'] ?? '',
-                        $post['reading_time_minutes'] ?? null
-                    ),
+                    'reading_time_minutes' => self::readingTimeMinutes($post['content'] ?? ''),
                     'category_slug' => self::categorySlug($post['category'] ?? ''),
                 ];
             })->values()->all(),

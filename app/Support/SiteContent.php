@@ -48,7 +48,7 @@ class SiteContent
 
     public static function announcement(): array
     {
-        return self::arrayValue('announcement');
+        return AnnouncementGuard::sanitize(self::arrayValue('announcement'));
     }
 
     public static function heroSlides(): array

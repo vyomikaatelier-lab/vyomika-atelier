@@ -140,6 +140,7 @@ class AdminFrontendSyncTest extends TestCase
                 'excerpt' => 'Patina, care and pairing notes.',
                 'status' => 'published',
                 'published_at' => now()->subDay()->format('Y-m-d\TH:i'),
+                'hero_image_alt' => 'Living With Brass — Vyomika Atelier editorial',
                 'is_active' => '1',
             ])
             ->assertRedirect(route('admin.blog.index'))
@@ -190,6 +191,7 @@ class AdminFrontendSyncTest extends TestCase
                 'excerpt' => 'Patina, care and pairing notes.',
                 'status' => 'published',
                 'published_at' => now()->subDay()->format('Y-m-d\TH:i'),
+                'hero_image_alt' => 'Living With Brass — Vyomika Atelier editorial',
                 'is_active' => '1',
             ])
             ->assertRedirect(route('admin.blog.index'))

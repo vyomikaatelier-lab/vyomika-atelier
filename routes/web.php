@@ -249,6 +249,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('blog', [BlogAdminController::class, 'index'])->name('blog.index');
         Route::get('blog/create', [BlogAdminController::class, 'create'])->name('blog.create');
         Route::post('blog', [BlogAdminController::class, 'store'])->name('blog.store');
+        Route::post('blog/bulk', [BlogAdminController::class, 'bulk'])->name('blog.bulk');
+        Route::get('blog/{post}/preview', [BlogAdminController::class, 'preview'])->name('blog.preview');
+        Route::post('blog/{post}/duplicate', [BlogAdminController::class, 'duplicate'])->name('blog.duplicate');
         Route::get('blog/{post}/edit', [BlogAdminController::class, 'edit'])->name('blog.edit');
         Route::put('blog/{post}', [BlogAdminController::class, 'update'])->name('blog.update');
         Route::delete('blog/{post}', [BlogAdminController::class, 'destroy'])->name('blog.destroy');

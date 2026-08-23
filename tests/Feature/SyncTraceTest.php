@@ -18,7 +18,9 @@ class SyncTraceTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const TRACE_VALUE = 'SYNC-TRACE-8C03C3B-2026';
+    private const TRACE_VALUE = 'Boot hydration probe 2026';
+
+    private const BLOCKED_TRACE = 'SYNC-TRACE-8C03C3B-2026';
 
     private function saveAnnouncement(string $text): void
     {
@@ -117,5 +119,15 @@ class SyncTraceTest extends TestCase
         $this->assertTrue($status['table_found']);
         $this->assertNull($status['error']);
         $this->assertContains('homepage.announcement', $status['applied']);
+    }
+
+    public function test_sync_trace_debug_markers_are_filtered_from_public_announcement_bar(): void
+    {
+        $this->saveAnnouncement(self::BLOCKED_TRACE);
+        $this->bootAsFreshRequestWould();
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertDontSee(self::BLOCKED_TRACE, false);
     }
 }
