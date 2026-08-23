@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Blog content library manifest — 25 articles for blog:import-content.
+ * Blog content library manifest — global + regional articles for blog:import-content.
  *
  * Body HTML lives in database/content/blog/articles/{slug}.php
  *
@@ -653,5 +653,228 @@ return array (
       2 => 'glass-partitions-open-plan-without-compromise',
     ),
     'excerpt' => 'From approved drawings to site installation — how custom metal packages move through measurement, fabrication, QC and delivery in India.',
+  ),
+  25 => 
+  array (
+    'slug' => 'india-pvd-partition-prices-materials-size-installation',
+    'title' => 'PVD Partition Prices in India: Materials, Size and Installation Factors',
+    'category' => 'PVD Partitions',
+    'cluster' => 'PVD PARTITIONS',
+    'primary_keyword' => 'PVD partition price in India',
+    'locale' => 'en-IN',
+    'status' => 'draft',
+    'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg',
+    'hero_image_alt' => 'PVD Partition Prices in India: Materials, Size and Installation Factors — Vyomika Atelier',
+    'meta_title' => 'PVD Partition Prices in India: Cost Factors | Vyomika Atelier',
+    'meta_description' => 'What drives PVD partition pricing in India — materials, dimensions, glass, finishes and installation — without misleading list prices.',
+    'related_service_slugs' => 
+    array (
+      0 => 'partitions',
+    ),
+    'related_article_slugs' => 
+    array (
+      0 => 'pvd-partition-price-in-india-what-determines-final-cost',
+      1 => 'pvd-partitions-materials-finishes-applications-cost-factors',
+    ),
+    'excerpt' => 'Understand PVD partition pricing in India: materials, panel size, glass specification, PVD finish and installation factors that shape a fair quotation.',
+    'robots_index' => false,
+  ),
+  26 => 
+  array (
+    'slug' => 'india-glass-railing-price-quotation-factors',
+    'title' => 'Glass Railing Price in India: What Affects a Project Quotation?',
+    'category' => 'Railings',
+    'cluster' => 'RAILINGS',
+    'primary_keyword' => 'glass railing price in India',
+    'locale' => 'en-IN',
+    'status' => 'draft',
+    'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg',
+    'hero_image_alt' => 'Glass Railing Price in India: What Affects a Project Quotation? — Vyomika Atelier',
+    'meta_title' => 'Glass Railing Price in India: Quotation Factors | Vyomika Atelier',
+    'meta_description' => 'Learn what affects glass railing quotations in India — run length, glass type, posts, finishes and site conditions — without generic price tables.',
+    'related_service_slugs' => NULL,
+    'related_article_slugs' => 
+    array (
+      0 => 'glass-railings-staircases-balconies-planning-checklist',
+      1 => 'stainless-steel-railings-types-finishes-selection-guide',
+    ),
+    'excerpt' => 'Glass railing prices in India depend on run length, glass type, post system, PVD finish and site access — factors to prepare before requesting a quote.',
+    'robots_index' => false,
+  ),
+  27 => 
+  array (
+    'slug' => 'india-choosing-metal-partitions-homes-apartments',
+    'title' => 'Choosing Metal Partitions for Indian Homes and Apartments',
+    'category' => 'Interior Metalwork',
+    'cluster' => 'PVD PARTITIONS',
+    'primary_keyword' => 'metal partition for living room',
+    'locale' => 'en-IN',
+    'status' => 'draft',
+    'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg',
+    'hero_image_alt' => 'Choosing Metal Partitions for Indian Homes and Apartments — Vyomika Atelier',
+    'meta_title' => 'Metal Partitions for Indian Homes & Apartments | Vyomika Atelier',
+    'meta_description' => 'Choose metal and PVD partitions for Indian apartments and villas — privacy, Vastu-friendly zoning, light and proportions.',
+    'related_service_slugs' => 
+    array (
+      0 => 'partitions',
+    ),
+    'related_article_slugs' => 
+    array (
+      0 => 'how-to-select-metal-partition-for-living-room',
+      1 => 'glass-partitions-open-plan-without-compromise',
+    ),
+    'excerpt' => 'Select metal partitions for Indian homes and apartments: open-plan zoning, PVD finishes, glass privacy and circulation clearances that suit local layouts.',
+    'robots_index' => false,
+  ),
+  28 => 
+  array (
+    'slug' => 'uk-metal-room-dividers-interiors-specification-guide',
+    'title' => 'Metal Room Dividers for UK Interiors: Design and Specification Guide',
+    'category' => 'PVD Partitions',
+    'cluster' => 'PVD PARTITIONS',
+    'primary_keyword' => 'metal room dividers UK',
+    'locale' => 'en-GB',
+    'status' => 'draft',
+    'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg',
+    'hero_image_alt' => 'Metal Room Dividers for UK Interiors: Design and Specification Guide — Vyomika Atelier',
+    'meta_title' => 'Metal Room Dividers for UK Interiors | Vyomika Atelier',
+    'meta_description' => 'Specify metal and glass room dividers for UK homes and offices — slimline profiles, PVD finishes and export enquiry guidance from an India-based fabricator.',
+    'related_service_slugs' => 
+    array (
+      0 => 'partitions',
+    ),
+    'related_article_slugs' => 
+    array (
+      0 => 'glass-partitions-open-plan-without-compromise',
+      1 => 'pvd-coating-explained-durable-metal-finishes',
+    ),
+    'excerpt' => 'Design and specify metal room dividers for UK interiors — glazed partition walls, PVD finishes and coordination notes for India-manufactured bespoke metalwork.',
+    'robots_index' => false,
+  ),
+  29 => 
+  array (
+    'slug' => 'uk-slimline-internal-glass-doors-hinged-sliding-fixed',
+    'title' => 'Slimline Internal Glass Doors: Hinged, Sliding or Fixed?',
+    'category' => 'Slim Profile Doors',
+    'cluster' => 'SLIM PROFILE/ENTRANCE DOORS',
+    'primary_keyword' => 'slimline internal glass doors',
+    'locale' => 'en-GB',
+    'status' => 'draft',
+    'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg',
+    'hero_image_alt' => 'Slimline Internal Glass Doors: Hinged, Sliding or Fixed? — Vyomika Atelier',
+    'meta_title' => 'Slimline Internal Glass Doors Compared | Vyomika Atelier',
+    'meta_description' => 'Compare slimline internal glass doors for UK projects — hinged, sliding and fixed panels — with PVD metal frames manufactured in India.',
+    'related_service_slugs' => 
+    array (
+      0 => 'slim-profile-door-system',
+    ),
+    'related_article_slugs' => 
+    array (
+      0 => 'slim-profile-doors-hinged-sliding-telescopic-compared',
+      1 => 'fluted-glass-slim-profile-doors-design-privacy-guide',
+    ),
+    'excerpt' => 'Compare slimline internal glass doors for UK homes — hinged, sliding and fixed glazed panels with minimal PVD metal frames.',
+    'robots_index' => false,
+  ),
+  30 => 
+  array (
+    'slug' => 'uk-corten-steel-cladding-weathering-drainage-detailing',
+    'title' => 'Corten Steel Cladding in the UK: Weathering, Drainage and Detailing',
+    'category' => 'Corten Steel',
+    'cluster' => 'CORTEN STEEL',
+    'primary_keyword' => 'Corten steel cladding UK',
+    'locale' => 'en-GB',
+    'status' => 'draft',
+    'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg',
+    'hero_image_alt' => 'Corten Steel Cladding in the UK: Weathering, Drainage and Detailing — Vyomika Atelier',
+    'meta_title' => 'Corten Steel Cladding UK: Detailing Guide | Vyomika Atelier',
+    'meta_description' => 'Corten steel cladding notes for UK projects — weathering behaviour, runoff control and detailing for India-manufactured panels.',
+    'related_service_slugs' => 
+    array (
+      0 => 'corten-steel-facade',
+    ),
+    'related_article_slugs' => 
+    array (
+      0 => 'what-is-corten-steel-and-how-does-it-weather',
+      1 => 'corten-steel-facades-design-drainage-weathering',
+    ),
+    'excerpt' => 'Corten steel cladding for UK projects: patina development, drainage detailing and runoff control — specification notes from an India-based fabricator.',
+    'robots_index' => false,
+  ),
+  31 => 
+  array (
+    'slug' => 'uae-pvd-stainless-steel-interiors-finishes-applications',
+    'title' => 'PVD Stainless Steel for UAE Interiors: Finishes and Applications',
+    'category' => 'PVD Finishes',
+    'cluster' => 'PVD HARDWARE/FURNITURE',
+    'primary_keyword' => 'PVD stainless steel UAE',
+    'locale' => 'en-AE',
+    'status' => 'draft',
+    'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg',
+    'hero_image_alt' => 'PVD Stainless Steel for UAE Interiors: Finishes and Applications — Vyomika Atelier',
+    'meta_title' => 'PVD Stainless Steel for UAE Interiors | Vyomika Atelier',
+    'meta_description' => 'PVD stainless steel finishes for UAE villas and offices — champagne, black and rose gold applications; India-manufactured architectural metalwork.',
+    'related_service_slugs' => 
+    array (
+      0 => 'partitions',
+      1 => 'main-entrance-pvd-doors',
+    ),
+    'related_article_slugs' => 
+    array (
+      0 => 'pvd-coating-explained-durable-metal-finishes',
+      1 => 'pvd-finish-selection-guide-gold-rose-gold-champagne-black',
+    ),
+    'excerpt' => 'PVD stainless steel for UAE interiors: finish options, high-touch applications and specification notes for India-manufactured metalwork.',
+    'robots_index' => false,
+  ),
+  32 => 
+  array (
+    'slug' => 'uae-glass-metal-partitions-dubai-offices-villas',
+    'title' => 'Glass and Metal Partitions for Dubai Offices and Villas',
+    'category' => 'PVD Partitions',
+    'cluster' => 'PVD PARTITIONS',
+    'primary_keyword' => 'office glass partitions Dubai',
+    'locale' => 'en-AE',
+    'status' => 'draft',
+    'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg',
+    'hero_image_alt' => 'Glass and Metal Partitions for Dubai Offices and Villas — Vyomika Atelier',
+    'meta_title' => 'Glass & Metal Partitions for Dubai | Vyomika Atelier',
+    'meta_description' => 'Plan glass and PVD metal partitions for Dubai offices and villas — zoning, finishes and export supply from India.',
+    'related_service_slugs' => 
+    array (
+      0 => 'partitions',
+    ),
+    'related_article_slugs' => 
+    array (
+      0 => 'glass-partitions-open-plan-without-compromise',
+      1 => 'uae-pvd-stainless-steel-interiors-finishes-applications',
+    ),
+    'excerpt' => 'Glass and metal partitions for Dubai offices and villas — open-plan zoning, PVD frames and export supply considerations.',
+    'robots_index' => false,
+  ),
+  33 => 
+  array (
+    'slug' => 'uae-corten-steel-heat-humidity-coastal-considerations',
+    'title' => 'Corten Steel in UAE Conditions: Heat, Humidity and Coastal Considerations',
+    'category' => 'Corten Steel',
+    'cluster' => 'CORTEN STEEL',
+    'primary_keyword' => 'Corten steel cladding UAE',
+    'locale' => 'en-AE',
+    'status' => 'draft',
+    'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg',
+    'hero_image_alt' => 'Corten Steel in UAE Conditions: Heat, Humidity and Coastal Considerations — Vyomika Atelier',
+    'meta_title' => 'Corten Steel in UAE Conditions | Vyomika Atelier',
+    'meta_description' => 'Corten steel in UAE heat, humidity and coastal air — patina behaviour, detailing and export supply notes.',
+    'related_service_slugs' => 
+    array (
+      0 => 'corten-steel-facade',
+    ),
+    'related_article_slugs' => 
+    array (
+      0 => 'what-is-corten-steel-and-how-does-it-weather',
+      1 => 'corten-steel-facades-design-drainage-weathering',
+    ),
+    'excerpt' => 'Specify Corten steel for UAE projects with realistic expectations for heat, humidity, coastal salt and patina behaviour.',
+    'robots_index' => false,
   ),
 );
