@@ -25,9 +25,10 @@ The importer flags and downgrades to draft when `image` matches any of:
 
 | File | Slug | Reason |
 |---|---|---|
-| `m4wAc-e0a938ce-1199-4a72-bdf5-1083476eac16.jpg` | `corten-steel-modern-facades` | Grok watermark; not copied to `public/`; not in manifest — **OWNER IMAGE REQUIRED** |
+| `m4wAc-e0a938ce-1199-4a72-bdf5-1083476eac16.jpg` | `corten-steel-modern-facades` | Grok watermark; not copied to `public/` |
+| delhiduniya.com hotlinks | `glass-partitions-open-plan`, `pvd-coating-explained`, `corten-steel-modern-facades` | Replaced with self-hosted heroes |
 
-Other owner candidates under evaluation: `IMG_0285-…jpg` (`pvd-coating-explained`), `Elegant_modern_living_room_divider-…jpg` (`glass-partitions-open-plan`). See [owner-image-assessment.md](./owner-image-assessment.md).
+**Owner-approved heroes (2026-08-23):** see [owner-image-assessment.md](./owner-image-assessment.md) — three pillar slugs self-hosted under `/images/blog/heroes/`; JPEG only (sources &lt;1200px wide).
 
 ## Before publishing
 

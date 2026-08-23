@@ -6,6 +6,9 @@
  * Body HTML lives in database/content/blog/articles/{slug}.php
  * Regional entries (locale set) require --regional flag; default import is global-only.
  *
+ * Published status in manifest applies only to NEW records. On apply, BlogContentImporter
+ * preserves existing DB status and published_at for matching slugs (stripPreservedFieldsFromUpdate).
+ *
  * @return list<array<string, mixed>>
  */
 return array (
@@ -16,11 +19,12 @@ return array (
     'category' => 'PVD Partitions',
     'cluster' => 'PVD PARTITIONS',
     'primary_keyword' => 'glass partitions',
-    'status' => 'draft',
+    'status' => 'published',
     'published_at' => '2026-06-15',
     'is_featured' => true,
-    'image' => 'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg',
-    'hero_image_alt' => 'PVD-framed glass partition dividing an open-plan living room while preserving daylight',
+    'image' => '/images/blog/heroes/glass-partitions-open-plan-hero.jpg',
+    'hero_image_alt' => 'Gold-finished metal and glass partition installed in a Vyomika Atelier living-room project',
+    'og_image' => '/images/blog/heroes/glass-partitions-open-plan-hero.jpg',
     'meta_title' => 'Glass Partitions: Open Plan Without Compromise | Vyomika Atelier',
     'meta_description' => 'Plan glass and metal partitions that keep open-plan light and flow while defining zones — materials, privacy levels and coordination for Indian homes and offices.',
     'related_service_slugs' => 
@@ -54,10 +58,11 @@ return array (
     'category' => 'PVD Finishes',
     'cluster' => 'PVD HARDWARE/FURNITURE',
     'primary_keyword' => 'PVD coating',
-    'status' => 'draft',
+    'status' => 'published',
     'published_at' => '2026-06-10',
     'image' => '/images/blog/heroes/pvd-coating-explained-hero.jpg',
     'hero_image_alt' => 'Close-up of a brushed gold PVD-coated metal plaque stencilled LED PROFILE PVD PARTITION, reflected on a glossy surface',
+    'og_image' => '/images/blog/heroes/pvd-coating-explained-hero.jpg',
     'meta_title' => 'PVD Coating Explained: Durable Metal Finishes | Vyomika Atelier',
     'meta_description' => 'What PVD coating is, how it differs from plating and powder coat, and how architects specify durable gold, champagne and black finishes on stainless metalwork.',
     'related_service_slugs' => 
@@ -86,10 +91,11 @@ return array (
     'category' => 'Corten Steel',
     'cluster' => 'CORTEN STEEL',
     'primary_keyword' => 'Corten steel facade',
-    'status' => 'draft',
+    'status' => 'published',
     'published_at' => '2026-06-05',
     'image' => '/images/blog/heroes/corten-steel-modern-facades-hero.jpg',
-    'hero_image_alt' => 'Modern building with weathered Corten steel cladding panels, concrete volumes and perforated Corten sunscreens in a paved courtyard',
+    'hero_image_alt' => 'Representative contemporary Indian building visualised with weathered Corten steel façade panels and perforated screens',
+    'og_image' => '/images/blog/heroes/corten-steel-modern-facades-hero.jpg',
     'meta_title' => 'Why Corten Steel Suits Modern Façades | Vyomika Atelier',
     'meta_description' => 'How weathering steel brings warmth and depth to modern Indian façades — patina behaviour, design applications and practical specification notes for architects.',
     'related_project_slugs' => 
