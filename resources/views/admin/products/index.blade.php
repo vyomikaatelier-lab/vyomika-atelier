@@ -13,9 +13,6 @@
 <div class="flex flex-wrap justify-between items-start gap-4 mb-6">
     <div>
         <h1 class="text-2xl font-semibold">Products</h1>
-        @if($unclassifiedCount > 0)
-        <p class="text-sm text-amber-700 mt-1">{{ $unclassifiedCount }} product(s) need classification.</p>
-        @endif
         @if($categoryFilter)
         <p class="text-sm text-gray-600 mt-1">Showing <strong>{{ $products->count() }}</strong> in <strong>{{ $categoryFilter->name }}</strong></p>
         @elseif($activeSection)
@@ -28,10 +25,6 @@
         @endif
     </div>
     <div class="flex flex-wrap gap-2">
-        <a href="{{ route('admin.products.index', $listParams(['filter' => request('filter') === 'unclassified' ? null : 'unclassified'])) }}"
-           class="px-4 py-2 rounded text-sm border {{ request('filter') === 'unclassified' ? 'bg-amber-100 border-amber-300' : 'bg-white' }}">
-            {{ request('filter') === 'unclassified' ? 'Show all' : 'Unclassified' }}
-        </a>
         <a href="{{ route('admin.products.create', $listParams()) }}" class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Add Product</a>
     </div>
 </div>
@@ -143,7 +136,7 @@
     </thead>
     <tbody id="product-sortable-list">
         @forelse($products as $product)
-        <tr class="border-b {{ ! $product->isClassified() ? 'bg-amber-50' : '' }}" data-product-id="{{ $product->id }}">
+        <tr class="border-b" data-product-id="{{ $product->id }}">
             @if(\Illuminate\Support\Facades\Route::has('admin.products.bulk'))
             <td class="p-3"><input type="checkbox" form="product-bulk-form" name="ids[]" value="{{ $product->id }}" class="product-bulk-check" aria-label="Select {{ $product->name }}"></td>
             @endif

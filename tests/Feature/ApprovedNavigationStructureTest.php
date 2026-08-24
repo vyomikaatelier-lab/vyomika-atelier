@@ -48,12 +48,13 @@ class ApprovedNavigationStructureTest extends TestCase
         }
     }
 
-    public function test_sync_does_not_reactivate_obsolete_categories(): void
+    public function test_sync_does_not_reactivate_obsolete_or_owner_disabled_categories(): void
     {
         ProductCatalog::syncCanonicalCategories();
 
         Category::query()->where('slug', 'home-decor')->update(['is_active' => true]);
         Category::query()->where('slug', 'railings')->update(['is_active' => true]);
+        Category::query()->where('slug', 'glass-tables')->update(['is_active' => false]);
 
         ProductCatalog::syncCanonicalCategories();
 
@@ -63,11 +64,9 @@ class ApprovedNavigationStructureTest extends TestCase
             $this->assertFalse($category->fresh()->is_active, $slug.' should stay inactive');
         }
 
-        foreach (ProductCatalog::canonicalCategories() as $cat) {
-            $this->assertTrue(
-                Category::query()->where('slug', $cat['slug'])->where('is_active', true)->exists(),
-                $cat['slug'].' should be active'
-            );
-        }
+        $this->assertFalse(
+            Category::query()->where('slug', 'glass-tables')->value('is_active'),
+            'Owner-disabled canonical categories must not be reactivated by sync.'
+        );
     }
 }

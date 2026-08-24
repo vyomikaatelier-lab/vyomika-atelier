@@ -88,8 +88,8 @@ class CategoryAdminController extends Controller
 
     public function sync(Request $request)
     {
-        $synced = ProductCatalog::syncCanonicalCategories();
-        $message = "Synced {$synced} canonical categories from catalog defaults.";
+        $result = ProductCatalog::syncCanonicalCategories();
+        $message = "Synced {$result['synced']} canonical categories from catalog defaults.";
 
         if ($request->boolean('assign_products')) {
             $assigned = ProductCatalog::assignUnclassifiedProducts();

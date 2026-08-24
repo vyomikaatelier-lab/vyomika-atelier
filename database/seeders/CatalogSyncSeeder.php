@@ -17,7 +17,7 @@ class CatalogSyncSeeder extends Seeder
 
     public function run(): void
     {
-        $dryRun = static::$dryRun || (bool) ($this->command?->option('dry-run') ?? false);
+        $dryRun = static::$dryRun;
 
         $this->syncCategories($dryRun);
         $this->syncProducts($dryRun);
