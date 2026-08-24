@@ -59,7 +59,6 @@ php artisan optimize:clear
 echo "Running migrations..."
 php artisan migrate --force
 php artisan db:seed --force
-php artisan catalog:sync --force
 
 # Clear ADMIN_PASSWORD so future db:seed runs cannot reset the admin password
 if grep -q '^ADMIN_PASSWORD=.' .env 2>/dev/null; then

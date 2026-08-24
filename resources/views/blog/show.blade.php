@@ -163,12 +163,11 @@
                     <h2 id="blog-services-title" class="am-blog-block__title">Related Services</h2>
                     <div class="am-blog-related-grid">
                         @foreach($relatedServices as $service)
-                        @php $serviceImage = $service->imageUrl(); @endphp
                         <article class="am-blog-related-card">
                             <a href="{{ route('services.show', $service->slug) }}" class="am-blog-related-card__link">
-                                @if($serviceImage)
+                                @if($service->image)
                                 <div class="am-blog-related-card__thumb">
-                                    <img src="{{ $serviceImage }}" alt="{{ $service->name }} — Vyomika Atelier" loading="lazy">
+                                    <img src="{{ $service->image }}" alt="{{ $service->name }} — Vyomika Atelier" loading="lazy">
                                 </div>
                                 @endif
                                 <h3 class="am-blog-related-card__title">{{ $service->name }}</h3>

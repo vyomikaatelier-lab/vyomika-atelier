@@ -14,14 +14,8 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        if (! app()->environment('production')) {
-            $this->call(CatalogSyncSeeder::class);
-            $this->call(CorrectCatalogClassificationSeeder::class);
-        } else {
-            $this->command?->warn(
-                'Catalog seeders skipped in production db:seed. Use: php artisan catalog:sync --force'
-            );
-        }
+        $this->call(CatalogSyncSeeder::class);
+        $this->call(CorrectCatalogClassificationSeeder::class);
 
         if (Project::count() === 0 && BlogPost::count() === 0) {
             $this->seedProjectsAndBlog();
