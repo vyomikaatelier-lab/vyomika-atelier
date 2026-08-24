@@ -13,19 +13,25 @@ use Illuminate\Support\Facades\Schema;
 
 class CatalogSyncSeeder extends Seeder
 {
+    public static bool $dryRun = false;
+
     public function run(): void
     {
-        $this->syncCategories();
-        $this->syncProducts();
-        $this->syncServices();
+        $dryRun = static::$dryRun || (bool) ($this->command?->option('dry-run') ?? false);
+
+        $this->syncCategories($dryRun);
+        $this->syncProducts($dryRun);
+        $this->syncServices($dryRun);
     }
 
-    private function syncCategories(): void
+    private function syncCategories(bool $dryRun): void
     {
-        ProductCatalog::syncCanonicalCategories();
+        $result = ProductCatalog::syncCanonicalCategories($dryRun);
+        $suffix = $dryRun ? ' (dry-run)' : '';
+        $this->command?->info("Categories: {$result['synced']} canonical, {$result['created']} would create, {$result['updated']} would update{$suffix}.");
     }
 
-    private function syncProducts(): void
+    private function syncProducts(bool $dryRun): void
     {
         $cat = fn (string $slug) => Category::query()->where('slug', $slug)->first();
 
@@ -46,11 +52,30 @@ class CatalogSyncSeeder extends Seeder
             $productsBySlug[$item['slug']] = $item;
         }
 
+        $created = 0;
+        $backfilled = 0;
+        $skipped = 0;
+
         foreach (array_values($productsBySlug) as $item) {
             $categorySlug = ProductCatalog::categorySlugForProduct($item['slug'])
                 ?? (in_array($item['category'] ?? '', ProductCatalog::obsoleteCategorySlugs(), true)
                     ? (in_array($item['category'], ['fluted-panels', 'room-dividers'], true) ? 'partitions' : 'bespoke-metal-furniture')
                     : ($item['category'] ?? null));
+
+            $existing = Product::query()->where('slug', $item['slug'])->first();
+
+            if ($existing !== null) {
+                if ($existing->category_id === null && $categorySlug && ($category = $cat($categorySlug))) {
+                    if (! $dryRun) {
+                        $existing->update(['category_id' => $category->id]);
+                    }
+                    $backfilled++;
+                } else {
+                    $skipped++;
+                }
+
+                continue;
+            }
 
             $payload = [
                 'category_id' => $categorySlug ? $cat($categorySlug)?->id : null,
@@ -79,21 +104,26 @@ class CatalogSyncSeeder extends Seeder
                 }
             }
 
-            Product::query()->updateOrCreate(
-                ['slug' => $item['slug']],
-                $payload
-            );
+            if (! $dryRun) {
+                Product::query()->create(array_merge(['slug' => $item['slug']], $payload));
+            }
+            $created++;
         }
+
+        $suffix = $dryRun ? ' (dry-run)' : '';
+        $this->command?->info("Products: {$created} would create, {$backfilled} category backfill, {$skipped} existing preserved{$suffix}.");
     }
 
-    private function syncServices(): void
+    private function syncServices(bool $dryRun): void
     {
-        Service::query()
-            ->whereIn('slug', Service::adminHiddenSlugs())
-            ->each(function (Service $service) {
-                $service->designs()->delete();
-                $service->delete();
-            });
+        if (! $dryRun) {
+            Service::query()
+                ->whereIn('slug', Service::adminHiddenSlugs())
+                ->each(function (Service $service) {
+                    $service->designs()->delete();
+                    $service->delete();
+                });
+        }
 
         $services = [
             [
@@ -154,35 +184,63 @@ class CatalogSyncSeeder extends Seeder
             ],
         ];
 
+        $created = 0;
+        $skipped = 0;
+
         foreach ($services as $data) {
             $designs = $data['designs'] ?? [];
-            $isActive = $data['is_active'] ?? true;
+            $defaultActive = $data['is_active'] ?? true;
             unset($data['designs'], $data['is_active']);
 
-            $service = Service::query()->updateOrCreate(
-                ['slug' => $data['slug']],
-                [
-                    ...$data,
-                    'is_active' => $isActive,
-                    'rate_per_sqft' => 1800,
-                ]
-            );
+            $existing = Service::query()->where('slug', $data['slug'])->first();
 
-            foreach ($designs as $design) {
-                if (! Schema::hasColumn('service_designs', 'product_slug')) {
-                    unset($design['product_slug']);
+            if ($existing === null) {
+                if (! $dryRun) {
+                    $service = Service::query()->create([
+                        ...$data,
+                        'is_active' => $defaultActive,
+                        'rate_per_sqft' => 1800,
+                    ]);
+                    $this->syncServiceDesigns($service, $designs, $dryRun);
                 }
+                $created++;
+            } else {
+                $skipped++;
+                if (! $dryRun) {
+                    $this->syncServiceDesigns($existing, $designs, $dryRun, createOnly: true);
+                }
+            }
+        }
 
-                ServiceDesign::query()->updateOrCreate(
-                    [
+        $suffix = $dryRun ? ' (dry-run)' : '';
+        $this->command?->info("Services: {$created} would create, {$skipped} existing preserved{$suffix}.");
+    }
+
+    /** @param list<array<string, mixed>> $designs */
+    private function syncServiceDesigns(Service $service, array $designs, bool $dryRun, bool $createOnly = false): void
+    {
+        foreach ($designs as $design) {
+            if (! Schema::hasColumn('service_designs', 'product_slug')) {
+                unset($design['product_slug']);
+            }
+
+            $existing = ServiceDesign::query()
+                ->where('service_id', $service->id)
+                ->where('slug', $design['slug'])
+                ->first();
+
+            if ($existing !== null && $createOnly) {
+                continue;
+            }
+
+            if ($existing === null) {
+                if (! $dryRun) {
+                    ServiceDesign::query()->create([
                         'service_id' => $service->id,
-                        'slug' => $design['slug'],
-                    ],
-                    [
                         ...$design,
                         'is_active' => true,
-                    ]
-                );
+                    ]);
+                }
             }
         }
     }

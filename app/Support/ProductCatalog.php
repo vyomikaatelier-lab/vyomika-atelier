@@ -144,39 +144,85 @@ class ProductCatalog
         ];
     }
 
-    public static function syncCanonicalCategories(): int
+    /**
+     * Ensure canonical categories exist with correct section/sort order.
+     * Preserves admin-controlled is_active on existing rows (never force-enables).
+     *
+     * @return array{synced: int, created: int, updated: int}
+     */
+    public static function syncCanonicalCategories(bool $dryRun = false): array
     {
         $synced = 0;
+        $created = 0;
+        $updated = 0;
 
         foreach (self::canonicalCategories() as $index => $cat) {
-            Category::query()->updateOrCreate(
-                ['slug' => $cat['slug']],
-                [
-                    'name' => $cat['name'],
-                    'section' => $cat['section'],
-                    'sort_order' => $index + 1,
-                    'is_active' => true,
-                ]
-            );
+            $existing = Category::query()->where('slug', $cat['slug'])->first();
+            $attributes = [
+                'name' => $cat['name'],
+                'section' => $cat['section'],
+                'sort_order' => $index + 1,
+            ];
+
+            if ($existing === null) {
+                $attributes['is_active'] = true;
+                if (! $dryRun) {
+                    Category::query()->create(array_merge(['slug' => $cat['slug']], $attributes));
+                }
+                $created++;
+            } else {
+                $changes = array_filter(
+                    $attributes,
+                    fn ($value, $key) => $existing->{$key} !== $value,
+                    ARRAY_FILTER_USE_BOTH
+                );
+                if ($changes !== []) {
+                    if (! $dryRun) {
+                        $existing->update($changes);
+                    }
+                    $updated++;
+                }
+            }
+
             $synced++;
         }
 
         foreach (self::obsoleteCategoryMeta() as $slug => $meta) {
-            Category::query()->updateOrCreate(
-                ['slug' => $slug],
-                [
+            $existing = Category::query()->where('slug', $slug)->first();
+
+            if ($existing === null) {
+                if (! $dryRun) {
+                    Category::query()->create([
+                        'slug' => $slug,
+                        'name' => $meta['name'],
+                        'section' => $meta['section'],
+                        'is_active' => false,
+                    ]);
+                }
+                $created++;
+            } else {
+                $changes = array_filter([
                     'name' => $meta['name'],
                     'section' => $meta['section'],
-                    'is_active' => false,
-                ]
-            );
+                ], fn ($value, $key) => $existing->{$key} !== $value, ARRAY_FILTER_USE_BOTH);
+
+                if ($changes !== []) {
+                    if (! $dryRun) {
+                        $existing->update($changes);
+                    }
+                    $updated++;
+                }
+            }
         }
 
-        Category::query()
-            ->whereIn('slug', self::obsoleteCategorySlugs())
-            ->update(['is_active' => false]);
+        if (! $dryRun) {
+            Category::query()
+                ->whereIn('slug', self::obsoleteCategorySlugs())
+                ->where('is_active', true)
+                ->update(['is_active' => false]);
+        }
 
-        return $synced;
+        return compact('synced', 'created', 'updated');
     }
 
     public static function assignUnclassifiedProducts(): int
