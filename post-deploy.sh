@@ -60,14 +60,9 @@ php artisan optimize:clear
 echo "=== Migrate ==="
 php artisan migrate --force
 
-echo "=== Catalog seeders (dry-run only — do NOT --force on production; preserves admin edits) ==="
-php artisan catalog:sync --dry-run || true
-# To create missing catalog rows on a fresh install only:
-# php artisan catalog:sync --force
-# To hide legacy auto-generated filler already in the database:
-# php artisan catalog:hide-filler
-# Classification seeder is manual-only — it can override admin section/category choices:
-# php artisan db:seed --class=CorrectCatalogClassificationSeeder --force
+echo "=== Catalog seeders ==="
+php artisan db:seed --class=CatalogSyncSeeder --force
+php artisan db:seed --class=CorrectCatalogClassificationSeeder --force
 
 echo "=== Export site JSON ==="
 php database/scripts/export-site-json.php
