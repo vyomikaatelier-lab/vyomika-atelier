@@ -11,6 +11,10 @@ class CartService
 {
     private const SESSION_KEY = 'cart';
 
+    private const BUY_NOW_KEY = 'buy_now';
+
+    public const CHECKOUT_SOURCE_KEY = 'checkout_source';
+
     /**
      * @return array{quantity: int, finish_slug: ?string, finish_name: ?string, size_label: ?string, unit_price: ?float}
      */
@@ -144,6 +148,83 @@ class CartService
     public function clear(): void
     {
         session()->forget(self::SESSION_KEY);
+    }
+
+    public function setBuyNow(Product $product, int $quantity = 1, ?string $finishSlug = null, ?string $sizeLabel = null): void
+    {
+        $finish = FinishSwatches::resolve($finishSlug);
+        $size = $this->resolveSizeSelection($product, $sizeLabel);
+
+        session([self::BUY_NOW_KEY => [
+            'product_id' => $product->id,
+            'quantity' => max(1, $quantity),
+            'finish_slug' => $finish['slug'],
+            'finish_name' => $finish['name'],
+            'size_label' => $size['label'],
+            'unit_price' => $size['unit_price'],
+        ]]);
+    }
+
+    public function clearBuyNow(): void
+    {
+        session()->forget(self::BUY_NOW_KEY);
+    }
+
+    public function hasBuyNow(): bool
+    {
+        return $this->buyNowItems()->isNotEmpty();
+    }
+
+    /**
+     * Items charged at checkout: the Buy Now snapshot when present, otherwise the cart.
+     */
+    public function checkoutItems(): Collection
+    {
+        $buyNow = $this->buyNowItems();
+
+        return $buyNow->isNotEmpty() ? $buyNow : $this->all();
+    }
+
+    public function checkoutSubtotal(): float
+    {
+        return $this->checkoutItems()->sum('line_total');
+    }
+
+    public function checkoutIsEmpty(): bool
+    {
+        return $this->checkoutItems()->isEmpty();
+    }
+
+    /**
+     * @return Collection<int, array{product: Product, quantity: int, finish_slug: ?string, finish_name: ?string, size_label: ?string, unit_price: float, line_total: float}>
+     */
+    public function buyNowItems(): Collection
+    {
+        $line = session(self::BUY_NOW_KEY);
+        if (! is_array($line) || empty($line['product_id'])) {
+            return collect();
+        }
+
+        $product = Product::with('category')->find($line['product_id']);
+        $normalized = $this->normalizeLine($line);
+
+        if (! CartGuard::isEligible($product)) {
+            $this->clearBuyNow();
+
+            return collect();
+        }
+
+        $unitPrice = $this->resolveUnitPrice($product, $normalized['size_label'], $normalized['unit_price']);
+
+        return collect([[
+            'product' => $product,
+            'quantity' => $normalized['quantity'],
+            'finish_slug' => $normalized['finish_slug'],
+            'finish_name' => $normalized['finish_name'],
+            'size_label' => $normalized['size_label'],
+            'unit_price' => $unitPrice,
+            'line_total' => $unitPrice * $normalized['quantity'],
+        ]]);
     }
 
     public function count(): int

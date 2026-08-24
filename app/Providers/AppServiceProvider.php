@@ -9,6 +9,7 @@ use App\Support\AdminMfa;
 use App\Support\CmsSettings;
 use App\Support\PackageDiscovery;
 use App\View\Composers\StorefrontSeoComposer;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -61,6 +62,13 @@ class AppServiceProvider extends ServiceProvider
         }
 
         View::composer('layouts.store', StorefrontSeoComposer::class);
+
+        ResetPassword::createUrlUsing(function ($user, string $token) {
+            return url(route('account.password.reset', [
+                'token' => $token,
+                'email' => $user->getEmailForPasswordReset(),
+            ], false));
+        });
     }
 
     private function configureRateLimiting(): void
@@ -100,6 +108,15 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('otp-verify', fn (Request $request) => Limit::perHour(5)->by(
             'otp-verify:'.$request->session()->get('account_pending_verification_id', $request->ip())
         ));
+
+        RateLimiter::for('password-reset', function (Request $request) {
+            $email = strtolower((string) $request->input('email', ''));
+
+            return [
+                Limit::perHour(5)->by($request->ip()),
+                Limit::perHour(3)->by($email !== '' ? 'password-reset:'.$email : 'password-reset:'.$request->ip()),
+            ];
+        });
 
         RateLimiter::for('cart', fn (Request $request) => Limit::perMinute(30)->by($request->ip()));
 

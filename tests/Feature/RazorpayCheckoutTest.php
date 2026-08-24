@@ -455,4 +455,55 @@ class RazorpayCheckoutTest extends TestCase
         $this->assertFalse($result['success']);
         $this->assertSame(422, $result['status']);
     }
+
+    public function test_legitimate_gateway_callback_is_not_rejected_by_checkout_throttle(): void
+    {
+        $order = $this->makeOrder(['razorpay_order_id' => 'order_throttle_cb']);
+        $this->addShopItem($order);
+        $paymentId = 'pay_throttle_cb';
+        $this->fakePayment($paymentId, 'order_throttle_cb');
+
+        $shopper = User::factory()->create();
+        $this->actingAs($shopper);
+        for ($i = 0; $i < 12; $i++) {
+            $this->post(route('checkout.store'), []);
+        }
+        $this->post(route('checkout.store'), [])->assertStatus(429);
+
+        $response = $this->actingForOrder($order)
+            ->post(route('checkout.pay.verify', $order), [
+                'razorpay_payment_id' => $paymentId,
+                'razorpay_order_id' => 'order_throttle_cb',
+                'razorpay_signature' => $this->signature('order_throttle_cb', $paymentId),
+            ]);
+
+        $this->assertNotEquals(429, $response->status());
+        $response->assertRedirect(route('checkout.success', $order));
+        $this->assertSame('paid', $order->fresh()->status);
+        $this->assertSame($paymentId, $order->fresh()->payment_id);
+    }
+
+    public function test_invalid_gateway_callback_still_fails_after_checkout_throttle(): void
+    {
+        $order = $this->makeOrder(['razorpay_order_id' => 'order_throttle_bad']);
+        $this->addShopItem($order);
+
+        $shopper = User::factory()->create();
+        $this->actingAs($shopper);
+        for ($i = 0; $i < 12; $i++) {
+            $this->post(route('checkout.store'), []);
+        }
+        $this->post(route('checkout.store'), [])->assertStatus(429);
+
+        $response = $this->actingForOrder($order)
+            ->post(route('checkout.pay.verify', $order), [
+                'razorpay_payment_id' => 'pay_forged',
+                'razorpay_order_id' => 'order_throttle_bad',
+                'razorpay_signature' => 'invalid-signature',
+            ]);
+
+        $this->assertNotEquals(429, $response->status());
+        $this->assertSame('pending', $order->fresh()->status);
+        $this->assertNull($order->fresh()->payment_id);
+    }
 }

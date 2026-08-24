@@ -51,18 +51,23 @@ class CartController extends Controller
 
         $quantity = max(1, (int) $request->input('quantity', 1));
         $quantity = min($quantity, min($available, 99));
-        $finishSlug = $request->input('finish_slug');
-        $sizeLabel = $request->input('size_label');
-        $this->cart->add(
-            $product,
-            $quantity,
-            is_string($finishSlug) ? $finishSlug : null,
-            is_string($sizeLabel) ? $sizeLabel : null,
-        );
+        $finishSlug = is_string($request->input('finish_slug')) ? $request->input('finish_slug') : null;
+        $sizeLabel = is_string($request->input('size_label')) ? $request->input('size_label') : null;
 
         if ($request->boolean('buy_now')) {
+            $this->cart->setBuyNow($product, $quantity, $finishSlug, $sizeLabel);
+
+            if (! auth()->check()) {
+                $request->session()->put('url.intended', route('checkout.index'));
+
+                return redirect()->route('account.login')
+                    ->with('info', 'Sign in or create an account to complete your purchase.');
+            }
+
             return redirect()->route('checkout.index');
         }
+
+        $this->cart->add($product, $quantity, $finishSlug, $sizeLabel);
 
         return back()->with('success', 'Added to cart.');
     }

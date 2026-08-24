@@ -3,16 +3,13 @@
 return [
     /*
     |--------------------------------------------------------------------------
-    | Require a verified customer phone number at checkout
+    | Retired: require a verified customer phone number at checkout
     |--------------------------------------------------------------------------
     |
-    | WhatsApp customer OTP is unfinished and is not payment verification.
-    | Keep this false so authenticated customers can complete Razorpay
-    | checkout without phone_verified_at. Set true only after OTP is ready.
+    | Customer WhatsApp OTP is removed from the storefront. Authenticated,
+    | active, non-admin customers proceed to checkout without phone_verified_at.
+    | This flag is unused and kept only so existing env files do not error.
     |
     */
-    'require_verified_phone' => filter_var(
-        env('CHECKOUT_REQUIRE_VERIFIED_PHONE', false),
-        FILTER_VALIDATE_BOOLEAN
-    ),
+    'require_verified_phone' => false,
 ];

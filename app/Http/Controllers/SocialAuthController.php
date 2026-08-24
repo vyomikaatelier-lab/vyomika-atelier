@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\CartService;
 use App\Support\AdminAccess;
+use App\Support\SafeInternalUrl;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -13,11 +15,13 @@ class SocialAuthController extends Controller
 {
     private const PROVIDERS = ['google', 'apple'];
 
+    public function __construct(private CartService $cart) {}
+
     public function redirect(string $provider)
     {
         if (! $this->providerConfigured($provider)) {
             return redirect()->route('account.login')
-                ->with('info', $this->providerLabel($provider) . ' sign-in is not configured yet. Use email or mobile sign-in.');
+                ->with('info', $this->providerLabel($provider) . ' sign-in is not configured yet. Use email and password.');
         }
 
         return Socialite::driver($provider)
@@ -80,19 +84,29 @@ class SocialAuthController extends Controller
                 'email' => $email,
                 $providerIdColumn => $socialUser->getId(),
                 'password' => Str::password(32),
-                'is_admin' => false,
                 'is_active' => true,
                 'account_type' => 'customer',
                 'email_verified_at' => now(),
             ]);
+            $user->forceFill([
+                'is_admin' => false,
+                'phone_verified_at' => null,
+            ])->save();
         }
 
         AdminAccess::revoke($request);
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('account'))
-            ->with('success', 'Welcome to Vyomika Atelier.');
+        $default = $this->cart->hasBuyNow()
+            ? route('checkout.index')
+            : route('account');
+        $intended = $request->session()->pull('url.intended');
+        $redirect = (is_string($intended) && SafeInternalUrl::isSafe($intended))
+            ? redirect($intended)
+            : redirect($default);
+
+        return $redirect->with('success', 'Welcome to Vyomika Atelier.');
     }
 
     private function providerConfigured(string $provider): bool

@@ -12,21 +12,25 @@ class RedirectVerifiedCustomerMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->check()) {
-            $user = auth()->user();
-
-            if ($user->isAdmin()) {
-                AdminAccess::revoke($request);
-                Auth::logout();
-
-                return $next($request);
-            }
-
-            if ($user->hasVerifiedPhone()) {
-                return redirect()->route('account');
-            }
+        if (! auth()->check()) {
+            return $next($request);
         }
 
-        return $next($request);
+        $user = auth()->user();
+
+        if ($user->isAdmin()) {
+            AdminAccess::revoke($request);
+            Auth::logout();
+
+            return $next($request);
+        }
+
+        if (! $user->is_active) {
+            Auth::logout();
+
+            return $next($request);
+        }
+
+        return redirect()->route('account');
     }
 }

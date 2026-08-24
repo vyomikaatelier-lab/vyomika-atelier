@@ -29,13 +29,13 @@ class CheckoutController extends Controller
 
     public function index()
     {
-        if ($this->cart->isEmpty()) {
+        if ($this->cart->checkoutIsEmpty()) {
             return redirect()->route('shop.index')->with('error', 'Your cart is empty.');
         }
 
         $user = Auth::user();
-        $items = $this->cart->all();
-        $subtotal = $this->cart->subtotal();
+        $items = $this->cart->checkoutItems();
+        $subtotal = $this->cart->checkoutSubtotal();
         $shipping = $subtotal >= 5000 ? 0 : 199;
         $total = $subtotal + $shipping;
         $defaultAddress = $user?->addresses()->where('is_default', true)->first()
@@ -58,7 +58,7 @@ class CheckoutController extends Controller
             return redirect()->route('checkout.index')->with('error', $message);
         }
 
-        if ($this->cart->isEmpty()) {
+        if ($this->cart->checkoutIsEmpty()) {
             return redirect()->route('shop.index')->with('error', 'Your cart is empty.');
         }
 
@@ -76,7 +76,7 @@ class CheckoutController extends Controller
             }
         }
 
-        $ineligible = $this->cart->all()->first(
+        $ineligible = $this->cart->checkoutItems()->first(
             fn (array $item) => ! CartGuard::isEligible($item['product'])
         );
 
@@ -104,8 +104,9 @@ class CheckoutController extends Controller
             $snapshot['country'] ? 'Country/Region: ' . $snapshot['country'] : null,
         ]);
 
-        $items = $this->cart->all();
-        $subtotal = $this->cart->subtotal();
+        $fromBuyNow = $this->cart->hasBuyNow();
+        $items = $this->cart->checkoutItems();
+        $subtotal = $this->cart->checkoutSubtotal();
         $shipping = $subtotal >= 5000 ? 0 : 199;
         $total = $subtotal + $shipping;
 
@@ -212,6 +213,11 @@ class CheckoutController extends Controller
 
         $order->update(['razorpay_order_id' => $razorpayOrder['id']]);
         OrderAccess::remember($order);
+
+        if ($fromBuyNow) {
+            $request->session()->put(CartService::CHECKOUT_SOURCE_KEY, 'buy_now');
+            $this->cart->clearBuyNow();
+        }
 
         $emailSent = $this->notifications->sendOrderReceived($order->fresh('items'));
 

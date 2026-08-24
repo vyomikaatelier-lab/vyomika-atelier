@@ -8,22 +8,36 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Adds nullable unique indexes for Razorpay identifiers.
  *
- * Pre-deployment duplicate check (read-only; do not UPDATE/DELETE rows):
+ * Keep this migration unexecuted until production preflight is approved.
+ * Do not UPDATE, DELETE, or normalize payment identifiers automatically.
  *
- *   SELECT razorpay_order_id, COUNT(*) AS c
+ * Pre-deployment duplicate check (read-only; includes empty strings):
+ *
+ *   SELECT razorpay_order_id, COUNT(*) AS duplicate_count
  *   FROM orders
- *   WHERE razorpay_order_id IS NOT NULL AND razorpay_order_id != ''
+ *   WHERE razorpay_order_id IS NOT NULL
  *   GROUP BY razorpay_order_id
- *   HAVING c > 1;
+ *   HAVING COUNT(*) > 1;
  *
- *   SELECT payment_id, COUNT(*) AS c
+ *   SELECT payment_id, COUNT(*) AS duplicate_count
  *   FROM orders
- *   WHERE payment_id IS NOT NULL AND payment_id != ''
+ *   WHERE payment_id IS NOT NULL
  *   GROUP BY payment_id
- *   HAVING c > 1;
+ *   HAVING COUNT(*) > 1;
  *
- * If either query returns rows, resolve duplicates manually before migrating.
- * This migration refuses to run when duplicates exist and does not change payment data.
+ * Empty-string inventory (read-only; do not auto-normalize):
+ *
+ *   SELECT COUNT(*) AS empty_razorpay_order_ids
+ *   FROM orders
+ *   WHERE razorpay_order_id = '';
+ *
+ *   SELECT COUNT(*) AS empty_payment_ids
+ *   FROM orders
+ *   WHERE payment_id = '';
+ *
+ * If either duplicate query returns rows, resolve duplicates manually before migrating.
+ * This migration refuses to run when duplicates exist (including duplicated empty strings)
+ * and does not change payment data.
  */
 return new class extends Migration
 {
@@ -51,7 +65,6 @@ return new class extends Migration
         $duplicates = DB::table('orders')
             ->select($column)
             ->whereNotNull($column)
-            ->where($column, '!=', '')
             ->groupBy($column)
             ->havingRaw('COUNT(*) > 1')
             ->get();

@@ -30,10 +30,6 @@ class CustomerAccountMiddleware
                 ->withErrors(['email' => 'This account has been disabled.']);
         }
 
-        if (! $user->hasVerifiedPhone()) {
-            return redirect()->route('account.verify');
-        }
-
         return $next($request);
     }
 }
