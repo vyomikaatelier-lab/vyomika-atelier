@@ -67,6 +67,7 @@ class ServiceGallery
             ->with('category')
             ->where('is_active', true)
             ->where('is_gallery_visible', true)
+            ->eligibleForGallery()
             ->unlessHiddenForStock();
 
         $query->where(function ($q) use ($slugs, $categorySlugs) {
@@ -85,7 +86,9 @@ class ServiceGallery
             }
         });
 
-        return $query->orderedForDisplay()->get();
+        return $query->orderedForDisplay()->get()->filter(
+            fn (Product $product) => ! $product->isCatalogFiller() && $product->hasDisplayableGalleryImage()
+        )->values();
     }
 
     public static function queryFor(Service $service): Builder
@@ -97,6 +100,7 @@ class ServiceGallery
             ->with('category')
             ->where('is_active', true)
             ->where('is_gallery_visible', true)
+            ->eligibleForGallery()
             ->unlessHiddenForStock();
 
         if ($slugs === []) {
@@ -117,6 +121,7 @@ class ServiceGallery
             ->with('category')
             ->where('is_active', true)
             ->where('is_gallery_visible', true)
+            ->eligibleForGallery()
             ->unlessHiddenForStock()
             ->when(
                 $categorySlugs === [],
