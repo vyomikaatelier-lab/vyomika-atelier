@@ -30,7 +30,6 @@ class CollectionGalleryRefreshTest extends TestCase
             'section' => Product::SECTION_SHOP,
             'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
             'pricing_type' => Product::PRICING_FIXED,
-            'image' => '/images/test-product.jpg',
             'is_active' => true,
             'is_gallery_visible' => true,
         ]);
@@ -46,7 +45,6 @@ class CollectionGalleryRefreshTest extends TestCase
             'section' => Product::SECTION_SHOP,
             'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
             'pricing_type' => Product::PRICING_FIXED,
-            'image' => '/images/test-product.jpg',
             'is_active' => '1',
             'is_gallery_visible' => '1',
         ])->assertRedirect();
@@ -75,7 +73,6 @@ class CollectionGalleryRefreshTest extends TestCase
             'section' => Product::SECTION_SHOP,
             'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
             'pricing_type' => Product::PRICING_FIXED,
-            'image' => '/images/test-product.jpg',
             'is_active' => true,
             'is_gallery_visible' => true,
         ]);
@@ -91,7 +88,6 @@ class CollectionGalleryRefreshTest extends TestCase
             'section' => Product::SECTION_SHOP,
             'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
             'pricing_type' => Product::PRICING_FIXED,
-            'image' => '/images/test-product.jpg',
             'is_active' => '1',
             'is_gallery_visible' => '1',
         ]);
@@ -120,7 +116,6 @@ class CollectionGalleryRefreshTest extends TestCase
             'section' => Product::SECTION_SHOP,
             'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
             'pricing_type' => Product::PRICING_FIXED,
-            'image' => '/images/test-product.jpg',
             'is_active' => true,
             'is_gallery_visible' => true,
             'sort_order' => 100,

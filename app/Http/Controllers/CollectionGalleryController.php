@@ -147,7 +147,6 @@ class CollectionGalleryController extends Controller
             ->with('category')
             ->where('is_active', true)
             ->where('is_gallery_visible', true)
-            ->eligibleForGallery()
             ->unlessHiddenForStock();
 
         if ($catalogSlugs !== []) {

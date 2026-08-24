@@ -47,7 +47,6 @@ class StudioDoorGalleryLayoutTest extends TestCase
             'pricing_type' => Product::PRICING_FIXED,
             'is_active' => true,
             'is_gallery_visible' => true,
-            'image' => 'products/test-product.jpg',
         ]);
 
         return compact('service', 'category', 'product');

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Support\MediaUrl;
 use App\Support\ServiceGallery;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -29,20 +28,6 @@ class Service extends Model
     public function designs(): HasMany
     {
         return $this->hasMany(ServiceDesign::class);
-    }
-
-    public function imageUrl(): ?string
-    {
-        if (filled($this->image)) {
-            $resolved = MediaUrl::resolve($this->image);
-            if ($resolved !== null) {
-                return $resolved;
-            }
-        }
-
-        $configImage = data_get(config("service-pages.{$this->slug}"), 'hero.image');
-
-        return MediaUrl::resolve(is_string($configImage) ? $configImage : null);
     }
 
     public function usesPopupForm(): bool

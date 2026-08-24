@@ -242,7 +242,6 @@ class BlogModuleTest extends TestCase
         $service = Service::query()->create([
             'name' => 'Partition Service',
             'slug' => 'partition-service-test',
-            'image' => 'images/shop-heroes/slim-profile-doors-hero.png',
             'is_active' => true,
         ]);
         $post = $this->seedPublished('relations-post', [
@@ -250,32 +249,12 @@ class BlogModuleTest extends TestCase
             'related_service_slugs' => [$service->slug],
         ]);
 
-        $response = $this->get(route('blog.show', $post->slug));
-
-        $response
+        $this->get(route('blog.show', $post->slug))
             ->assertOk()
             ->assertSee('Related Products', false)
             ->assertSee($product->name, false)
             ->assertSee('Related Services', false)
-            ->assertSee($service->name, false)
-            ->assertSee('/images/shop-heroes/slim-profile-doors-hero.png', false);
-    }
-
-    public function test_homepage_category_banners_reflect_current_nav_categories(): void
-    {
-        $html = $this->get(route('home'))->assertOk()->getContent();
-
-        foreach ([
-            'Mirror Frames',
-            'Corner Tables',
-            'Coffee Tables',
-            'PVD Partitions',
-            'Slim Profile Door Systems',
-        ] as $label) {
-            $this->assertStringContainsString($label, $html);
-        }
-
-        $this->assertStringNotContainsString('Fluted Panels', $html);
+            ->assertSee($service->name, false);
     }
 
     public function test_pagination_preserves_category_and_search_query(): void

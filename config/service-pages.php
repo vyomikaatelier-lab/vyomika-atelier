@@ -20,7 +20,7 @@ return [
             ],
             'cta_primary' => ['label' => 'Browse Designs', 'href' => '#service-gallery'],
             'cta_secondary' => ['label' => 'Request Quote', 'href' => '/custom-order'],
-            'image' => 'images/blog/heroes/glass-partitions-open-plan-hero-card.jpg',
+            'image' => 'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg',
         ],
         'intro' => [
             'title' => 'Partitions That Define Space',
