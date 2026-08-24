@@ -55,16 +55,26 @@
                 <p class="am-blog-article__excerpt" itemprop="description">{{ $post->excerpt }}</p>
                 @endif
                 <div class="am-blog-meta am-blog-article__meta">
-                    <span itemprop="author" itemscope itemtype="https://schema.org/Organization">
+                    <span class="am-blog-meta__item" itemprop="author" itemscope itemtype="https://schema.org/Organization">
+                        <svg class="am-blog-meta__icon" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                         <span itemprop="name">{{ $post->author ?? 'Vyomika Atelier Editorial Team' }}</span>
                     </span>
                     @if($post->published_at)
-                    <time datetime="{{ $post->published_at->toAtomString() }}" itemprop="datePublished">{{ $post->published_at->format('j F Y') }}</time>
+                    <time class="am-blog-meta__item" datetime="{{ $post->published_at->toAtomString() }}" itemprop="datePublished">
+                        <svg class="am-blog-meta__icon" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        {{ $post->published_at->format('j F Y') }}
+                    </time>
                     @endif
                     @if($post->lastUpdatedAt())
-                    <time datetime="{{ $post->lastUpdatedAt()->toAtomString() }}" itemprop="dateModified">Updated {{ $post->lastUpdatedAt()->format('j F Y') }}</time>
+                    <time class="am-blog-meta__item" datetime="{{ $post->lastUpdatedAt()->toAtomString() }}" itemprop="dateModified">
+                        <svg class="am-blog-meta__icon" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg>
+                        Updated {{ $post->lastUpdatedAt()->format('j F Y') }}
+                    </time>
                     @endif
-                    <span>{{ $post->readingTime() }} min read</span>
+                    <span class="am-blog-meta__item">
+                        <svg class="am-blog-meta__icon" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        {{ $post->readingTime() }} min read
+                    </span>
                 </div>
             </div>
             @if($post->imageUrl())
@@ -91,8 +101,8 @@
                 <nav class="am-blog-toc" aria-labelledby="blog-toc-title">
                     <p id="blog-toc-title" class="am-blog-toc__title">In this article</p>
                     <ol class="am-blog-toc__list">
-                        @foreach($toc as $item)
-                        <li><a href="#{{ $item['id'] }}">{{ $item['text'] }}</a></li>
+                        @foreach($toc as $index => $item)
+                        <li><a href="#{{ $item['id'] }}" data-toc-link><span class="am-blog-toc__num">{{ $index + 1 }}.</span> {{ $item['text'] }}</a></li>
                         @endforeach
                     </ol>
                 </nav>
@@ -289,6 +299,26 @@
     headings.forEach(function (heading, index) {
         if (!heading.id) heading.id = 'section-' + (index + 1);
     });
+
+    var tocLinks = document.querySelectorAll('[data-toc-link]');
+    if (!tocLinks.length || !headings.length) return;
+
+    function setActive(id) {
+        tocLinks.forEach(function (link) {
+            link.classList.toggle('is-active', link.getAttribute('href') === '#' + id);
+        });
+    }
+
+    if ('IntersectionObserver' in window) {
+        var observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) setActive(entry.target.id);
+            });
+        }, { rootMargin: '-20% 0px -60% 0px', threshold: 0 });
+        headings.forEach(function (heading) { observer.observe(heading); });
+    } else if (headings[0]) {
+        setActive(headings[0].id);
+    }
 })();
 </script>
 @endpush
