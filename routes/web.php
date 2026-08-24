@@ -46,7 +46,6 @@ use App\Http\Controllers\ProfessionalsController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RailingsController;
 use App\Http\Controllers\RobotsController;
-use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\ShopPageController;
 use App\Http\Controllers\SitemapController;
@@ -85,16 +84,34 @@ Route::middleware('checkout.customer')->group(function () {
 
 Route::post('/webhooks/razorpay', RazorpayWebhookController::class)->name('webhooks.razorpay');
 
-Route::get('/services', [ServiceController::class, 'index'])->name('services.index');
+Route::redirect('/services', '/shop', 301)->name('services.index');
 Route::get('/corten-steel', [CortenSteelController::class, 'show'])->name('corten-steel.show');
 Route::redirect('/services/corten-steel-facade', '/corten-steel', 301);
-Route::redirect('/services/bespoke-metal-furniture', '/shop/bespoke-metal-furniture');
-Route::redirect('/services/partitions', '/studio/pvd-partitions');
-Route::redirect('/services/slim-profile-door-system', '/studio/slim-profile-door-systems');
-Route::redirect('/services/main-entrance-pvd-doors', '/studio/main-entrance-pvd-doors');
-Route::redirect('/services/rack-systems-metal-pvd', '/studio/metal-pvd-rack-systems');
-Route::get('/services/{slug}', [ServiceController::class, 'show'])->name('services.show');
-Route::get('/services/{serviceSlug}/{designSlug}', [ServiceController::class, 'design'])->name('services.design');
+Route::redirect('/services/bespoke-metal-furniture', '/shop/bespoke-metal-furniture', 301);
+Route::redirect('/services/partitions', '/studio/pvd-partitions', 301);
+Route::redirect('/services/slim-profile-door-system', '/studio/slim-profile-door-systems', 301);
+Route::redirect('/services/main-entrance-pvd-doors', '/studio/main-entrance-pvd-doors', 301);
+Route::redirect('/services/rack-systems-metal-pvd', '/studio/metal-pvd-rack-systems', 301);
+Route::get('/services/{slug}', function (string $slug) {
+    if ($slug === 'bespoke-metal-furniture') {
+        return redirect()->route('shop.show', 'bespoke-metal-furniture', 301);
+    }
+    if ($slug === 'corten-steel-facade') {
+        return redirect()->route('corten-steel.show', [], 301);
+    }
+    if ($studio = StorefrontRoutes::studioUrlForService($slug)) {
+        return redirect()->route('studio.show', $studio, 301);
+    }
+
+    return redirect('/shop', 301);
+})->where('slug', '[a-z0-9\-]+')->name('services.show');
+Route::get('/services/{serviceSlug}/{designSlug}', function (string $serviceSlug, string $designSlug) {
+    if ($studio = StorefrontRoutes::studioUrlForService($serviceSlug)) {
+        return redirect()->route('studio.show', $studio, 301);
+    }
+
+    return redirect('/shop', 301);
+})->where(['serviceSlug' => '[a-z0-9\-]+', 'designSlug' => '[a-z0-9\-]+'])->name('services.design');
 
 Route::get('/studio', [StudioController::class, 'index'])->name('studio.index');
 Route::get('/studio/{slug}', [StudioController::class, 'show'])

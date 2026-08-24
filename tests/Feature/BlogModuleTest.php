@@ -276,6 +276,10 @@ class BlogModuleTest extends TestCase
         }
 
         $this->assertStringNotContainsString('Fluted Panels', $html);
+        $this->assertStringContainsString('am-cat-grid', $html);
+        $this->assertStringContainsString('Featured From Our Collections', $html);
+        $this->assertStringNotContainsString('PVD Craft, Elevated for Interiors', $html);
+        $this->assertStringNotContainsString('/services', $html);
     }
 
     public function test_pagination_preserves_category_and_search_query(): void
