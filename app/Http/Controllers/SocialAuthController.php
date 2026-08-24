@@ -84,7 +84,6 @@ class SocialAuthController extends Controller
                 'is_active' => true,
                 'account_type' => 'customer',
                 'email_verified_at' => now(),
-                'phone_verified_at' => now(),
             ]);
         }
 

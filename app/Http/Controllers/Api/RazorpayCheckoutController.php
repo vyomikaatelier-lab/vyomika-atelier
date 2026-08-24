@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\RazorpayReconciliationRequiredException;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\OrderPaymentService;
@@ -44,10 +45,6 @@ class RazorpayCheckoutController extends Controller
             ]);
         }
 
-        if ($order->isExpired()) {
-            return response()->json(['message' => 'This order has expired. Please place a new order.'], 410);
-        }
-
         try {
             $payments->verifyAndComplete(
                 $order,
@@ -55,6 +52,8 @@ class RazorpayCheckoutController extends Controller
                 $validated['razorpay_order_id'],
                 $validated['razorpay_signature'],
             );
+        } catch (RazorpayReconciliationRequiredException $e) {
+            return response()->json(['message' => $e->getMessage()], 409);
         } catch (RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], $e->getCode() ?: 400);
         }

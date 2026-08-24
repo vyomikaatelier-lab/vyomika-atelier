@@ -42,8 +42,23 @@ class CheckoutCustomerVerificationTest extends TestCase
         $response->assertSessionHas('info', CheckoutCustomer::MSG_SIGN_IN);
     }
 
-    public function test_unverified_customer_cannot_access_checkout(): void
+    public function test_unverified_customer_can_access_checkout_when_phone_requirement_is_off(): void
     {
+        config(['checkout.require_verified_phone' => false]);
+
+        [, $session] = $this->shopCart();
+        $user = User::factory()->unverified()->create();
+
+        $response = $this->actingAs($user)->withSession($session)->get(route('checkout.index'));
+
+        $response->assertOk();
+        $response->assertSee('Shipping details');
+    }
+
+    public function test_unverified_customer_cannot_access_checkout_when_phone_requirement_is_on(): void
+    {
+        config(['checkout.require_verified_phone' => true]);
+
         [, $session] = $this->shopCart();
         $user = User::factory()->unverified()->create();
 

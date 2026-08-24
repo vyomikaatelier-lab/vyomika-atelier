@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\RazorpayReconciliationRequiredException;
 use App\Models\Order;
 use App\Services\OrderPaymentService;
 use App\Services\RazorpayService;
@@ -52,11 +53,6 @@ class PaymentController extends Controller
             return redirect()->route('checkout.success', $order);
         }
 
-        if ($order->isExpired()) {
-            return redirect()->route('shop.index')
-                ->with('error', 'This order has expired. Please place a new order.');
-        }
-
         $validated = $request->validate([
             'razorpay_payment_id' => 'required|string',
             'razorpay_order_id' => 'required|string',
@@ -70,7 +66,15 @@ class PaymentController extends Controller
                 $validated['razorpay_order_id'],
                 $validated['razorpay_signature'],
             );
+        } catch (RazorpayReconciliationRequiredException $e) {
+            return redirect()->route('shop.index')
+                ->with('error', $e->getMessage());
         } catch (RuntimeException $e) {
+            if ($order->fresh()?->isExpired()) {
+                return redirect()->route('shop.index')
+                    ->with('error', $e->getMessage());
+            }
+
             return redirect()->route('checkout.pay', $order)
                 ->with('error', $e->getMessage());
         }

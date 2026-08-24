@@ -37,10 +37,15 @@ class CheckoutCustomer
             return self::MSG_DISABLED;
         }
 
-        if (! $user->hasVerifiedPhone()) {
+        if (self::requiresVerifiedPhone() && ! $user->hasVerifiedPhone()) {
             return self::MSG_VERIFY;
         }
 
         return null;
+    }
+
+    public static function requiresVerifiedPhone(): bool
+    {
+        return (bool) config('checkout.require_verified_phone', false);
     }
 }

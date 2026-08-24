@@ -33,7 +33,7 @@ class EnsureCheckoutCustomer
                 ->withErrors(['email' => CheckoutCustomer::MSG_DISABLED]);
         }
 
-        if (! $user->hasVerifiedPhone()) {
+        if (CheckoutCustomer::requiresVerifiedPhone() && ! $user->hasVerifiedPhone()) {
             return redirect()->route('account.verify')
                 ->with('info', CheckoutCustomer::MSG_VERIFY);
         }

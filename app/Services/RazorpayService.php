@@ -3,8 +3,11 @@
 namespace App\Services;
 
 use App\Models\Order;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use RuntimeException;
 
 class RazorpayService
 {
@@ -122,9 +125,53 @@ class RazorpayService
     public function verifySignature(string $razorpayOrderId, string $paymentId, string $signature): bool
     {
         $payload = $razorpayOrderId.'|'.$paymentId;
-        $expected = hash_hmac('sha256', $payload, $this->secret());
+        $expected = hash_hmac('sha256', $payload, (string) $this->secret());
 
         return hash_equals($expected, $signature);
+    }
+
+    /**
+     * Fetch a payment from Razorpay. Never returns raw gateway error bodies to callers.
+     *
+     * @return array<string, mixed>
+     */
+    public function fetchPayment(string $paymentId): array
+    {
+        if (! $this->isConfigured()) {
+            throw new RuntimeException('Payment confirmation is temporarily unavailable. Please wait a moment.', 503);
+        }
+
+        try {
+            $response = $this->api()->get('https://api.razorpay.com/v1/payments/'.$paymentId);
+        } catch (ConnectionException $e) {
+            Log::error('Razorpay payment fetch failed.', [
+                'payment_id' => $paymentId,
+                'error' => 'connection_failed',
+            ]);
+
+            throw new RuntimeException('Payment confirmation is temporarily unavailable. Please wait a moment.', 503);
+        }
+
+        if (! $response->successful()) {
+            Log::error('Razorpay payment fetch failed.', [
+                'payment_id' => $paymentId,
+                'http_status' => $response->status(),
+            ]);
+
+            throw new RuntimeException('Payment confirmation is temporarily unavailable. Please wait a moment.', 503);
+        }
+
+        $data = $response->json();
+
+        if (! is_array($data) || ! filled($data['id'] ?? null)) {
+            Log::error('Razorpay payment fetch returned an unexpected payload.', [
+                'payment_id' => $paymentId,
+            ]);
+
+            throw new RuntimeException('Payment confirmation is temporarily unavailable. Please wait a moment.', 503);
+        }
+
+        return $data;
     }
 
     public function verifyWebhookSignature(string $body, string $signature): bool
