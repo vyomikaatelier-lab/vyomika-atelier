@@ -116,7 +116,7 @@
 </section>
 @endif
 
-{{-- Spotlights — featured collection highlights --}}
+{{-- Spotlights --}}
 @if(SiteContent::homepageSectionEnabled('spotlights'))
 <section class="am-section am-section--edge">
     <div class="am-section__intro">
@@ -126,9 +126,19 @@
         </div>
     </div>
     <div class="am-section__body">
-        <div class="am-product-grid am-product-grid--4">
+        <div class="am-spotlight-grid">
             @foreach($spotlights['items'] ?? [] as $item)
-                @include('partials.am-product-card', ['product' => $item])
+            <div class="am-spotlight">
+                <div class="am-spotlight__image">
+                    <img src="{{ $item['image'] ?? '' }}" alt="{{ $item['title'] ?? '' }}" loading="lazy">
+                </div>
+                <div class="am-spotlight__body">
+                    <h3>{{ $item['title'] ?? '' }}</h3>
+                    <p>{{ $item['description'] ?? '' }}</p>
+                    <p class="am-spotlight__price">{{ SiteContent::formatPrice($item['price'] ?? 0) }} <span style="font-weight:400;font-size:0.85rem;color:var(--am-muted)">{{ $item['price_unit'] ?? '' }}</span></p>
+                    <a href="{{ url($item['href'] ?? '/shop') }}" class="am-btn am-btn--primary">{{ $item['cta'] ?? 'Buy now' }}</a>
+                </div>
+            </div>
             @endforeach
         </div>
     </div>

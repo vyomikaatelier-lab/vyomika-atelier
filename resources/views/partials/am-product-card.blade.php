@@ -33,13 +33,9 @@
         ? ($product->imageUrl() ?: $product->image)
         : ($isObject ? ($product->image ?? '') : ($product['image'] ?? ''));
 
-    $customHref = $isModel ? null : ($isObject ? ($product->href ?? null) : ($product['href'] ?? null));
-
-    $url = filled($customHref)
-        ? url($customHref)
-        : ($slug
+    $url = $slug
         ? ($isModel ? StorefrontRoutes::productUrl($product) : StorefrontUrl::to('shop.show', ['slug' => $slug], '/shop/'.$slug))
-        : StorefrontUrl::to('shop.index', [], '/shop'));
+        : StorefrontUrl::to('shop.index', [], '/shop');
 
     $orderServiceSlug = $isModel
         ? (\App\Models\Service::serviceSlugForProduct($slug, $categorySlug) ?? '')

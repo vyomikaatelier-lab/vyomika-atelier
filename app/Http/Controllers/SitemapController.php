@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\BlogPost;
 use App\Models\Product;
 use App\Models\Project;
+use App\Models\Service;
 use App\Support\BlogContent;
 use App\Support\MirrorFramesContent;
 use App\Support\StorefrontRoutes;
@@ -125,7 +126,25 @@ class SitemapController extends Controller
                 });
         }
 
-        // Public /services URLs redirect to shop or studio — omit from sitemap.
+        if (Schema::hasTable('services')) {
+            Service::query()
+                ->where('is_active', true)
+                ->get(['slug', 'updated_at'])
+                ->each(function (Service $service) use (&$urls) {
+                    if (StorefrontRoutes::studioUrlForService($service->slug)) {
+                        return;
+                    }
+                    if (in_array($service->slug, Service::adminHiddenSlugs(), true)) {
+                        return;
+                    }
+                    $urls[] = [
+                        'loc' => route('services.show', $service->slug),
+                        'lastmod' => $service->updated_at?->toAtomString(),
+                        'changefreq' => 'monthly',
+                        'priority' => '0.7',
+                    ];
+                });
+        }
 
         $xml = view('sitemap.xml', compact('urls'))->render();
 

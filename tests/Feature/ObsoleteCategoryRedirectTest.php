@@ -34,18 +34,4 @@ class ObsoleteCategoryRedirectTest extends TestCase
         $this->get('/services/corten-steel-facade')
             ->assertRedirect('/corten-steel');
     }
-
-    public function test_services_index_redirects_to_shop(): void
-    {
-        $this->get('/services')->assertRedirect('/shop');
-    }
-
-    public function test_legacy_service_slug_redirects_to_studio_or_shop(): void
-    {
-        $this->get('/services/partitions')
-            ->assertRedirect(route('studio.show', 'pvd-partitions'));
-
-        $this->get('/services/fluted-screens')
-            ->assertRedirect('/shop');
-    }
 }

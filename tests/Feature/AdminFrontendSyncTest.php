@@ -226,9 +226,10 @@ class AdminFrontendSyncTest extends TestCase
             ->assertSessionHasNoErrors();
 
         $this->get(route('services.show', 'fluted-screens'))
-            ->assertRedirect('/shop');
+            ->assertOk()
+            ->assertSee('Hand-finished fluted metal screens.', false);
 
-        $this->get(route('services.index'))->assertRedirect('/shop');
+        $this->get(route('services.index'))->assertOk()->assertSee('Fluted Screens');
     }
 
     public function test_exhibition_edit_appears_on_the_about_page(): void

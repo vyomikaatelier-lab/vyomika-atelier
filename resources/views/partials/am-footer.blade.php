@@ -49,7 +49,7 @@
                 <h5>Studio</h5>
                 <ul>
                     @foreach($footer['service_links'] ?? [] as $link)
-                    <li><a href="{{ $storefrontLink($link['route'], $link['params'] ?? [], '/studio/pvd-partitions') }}">{{ $link['label'] }}</a></li>
+                    <li><a href="{{ $storefrontLink($link['route'], $link['params'] ?? [], '/services') }}">{{ $link['label'] }}</a></li>
                     @endforeach
                 </ul>
             </div>
@@ -119,7 +119,7 @@
                     <div class="am-footer__accordion-panel" id="am-footer-panel-studio" hidden>
                         <ul>
                             @foreach($footer['service_links'] ?? [] as $link)
-                            <li><a href="{{ $storefrontLink($link['route'], $link['params'] ?? [], '/studio/pvd-partitions') }}">{{ $link['label'] }}</a></li>
+                            <li><a href="{{ $storefrontLink($link['route'], $link['params'] ?? [], '/services') }}">{{ $link['label'] }}</a></li>
                             @endforeach
                         </ul>
                     </div>
