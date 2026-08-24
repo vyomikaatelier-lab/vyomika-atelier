@@ -42,7 +42,6 @@ class StudioDoorGalleryLayoutTest extends TestCase
             'description' => 'Gallery layout regression product.',
             'price' => 45999,
             'stock' => 5,
-            'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg',
             'section' => Product::SECTION_STUDIO,
             'purchase_mode' => Product::PURCHASE_MODE_ENQUIRY,
             'pricing_type' => Product::PRICING_FIXED,

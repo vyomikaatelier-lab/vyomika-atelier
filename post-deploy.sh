@@ -64,10 +64,6 @@ echo "=== Catalog seeders ==="
 php artisan db:seed --class=CatalogSyncSeeder --force
 php artisan db:seed --class=CorrectCatalogClassificationSeeder --force
 
-echo "=== Deactivate auto-generated catalog filler products ==="
-php artisan catalog:purge-filler --dry-run || true
-php artisan catalog:purge-filler
-
 echo "=== Export site JSON ==="
 php database/scripts/export-site-json.php
 php database/scripts/export-pricing-json.php

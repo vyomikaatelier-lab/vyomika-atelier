@@ -12,7 +12,6 @@
     <h2 class="am-design-gallery__title">{{ $heading }}</h2>
     <div class="am-design-gallery__grid am-design-gallery__grid--studio">
         @foreach($products as $product)
-        @continue(! $product->hasDisplayableGalleryImage())
         @php
             $productUrl = \App\Support\StorefrontRoutes::productUrl($product);
             $resolvedService = $serviceSlug ?: (\App\Models\Service::serviceSlugForProduct($product->slug, $product->category?->slug) ?? '');
