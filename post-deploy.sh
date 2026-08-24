@@ -62,7 +62,7 @@ php artisan migrate --force
 
 echo "=== Catalog seeders (non-destructive — existing admin edits preserved) ==="
 php artisan catalog:sync --dry-run || true
-php artisan catalog:sync
+php artisan catalog:sync --force
 php artisan db:seed --class=CorrectCatalogClassificationSeeder --force
 
 echo "=== Export site JSON ==="

@@ -15,8 +15,19 @@ class CatalogSyncSeeder extends Seeder
 {
     public static bool $dryRun = false;
 
+    /** Set by catalog:sync --force (required for writes in production). */
+    public static bool $force = false;
+
     public function run(): void
     {
+        if (app()->environment('production') && ! static::$force && ! static::$dryRun) {
+            $this->command?->error(
+                'CatalogSyncSeeder blocked in production. Run: php artisan catalog:sync --force'
+            );
+
+            return;
+        }
+
         $dryRun = static::$dryRun;
 
         $this->syncCategories($dryRun);

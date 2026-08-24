@@ -62,4 +62,25 @@ class CatalogSyncPreservesAdminStateTest extends TestCase
         $this->assertSame(0, Category::query()->count());
         $this->assertSame(0, Product::query()->count());
     }
+
+    public function test_catalog_sync_seeder_blocked_in_production_without_force(): void
+    {
+        $this->app['env'] = 'production';
+
+        Category::query()->delete();
+        Product::query()->delete();
+
+        (new CatalogSyncSeeder)->run();
+
+        $this->assertSame(0, Category::query()->count());
+        $this->assertSame(0, Product::query()->count());
+    }
+
+    public function test_catalog_sync_command_requires_force_in_production(): void
+    {
+        $this->app['env'] = 'production';
+
+        $this->artisan('catalog:sync')
+            ->assertFailed();
+    }
 }

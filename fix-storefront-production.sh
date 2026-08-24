@@ -72,7 +72,7 @@ php artisan migrate --force
 
 echo "5b) Sync studio catalog (non-destructive — preserves admin edits)..."
 php artisan catalog:sync --dry-run || true
-php artisan catalog:sync
+php artisan catalog:sync --force
 
 echo "6) Restore symlinks (never rm -rf public_html when it points at public/)..."
 mkdir -p storage/app/public
