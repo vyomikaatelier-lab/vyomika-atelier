@@ -70,9 +70,10 @@ php artisan view:clear
 echo "5) Migrations..."
 php artisan migrate --force
 
-echo "5b) Sync studio catalog (non-destructive — preserves admin edits)..."
+echo "5b) Catalog sync (dry-run only — do NOT --force on production)..."
 php artisan catalog:sync --dry-run || true
-php artisan catalog:sync --force
+# Fresh install only: php artisan catalog:sync --force
+# Hide legacy filler rows: php artisan catalog:hide-filler
 
 echo "6) Restore symlinks (never rm -rf public_html when it points at public/)..."
 mkdir -p storage/app/public

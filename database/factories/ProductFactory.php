@@ -25,6 +25,7 @@ class ProductFactory extends Factory
             'compare_price' => null,
             'sku' => strtoupper(Str::random(8)),
             'stock' => 25,
+            'image' => 'products/test-product.jpg',
             'is_featured' => false,
             'is_active' => true,
             'section' => Product::SECTION_SHOP,

@@ -141,6 +141,36 @@ class Product extends Model
         });
     }
 
+    /** Rows unfit for public gallery grids (missing media, auto-generated catalog filler). */
+    public function scopeEligibleForGallery($query)
+    {
+        return $query
+            ->whereNotNull('name')
+            ->where('name', '!=', '')
+            ->whereNotNull('image')
+            ->where('image', '!=', '')
+            ->where(function ($q) {
+                $q->whereNull('sku')
+                    ->orWhere('sku', 'not like', 'SSM-P%');
+            })
+            ->where('image', 'not like', '%unsplash.com%');
+    }
+
+    public function isCatalogFiller(): bool
+    {
+        if (! filled($this->name) || ! filled($this->image)) {
+            return true;
+        }
+
+        if (str_contains((string) $this->image, 'unsplash.com')) {
+            return true;
+        }
+
+        $sku = (string) ($this->sku ?? '');
+
+        return $sku !== '' && str_starts_with($sku, 'SSM-P');
+    }
+
     public function formattedPrice(): string
     {
         return '₹'.number_format($this->price, 0);

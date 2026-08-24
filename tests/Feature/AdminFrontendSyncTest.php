@@ -67,6 +67,7 @@ class AdminFrontendSyncTest extends TestCase
                 'pricing_type' => Product::PRICING_FIXED,
                 'is_active' => '1',
                 'is_gallery_visible' => '1',
+                'image' => 'products/test-product.jpg',
             ], $overrides))
             ->assertRedirect(route('admin.products.index'))
             ->assertSessionHasNoErrors();
