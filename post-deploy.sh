@@ -63,7 +63,8 @@ php artisan migrate --force
 echo "=== Catalog seeders (non-destructive — existing admin edits preserved) ==="
 php artisan catalog:sync --dry-run || true
 php artisan catalog:sync --force
-php artisan db:seed --class=CorrectCatalogClassificationSeeder --force
+# Classification seeder is manual-only — it can override admin section/category choices:
+# php artisan db:seed --class=CorrectCatalogClassificationSeeder --force
 
 echo "=== Export site JSON ==="
 php database/scripts/export-site-json.php
