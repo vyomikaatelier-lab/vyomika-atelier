@@ -101,7 +101,7 @@ class CatalogSyncSeeder extends Seeder
                 'slug' => 'partitions',
                 'summary' => 'Custom wave, fluted, and laser-cut PVD partition systems with online sq ft calculator.',
                 'content' => '<p>Engineered stainless partitions in champagne gold, rose gold, matte black, and bespoke finishes. Each system is fabricated to your dimensions with Pan-India delivery and installation support.</p>',
-                'image' => 'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg',
+                'image' => 'images/blog/heroes/glass-partitions-open-plan-hero-card.jpg',
                 'has_calculator' => true,
                 'has_designs' => true,
                 'lead_form' => 'popup',
@@ -109,7 +109,7 @@ class CatalogSyncSeeder extends Seeder
                     ['name' => 'Wave Partition', 'slug' => 'wave-partition', 'product_slug' => 'champagne-wave-partition', 'description' => 'Sculptural wave profile with champagne or rose gold PVD finish.', 'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg'],
                     ['name' => 'Fluted Panel', 'slug' => 'fluted-panel', 'product_slug' => 'veil-fluted-panel', 'description' => 'Vertical fluting for light diffusion and acoustic softening.', 'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg'],
                     ['name' => 'Laser-Cut Screen', 'slug' => 'laser-cut-screen', 'product_slug' => 'laser-cut-partition', 'description' => 'Custom patterns cut in stainless with precision CNC finishing.', 'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg'],
-                    ['name' => 'Frameless Glass + Metal', 'slug' => 'frameless-glass-metal', 'product_slug' => 'rose-gold-room-divider', 'description' => 'Hybrid partition combining PVD metal frames with glass infill.', 'image' => 'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg'],
+                    ['name' => 'Frameless Glass + Metal', 'slug' => 'frameless-glass-metal', 'product_slug' => 'rose-gold-room-divider', 'description' => 'Hybrid partition combining PVD metal frames with glass infill.', 'image' => 'images/blog/heroes/glass-partitions-open-plan-hero-card.jpg'],
                 ],
             ],
             [
