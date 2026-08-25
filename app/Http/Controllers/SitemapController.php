@@ -20,7 +20,6 @@ class SitemapController extends Controller
 
         $static = [
             ['loc' => route('home'), 'changefreq' => 'weekly', 'priority' => '1.0'],
-            ['loc' => route('shop.index'), 'changefreq' => 'weekly', 'priority' => '0.9'],
             ['loc' => route('studio.index'), 'changefreq' => 'monthly', 'priority' => '0.85'],
             ['loc' => route('projects.index'), 'changefreq' => 'weekly', 'priority' => '0.8'],
             ['loc' => route('blog.index'), 'changefreq' => 'weekly', 'priority' => '0.8'],

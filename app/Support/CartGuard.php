@@ -45,6 +45,10 @@ class CartGuard
             return self::MSG_INACTIVE;
         }
 
+        if (! $product->is_gallery_visible) {
+            return self::MSG_INACTIVE;
+        }
+
         if (! $product->usesCheckoutFlow()) {
             return self::MSG_INACTIVE;
         }

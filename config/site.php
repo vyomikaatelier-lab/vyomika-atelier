@@ -19,7 +19,7 @@ return [
     'announcement' => [
         'text' => 'Festive Offer: 15% Off PVD Partitions — Auto Applied at Checkout',
         'link_label' => 'Shop Now',
-        'link_href' => '/shop',
+        'link_href' => '/shop/mirror-frames',
     ],
 
     'homepage' => [
@@ -72,8 +72,8 @@ return [
                 'title' => 'Define Spaces With PVD Partitions',
                 'description' => 'Champagne gold, rose gold, and matte black finishes — precision stainless partitions crafted for modern Indian interiors.',
                 'image' => 'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg',
-                'cta_label' => 'View All Products',
-                'cta_href' => '/shop',
+                'cta_label' => 'Explore PVD Partitions',
+                'cta_href' => '/studio/pvd-partitions',
             ],
             [
                 'kicker' => 'BESPOKE FABRICATION',
@@ -97,13 +97,13 @@ return [
     'best_sellers' => [
         'title' => 'Best-Selling Products',
         'subtitle' => 'Our most-loved shop pieces — mirrors, tables, handles, and bespoke metal furniture.',
-        'cta_label' => 'View All Products',
+        'cta_label' => 'Shop Mirror Frames',
         'banner' => [
             'title' => 'Discover Your Signature Finish',
             'subtitle' => 'Handpicked PVD metal furniture for modern interiors',
             'cta' => 'Shop now',
             'image' => 'https://images.unsplash.com/photo-1532372320572-127d86b32558?w=1400&q=80',
-            'href' => '/shop',
+            'href' => '/shop/mirror-frames',
         ],
         'products' => [
             [
@@ -256,8 +256,8 @@ return [
     'cta_band' => [
         'title' => 'Shape A Space Filled With Precision Metal Beauty',
         'description' => 'Experience thoughtfully crafted PVD partitions and furniture that elevate your interiors across India.',
-        'cta_label' => 'View All Products',
-        'cta_href' => '/shop',
+        'cta_label' => 'Shop Mirror Frames',
+        'cta_href' => '/shop/mirror-frames',
     ],
 
     'testimonials' => [
@@ -337,7 +337,6 @@ return [
     'footer' => [
         'newsletter' => 'Get 10% off your first order and exclusive trade offers.',
         'shop_links' => [
-            ['label' => 'All Products', 'route' => 'shop.index'],
             ['label' => 'Mirror Frames', 'route' => 'shop.mirror-frames.index'],
             ['label' => 'Corner Tables', 'route' => 'shop.show', 'params' => ['slug' => 'corner-tables']],
             ['label' => 'Coffee Tables', 'route' => 'shop.show', 'params' => ['slug' => 'coffee-tables']],

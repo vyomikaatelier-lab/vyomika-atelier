@@ -34,6 +34,20 @@ class AccountAuthController extends Controller
         return $this->authView('login');
     }
 
+    public function showContinue()
+    {
+        $this->forgetRetiredOtpState(request());
+
+        if (! $this->cart->hasBuyNow()) {
+            return redirect()->route('account.login');
+        }
+
+        return view('account.continue', [
+            'countryCodes' => config('account.country_codes', []),
+            'socialProviders' => $this->socialProviders(),
+        ]);
+    }
+
     public function showRegister()
     {
         $this->forgetRetiredOtpState(request());

@@ -29,7 +29,7 @@ class StorefrontSeoComposer
             $robots = 'noindex,nofollow';
         }
 
-        if ($robots === null && request()->routeIs('shop.index') && (request()->filled('search') || request()->filled('sort'))) {
+        if ($robots === null && (request()->routeIs('search') || (request()->routeIs('shop.index') && (request()->filled('search') || request()->filled('sort'))))) {
             $robots = 'noindex,follow';
         }
 

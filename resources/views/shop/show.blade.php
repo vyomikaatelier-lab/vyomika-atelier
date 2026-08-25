@@ -80,10 +80,9 @@
                     </div>
                     <p class="am-pdp__sqft-price-note" data-sqft-black-note hidden>Black finish selected — ₹{{ number_format($blackRate, 0) }}/sq ft (+30%)</p>
                     @else
-                    <span class="am-featured__price-current">{{ $product->formattedPrice() }}</span>
-                    @if($product->hasDisplayComparePrice())
-                    <span class="am-featured__price-old">₹{{ number_format($product->compare_price, 0) }}</span>
-                    <span class="am-featured__badge">-{{ $discount }}%</span>
+                    <span class="am-featured__price-current">{{ \App\Support\StorefrontPrice::listingLabel($product) }}</span>
+                    @if($compareLabel = \App\Support\StorefrontPrice::compareLabel($product))
+                    <span class="am-featured__price-old">{{ $compareLabel }}</span>
                     @endif
                     @endif
                 </div>

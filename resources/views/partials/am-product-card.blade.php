@@ -16,13 +16,14 @@
     $sectionLabel = $isModel
         ? StorefrontRoutes::productSectionLabel($product)
         : ($isObject ? ($product->section_label ?? $product->shop_category ?? '') : ($product['section_label'] ?? $product['shop_category'] ?? ''));
-    $price = $isModel
-        ? ($product->hasSizeOptions() ? $product->listingPrice() : $product->price)
-        : ($isObject ? ($product->price ?? 0) : ($product['price'] ?? 0));
-    $priceLabel = $isModel && $product->hasSizeOptions()
-        ? 'From '.\App\Support\SiteContent::formatPrice($price)
-        : \App\Support\SiteContent::formatPrice($price);
+    $priceLabel = $isModel
+        ? \App\Support\StorefrontPrice::listingLabel($product)
+        : \App\Support\StorefrontPrice::formatInr($isObject ? ($product->price ?? null) : ($product['price'] ?? null));
+    $compareLabel = $isModel
+        ? \App\Support\StorefrontPrice::compareLabel($product)
+        : null;
     $comparePrice = $isModel ? $product->compare_price : ($isObject ? ($product->compare_price ?? null) : ($product['compare_price'] ?? null));
+    $price = $isModel ? $product->listingPrice() : ($isObject ? ($product->price ?? 0) : ($product['price'] ?? 0));
     $badge = $isModel ? null : ($isObject ? ($product->badge ?? null) : ($product['badge'] ?? null));
 
     if ($isModel && ! $badge && ! $product->hasSizeOptions() && $comparePrice && $comparePrice > $price) {
@@ -35,7 +36,7 @@
 
     $url = $slug
         ? ($isModel ? StorefrontRoutes::productUrl($product) : StorefrontUrl::to('shop.show', ['slug' => $slug], '/shop/'.$slug))
-        : StorefrontUrl::to('shop.index', [], '/shop');
+        : \App\Support\StorefrontRoutes::primaryShopUrl();
 
     $orderServiceSlug = $isModel
         ? (\App\Models\Service::serviceSlugForProduct($slug, $categorySlug) ?? '')
@@ -80,10 +81,10 @@
                 data-product-name="{{ $name }}"
                 data-product-slug="{{ $slug }}"
                 data-service-slug="{{ $orderServiceSlug }}">
-                Order Now
+                Request Quote
             </button>
             @else
-            <button type="button" class="am-btn am-btn--primary am-btn--sm am-btn--full" data-order-now data-product-url="{{ $url }}">Order Now</button>
+            <button type="button" class="am-btn am-btn--primary am-btn--sm am-btn--full" data-order-now data-product-url="{{ $url }}">Request Quote</button>
             @endif
         </div>
     </div>
@@ -102,12 +103,11 @@
 
         <div class="am-product-card__price">
 
+            @if($priceLabel)
             <span class="am-product-card__price-current">{{ $priceLabel }}</span>
-
-            @if($comparePrice)
-
-            <span class="am-product-card__price-old">{{ \App\Support\SiteContent::formatPrice($comparePrice) }}</span>
-
+            @endif
+            @if($compareLabel)
+            <span class="am-product-card__price-old">{{ $compareLabel }}</span>
             @endif
 
         </div>

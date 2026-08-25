@@ -143,6 +143,6 @@ class ServiceGallery
 
     public static function galleryCtaLabel(Service $service): string
     {
-        return $service->slug === 'corten-steel-facade' ? 'Request Quote' : 'Order Now';
+        return 'Request Quote';
     }
 }

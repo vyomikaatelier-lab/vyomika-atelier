@@ -161,7 +161,7 @@ class CartService
             'finish_slug' => $finish['slug'],
             'finish_name' => $finish['name'],
             'size_label' => $size['label'],
-            'unit_price' => $size['unit_price'],
+            'created_at' => now()->timestamp,
         ]]);
     }
 
@@ -205,6 +205,14 @@ class CartService
             return collect();
         }
 
+        $createdAt = (int) ($line['created_at'] ?? 0);
+        $ttl = max(1, (int) config('shop.buy_now_ttl_minutes', 120)) * 60;
+        if ($createdAt > 0 && (now()->timestamp - $createdAt) > $ttl) {
+            $this->clearBuyNow();
+
+            return collect();
+        }
+
         $product = Product::with('category')->find($line['product_id']);
         $normalized = $this->normalizeLine($line);
 
@@ -214,7 +222,7 @@ class CartService
             return collect();
         }
 
-        $unitPrice = $this->resolveUnitPrice($product, $normalized['size_label'], $normalized['unit_price']);
+        $unitPrice = $this->resolveUnitPrice($product, $normalized['size_label'], null);
 
         return collect([[
             'product' => $product,
@@ -268,10 +276,6 @@ class CartService
         if ($product->hasSizeOptions()) {
             if (filled($sizeLabel)) {
                 return $product->unitPriceForSize($sizeLabel);
-            }
-
-            if ($storedUnitPrice !== null) {
-                return $storedUnitPrice;
             }
 
             return $product->listingPrice();

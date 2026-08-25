@@ -24,7 +24,7 @@ return [
             'footer_tagline' => 'Bold forms.',
             'footer_tagline_accent' => 'Built to last.',
             'cta_primary' => ['label' => 'Browse Designs', 'href' => '#collection-gallery'],
-            'cta_secondary' => ['label' => 'Browse All Shop', 'href' => '/shop'],
+            'cta_secondary' => ['label' => 'Shop Mirror Frames', 'href' => '/shop/mirror-frames'],
             'image' => 'images/shop-heroes/coffee-tables-hero.png',
         ],
         'intro' => [
@@ -53,7 +53,7 @@ return [
             'footer_tagline' => 'Bold designs.',
             'footer_tagline_accent' => 'Timeless spaces.',
             'cta_primary' => ['label' => 'Browse Designs', 'href' => '#collection-gallery'],
-            'cta_secondary' => ['label' => 'Browse All Shop', 'href' => '/shop'],
+            'cta_secondary' => ['label' => 'Shop Mirror Frames', 'href' => '/shop/mirror-frames'],
             'image' => 'images/shop-heroes/corner-tables-hero.png',
         ],
         'intro' => [
@@ -82,7 +82,7 @@ return [
             'footer_tagline' => 'Floating surfaces.',
             'footer_tagline_accent' => 'Lasting presence.',
             'cta_primary' => ['label' => 'Browse Designs', 'href' => '#collection-gallery'],
-            'cta_secondary' => ['label' => 'Browse All Shop', 'href' => '/shop'],
+            'cta_secondary' => ['label' => 'Shop Mirror Frames', 'href' => '/shop/mirror-frames'],
             'image' => 'images/shop-heroes/glass-tables-hero.png',
         ],
         'intro' => [
@@ -110,7 +110,7 @@ return [
             'footer_tagline' => 'Every entrance.',
             'footer_tagline_accent' => 'Elevated.',
             'cta_primary' => ['label' => 'Browse Designs', 'href' => '#collection-gallery'],
-            'cta_secondary' => ['label' => 'Browse All Shop', 'href' => '/shop'],
+            'cta_secondary' => ['label' => 'Shop Mirror Frames', 'href' => '/shop/mirror-frames'],
             'image' => 'images/shop-heroes/door-handles-hero.png',
         ],
         'intro' => [

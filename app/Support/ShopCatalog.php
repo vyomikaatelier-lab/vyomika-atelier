@@ -246,7 +246,7 @@ class ShopCatalog
                 }
 
                 if ($route === 'shop.index') {
-                    return true;
+                    return false;
                 }
 
                 $slug = $link['params']['slug'] ?? null;

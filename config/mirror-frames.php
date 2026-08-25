@@ -22,7 +22,7 @@ return [
             'Built to last',
         ],
         'cta_primary' => ['label' => 'Browse Designs', 'href' => '#mirror-designs'],
-        'cta_secondary' => ['label' => 'Browse All Shop', 'href' => '/shop'],
+        'cta_secondary' => ['label' => 'Shop Coffee Tables', 'href' => '/shop/coffee-tables'],
         'image' => 'images/shop-heroes/mirror-frames-hero.png',
         'image_position' => 'left',
     ],

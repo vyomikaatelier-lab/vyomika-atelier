@@ -2502,8 +2502,29 @@ ul { list-style: none; }
 @media (min-width: 1024px) {
   .am-design-gallery__grid--studio { grid-template-columns: repeat(3, 1fr); }
 }
-.am-design-gallery__media-wrap {
-  position: relative;
+.am-design-gallery__price {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: baseline;
+  margin: 0.35rem 0 0.5rem;
+  font-weight: 600;
+}
+.am-design-gallery__price-current { color: var(--am-ink, #1a1a1a); }
+.am-design-gallery__price-old {
+  color: var(--am-muted, #6b6b6b);
+  text-decoration: line-through;
+  font-weight: 500;
+}
+.am-order-summary__tax {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--am-muted, #6b6b6b);
+}
+.am-order-summary__variant {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--am-muted, #6b6b6b);
 }
 .am-design-gallery__media-fallback {
   display: flex;

@@ -3,82 +3,39 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use App\Models\Category;
 use App\Support\ShopCatalog;
 use App\Support\StorefrontRoutes;
 use Illuminate\Http\Request;
 
 class ShopController extends Controller
 {
+    /**
+     * The generic all-products listing is retired. /shop permanently redirects
+     * to the configured primary shop category. Query-string category shortcuts
+     * and search keep working as one-hop redirects.
+     */
     public function index(Request $request)
     {
         if ($request->filled('category')) {
-            $categorySlug = $request->category;
+            $categorySlug = (string) $request->query('category');
 
             if ($redirect = ShopCatalog::studioCategoryRedirectUrl($categorySlug)) {
-                return redirect($redirect);
+                return redirect($redirect, 301);
             }
 
             if ($categorySlug === 'mirror-frames') {
-                return redirect()->route('shop.mirror-frames.index');
+                return redirect()->route('shop.mirror-frames.index', [], 301);
             }
 
             if (StorefrontRoutes::isShopCategory($categorySlug)) {
-                return redirect()->route('shop.show', $categorySlug);
-            }
-        }
-
-        $query = ShopCatalog::applyListingScope(
-            Product::where('is_active', true)->with('category')
-        );
-
-        $activeCategory = null;
-        if ($request->filled('category')) {
-            $activeCategory = Category::where('slug', $request->category)
-                ->where('is_active', true)
-                ->whereIn('slug', ShopCatalog::categorySlugs())
-                ->first();
-
-            if ($activeCategory) {
-                $query->where('category_id', $activeCategory->id);
-            } else {
-                $query->whereRaw('0 = 1');
+                return redirect()->route('shop.show', $categorySlug, 301);
             }
         }
 
         if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%")
-                    ->orWhere('sku', 'like', "%{$search}%");
-            });
+            return redirect()->route('search', ['q' => $request->query('search')], 301);
         }
 
-        match ($request->get('sort', 'newest')) {
-            'price_asc' => $query->orderBy('price'),
-            'price_desc' => $query->orderByDesc('price'),
-            'name' => $query->orderBy('name'),
-            default => $query->orderedForDisplay(),
-        };
-
-        $products = $query->paginate(12)->withQueryString();
-
-        $categories = Category::query()
-            ->where('is_active', true)
-            ->whereIn('slug', ShopCatalog::categorySlugs())
-            ->tap(fn ($q) => ShopCatalog::applyStorefrontCategoryScope($q))
-            ->withCount(['products' => fn ($q) => ShopCatalog::applyListingScope(
-                $q->where('is_active', true)
-            )])
-            ->orderBy('name')
-            ->get();
-
-        $pageTitle = $activeCategory?->name ?? ($request->filled('search') ? 'Search' : 'Shop');
-        $pageSubtitle = $activeCategory
-            ? 'Browse '.$activeCategory->name.' from Vyomika Atelier LLP.'
-            : 'Mirror frames, tables, and door hardware — order through our collection galleries.';
-
-        return view('shop.index', compact('products', 'categories', 'activeCategory', 'pageTitle', 'pageSubtitle'));
+        return redirect(StorefrontRoutes::primaryShopUrl(), 301);
     }
 }

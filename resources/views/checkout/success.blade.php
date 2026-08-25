@@ -9,7 +9,7 @@
     <div class="am-container am-checkout-flow am-checkout-flow--centered">
         @include('partials.am-breadcrumbs', ['items' => [
             ['label' => 'Home', 'url' => route('home')],
-            ['label' => 'Shop', 'url' => route('shop.index')],
+            ['label' => 'Shop', 'url' => \App\Support\StorefrontRoutes::primaryShopUrl()],
             ['label' => 'Order confirmed'],
         ]])
 
@@ -67,7 +67,7 @@
                 @endif
 
                 <div class="am-checkout-success-card__actions">
-                    <a href="{{ route('shop.index') }}" class="am-btn am-btn--primary">Continue Shopping</a>
+                    <a href="{{ \App\Support\StorefrontRoutes::primaryShopUrl() }}" class="am-btn am-btn--primary">Continue Shopping</a>
                     <button type="button" class="am-btn am-btn--outline" data-open-contact-studio data-contact-context="Order #{{ $order->order_number }}">Contact Us</button>
                 </div>
             </div>

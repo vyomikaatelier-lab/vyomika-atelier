@@ -53,15 +53,22 @@ class CartController extends Controller
         $quantity = min($quantity, min($available, 99));
         $finishSlug = is_string($request->input('finish_slug')) ? $request->input('finish_slug') : null;
         $sizeLabel = is_string($request->input('size_label')) ? $request->input('size_label') : null;
+        // Never accept client-supplied commercial fields.
+        unset($request['price'], $request['unit_price'], $request['total'], $request['discount'], $request['shipping']);
 
         if ($request->boolean('buy_now')) {
+            if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts('buy-now:'.$request->ip(), 8)) {
+                return back()->with('error', 'Please wait a moment before trying again.');
+            }
+            \Illuminate\Support\Facades\RateLimiter::hit('buy-now:'.$request->ip(), 60);
+
             $this->cart->setBuyNow($product, $quantity, $finishSlug, $sizeLabel);
 
             if (! auth()->check()) {
                 $request->session()->put('url.intended', route('checkout.index'));
 
-                return redirect()->route('account.login')
-                    ->with('info', 'Sign in or create an account to complete your purchase.');
+                return redirect()->route('account.continue')
+                    ->with('info', 'Sign in or create an account to continue securely to checkout.');
             }
 
             return redirect()->route('checkout.index');

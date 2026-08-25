@@ -34,6 +34,22 @@
         @if($description)
         <p class="am-design-gallery__desc">{{ $description }}</p>
         @endif
+        @php
+            $priceLabel = $product instanceof \App\Models\Product
+                ? \App\Support\StorefrontPrice::listingLabel($product)
+                : \App\Support\StorefrontPrice::formatInr($price);
+            $compareLabel = $product instanceof \App\Models\Product
+                ? \App\Support\StorefrontPrice::compareLabel($product)
+                : null;
+        @endphp
+        @if($priceLabel)
+        <p class="am-design-gallery__price">
+            <span class="am-design-gallery__price-current">{{ $priceLabel }}</span>
+            @if($compareLabel)
+            <span class="am-design-gallery__price-old">{{ $compareLabel }}</span>
+            @endif
+        </p>
+        @endif
         <div class="am-design-gallery__actions">
             <a href="{{ $showUrl }}" class="am-btn am-btn--card-view">View</a>
             @if($product && $useCheckout)
@@ -46,6 +62,7 @@
                 'category' => $categoryName ?? $product->category?->name ?? '',
                 'finish' => $finish,
                 'price' => $price ?? $product->price,
+                'label' => 'Request Quote',
             ])
             @else
             @include('partials.am-gallery-order-now-btn', [

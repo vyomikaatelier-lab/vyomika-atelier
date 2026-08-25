@@ -86,6 +86,27 @@ class StorefrontRoutes
         return route('shop.show', $slug);
     }
 
+    /**
+     * Canonical shop landing: the configured primary category, not the retired
+     * all-products listing. Falls back to Mirror Frames when the config value
+     * is missing or is not a known shop category.
+     */
+    public static function primaryShopCategorySlug(): string
+    {
+        $configured = config('shop.primary_category', 'mirror-frames');
+
+        if (is_string($configured) && self::isShopCategory($configured)) {
+            return $configured;
+        }
+
+        return 'mirror-frames';
+    }
+
+    public static function primaryShopUrl(): string
+    {
+        return self::shopCategoryUrl(self::primaryShopCategorySlug());
+    }
+
     public static function shopCategorySlugForProduct(?string $productSlug, ?string $categorySlug = null): ?string
     {
         return ProductCatalog::shopCategorySlugForProduct($productSlug, $categorySlug);
