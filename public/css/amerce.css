@@ -20,10 +20,8 @@
   --am-font: 'DM Sans', system-ui, sans-serif;
   --am-display: 'Playfair Display', Georgia, serif;
   --site-gutter: clamp(16px, 3.2vw, 64px);
-  --site-content-max: 1440px;
   --am-container: 100%;
   --am-gutter: var(--site-gutter);
-  --am-content-max: var(--site-content-max);
   --am-edge-gap: clamp(12px, 1.6vw, 20px);
   --am-header-h: 72px;
   --am-announce-h: 36px;
@@ -54,15 +52,15 @@ ul { list-style: none; }
 
 .am-container {
   width: 100%;
-  max-width: var(--site-content-max);
+  max-width: none;
   margin-inline: auto;
   padding-inline: var(--site-gutter);
   box-sizing: border-box;
 }
 .am-section { padding: clamp(2.5rem, 5vw, 4rem) 0; }
 .am-section--edge { padding-inline: 0; }
-.am-section__intro { padding-inline: var(--site-gutter); margin-bottom: clamp(1.5rem, 3vw, 2rem); max-width: var(--site-content-max); margin-inline: auto; width: 100%; box-sizing: border-box; }
-.am-section__body { width: 100%; max-width: var(--site-content-max); margin-inline: auto; padding-inline: var(--site-gutter); box-sizing: border-box; }
+.am-section__intro { padding-inline: var(--site-gutter); margin-bottom: clamp(1.5rem, 3vw, 2rem); width: 100%; box-sizing: border-box; }
+.am-section__body { width: 100%; padding-inline: var(--site-gutter); box-sizing: border-box; }
 .am-section--white { background: var(--am-white); }
 .am-section--cream { background: var(--am-cream); }
 .am-section--dark { background: var(--am-product-bg); color: var(--am-charcoal); }
@@ -1456,8 +1454,6 @@ ul { list-style: none; }
 /* Trust badges */
 .am-trust { border-top: 1px solid var(--am-border); border-bottom: 1px solid var(--am-border); background: var(--am-white); padding-inline: var(--site-gutter); }
 .am-trust-grid {
-  max-width: var(--site-content-max);
-  margin-inline: auto;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 0;
@@ -1663,7 +1659,7 @@ ul { list-style: none; }
   box-shadow: var(--am-shadow);
 }
 .am-search-bar.is-open { transform: translateY(0); }
-.am-search-bar form { display: flex; gap: 0.5rem; max-width: min(600px, calc(var(--site-content-max) - (var(--site-gutter) * 2))); margin: 0 auto; width: 100%; }
+.am-search-bar form { display: flex; gap: 0.5rem; max-width: 600px; margin: 0 auto; width: 100%; }
 .am-search-bar input {
   flex: 1;
   padding: 0.75rem 1rem;
@@ -4262,8 +4258,6 @@ ul { list-style: none; }
   grid-template-columns: 1fr;
   min-height: 0;
   width: 100%;
-  max-width: var(--site-content-max);
-  margin-inline: auto;
   padding-inline: var(--site-gutter);
   box-sizing: border-box;
 }
