@@ -36,7 +36,12 @@
                             @if(!empty($item['size_label']) || !empty($item['finish_name']))
                             <span class="am-order-summary__variant">{{ trim(implode(' · ', array_filter([$item['size_label'] ?? null, $item['finish_name'] ?? null]))) }}</span>
                             @endif
-                            <span class="am-order-summary__qty">Qty {{ $qty }}@if(!empty($item['unit_price'])) · {{ \App\Support\StorefrontPrice::formatInr($item['unit_price']) }} each@endif</span>
+                            <span class="am-order-summary__qty">
+                                Qty {{ $qty }}
+                                @if(!empty($item['unit_price']))
+                                · {{ \App\Support\StorefrontPrice::formatInr($item['unit_price']) }} each
+                                @endif
+                            </span>
                         </span>
                         <span class="am-order-summary__price">₹{{ number_format($lineTotal, 0) }}</span>
                     </li>

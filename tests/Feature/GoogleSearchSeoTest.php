@@ -207,7 +207,7 @@ class GoogleSearchSeoTest extends TestCase
 
     public function test_shop_search_urls_are_noindex(): void
     {
-        $this->get(route('shop.index', ['search' => 'table']))
+        $this->get(route('search', ['q' => 'table']))
             ->assertOk()
             ->assertSee('noindex', false);
     }

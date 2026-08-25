@@ -12,6 +12,7 @@ use App\Services\StockAvailability;
 use App\Support\CartGuard;
 use App\Support\CheckoutCustomer;
 use App\Support\OrderAccess;
+use App\Support\StorefrontRoutes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -30,7 +31,7 @@ class CheckoutController extends Controller
     public function index()
     {
         if ($this->cart->checkoutIsEmpty()) {
-            return redirect()->route('shop.index')->with('error', 'Your cart is empty.');
+            return redirect(StorefrontRoutes::primaryShopUrl())->with('error', 'Your cart is empty.');
         }
 
         $user = Auth::user();
@@ -59,7 +60,7 @@ class CheckoutController extends Controller
         }
 
         if ($this->cart->checkoutIsEmpty()) {
-            return redirect()->route('shop.index')->with('error', 'Your cart is empty.');
+            return redirect(StorefrontRoutes::primaryShopUrl())->with('error', 'Your cart is empty.');
         }
 
         if (! $this->razorpay->isConfigured()) {
@@ -228,7 +229,7 @@ class CheckoutController extends Controller
     public function success(Order $order)
     {
         if (! OrderAccess::canAccess($order)) {
-            return redirect()->route('shop.index')->with('error', 'Order not found.');
+            return redirect(StorefrontRoutes::primaryShopUrl())->with('error', 'Order not found.');
         }
 
         $order->load('items');

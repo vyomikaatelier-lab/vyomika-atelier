@@ -632,7 +632,7 @@ class ProductCatalog
         $shopCategorySlug = $contextSlug ?? self::shopCategorySlugForProduct($slug, $categorySlug);
         $items = [
             ['label' => 'Home', 'url' => route('home')],
-            ['label' => 'Shop', 'url' => route('shop.index')],
+            ['label' => 'Shop', 'url' => StorefrontRoutes::primaryShopUrl()],
         ];
 
         if ($shopCategorySlug) {

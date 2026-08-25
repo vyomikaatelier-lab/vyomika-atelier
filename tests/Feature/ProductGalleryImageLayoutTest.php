@@ -106,7 +106,7 @@ class ProductGalleryImageLayoutTest extends TestCase
             ->assertSee('am-design-gallery--portrait', false);
     }
 
-    public function test_shop_index_uses_square_cover_product_cards(): void
+    public function test_shop_category_page_uses_square_cover_product_cards(): void
     {
         $category = Category::query()->firstOrCreate(
             ['slug' => 'coffee-tables'],
@@ -115,9 +115,9 @@ class ProductGalleryImageLayoutTest extends TestCase
 
         Product::query()->create([
             'category_id' => $category->id,
-            'name' => 'Shop Index Coffee Table',
-            'slug' => 'shop-index-coffee-table',
-            'description' => 'Shop index card layout test.',
+            'name' => 'Category Gallery Coffee Table',
+            'slug' => 'category-gallery-coffee-table',
+            'description' => 'Category gallery card layout test.',
             'price' => 15000,
             'stock' => 5,
             'section' => Product::SECTION_SHOP,
@@ -127,11 +127,11 @@ class ProductGalleryImageLayoutTest extends TestCase
             'is_gallery_visible' => true,
         ]);
 
-        $this->get(route('shop.index'))
+        $this->get(route('shop.show', 'coffee-tables'))
             ->assertOk()
-            ->assertSee('am-product-grid--shop', false)
-            ->assertSee('am-product-card__thumb', false)
-            ->assertSee('Shop Index Coffee Table', false);
+            ->assertSee('am-collection-gallery-grid', false)
+            ->assertSee('am-design-gallery__card', false)
+            ->assertSee('Category Gallery Coffee Table', false);
     }
 
     public function test_homepage_featured_products_use_square_cover_product_cards(): void

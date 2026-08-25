@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Services\OrderPaymentService;
 use App\Services\RazorpayService;
 use App\Support\OrderAccess;
+use App\Support\StorefrontRoutes;
 use Illuminate\Http\Request;
 use RuntimeException;
 
@@ -20,7 +21,7 @@ class PaymentController extends Controller
     public function show(Order $order)
     {
         if (! OrderAccess::canAccess($order)) {
-            return redirect()->route('shop.index')->with('error', 'Order not found.');
+            return redirect(StorefrontRoutes::primaryShopUrl())->with('error', 'Order not found.');
         }
 
         if ($order->payment_method !== 'razorpay' || $order->status !== 'pending') {
@@ -28,7 +29,7 @@ class PaymentController extends Controller
         }
 
         if ($order->isExpired()) {
-            return redirect()->route('shop.index')
+            return redirect(StorefrontRoutes::primaryShopUrl())
                 ->with('error', 'This order has expired. Please place a new order.');
         }
 
@@ -46,7 +47,7 @@ class PaymentController extends Controller
     public function verify(Request $request, Order $order)
     {
         if (! OrderAccess::canAccess($order)) {
-            return redirect()->route('shop.index')->with('error', 'Order not found.');
+            return redirect(StorefrontRoutes::primaryShopUrl())->with('error', 'Order not found.');
         }
 
         if ($order->status !== 'pending') {
@@ -67,11 +68,11 @@ class PaymentController extends Controller
                 $validated['razorpay_signature'],
             );
         } catch (RazorpayReconciliationRequiredException $e) {
-            return redirect()->route('shop.index')
+            return redirect(StorefrontRoutes::primaryShopUrl())
                 ->with('error', $e->getMessage());
         } catch (RuntimeException $e) {
             if ($order->fresh()?->isExpired()) {
-                return redirect()->route('shop.index')
+                return redirect(StorefrontRoutes::primaryShopUrl())
                     ->with('error', $e->getMessage());
             }
 

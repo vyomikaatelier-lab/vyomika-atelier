@@ -82,20 +82,24 @@ class StorefrontPrice
             return true;
         }
 
+        if (self::isFixedUnitPricingType($product->pricing_type)) {
+            return false;
+        }
+
         return $product->resolvedPricingType() === Product::PRICING_SQUARE_FOOT
             || in_array(strtolower((string) $product->pricing_type), ['sqft', 'sq_ft', 'per_sqft', 'per_sq_ft', 'square-foot'], true);
     }
 
     public static function publicUnitSuffix(Product $product): ?string
     {
-        $fromType = self::unitSuffix($product->resolvedPricingType());
-        if ($fromType) {
-            return $fromType;
-        }
-
         $fromStored = self::unitSuffix($product->pricing_type);
         if ($fromStored) {
             return $fromStored;
+        }
+
+        $fromType = self::unitSuffix($product->resolvedPricingType());
+        if ($fromType) {
+            return $fromType;
         }
 
         if ($product->usesCheckoutFlow() && $product->isDoorHandleProduct()) {
@@ -103,5 +107,12 @@ class StorefrontPrice
         }
 
         return null;
+    }
+
+    private static function isFixedUnitPricingType(?string $pricingType): bool
+    {
+        return in_array(strtolower(trim((string) $pricingType)), [
+            'panel', 'per_panel', 'piece', 'unit', 'per_piece', 'per_unit', 'pc', 'per_pc',
+        ], true);
     }
 }

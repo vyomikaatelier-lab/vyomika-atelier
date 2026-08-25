@@ -79,7 +79,7 @@ class ShopCatalog
             'main-entrance-pvd-doors' => route('studio.show', 'main-entrance-pvd-doors'),
             'rack-systems-metal-pvd' => route('studio.show', 'metal-pvd-rack-systems'),
             'metal-furniture' => route('shop.show', 'bespoke-metal-furniture'),
-            'home-decor' => route('shop.index'),
+            'home-decor' => StorefrontRoutes::primaryShopUrl(),
             'railings' => route('railings.index'),
             default => null,
         };

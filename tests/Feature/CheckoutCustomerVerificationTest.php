@@ -130,10 +130,10 @@ class CheckoutCustomerVerificationTest extends TestCase
         ])->post(route('cart.add', $buyNow), [
             'quantity' => 2,
             'buy_now' => 1,
-        ])->assertRedirect(route('account.login'));
+        ])->assertRedirect(route('account.continue'));
 
-        $this->assertSame($buyNow->id, session('buy_now.product_id'));
-        $this->assertSame(2, session('buy_now.quantity'));
+        $this->assertSame($buyNow->id, session('buy_now')['product_id']);
+        $this->assertSame(2, session('buy_now')['quantity']);
         $this->assertArrayHasKey($other->id, session('cart'));
 
         $this->post(route('account.login.email'), [
@@ -163,7 +163,7 @@ class CheckoutCustomerVerificationTest extends TestCase
         $this->post(route('cart.add', $product), [
             'quantity' => 1,
             'buy_now' => 1,
-        ])->assertRedirect(route('account.login'));
+        ])->assertRedirect(route('account.continue'));
 
         $this->post(route('account.register.send'), [
             'name' => 'New Shopper',

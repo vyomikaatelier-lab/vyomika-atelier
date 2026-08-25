@@ -83,6 +83,9 @@
                     <span class="am-featured__price-current">{{ \App\Support\StorefrontPrice::listingLabel($product) }}</span>
                     @if($compareLabel = \App\Support\StorefrontPrice::compareLabel($product))
                     <span class="am-featured__price-old">{{ $compareLabel }}</span>
+                    @if($discount)
+                    <span class="am-featured__badge">-{{ $discount }}%</span>
+                    @endif
                     @endif
                     @endif
                 </div>

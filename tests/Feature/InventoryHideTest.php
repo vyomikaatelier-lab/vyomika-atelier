@@ -51,7 +51,7 @@ class InventoryHideTest extends TestCase
             'hide_when_out_of_stock' => true,
         ]);
 
-        $this->get(route('shop.index'))
+        $this->get(route('shop.show', 'coffee-tables'))
             ->assertOk()
             ->assertDontSee('Hidden Coffee Table', false);
 
@@ -69,7 +69,7 @@ class InventoryHideTest extends TestCase
             'hide_when_out_of_stock' => false,
         ]);
 
-        $this->get(route('shop.index'))
+        $this->get(route('shop.show', 'coffee-tables'))
             ->assertOk()
             ->assertSee('Visible Coffee Table', false);
     }
@@ -84,7 +84,7 @@ class InventoryHideTest extends TestCase
             'hide_when_out_of_stock' => true,
         ]);
 
-        $this->get(route('shop.index'))
+        $this->get(route('home'))
             ->assertOk()
             ->assertDontSee('Sold Out Corner Table', false)
             ->assertDontSee('category=corner-tables', false)

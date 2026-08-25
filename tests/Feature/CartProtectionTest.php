@@ -25,7 +25,7 @@ class CartProtectionTest extends TestCase
         $this->assertSame(1, session('cart')[$product->id]['quantity'] ?? null);
     }
 
-    public function test_shop_buy_now_redirects_guest_to_login(): void
+    public function test_shop_buy_now_redirects_guest_to_continue(): void
     {
         $category = Category::factory()->create(['slug' => 'coffee-tables']);
         $product = Product::factory()->shop()->create(['category_id' => $category->id, 'stock' => 5]);
@@ -35,8 +35,8 @@ class CartProtectionTest extends TestCase
             'buy_now' => 1,
         ]);
 
-        $response->assertRedirect(route('account.login'));
-        $this->assertSame($product->id, session('buy_now.product_id'));
+        $response->assertRedirect(route('account.continue'));
+        $this->assertSame($product->id, session('buy_now')['product_id']);
         $this->assertArrayNotHasKey($product->id, session('cart', []));
     }
 
