@@ -49,9 +49,15 @@ class StorefrontPrice
         $formatted = self::formatInr($amount);
 
         if ($formatted === null) {
-            return $product->isStudioItem() || $product->resolvedPricingType() === Product::PRICING_QUOTATION_ONLY
-                ? 'Price on request'
-                : null;
+            if ($product->isStudioItem() || $product->resolvedPricingType() === Product::PRICING_QUOTATION_ONLY) {
+                return 'Price on request';
+            }
+
+            if ($product->usesCheckoutFlow()) {
+                return 'Price on request';
+            }
+
+            return null;
         }
 
         $prefix = self::usesFromPrefix($product) ? 'From ' : '';

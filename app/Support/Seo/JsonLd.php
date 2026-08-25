@@ -172,7 +172,7 @@ class JsonLd
      */
     public static function product(Product $product): ?array
     {
-        if (! CartGuard::isEligible($product)) {
+        if (! $product->is_active || $product->isStudioItem() || ! $product->usesCheckoutFlow()) {
             return null;
         }
 
@@ -215,11 +215,10 @@ class JsonLd
             $data['mpn'] = (string) $product->mpn;
         }
 
-        $unitPrice = $product->hasSizeOptions()
-            ? $product->listingPrice()
-            : (float) $product->price;
+        $unitPrice = CartGuard::trustedUnitPrice($product, null)
+            ?? ($product->hasSizeOptions() ? $product->listingPrice() : null);
 
-        if ($unitPrice > 0 && $product->pricing_type !== Product::PRICING_QUOTATION_ONLY) {
+        if ($unitPrice !== null && $unitPrice > 0 && $product->pricing_type !== Product::PRICING_QUOTATION_ONLY) {
             $data['offers'] = [
                 '@type' => 'Offer',
                 'url' => $url,

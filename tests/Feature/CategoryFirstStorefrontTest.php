@@ -139,7 +139,7 @@ class CategoryFirstStorefrontTest extends TestCase
     {
         $product = Product::factory()->shop()->make(['price' => 0]);
 
-        $this->assertNull(StorefrontPrice::listingLabel($product));
+        $this->assertSame('Price on request', StorefrontPrice::listingLabel($product));
         $this->assertNull(StorefrontPrice::formatInr(0));
     }
 

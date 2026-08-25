@@ -57,13 +57,19 @@ class CartService
             $product = $products->get($productId);
             $normalized = $this->normalizeLine($line);
 
-            if (! CartGuard::isEligible($product)) {
+            if (! CartGuard::isEligible($product, $normalized['size_label'])) {
                 $invalidIds[] = $productId;
 
                 return null;
             }
 
-            $unitPrice = $this->resolveUnitPrice($product, $normalized['size_label'], $normalized['unit_price']);
+            $unitPrice = CartGuard::trustedUnitPrice($product, $normalized['size_label']);
+
+            if ($unitPrice === null) {
+                $invalidIds[] = $productId;
+
+                return null;
+            }
 
             return [
                 'product' => $product,
@@ -91,7 +97,10 @@ class CartService
             : 0;
         $existing = $this->normalizeLine($cart[$product->id] ?? null);
         $finish = FinishSwatches::resolve($finishSlug ?? $existing['finish_slug']);
-        $size = $this->resolveSizeSelection($product, $sizeLabel ?? $existing['size_label']);
+        $resolvedSizeLabel = $sizeLabel ?? $existing['size_label'];
+        $size = $product->hasSizeOptions() && filled($resolvedSizeLabel)
+            ? $this->resolveSizeSelection($product, $resolvedSizeLabel)
+            : ['label' => null, 'unit_price' => CartGuard::trustedUnitPrice($product, null) ?? 0.0];
 
         $cart[$product->id] = [
             'quantity' => $existingQty + $quantity,
@@ -153,7 +162,9 @@ class CartService
     public function setBuyNow(Product $product, int $quantity = 1, ?string $finishSlug = null, ?string $sizeLabel = null): void
     {
         $finish = FinishSwatches::resolve($finishSlug);
-        $size = $this->resolveSizeSelection($product, $sizeLabel);
+        $size = $product->hasSizeOptions() && filled($sizeLabel)
+            ? $this->resolveSizeSelection($product, $sizeLabel)
+            : ['label' => null, 'unit_price' => CartGuard::trustedUnitPrice($product, null) ?? 0.0];
 
         session([self::BUY_NOW_KEY => [
             'product_id' => $product->id,
@@ -216,13 +227,19 @@ class CartService
         $product = Product::with('category')->find($line['product_id']);
         $normalized = $this->normalizeLine($line);
 
-        if (! CartGuard::isEligible($product)) {
+        if (! CartGuard::isEligible($product, $normalized['size_label'])) {
             $this->clearBuyNow();
 
             return collect();
         }
 
-        $unitPrice = $this->resolveUnitPrice($product, $normalized['size_label'], null);
+        $unitPrice = CartGuard::trustedUnitPrice($product, $normalized['size_label']);
+
+        if ($unitPrice === null) {
+            $this->clearBuyNow();
+
+            return collect();
+        }
 
         return collect([[
             'product' => $product,
@@ -259,28 +276,16 @@ class CartService
         if (! $product->hasSizeOptions()) {
             return [
                 'label' => null,
-                'unit_price' => (float) $product->price,
+                'unit_price' => CartGuard::trustedUnitPrice($product, null) ?? 0.0,
             ];
         }
 
         $option = $product->resolveSizeOption($sizeLabel);
+        $label = $option['label'] ?? null;
 
         return [
-            'label' => $option['label'] ?? null,
-            'unit_price' => (float) ($option['price'] ?? $product->price),
+            'label' => $label,
+            'unit_price' => CartGuard::trustedUnitPrice($product, $label) ?? 0.0,
         ];
-    }
-
-    private function resolveUnitPrice(Product $product, ?string $sizeLabel, ?float $storedUnitPrice): float
-    {
-        if ($product->hasSizeOptions()) {
-            if (filled($sizeLabel)) {
-                return $product->unitPriceForSize($sizeLabel);
-            }
-
-            return $product->listingPrice();
-        }
-
-        return (float) $product->price;
     }
 }

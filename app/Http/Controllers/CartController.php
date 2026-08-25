@@ -36,7 +36,12 @@ class CartController extends Controller
      */
     public function add(Request $request, Product $product)
     {
-        if ($message = CartGuard::checkoutEligibility($product)) {
+        $sizeLabel = is_string($request->input('size_label')) ? trim($request->input('size_label')) : null;
+        if ($sizeLabel === '') {
+            $sizeLabel = null;
+        }
+
+        if ($message = CartGuard::checkoutEligibility($product, $sizeLabel)) {
             return back()->with('error', $message);
         }
 
@@ -52,7 +57,6 @@ class CartController extends Controller
         $quantity = max(1, (int) $request->input('quantity', 1));
         $quantity = min($quantity, min($available, 99));
         $finishSlug = is_string($request->input('finish_slug')) ? $request->input('finish_slug') : null;
-        $sizeLabel = is_string($request->input('size_label')) ? $request->input('size_label') : null;
         // Never accept client-supplied commercial fields.
         unset($request['price'], $request['unit_price'], $request['total'], $request['discount'], $request['shipping']);
 
@@ -81,10 +85,13 @@ class CartController extends Controller
 
     public function update(Request $request, Product $product)
     {
-        if (! CartGuard::isEligible($product)) {
+        $cartLine = session('cart', [])[$product->id] ?? null;
+        $sizeLabel = is_array($cartLine) ? ($cartLine['size_label'] ?? null) : null;
+
+        if (! CartGuard::isEligible($product, is_string($sizeLabel) ? $sizeLabel : null)) {
             $this->cart->remove($product);
 
-            return back()->with('error', CartGuard::checkoutEligibility($product));
+            return back()->with('error', CartGuard::checkoutEligibility($product, is_string($sizeLabel) ? $sizeLabel : null));
         }
 
         $available = StockAvailability::availableForProduct($product);

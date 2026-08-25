@@ -1,7 +1,13 @@
 @props(['product', 'externalSizeSelector' => false])
 
 @php
+    use App\Support\CartGuard;
     use App\Support\FinishSwatches;
+
+    if (! CartGuard::canPurchaseOnPdp($product)) {
+        return;
+    }
+
     $defaultFinish = FinishSwatches::resolve(null);
     $defaultSize = $product->resolveSizeOption(null);
     $hasSizeOptions = $product->hasSizeOptions();

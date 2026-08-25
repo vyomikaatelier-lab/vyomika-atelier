@@ -29,7 +29,7 @@
     $sectionLabel = StorefrontRoutes::productSectionLabel($product);
     $isStudio = $product->isStudioItem();
     $showCalculator = $isStudio;
-    $showCheckoutBuy = $product->usesCheckoutFlow();
+    $showCheckoutBuy = \App\Support\CartGuard::canPurchaseOnPdp($product);
     $calcServiceSlug = Service::serviceSlugForProduct($product->slug, $categorySlug) ?? '';
     $calcLabel = Service::estimateLabelForProduct($product->slug, $categorySlug);
     $calcRate = $product->sqFtRate();

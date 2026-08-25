@@ -20,19 +20,12 @@
                     $product,
                     \App\Support\StorefrontRoutes::isShopCategory((string) $shopPageSlug) ? $shopPageSlug : null
                 );
-                $cardCategoryLabel = $parentCategoryName
-                    ?: (\App\Support\StorefrontRoutes::isShopCategory((string) $shopPageSlug)
-                        ? \App\Support\StorefrontRoutes::shopCategoryLabel($shopPageSlug)
-                        : null);
             @endphp
             @include('partials.am-design-gallery-card', [
                 'showUrl' => $showUrl,
                 'title' => $product->name,
-                'description' => $product->description,
                 'image' => $product->imageUrl(),
                 'product' => $product,
-                'categoryName' => $cardCategoryLabel,
-                'useCheckout' => $product->usesCheckoutFlow(),
             ])
             @endforeach
         </div>

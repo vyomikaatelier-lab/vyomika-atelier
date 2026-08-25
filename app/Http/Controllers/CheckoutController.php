@@ -78,12 +78,16 @@ class CheckoutController extends Controller
         }
 
         $ineligible = $this->cart->checkoutItems()->first(
-            fn (array $item) => ! CartGuard::isEligible($item['product'])
+            fn (array $item) => ! CartGuard::isEligible($item['product'], $item['size_label'] ?? null)
+                || ($item['unit_price'] ?? 0) <= 0
         );
 
         if ($ineligible) {
             return redirect()->route('checkout.index')
-                ->with('error', CartGuard::checkoutEligibility($ineligible['product']));
+                ->with('error', CartGuard::checkoutEligibility(
+                    $ineligible['product'],
+                    $ineligible['size_label'] ?? null
+                ) ?? CartGuard::MSG_NO_PRICE);
         }
 
         try {
@@ -110,6 +114,11 @@ class CheckoutController extends Controller
         $subtotal = $this->cart->checkoutSubtotal();
         $shipping = $subtotal >= 5000 ? 0 : 199;
         $total = $subtotal + $shipping;
+
+        if ($subtotal <= 0 || $total <= 0) {
+            return redirect()->route('cart.index')
+                ->with('error', CartGuard::MSG_NO_PRICE);
+        }
 
         foreach ($items as $item) {
             $available = StockAvailability::availableForProduct($item['product']);

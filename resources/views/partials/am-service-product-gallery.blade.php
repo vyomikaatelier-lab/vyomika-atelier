@@ -15,7 +15,8 @@
         @php
             $productUrl = \App\Support\StorefrontRoutes::productUrl($product);
             $resolvedService = $serviceSlug ?: (\App\Models\Service::serviceSlugForProduct($product->slug, $product->category?->slug) ?? '');
-            $itemLabel = $categoryLabel ?: \App\Support\StorefrontRoutes::productSectionLabel($product);
+            $priceLabel = \App\Support\StorefrontPrice::listingLabel($product);
+            $compareLabel = \App\Support\StorefrontPrice::compareLabel($product);
         @endphp
         <article class="am-design-gallery__card am-design-gallery__card--split">
             @include('partials.am-gallery-media', [
@@ -27,13 +28,6 @@
                 <h3 class="am-design-gallery__name">
                     <a href="{{ $productUrl }}">{{ $product->name }}</a>
                 </h3>
-                @if($itemLabel)
-                <p class="am-design-gallery__cat">{{ $itemLabel }}</p>
-                @endif
-                @php
-                    $priceLabel = \App\Support\StorefrontPrice::listingLabel($product);
-                    $compareLabel = \App\Support\StorefrontPrice::compareLabel($product);
-                @endphp
                 @if($priceLabel)
                 <p class="am-design-gallery__price">
                     <span class="am-design-gallery__price-current">{{ $priceLabel }}</span>
@@ -42,16 +36,13 @@
                     @endif
                 </p>
                 @endif
-                @if($product->description)
-                <p class="am-design-gallery__desc">{{ $product->description }}</p>
-                @endif
                 <div class="am-design-gallery__actions">
                     <a href="{{ $productUrl }}" class="am-btn am-btn--card-view">View Details</a>
                     @include('partials.am-gallery-order-now-btn', [
                         'name' => $product->name,
                         'slug' => $product->slug,
                         'serviceSlug' => $resolvedService,
-                        'category' => $itemLabel,
+                        'category' => $categoryLabel,
                         'price' => $product->price,
                         'label' => 'Request Quote',
                     ])
