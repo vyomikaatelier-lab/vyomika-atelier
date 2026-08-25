@@ -90,6 +90,10 @@ class CheckoutController extends Controller
                 ) ?? CartGuard::MSG_NO_PRICE);
         }
 
+        if ($message = CartGuard::checkoutItemsEligible($this->cart->checkoutItems())) {
+            return redirect()->route('checkout.index')->with('error', $message);
+        }
+
         try {
             $addressInput = $this->addresses->mapCheckoutInput($request->all());
             $validatedAddress = $this->addresses->validate($addressInput, true);
@@ -127,6 +131,10 @@ class CheckoutController extends Controller
                 return redirect()->route('cart.index')
                     ->with('error', "{$item['product']->name} only has {$available} available. Please update your cart.");
             }
+        }
+
+        if ($message = CartGuard::checkoutItemsEligible($items)) {
+            return redirect()->route('cart.index')->with('error', $message);
         }
 
         $checkoutToken = $request->session()->get('checkout_submit_token');

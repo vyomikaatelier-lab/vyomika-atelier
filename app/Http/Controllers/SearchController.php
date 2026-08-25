@@ -17,7 +17,7 @@ class SearchController extends Controller
         $products = collect();
         if ($q !== '') {
             $products = ShopCatalog::applyListingScope(
-                Product::query()->where('is_active', true)->with('category')
+                Product::query()->with('category')
             )
                 ->where(function ($query) use ($q) {
                     $query->where('name', 'like', '%'.$q.'%')

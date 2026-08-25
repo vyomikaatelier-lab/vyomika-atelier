@@ -109,6 +109,7 @@ class ShopCatalog
     public static function applyListingScope(Builder $query): Builder
     {
         $query = self::applyShopScope($query);
+        $query = ProductPublicationPolicy::applyGalleryScope($query);
 
         if (! self::supportsInventoryHide()) {
             return $query;

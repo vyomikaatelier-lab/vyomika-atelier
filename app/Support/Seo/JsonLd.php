@@ -5,6 +5,7 @@ namespace App\Support\Seo;
 use App\Models\Product;
 use App\Support\CartGuard;
 use App\Support\MediaUrl;
+use App\Support\ProductPublicationPolicy;
 
 class JsonLd
 {
@@ -172,7 +173,7 @@ class JsonLd
      */
     public static function product(Product $product): ?array
     {
-        if (! $product->is_active || $product->isStudioItem() || ! $product->usesCheckoutFlow()) {
+        if (! ProductPublicationPolicy::isStructuredDataEligible($product)) {
             return null;
         }
 

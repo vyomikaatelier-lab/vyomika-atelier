@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Support\CategoryPublicationPolicy;
 use App\Support\ShopCatalog;
 use App\Support\StorefrontRoutes;
 use Illuminate\Http\RedirectResponse;
@@ -26,6 +27,10 @@ class ShopPageController extends Controller
         }
 
         if (StorefrontRoutes::isShopCategory($slug) || $this->isActiveShopCategory($slug)) {
+            if (! CategoryPublicationPolicy::isSitemapListedBySlug($slug)) {
+                abort(404);
+            }
+
             if ($slug === 'mirror-frames') {
                 return redirect()->route('shop.mirror-frames.index', [], 301);
             }

@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Order;
 use App\Models\Product;
 
 /**
@@ -82,15 +83,7 @@ class CartGuard
             return self::MSG_RAILINGS;
         }
 
-        if (! $product->is_active) {
-            return self::MSG_INACTIVE;
-        }
-
-        if (! $product->is_gallery_visible) {
-            return self::MSG_INACTIVE;
-        }
-
-        if (! $product->usesCheckoutFlow()) {
+        if (! ProductPublicationPolicy::isCartEligible($product)) {
             return self::MSG_INACTIVE;
         }
 
@@ -112,6 +105,33 @@ class CartGuard
     public static function isEligible(?Product $product, ?string $sizeLabel = null): bool
     {
         return self::checkoutEligibility($product, $sizeLabel) === null;
+    }
+
+    public static function orderItemsEligible(Order $order): ?string
+    {
+        $order->loadMissing('items.product.category');
+
+        foreach ($order->items as $item) {
+            if ($message = self::checkoutEligibility($item->product, $item->size_label)) {
+                return $message;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  iterable<int, array{product: ?Product, size_label?: ?string}>  $items
+     */
+    public static function checkoutItemsEligible(iterable $items): ?string
+    {
+        foreach ($items as $item) {
+            if ($message = self::checkoutEligibility($item['product'] ?? null, $item['size_label'] ?? null)) {
+                return $message;
+            }
+        }
+
+        return null;
     }
 
     /** Buy Now on gallery/search cards (no inline variant picker). */
@@ -139,7 +159,7 @@ class CartGuard
             return false;
         }
 
-        if (! $product->is_active || ! $product->is_gallery_visible || ! $product->usesCheckoutFlow()) {
+        if (! ProductPublicationPolicy::isCartEligible($product)) {
             return false;
         }
 

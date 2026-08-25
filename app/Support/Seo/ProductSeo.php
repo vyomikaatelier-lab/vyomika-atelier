@@ -3,6 +3,7 @@
 namespace App\Support\Seo;
 
 use App\Models\Product;
+use App\Support\ProductPublicationPolicy;
 use Illuminate\Support\Str;
 
 class ProductSeo
@@ -14,7 +15,7 @@ class ProductSeo
             ? (string) $product->canonical_url
             : route('shop.show', $product->slug);
 
-        $robots = $product->robots_index === false ? 'noindex,follow' : null;
+        $robots = ProductPublicationPolicy::robotsMeta($product);
 
         return PageSeo::make([
             'title' => $product->meta_title ?: ($product->name.' — Vyomika Atelier'),

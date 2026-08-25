@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Project;
 use App\Models\Service;
 use App\Support\Seo\StaticPageSeo;
+use App\Support\ShopCatalog;
 use App\Support\SiteContent;
 use Illuminate\Support\Facades\Schema;
 
@@ -16,9 +17,7 @@ class HomeController extends Controller
     public function index()
     {
         $featuredProducts = Schema::hasTable('products')
-            ? \App\Support\ShopCatalog::applyListingScope(
-                Product::where('is_active', true)
-            )->orderedForDisplay()->take(6)->get()
+            ? ShopCatalog::applyListingScope(Product::query())->orderedForDisplay()->take(6)->get()
             : collect();
 
         $categories = Schema::hasTable('categories')
@@ -47,16 +46,14 @@ class HomeController extends Controller
 
         $trendingSlugs = collect($site['trending']['products'] ?? [])->pluck('slug')->filter();
         $trendingFromDb = ($trendingSlugs->isNotEmpty() && Schema::hasTable('products'))
-            ? \App\Support\ShopCatalog::applyListingScope(
-                Product::where('is_active', true)->whereIn('slug', $trendingSlugs)
+            ? ShopCatalog::applyListingScope(
+                Product::query()->whereIn('slug', $trendingSlugs)
             )->orderedForDisplay()->get()
             : collect();
         if ($trendingFromDb->count() < 4 && Schema::hasTable('products')) {
             $trendingFromDb = $trendingFromDb->concat(
-                \App\Support\ShopCatalog::applyListingScope(
-                    Product::where('is_active', true)
-                        ->whereNotIn('id', $trendingFromDb->pluck('id'))
-                )->orderedForDisplay()->take(4 - $trendingFromDb->count())->get()
+                ShopCatalog::applyListingScope(Product::query()->whereNotIn('id', $trendingFromDb->pluck('id')))
+                    ->orderedForDisplay()->take(4 - $trendingFromDb->count())->get()
             )->unique('id')->sortByDesc(fn (Product $product) => [$product->sort_order, $product->id])->values();
         }
 

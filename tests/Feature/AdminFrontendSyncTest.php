@@ -591,8 +591,7 @@ class AdminFrontendSyncTest extends TestCase
         $category->update(['is_active' => false]);
 
         $this->get(route('shop.show', 'coffee-tables'))
-            ->assertOk()
-            ->assertDontSee('Meridian Brass Coffee Table');
+            ->assertNotFound();
     }
 
     public function test_hiding_every_exhibition_empties_the_about_section(): void

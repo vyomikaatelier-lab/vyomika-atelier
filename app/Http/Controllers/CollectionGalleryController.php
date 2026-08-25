@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Support\CategoryPublicationPolicy;
 use App\Support\CollectionContent;
 use App\Support\ProductCatalog;
+use App\Support\ProductPublicationPolicy;
 use App\Support\Seo\JsonLd;
 use App\Support\Seo\PageSeo;
 use App\Support\StorefrontRoutes;
@@ -156,11 +158,9 @@ class CollectionGalleryController extends Controller
             return collect();
         }
 
-        $query = Product::query()
-            ->with('category')
-            ->where('is_active', true)
-            ->where('is_gallery_visible', true)
-            ->unlessHiddenForStock();
+        $query = ProductPublicationPolicy::applyGalleryScope(
+            Product::query()->with('category')
+        )->unlessHiddenForStock();
 
         if ($catalogSlugs !== []) {
             $query->where(function ($q) use ($category, $catalogSlugs) {

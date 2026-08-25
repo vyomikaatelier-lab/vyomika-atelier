@@ -745,7 +745,7 @@ class Product extends Model
     /** Whether this product may ever legally enter the cart/checkout flow. */
     public function canEnterCart(): bool
     {
-        return $this->is_active && $this->usesCheckoutFlow();
+        return \App\Support\ProductPublicationPolicy::isCartEligible($this);
     }
 
     public function isClassified(): bool

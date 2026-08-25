@@ -63,11 +63,9 @@ class ServiceGallery
             return collect();
         }
 
-        $query = Product::query()
-            ->with('category')
-            ->where('is_active', true)
-            ->where('is_gallery_visible', true)
-            ->unlessHiddenForStock();
+        $query = ProductPublicationPolicy::applyGalleryScope(
+            Product::query()->with('category')
+        )->unlessHiddenForStock();
 
         $query->where(function ($q) use ($slugs, $categorySlugs) {
             $hasCategories = $categorySlugs !== [];
@@ -93,11 +91,9 @@ class ServiceGallery
         $slugs = ProductCatalog::productSlugsForService($service->slug);
         $categorySlugs = $service->relatedCategorySlugs();
 
-        $query = Product::query()
-            ->with('category')
-            ->where('is_active', true)
-            ->where('is_gallery_visible', true)
-            ->unlessHiddenForStock();
+        $query = ProductPublicationPolicy::applyGalleryScope(
+            Product::query()->with('category')
+        )->unlessHiddenForStock();
 
         if ($slugs === []) {
             return $query->whereHas('category', fn ($q) => $q->whereIn('slug', $categorySlugs));
@@ -113,11 +109,9 @@ class ServiceGallery
     {
         $categorySlugs = $service->relatedCategorySlugs();
 
-        return Product::query()
-            ->with('category')
-            ->where('is_active', true)
-            ->where('is_gallery_visible', true)
-            ->unlessHiddenForStock()
+        return ProductPublicationPolicy::applyGalleryScope(
+            Product::query()->with('category')
+        )->unlessHiddenForStock()
             ->when(
                 $categorySlugs === [],
                 fn (Builder $q) => $q->whereRaw('0 = 1'),

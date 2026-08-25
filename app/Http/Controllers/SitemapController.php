@@ -7,7 +7,9 @@ use App\Models\Product;
 use App\Models\Project;
 use App\Models\Service;
 use App\Support\BlogContent;
+use App\Support\CategoryPublicationPolicy;
 use App\Support\MirrorFramesContent;
+use App\Support\ProductPublicationPolicy;
 use App\Support\StorefrontRoutes;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Schema;
@@ -37,6 +39,10 @@ class SitemapController extends Controller
 
         foreach (StorefrontRoutes::shopCategorySlugs() as $shopSlug) {
             if ($shopSlug === 'mirror-frames') {
+                continue;
+            }
+
+            if (! CategoryPublicationPolicy::isSitemapListedBySlug($shopSlug)) {
                 continue;
             }
 
@@ -109,11 +115,11 @@ class SitemapController extends Controller
         }
 
         if (Schema::hasTable('products')) {
-            Product::query()
-                ->where('is_active', true)
-                ->where('robots_index', true)
-                ->where('section', Product::SECTION_SHOP)
-                ->unlessHiddenForStock()
+            ProductPublicationPolicy::applySitemapScope(
+                Product::query()
+                    ->where('section', Product::SECTION_SHOP)
+                    ->unlessHiddenForStock()
+            )
                 ->get(['slug', 'updated_at'])
                 ->each(function (Product $product) use (&$urls) {
                     $urls[] = [

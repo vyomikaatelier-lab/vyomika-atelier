@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Exceptions\RazorpayReconciliationRequiredException;
 use App\Models\Order;
 use App\Services\StockAvailability;
+use App\Support\CartGuard;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
@@ -22,6 +23,10 @@ class OrderPaymentService
      */
     public function razorpayCheckoutPayload(Order $order): array
     {
+        if ($message = CartGuard::orderItemsEligible($order)) {
+            throw new RuntimeException($message, 422);
+        }
+
         if ($order->razorpay_order_id) {
             return $this->buildPayload($order->razorpay_order_id, $order);
         }
