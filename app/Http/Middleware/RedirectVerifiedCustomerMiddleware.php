@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\CartService;
 use App\Support\AdminAccess;
 use Closure;
 use Illuminate\Http\Request;
@@ -10,6 +11,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RedirectVerifiedCustomerMiddleware
 {
+    public function __construct(private CartService $cart) {}
+
     public function handle(Request $request, Closure $next): Response
     {
         if (! auth()->check()) {
@@ -29,6 +32,10 @@ class RedirectVerifiedCustomerMiddleware
             Auth::logout();
 
             return $next($request);
+        }
+
+        if ($this->cart->hasBuyNow()) {
+            return redirect()->route('checkout.index');
         }
 
         return redirect()->route('account');
