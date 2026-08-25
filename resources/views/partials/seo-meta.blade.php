@@ -5,6 +5,8 @@
     $pageSeo = isset($pageSeo) && is_array($pageSeo) ? $pageSeo : [];
     $seo = PageSeo::make($pageSeo);
     $analytics = PageSeo::analytics();
+    $routeName = request()->route()?->getName();
+    $isLegalPage = is_string($routeName) && str_starts_with($routeName, 'legal.');
 @endphp
 <meta name="description" content="{{ $seo['description'] }}">
 @if(!empty($seo['robots']))
@@ -28,7 +30,7 @@
 <meta name="google-site-verification" content="{{ $analytics['gsc'] }}">
 @endif
 {!! JsonLd::script(JsonLd::organization()) !!}
-@if($localBusinessLd = JsonLd::localBusiness())
+@if(! $isLegalPage && ($localBusinessLd = JsonLd::localBusiness()))
 {!! JsonLd::script($localBusinessLd) !!}
 @endif
 {!! JsonLd::script(JsonLd::website()) !!}

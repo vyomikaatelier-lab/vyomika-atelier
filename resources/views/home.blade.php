@@ -6,10 +6,11 @@
 
 @php
     use App\Support\SiteContent;
+    use App\Support\StorefrontNavigation;
     use App\Support\StorefrontUrl;
     $heroSlides = SiteContent::heroSlides();
     $bestSellers = SiteContent::bestSellers();
-    $categoryBanners = SiteContent::categoryBanners();
+    $homepageCategoryTiles = $homepageCategoryTiles ?? StorefrontNavigation::homepageCategoryTiles();
     $trending = SiteContent::trending();
     $spotlights = SiteContent::spotlights();
     $ctaBand = SiteContent::get('cta_band', []);
@@ -33,7 +34,8 @@
                 <p class="am-hero__kicker">{{ $slide['kicker'] ?? '' }}</p>
                 <h1 class="am-hero__title">{{ $slide['title'] ?? '' }}</h1>
                 <p class="am-hero__desc">{{ $slide['description'] ?? '' }}</p>
-                <a href="{{ url($slide['cta_href'] ?? '/shop') }}" class="am-btn am-btn--primary am-btn--lg">{{ $slide['cta_label'] ?? 'Shop Now' }}</a>
+                @php $heroCta = StorefrontNavigation::resolveCta($slide['cta_href'] ?? null, $slide['cta_label'] ?? null); @endphp
+                <a href="{{ url($heroCta['href']) }}" class="am-btn am-btn--primary am-btn--lg">{{ $heroCta['label'] !== '' ? $heroCta['label'] : 'Explore' }}</a>
             </div>
             <div class="am-hero__image">
                 @include('partials.am-hero-picture', ['slide' => $slide, 'priority' => $i === 0])
@@ -57,14 +59,14 @@
                 <h2>{{ $bestSellers['title'] ?? 'Best-Selling Products' }}</h2>
                 <p>{{ $bestSellers['subtitle'] ?? '' }}</p>
             </div>
-            <a href="{{ \App\Support\StorefrontRoutes::primaryShopUrl() }}" class="am-section-head__link">{{ $bestSellers['cta_label'] ?? 'Shop Mirror Frames' }}</a>
+            <a href="{{ StorefrontNavigation::resolveHref(\App\Support\StorefrontRoutes::primaryShopUrl()) }}" class="am-section-head__link">{{ StorefrontNavigation::resolveCta(\App\Support\StorefrontRoutes::primaryShopUrl(), $bestSellers['cta_label'] ?? null)['label'] }}</a>
         </div>
     </div>
     @php $banner = $bestSellers['banner'] ?? []; @endphp
     <div class="am-section__body">
         <div class="am-product-grid am-product-grid--with-banner">
             @if(!empty($banner))
-            <a href="{{ url($banner['href'] ?? \App\Support\StorefrontRoutes::primaryShopUrl()) }}" class="am-product-banner">
+            <a href="{{ StorefrontNavigation::resolveHref($banner['href'] ?? StorefrontNavigation::primaryPublishedShopUrl()) }}" class="am-product-banner">
                 <img src="{{ $banner['image'] ?? '' }}" alt="{{ $banner['title'] ?? '' }}" loading="lazy">
                 <h3>{{ $banner['title'] ?? '' }}</h3>
                 <p>{{ $banner['subtitle'] ?? '' }}</p>
@@ -80,16 +82,18 @@
 @endif
 
 {{-- Category banners --}}
-@if(SiteContent::homepageSectionEnabled('category_banners'))
+@if(SiteContent::homepageSectionEnabled('category_banners') && $homepageCategoryTiles !== [])
 <section class="am-section am-section--edge">
     <div class="am-section__body">
         <div class="am-cat-grid">
-            @foreach($categoryBanners as $cat)
-            <a href="{{ url($cat['href'] ?? '/shop') }}" class="am-cat-tile">
-                <img src="{{ $cat['image'] ?? '' }}" alt="{{ $cat['title'] ?? '' }}" loading="lazy">
+            @foreach($homepageCategoryTiles as $cat)
+            <a href="{{ url($cat['href']) }}" class="am-cat-tile">
+                @if(!empty($cat['image']))
+                <img src="{{ $cat['image'] }}" alt="{{ $cat['title'] ?? '' }}" loading="lazy">
+                @endif
                 <h3>{{ $cat['title'] ?? '' }}</h3>
                 <p>{{ $cat['subtitle'] ?? '' }}</p>
-                <span class="am-btn am-btn--white am-btn--sm">{{ $cat['cta'] ?? 'Shop Now' }}</span>
+                <span class="am-btn am-btn--white am-btn--sm">{{ $cat['cta'] ?? 'View collection' }}</span>
             </a>
             @endforeach
         </div>
@@ -136,7 +140,7 @@
                     <h3>{{ $item['title'] ?? '' }}</h3>
                     <p>{{ $item['description'] ?? '' }}</p>
                     <p class="am-spotlight__price">{{ SiteContent::formatPrice($item['price'] ?? 0) }} <span style="font-weight:400;font-size:0.85rem;color:var(--am-muted)">{{ $item['price_unit'] ?? '' }}</span></p>
-                    <a href="{{ url($item['href'] ?? '/shop') }}" class="am-btn am-btn--primary">{{ $item['cta'] ?? 'Buy now' }}</a>
+                    <a href="{{ url(StorefrontNavigation::resolveHref($item['href'] ?? null)) }}" class="am-btn am-btn--primary">{{ $item['cta'] ?? 'Buy now' }}</a>
                 </div>
             </div>
             @endforeach
@@ -150,7 +154,8 @@
 <section class="am-cta-band">
     <h2>{{ $ctaBand['title'] ?? '' }}</h2>
     <p>{{ $ctaBand['description'] ?? '' }}</p>
-    <a href="{{ url($ctaBand['cta_href'] ?? \App\Support\StorefrontRoutes::primaryShopUrl()) }}" class="am-btn am-btn--primary am-btn--lg">{{ $ctaBand['cta_label'] ?? 'Shop Mirror Frames' }}</a>
+    @php $ctaBandResolved = StorefrontNavigation::resolveCta($ctaBand['cta_href'] ?? null, $ctaBand['cta_label'] ?? null); @endphp
+    <a href="{{ url($ctaBandResolved['href']) }}" class="am-btn am-btn--primary am-btn--lg">{{ $ctaBandResolved['label'] !== '' ? $ctaBandResolved['label'] : ('Shop '.StorefrontNavigation::primaryPublishedShopLabel()) }}</a>
 </section>
 @endif
 

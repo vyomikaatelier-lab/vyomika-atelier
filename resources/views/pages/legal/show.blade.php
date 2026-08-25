@@ -2,6 +2,7 @@
     :title="$page['title']"
     :meta-title="$page['meta_title'] ?? null"
     :meta-description="$page['meta_description'] ?? null"
+    :page-seo="$pageSeo"
     :last-updated="$lastUpdated"
     :sections="$sections"
     :business="$business"

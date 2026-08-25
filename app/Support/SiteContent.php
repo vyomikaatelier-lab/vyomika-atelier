@@ -99,10 +99,8 @@ class SiteContent
     public static function footer(): array
     {
         $footer = self::arrayValue('footer');
-
-        if (isset($footer['shop_links']) && is_array($footer['shop_links'])) {
-            $footer['shop_links'] = ShopCatalog::filterShopLinks($footer['shop_links']);
-        }
+        $footer['shop_links'] = StorefrontNavigation::shopLinks();
+        $footer['service_links'] = StorefrontNavigation::studioLinks();
 
         return $footer;
     }

@@ -7,7 +7,6 @@ use App\Models\Product;
 use App\Models\Project;
 use App\Models\Service;
 use App\Support\BlogContent;
-use App\Support\CategoryPublicationPolicy;
 use App\Support\MirrorFramesContent;
 use App\Support\ProductPublicationPolicy;
 use App\Support\StorefrontRoutes;
@@ -29,7 +28,6 @@ class SitemapController extends Controller
             ['loc' => route('professionals.index'), 'changefreq' => 'monthly', 'priority' => '0.7'],
             ['loc' => route('railings.index'), 'changefreq' => 'monthly', 'priority' => '0.8'],
             ['loc' => route('corten-steel.show'), 'changefreq' => 'monthly', 'priority' => '0.8'],
-            ['loc' => route('shop.mirror-frames.index'), 'changefreq' => 'weekly', 'priority' => '0.85'],
             ['loc' => route('contact.index'), 'changefreq' => 'monthly', 'priority' => '0.7'],
         ];
 
@@ -37,25 +35,17 @@ class SitemapController extends Controller
             $urls[] = $item;
         }
 
-        foreach (StorefrontRoutes::shopCategorySlugs() as $shopSlug) {
-            if ($shopSlug === 'mirror-frames') {
-                continue;
-            }
-
-            if (! CategoryPublicationPolicy::isSitemapListedBySlug($shopSlug)) {
-                continue;
-            }
-
+        foreach (\App\Support\StorefrontNavigation::shopLinks() as $shopLink) {
             $urls[] = [
-                'loc' => route('shop.show', $shopSlug),
+                'loc' => $shopLink['href'],
                 'changefreq' => 'weekly',
                 'priority' => '0.85',
             ];
         }
 
-        foreach (StorefrontRoutes::studioUrlSlugs() as $studioSlug) {
+        foreach (\App\Support\StorefrontNavigation::studioLinks() as $studioLink) {
             $urls[] = [
-                'loc' => route('studio.show', $studioSlug),
+                'loc' => $studioLink['href'],
                 'changefreq' => 'monthly',
                 'priority' => '0.8',
             ];

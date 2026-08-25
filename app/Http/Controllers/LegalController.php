@@ -49,6 +49,7 @@ class LegalController extends Controller
             'sections' => LegalContent::resolvedSections($page),
             'lastUpdated' => $data['content_updated_at'] ?? LegalContent::lastUpdated(),
             'business' => LegalContent::business(),
+            'pageSeo' => LegalContent::pageSeo($page),
         ]);
     }
 }

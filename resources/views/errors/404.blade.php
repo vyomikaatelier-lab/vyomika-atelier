@@ -2,10 +2,6 @@
 
 @section('title', 'Page not found — Vyomika Atelier')
 
-@push('meta')
-<meta name="robots" content="noindex, nofollow">
-@endpush
-
 @section('content')
 <section class="section">
     <div class="am-container">

@@ -118,6 +118,15 @@ svg:not(.am-icon-btn svg) {
   height: calc(var(--am-header-h) + var(--am-safe-top));
 }
 
+.am-header > .am-container.am-header__inner,
+.am-footer > .am-container {
+  width: 100%;
+  max-width: none;
+  margin-inline: auto;
+  padding-inline: var(--site-gutter, var(--am-gutter));
+  box-sizing: border-box;
+}
+
 .am-announce {
   padding-left: max(var(--site-gutter, var(--am-gutter)), var(--am-safe-left));
   padding-right: max(var(--site-gutter, var(--am-gutter)), var(--am-safe-right));

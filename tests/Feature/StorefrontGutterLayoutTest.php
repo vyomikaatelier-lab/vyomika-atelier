@@ -51,7 +51,9 @@ class StorefrontGutterLayoutTest extends TestCase
     {
         $css = (string) file_get_contents(public_path('css/responsive.css'));
 
-        $this->assertStringContainsString('.am-container .am-container', $css);
+        $this->assertStringContainsString('.am-header > .am-container.am-header__inner', $css);
+        $this->assertStringContainsString('.am-footer > .am-container', $css);
+        $this->assertStringContainsString('padding-inline: var(--site-gutter, var(--am-gutter))', $css);
         $this->assertStringNotContainsString('--am-content-max:', $css);
         $this->assertStringNotContainsString('max-width: var(--site-content-max', $css);
     }
