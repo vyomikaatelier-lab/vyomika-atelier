@@ -7,95 +7,125 @@
     'label' => 'Your Studio',
     'title' => 'My Account',
     'subtitle' => $user->name . ' · ' . $user->accountTypeLabel(),
+    'class' => 'am-page-hero--account',
 ])
 
 <section class="am-page-body am-account-dashboard">
-    <div class="am-container">
+    <div class="am-account-shell">
         @include('partials.am-account-alerts')
 
-        <div class="am-account-dashboard__grid">
-            <section class="am-card am-account-panel" id="profile">
-                <div class="am-card__body">
-                    <p class="am-card__label">Profile</p>
-                    <h2 class="am-card__title">Profile Details</h2>
-                    <form action="{{ route('account.profile.update') }}" method="POST" class="am-form-stack am-form-stack--compact">
-                        @csrf
-                        <input type="text" name="name" value="{{ old('name', $user->name) }}" class="am-input" required>
-                        <input type="email" name="email" value="{{ old('email', $user->email) }}" class="am-input" required>
-                        <p class="am-account-meta">Mobile: {{ $user->mobile_country_code }} {{ $user->mobile }} (verified)</p>
-                        <input type="tel" name="whatsapp" value="{{ old('whatsapp', $user->whatsapp) }}" placeholder="WhatsApp" class="am-input">
-                        <input type="text" name="city" value="{{ old('city', $user->city) }}" placeholder="City" class="am-input">
-                        <button type="submit" class="am-btn am-btn--outline am-btn--sm">Save Profile</button>
-                    </form>
-                </div>
-            </section>
-
-            <section class="am-card am-account-panel am-address-form-card" id="addresses">
-                <div class="am-card__body">
-                    <h2 class="am-address-form__title">My Address</h2>
-
-                    @forelse($addresses as $address)
-                    <article class="am-account-list-item">
-                        <div>
-                            <strong>{{ $address->label }}</strong>
-                            @if($address->is_default)<span class="am-account-badge">Default</span>@endif
-                            <p>{{ $address->name }} · {{ $address->phone }}</p>
-                            <p class="am-account-meta">{{ $address->formatted() }}</p>
-                        </div>
-                        <form action="{{ route('account.addresses.destroy', $address) }}" method="POST" onsubmit="return confirm('Remove this address?')">
+        <div class="am-account-dashboard__layout">
+            <aside class="am-account-dashboard__sidebar">
+                <section class="am-card am-account-panel" id="profile">
+                    <div class="am-card__body">
+                        <p class="am-card__label">Profile</p>
+                        <h2 class="am-card__title">Profile Details</h2>
+                        <form action="{{ route('account.profile.update') }}" method="POST" class="am-form-stack am-form-stack--compact">
                             @csrf
-                            @method('DELETE')
-                            <button type="submit" class="am-btn am-btn--ghost am-btn--sm">Remove</button>
+                            <div class="am-account-field">
+                                <label for="account-profile-name">Name</label>
+                                <input id="account-profile-name" type="text" name="name" value="{{ old('name', $user->name) }}" class="am-input" required>
+                            </div>
+                            <div class="am-account-field">
+                                <label for="account-profile-email">Email</label>
+                                <input id="account-profile-email" type="email" name="email" value="{{ old('email', $user->email) }}" class="am-input" required>
+                            </div>
+                            <p class="am-account-meta">Mobile: {{ $user->mobile_country_code }} {{ $user->mobile }} (verified)</p>
+                            <div class="am-account-field">
+                                <label for="account-profile-whatsapp">WhatsApp</label>
+                                <input id="account-profile-whatsapp" type="tel" name="whatsapp" value="{{ old('whatsapp', $user->whatsapp) }}" placeholder="WhatsApp" class="am-input">
+                            </div>
+                            <div class="am-account-field">
+                                <label for="account-profile-city">City</label>
+                                <input id="account-profile-city" type="text" name="city" value="{{ old('city', $user->city) }}" placeholder="City" class="am-input">
+                            </div>
+                            <button type="submit" class="am-btn am-btn--outline am-btn--full">Save Profile</button>
                         </form>
-                    </article>
-                    @empty
-                    <p class="am-account-empty">No saved addresses yet. Add your delivery address below.</p>
-                    @endforelse
+                    </div>
+                </section>
 
-                    @php
-                        $defaultAddress = $addresses->firstWhere('is_default', true) ?? $addresses->first();
-                        $nameSource = old('first_name') ? null : ($defaultAddress?->name ?? $user->name);
-                        $nameParts = $nameSource ? explode(' ', $nameSource, 2) : ['', ''];
-                        $addressMeta = $defaultAddress
-                            ? \App\Models\CustomerAddress::decodeLine2($defaultAddress->address_line2)
-                            : ['company' => '', 'country' => 'India'];
-                    @endphp
+                <section class="am-card am-account-panel am-account-panel--actions">
+                    <div class="am-card__body">
+                        <a href="{{ route('cart.index') }}" class="am-btn am-btn--outline am-btn--full">View Cart</a>
+                        <a href="{{ route('leads.create') }}" class="am-btn am-btn--outline am-btn--full">Custom Order</a>
+                        <form action="{{ route('account.logout') }}" method="POST">
+                            @csrf
+                            <button type="submit" class="am-btn am-btn--dark am-btn--full">Logout</button>
+                        </form>
+                    </div>
+                </section>
+            </aside>
 
-                    <form action="{{ route('account.addresses.store') }}" method="POST" class="am-address-form">
-                        @csrf
-                        <input type="hidden" name="label" value="{{ old('label', 'Home') }}">
-                        @include('partials.am-address-form-grid', [
-                            'mode' => 'account',
-                            'userEmail' => $user->email,
-                            'firstName' => old('first_name', $nameParts[0] ?? ''),
-                            'lastName' => old('last_name', $nameParts[1] ?? ''),
-                            'company' => old('company', $addressMeta['company'] ?? ''),
-                            'houseBuilding' => old('house_building', $defaultAddress?->house_building ?? $defaultAddress?->address_line1 ?? ''),
-                            'street' => old('street', $defaultAddress?->street ?? ''),
-                            'locality' => old('locality', $defaultAddress?->locality ?? ''),
-                            'landmark' => old('landmark', $defaultAddress?->landmark ?? ''),
-                            'city' => old('city', $defaultAddress?->city ?? $user->city ?? ''),
-                            'state' => old('state', $defaultAddress?->state ?? ''),
-                            'pincode' => old('pincode', $defaultAddress?->pincode ?? ''),
-                            'phone' => old('phone', $defaultAddress?->phone ?? $user->mobile ?? ''),
-                            'altMobile' => old('alt_mobile', $defaultAddress?->alt_mobile ?? ''),
-                            'country' => old('country', $defaultAddress?->country ?? $addressMeta['country'] ?? 'India'),
-                            'addressType' => old('address_type', $defaultAddress?->address_type ?? 'home'),
-                            'floor' => old('floor', $defaultAddress?->floor ?? ''),
-                            'liftAvailable' => old('lift_available', $defaultAddress?->lift_available),
-                            'deliveryInstructions' => old('delivery_instructions', $defaultAddress?->delivery_instructions ?? ''),
-                        ])
-                        <label class="am-account-consent am-address-form__default">
-                            <input type="checkbox" name="billing_same_as_shipping" value="1" @checked(old('billing_same_as_shipping', true))> Billing address same as shipping
-                        </label>
-                        <label class="am-account-consent am-address-form__default">
-                            <input type="checkbox" name="is_default" value="1" @checked(old('is_default', true))> Set as default delivery address
-                        </label>
-                        <button type="submit" class="am-btn am-btn--dark am-address-form__submit">Update Address</button>
-                    </form>
-                </div>
-            </section>
+            <div class="am-account-dashboard__main">
+                <section class="am-card am-account-panel am-address-form-card" id="addresses">
+                    <div class="am-card__body">
+                        <h2 class="am-address-form__title">My Address</h2>
 
+                        @forelse($addresses as $address)
+                        <article class="am-account-list-item">
+                            <div>
+                                <strong>{{ $address->label }}</strong>
+                                @if($address->is_default)<span class="am-account-badge">Default</span>@endif
+                                <p>{{ $address->name }} · {{ $address->phone }}</p>
+                                <p class="am-account-meta">{{ $address->formatted() }}</p>
+                            </div>
+                            <form action="{{ route('account.addresses.destroy', $address) }}" method="POST" onsubmit="return confirm('Remove this address?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="am-btn am-btn--ghost am-btn--sm">Remove</button>
+                            </form>
+                        </article>
+                        @empty
+                        <p class="am-account-empty">No saved addresses yet. Add your delivery address below.</p>
+                        @endforelse
+
+                        @php
+                            $defaultAddress = $addresses->firstWhere('is_default', true) ?? $addresses->first();
+                            $nameSource = old('first_name') ? null : ($defaultAddress?->name ?? $user->name);
+                            $nameParts = $nameSource ? explode(' ', $nameSource, 2) : ['', ''];
+                            $addressMeta = $defaultAddress
+                                ? \App\Models\CustomerAddress::decodeLine2($defaultAddress->address_line2)
+                                : ['company' => '', 'country' => 'India'];
+                        @endphp
+
+                        <form action="{{ route('account.addresses.store') }}" method="POST" class="am-address-form">
+                            @csrf
+                            <input type="hidden" name="label" value="{{ old('label', 'Home') }}">
+                            @include('partials.am-address-form-grid', [
+                                'mode' => 'account',
+                                'userEmail' => $user->email,
+                                'firstName' => old('first_name', $nameParts[0] ?? ''),
+                                'lastName' => old('last_name', $nameParts[1] ?? ''),
+                                'company' => old('company', $addressMeta['company'] ?? ''),
+                                'houseBuilding' => old('house_building', $defaultAddress?->house_building ?? $defaultAddress?->address_line1 ?? ''),
+                                'street' => old('street', $defaultAddress?->street ?? ''),
+                                'locality' => old('locality', $defaultAddress?->locality ?? ''),
+                                'landmark' => old('landmark', $defaultAddress?->landmark ?? ''),
+                                'city' => old('city', $defaultAddress?->city ?? $user->city ?? ''),
+                                'state' => old('state', $defaultAddress?->state ?? ''),
+                                'pincode' => old('pincode', $defaultAddress?->pincode ?? ''),
+                                'phone' => old('phone', $defaultAddress?->phone ?? $user->mobile ?? ''),
+                                'altMobile' => old('alt_mobile', $defaultAddress?->alt_mobile ?? ''),
+                                'country' => old('country', $defaultAddress?->country ?? $addressMeta['country'] ?? 'India'),
+                                'addressType' => old('address_type', $defaultAddress?->address_type ?? 'home'),
+                                'floor' => old('floor', $defaultAddress?->floor ?? ''),
+                                'liftAvailable' => old('lift_available', $defaultAddress?->lift_available),
+                                'deliveryInstructions' => old('delivery_instructions', $defaultAddress?->delivery_instructions ?? ''),
+                            ])
+                            <label class="am-account-consent am-address-form__default">
+                                <input type="checkbox" name="billing_same_as_shipping" value="1" @checked(old('billing_same_as_shipping', true))> Billing address same as shipping
+                            </label>
+                            <label class="am-account-consent am-address-form__default">
+                                <input type="checkbox" name="is_default" value="1" @checked(old('is_default', true))> Set as default delivery address
+                            </label>
+                            <button type="submit" class="am-btn am-btn--dark am-address-form__submit">Update Address</button>
+                        </form>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <div class="am-account-dashboard__summary">
             <section class="am-card am-account-panel" id="enquiries">
                 <div class="am-card__body">
                     <p class="am-card__label">Studio</p>
@@ -151,17 +181,6 @@
                     @else
                     <p class="am-account-empty">No professional application on file. <a href="{{ route('professionals.index') }}">Apply for a trade account</a></p>
                     @endif
-                </div>
-            </section>
-
-            <section class="am-card am-account-panel am-account-panel--actions">
-                <div class="am-card__body">
-                    <a href="{{ route('cart.index') }}" class="am-btn am-btn--outline am-btn--full">View Cart</a>
-                    <a href="{{ route('leads.create') }}" class="am-btn am-btn--outline am-btn--full">Custom Order</a>
-                    <form action="{{ route('account.logout') }}" method="POST">
-                        @csrf
-                        <button type="submit" class="am-btn am-btn--dark am-btn--full">Logout</button>
-                    </form>
                 </div>
             </section>
         </div>
