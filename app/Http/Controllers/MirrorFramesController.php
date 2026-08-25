@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Support\MirrorFramesContent;
+use App\Support\ProductPublicationPolicy;
 use Illuminate\View\View;
 
 class MirrorFramesController extends Controller
@@ -28,20 +29,15 @@ class MirrorFramesController extends Controller
 
         abort_unless($product, 404);
 
-        $related = Product::query()
-            ->where('is_active', true)
-            ->unlessHiddenForStock()
-            ->where('id', '!=', $product->id)
-            ->when($product->category_id, fn ($q) => $q->where('category_id', $product->category_id))
-            ->inRandomOrder()
-            ->take(4)
-            ->get();
+        $relatedQuery = ProductPublicationPolicy::applyGalleryScope(
+            Product::query()->unlessHiddenForStock()
+        )->where('id', '!=', $product->id)
+            ->when($product->category_id, fn ($q) => $q->where('category_id', $product->category_id));
+
+        $related = (clone $relatedQuery)->inRandomOrder()->take(4)->get();
 
         if ($related->count() < 4) {
-            $more = Product::query()
-                ->where('is_active', true)
-                ->unlessHiddenForStock()
-                ->where('id', '!=', $product->id)
+            $more = (clone $relatedQuery)
                 ->whereNotIn('id', $related->pluck('id'))
                 ->take(4 - $related->count())
                 ->get();

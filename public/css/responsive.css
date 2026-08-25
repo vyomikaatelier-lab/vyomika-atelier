@@ -11,7 +11,6 @@
   --am-safe-bottom: env(safe-area-inset-bottom, 0px);
   --am-safe-left: env(safe-area-inset-left, 0px);
   --am-touch-min: 44px;
-  --am-content-max: 90rem;
   --am-readable-max: 65ch;
 }
 
@@ -29,21 +28,17 @@ body {
   padding-right: var(--am-safe-right);
 }
 
-/* Readable max-width on text-heavy inner blocks without capping edge-to-edge galleries */
-.am-page-body .am-container,
-.am-section:not(.am-section--edge) > .am-container,
-.am-footer > .am-container {
-  max-width: var(--am-content-max);
-  margin-inline: auto;
-  width: 100%;
+/* Single storefront gutter — avoid nested container double-padding */
+.am-container .am-container {
+  padding-inline: 0;
+  max-width: none;
 }
 
-.am-shop-category-hero {
-  --am-hero-gutter: clamp(16px, 2.5vw, 40px);
-  max-width: var(--am-content-max);
-  margin-inline: auto;
-  padding-left: max(var(--am-hero-gutter), var(--am-safe-left));
-  padding-right: max(var(--am-hero-gutter), var(--am-safe-right));
+/* Standalone breadcrumbs in page flow align with gutter guides */
+main > .am-breadcrumbs,
+main > nav.am-breadcrumbs {
+  width: 100%;
+  padding-inline: var(--site-gutter, var(--am-gutter));
   box-sizing: border-box;
 }
 
@@ -124,8 +119,8 @@ svg:not(.am-icon-btn svg) {
 }
 
 .am-announce {
-  padding-left: max(var(--am-gutter), var(--am-safe-left));
-  padding-right: max(var(--am-gutter), var(--am-safe-right));
+  padding-left: max(var(--site-gutter, var(--am-gutter)), var(--am-safe-left));
+  padding-right: max(var(--site-gutter, var(--am-gutter)), var(--am-safe-right));
 }
 
 .am-mobile-nav {
@@ -492,7 +487,34 @@ main,
   overflow-x: clip;
 }
 
-/* Reduced motion */
+/* Long headings/prices wrap safely; buttons stay within card bounds */
+.am-design-gallery__name,
+.am-design-gallery__name a,
+.am-product-card__name,
+.am-product-card__name a,
+.am-design-gallery__price-current,
+.am-product-card__price-current,
+.am-pdp__title,
+.am-featured__price-current {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.am-design-gallery__actions .am-btn,
+.am-product-card__actions .am-btn,
+.am-product-card__view {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.am-account-field-input,
+.am-checkout-field input,
+.am-checkout-field select,
+.am-checkout-field textarea,
+.am-input {
+  max-width: 100%;
+  min-width: 0;
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -505,13 +527,6 @@ main,
 
   .am-announce__track {
     animation: none;
-  }
-}
-
-/* Zoom / large text — allow wrap instead of overflow */
-@media (min-width: 1920px) {
-  .am-container {
-    --am-gutter: clamp(12px, 2vw, 32px);
   }
 }
 

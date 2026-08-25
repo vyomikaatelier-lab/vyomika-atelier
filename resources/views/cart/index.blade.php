@@ -9,7 +9,7 @@
     <div class="am-container am-checkout-flow">
         @include('partials.am-breadcrumbs', ['items' => [
             ['label' => 'Home', 'url' => route('home')],
-            ['label' => 'Shop', 'url' => route('shop.index')],
+            ['label' => 'Shop', 'url' => \App\Support\StorefrontRoutes::primaryShopUrl()],
             ['label' => 'Cart'],
         ]])
 
@@ -37,7 +37,7 @@
                     </div>
                     <h2 class="am-checkout-empty__title">Your cart is empty</h2>
                     <p class="am-checkout-empty__text">Browse PVD partitions, metal furniture, and hardware to get started.</p>
-                    <a href="{{ route('shop.index') }}" class="am-btn am-btn--primary">Shop Products</a>
+                    <a href="{{ \App\Support\StorefrontRoutes::primaryShopUrl() }}" class="am-btn am-btn--primary">Shop Products</a>
                 </div>
             </div>
         @else
@@ -100,7 +100,7 @@
                     ])
                     <div class="am-checkout-sidebar__actions">
                         <a href="{{ route('checkout.index') }}" class="am-btn am-btn--primary am-btn--full am-btn--lg">Proceed to Checkout</a>
-                        <a href="{{ route('shop.index') }}" class="am-btn am-btn--outline am-btn--full">Continue Shopping</a>
+                        <a href="{{ \App\Support\StorefrontRoutes::primaryShopUrl() }}" class="am-btn am-btn--outline am-btn--full">Continue Shopping</a>
                     </div>
                 </div>
             </div>

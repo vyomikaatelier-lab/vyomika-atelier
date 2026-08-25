@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\RazorpayReconciliationRequiredException;
 use App\Models\Order;
 use App\Services\OrderPaymentService;
 use App\Services\RazorpayService;
 use App\Support\OrderAccess;
+use App\Support\StorefrontRoutes;
 use Illuminate\Http\Request;
 use RuntimeException;
 
@@ -19,7 +21,7 @@ class PaymentController extends Controller
     public function show(Order $order)
     {
         if (! OrderAccess::canAccess($order)) {
-            return redirect()->route('shop.index')->with('error', 'Order not found.');
+            return redirect(StorefrontRoutes::primaryShopUrl())->with('error', 'Order not found.');
         }
 
         if ($order->payment_method !== 'razorpay' || $order->status !== 'pending') {
@@ -27,7 +29,7 @@ class PaymentController extends Controller
         }
 
         if ($order->isExpired()) {
-            return redirect()->route('shop.index')
+            return redirect(StorefrontRoutes::primaryShopUrl())
                 ->with('error', 'This order has expired. Please place a new order.');
         }
 
@@ -45,16 +47,11 @@ class PaymentController extends Controller
     public function verify(Request $request, Order $order)
     {
         if (! OrderAccess::canAccess($order)) {
-            return redirect()->route('shop.index')->with('error', 'Order not found.');
+            return redirect(StorefrontRoutes::primaryShopUrl())->with('error', 'Order not found.');
         }
 
         if ($order->status !== 'pending') {
             return redirect()->route('checkout.success', $order);
-        }
-
-        if ($order->isExpired()) {
-            return redirect()->route('shop.index')
-                ->with('error', 'This order has expired. Please place a new order.');
         }
 
         $validated = $request->validate([
@@ -70,7 +67,15 @@ class PaymentController extends Controller
                 $validated['razorpay_order_id'],
                 $validated['razorpay_signature'],
             );
+        } catch (RazorpayReconciliationRequiredException $e) {
+            return redirect(StorefrontRoutes::primaryShopUrl())
+                ->with('error', $e->getMessage());
         } catch (RuntimeException $e) {
+            if ($order->fresh()?->isExpired()) {
+                return redirect(StorefrontRoutes::primaryShopUrl())
+                    ->with('error', $e->getMessage());
+            }
+
             return redirect()->route('checkout.pay', $order)
                 ->with('error', $e->getMessage());
         }

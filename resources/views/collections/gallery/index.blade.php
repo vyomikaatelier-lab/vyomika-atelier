@@ -34,4 +34,16 @@
     'shopPageSlug' => $slug,
 ])
 
+@if($products->isEmpty())
+<section class="am-section am-section--cream">
+    <div class="am-container am-empty">
+        <h2>No designs in this collection yet</h2>
+        <p>Browse another shop collection while we add more pieces here.</p>
+        <a href="{{ \App\Support\StorefrontRoutes::primaryShopUrl() }}" class="am-btn am-btn--outline">Shop Mirror Frames</a>
+    </div>
+</section>
+@elseif(method_exists($products, 'hasPages') && $products->hasPages())
+<div class="am-container am-pagination">{{ $products->links('vendor.pagination.amerce') }}</div>
+@endif
+
 @endsection

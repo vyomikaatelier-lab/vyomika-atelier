@@ -41,11 +41,9 @@
             @include('partials.am-design-gallery-card', [
                 'showUrl' => $showUrl,
                 'title' => $card['title'],
-                'description' => $card['description'],
                 'image' => $card['image'],
                 'badge' => $design['badge'] ?? null,
                 'product' => $card['product'],
-                'useCheckout' => ($card['product'] ?? null)?->usesCheckoutFlow() ?? false,
             ])
             @endforeach
         </div>

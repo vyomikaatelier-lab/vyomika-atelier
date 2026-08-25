@@ -63,12 +63,12 @@ class User extends Authenticatable implements PasskeyUser
 
     public function isAdmin(): bool
     {
-        return $this->is_admin;
+        return (bool) $this->is_admin;
     }
 
     public function isCustomer(): bool
     {
-        return ! $this->is_admin;
+        return ! $this->isAdmin();
     }
 
     public function hasVerifiedPhone(): bool

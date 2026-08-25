@@ -46,6 +46,7 @@ use App\Http\Controllers\ProfessionalsController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RailingsController;
 use App\Http\Controllers\RobotsController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\ShopPageController;
@@ -61,6 +62,7 @@ use Laravel\Passkeys\Http\Controllers\PasskeyLoginController;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::redirect('/preview.html', '/');
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
+Route::get('/search', [SearchController::class, 'index'])->name('search');
 Route::get('/shop/mirror-frames', [MirrorFramesController::class, 'index'])->name('shop.mirror-frames.index');
 Route::get('/shop/mirror-frames/{design}', [MirrorFramesController::class, 'show'])->name('shop.mirror-frames.show');
 Route::get('/shop/{slug}', [ShopPageController::class, 'show'])->name('shop.show');
@@ -74,13 +76,14 @@ Route::middleware('checkout.customer')->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:checkout')->name('checkout.store');
     Route::get('/checkout/pay/{order}', [PaymentController::class, 'show'])->name('checkout.pay');
-    Route::post('/checkout/pay/{order}', [PaymentController::class, 'verify'])->middleware('throttle:checkout')->name('checkout.pay.verify');
+    Route::post('/checkout/pay/{order}', [PaymentController::class, 'verify'])->name('checkout.pay.verify');
     Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
 
-    Route::prefix('api')->middleware('throttle:checkout')->group(function () {
-        Route::post('/create-order', [RazorpayCheckoutController::class, 'createOrder'])->name('api.create-order');
-        Route::post('/verify-payment', [RazorpayCheckoutController::class, 'verifyPayment'])->name('api.verify-payment');
-    });
+    Route::post('/api/create-order', [RazorpayCheckoutController::class, 'createOrder'])
+        ->middleware('throttle:checkout')
+        ->name('api.create-order');
+    Route::post('/api/verify-payment', [RazorpayCheckoutController::class, 'verifyPayment'])
+        ->name('api.verify-payment');
 });
 
 Route::post('/webhooks/razorpay', RazorpayWebhookController::class)->name('webhooks.razorpay');
@@ -147,22 +150,25 @@ Route::get('/about', [AboutController::class, 'index'])->name('about');
 Route::get('/professionals', [ProfessionalsController::class, 'index'])->name('professionals.index');
 Route::view('/team', 'pages.team')->name('team');
 Route::prefix('account')->name('account.')->middleware('customer.guest')->group(function () {
+    Route::get('/continue', [AccountAuthController::class, 'showContinue'])->name('continue');
     Route::get('/login', [AccountAuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AccountAuthController::class, 'sendLoginOtp'])->middleware('throttle:otp-send')->name('login.send');
-    Route::post('/login/email', [AccountAuthController::class, 'loginWithEmail'])->middleware('throttle:auth')->name('login.email');
-    Route::post('/login/mobile', [AccountAuthController::class, 'loginWithMobilePassword'])->middleware('throttle:auth')->name('login.mobile');
+    Route::post('/login', [AccountAuthController::class, 'loginWithEmail'])->middleware('throttle:auth')->name('login.email');
+    Route::post('/login/otp', [AccountAuthController::class, 'rejectRetiredOtp'])->middleware('throttle:otp-send')->name('login.send');
+    Route::post('/login/mobile', [AccountAuthController::class, 'rejectRetiredOtp'])->middleware('throttle:auth')->name('login.mobile');
     Route::get('/register', [AccountAuthController::class, 'showRegister'])->name('register');
-    Route::post('/register', [AccountAuthController::class, 'sendRegisterOtp'])->middleware('throttle:otp-send')->name('register.send');
+    Route::post('/register', [AccountAuthController::class, 'register'])->middleware('throttle:auth')->name('register.send');
     Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])->name('social.redirect');
     Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->name('social.callback');
     Route::get('/forgot', [AccountAuthController::class, 'showForgot'])->name('forgot');
-    Route::post('/forgot', [AccountAuthController::class, 'sendForgotOtp'])->middleware('throttle:otp-send')->name('forgot.send');
-    Route::post('/forgot/reset', [AccountAuthController::class, 'resetForgotPassword'])->middleware('throttle:auth')->name('forgot.reset');
+    Route::post('/forgot', [AccountAuthController::class, 'sendResetLink'])->middleware('throttle:password-reset')->name('forgot.send');
+    Route::get('/reset-password/{token}', [AccountAuthController::class, 'showReset'])->name('password.reset');
+    Route::post('/reset-password', [AccountAuthController::class, 'resetPassword'])->middleware('throttle:auth')->name('password.update');
+    Route::post('/forgot/reset', [AccountAuthController::class, 'resetPassword'])->middleware('throttle:auth')->name('forgot.reset');
 });
 
 Route::get('/account/verify-otp', [AccountAuthController::class, 'showVerifyOtp'])->name('account.verify');
-Route::post('/account/verify-otp', [AccountAuthController::class, 'verifyOtp'])->middleware('throttle:otp-verify')->name('account.verify.submit');
-Route::post('/account/resend-otp', [AccountAuthController::class, 'resendOtp'])->middleware('throttle:otp-send')->name('account.resend');
+Route::post('/account/verify-otp', [AccountAuthController::class, 'rejectRetiredOtp'])->middleware('throttle:otp-verify')->name('account.verify.submit');
+Route::post('/account/resend-otp', [AccountAuthController::class, 'rejectRetiredOtp'])->middleware('throttle:otp-send')->name('account.resend');
 
 Route::middleware('customer')->group(function () {
     Route::get('/account', [AccountDashboardController::class, 'index'])->name('account');

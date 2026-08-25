@@ -423,7 +423,7 @@ class AdminFrontendSyncTest extends TestCase
 
         $this->createProductAsAdmin($category, 'Terra Steel Planter', 'terra-steel-planter');
 
-        $this->get(route('shop.index'))
+        $this->get(route('shop.show', 'steel-planters'))
             ->assertOk()
             ->assertSee('Terra Steel Planter');
     }
@@ -577,7 +577,7 @@ class AdminFrontendSyncTest extends TestCase
             ->assertRedirect(route('admin.categories.index'))
             ->assertSessionHasNoErrors();
 
-        $this->get(route('shop.index'))
+        $this->get(route('shop.show', 'coffee-tables'))
             ->assertOk()
             ->assertSee('Coffee Tables');
     }
@@ -590,9 +590,8 @@ class AdminFrontendSyncTest extends TestCase
 
         $category->update(['is_active' => false]);
 
-        $this->get(route('shop.index'))
-            ->assertOk()
-            ->assertDontSee('Meridian Brass Coffee Table');
+        $this->get(route('shop.show', 'coffee-tables'))
+            ->assertNotFound();
     }
 
     public function test_hiding_every_exhibition_empties_the_about_section(): void

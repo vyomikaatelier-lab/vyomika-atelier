@@ -11,6 +11,10 @@ class CartService
 {
     private const SESSION_KEY = 'cart';
 
+    private const BUY_NOW_KEY = 'buy_now';
+
+    public const CHECKOUT_SOURCE_KEY = 'checkout_source';
+
     /**
      * @return array{quantity: int, finish_slug: ?string, finish_name: ?string, size_label: ?string, unit_price: ?float}
      */
@@ -53,13 +57,19 @@ class CartService
             $product = $products->get($productId);
             $normalized = $this->normalizeLine($line);
 
-            if (! CartGuard::isEligible($product)) {
+            if (! CartGuard::isEligible($product, $normalized['size_label'])) {
                 $invalidIds[] = $productId;
 
                 return null;
             }
 
-            $unitPrice = $this->resolveUnitPrice($product, $normalized['size_label'], $normalized['unit_price']);
+            $unitPrice = CartGuard::trustedUnitPrice($product, $normalized['size_label']);
+
+            if ($unitPrice === null) {
+                $invalidIds[] = $productId;
+
+                return null;
+            }
 
             return [
                 'product' => $product,
@@ -87,7 +97,10 @@ class CartService
             : 0;
         $existing = $this->normalizeLine($cart[$product->id] ?? null);
         $finish = FinishSwatches::resolve($finishSlug ?? $existing['finish_slug']);
-        $size = $this->resolveSizeSelection($product, $sizeLabel ?? $existing['size_label']);
+        $resolvedSizeLabel = $sizeLabel ?? $existing['size_label'];
+        $size = $product->hasSizeOptions() && filled($resolvedSizeLabel)
+            ? $this->resolveSizeSelection($product, $resolvedSizeLabel)
+            : ['label' => null, 'unit_price' => CartGuard::trustedUnitPrice($product, null) ?? 0.0];
 
         $cart[$product->id] = [
             'quantity' => $existingQty + $quantity,
@@ -146,6 +159,99 @@ class CartService
         session()->forget(self::SESSION_KEY);
     }
 
+    public function setBuyNow(Product $product, int $quantity = 1, ?string $finishSlug = null, ?string $sizeLabel = null): void
+    {
+        $finish = FinishSwatches::resolve($finishSlug);
+        $size = $product->hasSizeOptions() && filled($sizeLabel)
+            ? $this->resolveSizeSelection($product, $sizeLabel)
+            : ['label' => null, 'unit_price' => CartGuard::trustedUnitPrice($product, null) ?? 0.0];
+
+        session([self::BUY_NOW_KEY => [
+            'product_id' => $product->id,
+            'quantity' => max(1, $quantity),
+            'finish_slug' => $finish['slug'],
+            'finish_name' => $finish['name'],
+            'size_label' => $size['label'],
+            'created_at' => now()->timestamp,
+        ]]);
+    }
+
+    public function clearBuyNow(): void
+    {
+        session()->forget(self::BUY_NOW_KEY);
+    }
+
+    public function hasBuyNow(): bool
+    {
+        return $this->buyNowItems()->isNotEmpty();
+    }
+
+    /**
+     * Items charged at checkout: the Buy Now snapshot when present, otherwise the cart.
+     */
+    public function checkoutItems(): Collection
+    {
+        $buyNow = $this->buyNowItems();
+
+        return $buyNow->isNotEmpty() ? $buyNow : $this->all();
+    }
+
+    public function checkoutSubtotal(): float
+    {
+        return $this->checkoutItems()->sum('line_total');
+    }
+
+    public function checkoutIsEmpty(): bool
+    {
+        return $this->checkoutItems()->isEmpty();
+    }
+
+    /**
+     * @return Collection<int, array{product: Product, quantity: int, finish_slug: ?string, finish_name: ?string, size_label: ?string, unit_price: float, line_total: float}>
+     */
+    public function buyNowItems(): Collection
+    {
+        $line = session(self::BUY_NOW_KEY);
+        if (! is_array($line) || empty($line['product_id'])) {
+            return collect();
+        }
+
+        $createdAt = (int) ($line['created_at'] ?? 0);
+        $ttl = max(1, (int) config('shop.buy_now_ttl_minutes', 120)) * 60;
+        if ($createdAt > 0 && (now()->timestamp - $createdAt) > $ttl) {
+            $this->clearBuyNow();
+
+            return collect();
+        }
+
+        $product = Product::with('category')->find($line['product_id']);
+        $normalized = $this->normalizeLine($line);
+
+        if (! CartGuard::isEligible($product, $normalized['size_label'])) {
+            $this->clearBuyNow();
+
+            return collect();
+        }
+
+        $unitPrice = CartGuard::trustedUnitPrice($product, $normalized['size_label']);
+
+        if ($unitPrice === null) {
+            $this->clearBuyNow();
+
+            return collect();
+        }
+
+        return collect([[
+            'product' => $product,
+            'quantity' => $normalized['quantity'],
+            'finish_slug' => $normalized['finish_slug'],
+            'finish_name' => $normalized['finish_name'],
+            'size_label' => $normalized['size_label'],
+            'unit_price' => $unitPrice,
+            'line_total' => $unitPrice * $normalized['quantity'],
+        ]]);
+    }
+
     public function count(): int
     {
         return (int) collect(session(self::SESSION_KEY, []))
@@ -170,32 +276,16 @@ class CartService
         if (! $product->hasSizeOptions()) {
             return [
                 'label' => null,
-                'unit_price' => (float) $product->price,
+                'unit_price' => CartGuard::trustedUnitPrice($product, null) ?? 0.0,
             ];
         }
 
         $option = $product->resolveSizeOption($sizeLabel);
+        $label = $option['label'] ?? null;
 
         return [
-            'label' => $option['label'] ?? null,
-            'unit_price' => (float) ($option['price'] ?? $product->price),
+            'label' => $label,
+            'unit_price' => CartGuard::trustedUnitPrice($product, $label) ?? 0.0,
         ];
-    }
-
-    private function resolveUnitPrice(Product $product, ?string $sizeLabel, ?float $storedUnitPrice): float
-    {
-        if ($product->hasSizeOptions()) {
-            if (filled($sizeLabel)) {
-                return $product->unitPriceForSize($sizeLabel);
-            }
-
-            if ($storedUnitPrice !== null) {
-                return $storedUnitPrice;
-            }
-
-            return $product->listingPrice();
-        }
-
-        return (float) $product->price;
     }
 }

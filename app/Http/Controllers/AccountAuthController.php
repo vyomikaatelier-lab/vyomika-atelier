@@ -2,469 +2,226 @@
 
 namespace App\Http\Controllers;
 
-use App\Exceptions\WhatsAppDeliveryException;
-use App\Exceptions\WhatsAppNotConfiguredException;
 use App\Models\User;
-use App\Models\WhatsappOtpVerification;
-use App\Services\FormProtectionService;
+use App\Services\CartService;
 use App\Services\PhoneNumberService;
-use App\Services\WhatsappOtpService;
 use App\Support\AdminAccess;
+use App\Support\SafeInternalUrl;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 use InvalidArgumentException;
 
 class AccountAuthController extends Controller
 {
+    public const INVALID_CREDENTIALS = 'These credentials do not match our records.';
+
+    public const RESET_LINK_STATUS = 'If an account exists for that email, we have sent password reset instructions.';
+
     public function __construct(
-        private WhatsappOtpService $otp,
         private PhoneNumberService $phones,
-        private FormProtectionService $formProtection,
+        private CartService $cart,
     ) {}
 
-    public function showLogin(Request $request)
+    public function showLogin()
     {
-        if ($request->boolean('change_number')) {
-            $request->session()->forget([
-                'account_pending_verification_id',
-                'account_pending_mobile_display',
-            ]);
-
-            return redirect()->route('account.login', ['otp' => 1]);
-        }
+        $this->forgetRetiredOtpState(request());
 
         return $this->authView('login');
     }
 
-    public function sendLoginOtp(Request $request)
+    public function showContinue()
     {
-        return $this->dispatchOtp($request, 'login');
+        $this->forgetRetiredOtpState(request());
+
+        if (! $this->cart->hasBuyNow()) {
+            return redirect()->route('account.login');
+        }
+
+        return view('account.continue', [
+            'countryCodes' => config('account.country_codes', []),
+            'socialProviders' => $this->socialProviders(),
+        ]);
+    }
+
+    public function showRegister()
+    {
+        $this->forgetRetiredOtpState(request());
+
+        return $this->authView('register');
     }
 
     public function loginWithEmail(Request $request)
     {
         $validated = $request->validate([
-            'login' => 'required_without:email|string|max:255',
-            'email' => 'required_without:login|nullable|string|max:255',
+            'email' => 'required|email|max:255',
             'password' => 'required|string',
+            'remember' => 'sometimes|boolean',
         ]);
-
-        $identifier = trim((string) ($validated['login'] ?? $validated['email'] ?? ''));
-
-        $user = $this->findCustomerForPasswordLogin($identifier);
-
-        if (! $user || ! $user->is_active || ! Hash::check($validated['password'], $user->password)) {
-            return back()
-                ->withInput($request->only('login', 'email'))
-                ->withErrors(['login' => 'Invalid email, mobile number, or password.']);
-        }
-
-        $this->loginCustomerSession($request, $user);
-
-        return redirect()->intended(route('account'));
-    }
-
-    public function loginWithMobilePassword(Request $request)
-    {
-        $validated = $request->validate([
-            'country_code' => 'required|string|max:6',
-            'mobile' => 'required|string|max:20',
-            'password' => 'required|string',
-        ]);
-
-        try {
-            $phone = $this->phones->normalize($validated['country_code'], $validated['mobile']);
-        } catch (InvalidArgumentException $e) {
-            return back()
-                ->withInput()
-                ->withErrors(['mobile' => $e->getMessage()])
-                ->with('login_method', 'mobile')
-                ->with('mobile_login_mode', 'password');
-        }
 
         $user = User::query()
-            ->where('mobile', $phone['national'])
-            ->where('mobile_country_code', $phone['country_code'])
+            ->where('email', $validated['email'])
             ->where('is_admin', false)
-            ->whereNotNull('phone_verified_at')
             ->first();
 
         if (! $user || ! $user->is_active || ! Hash::check($validated['password'], $user->password)) {
             return back()
-                ->withInput()
-                ->withErrors(['mobile' => 'Invalid mobile number or password.'])
-                ->with('login_method', 'mobile')
-                ->with('mobile_login_mode', 'password');
+                ->withInput($request->only('email'))
+                ->withErrors(['email' => self::INVALID_CREDENTIALS]);
         }
 
-        $this->loginCustomerSession($request, $user);
+        $this->loginCustomerSession($request, $user, $request->boolean('remember'));
 
-        return redirect()->intended(route('account'));
+        return $this->redirectAfterAuth($request);
     }
 
-    public function showRegister(Request $request)
+    public function register(Request $request)
     {
-        if ($request->boolean('change_number')) {
-            $request->session()->forget([
-                'account_pending_verification_id',
-                'account_pending_mobile_display',
-                'account_register_password',
-                'account_register_password_confirmed',
-            ]);
-
-            return redirect()->route('account.register');
-        }
-
-        return $this->authView('register');
-    }
-
-    public function sendRegisterOtp(Request $request)
-    {
-        if ($request->input('register_step') === 'complete') {
-            return $this->completeRegister($request);
-        }
-
-        if ($response = $this->guardOtpForm($request, 'account_register')) {
-            return $response;
-        }
-
-        if (! $this->otp->providerConfigured()) {
-            return back()->withInput()->withErrors([
-                'mobile' => 'WhatsApp verification is not available yet. Please contact the studio.',
-            ]);
-        }
-
         $validated = $request->validate([
             'name' => 'required|string|max:120',
-            'country_code' => 'required|string|max:6',
-            'mobile' => 'required|string|max:20',
-            'whatsapp' => 'nullable|string|max:20',
-            'email' => 'required|email|max:255',
-            'password' => 'required|string|min:8|confirmed',
-            'city' => 'required|string|max:100',
-            'account_type' => ['required', Rule::in(array_keys(config('account.account_types', [])))],
+            'email' => 'required|email|max:255|unique:users,email',
+            'password' => ['required', 'confirmed', PasswordRule::min(8)],
+            'country_code' => 'nullable|string|max:6',
+            'mobile' => 'nullable|string|max:20',
         ]);
 
-        try {
-            $phone = $this->phones->normalize($validated['country_code'], $validated['mobile']);
-        } catch (InvalidArgumentException $e) {
-            return back()->withInput()->withErrors(['mobile' => $e->getMessage()]);
-        }
-
-        $whatsappInput = $validated['whatsapp'] ?? null;
-        $whatsappNational = $whatsappInput ?: $phone['national'];
-        $whatsappE164 = $phone['e164'];
-        if ($whatsappInput) {
+        $phone = null;
+        if (filled($validated['mobile'] ?? null)) {
             try {
-                $whatsappE164 = $this->phones->normalize($validated['country_code'], $whatsappInput)['e164'];
-            } catch (InvalidArgumentException) {
-                return back()->withInput()->withErrors(['whatsapp' => 'Enter a valid WhatsApp number.']);
+                $phone = $this->phones->normalize($validated['country_code'] ?: '+91', $validated['mobile']);
+            } catch (InvalidArgumentException $e) {
+                return back()->withInput($request->except('password', 'password_confirmation'))
+                    ->withErrors(['mobile' => $e->getMessage()]);
+            }
+
+            $taken = User::query()
+                ->where('mobile', $phone['national'])
+                ->where('mobile_country_code', $phone['country_code'])
+                ->exists();
+
+            if ($taken) {
+                return back()->withInput($request->except('password', 'password_confirmation'))
+                    ->withErrors(['mobile' => 'This mobile number is already registered. Try signing in.']);
             }
         }
 
-        if (User::where('email', $validated['email'])->whereNotNull('phone_verified_at')->exists()) {
-            return back()->withInput()->withErrors([
-                'email' => 'An account with this email already exists. Try signing in.',
-            ]);
-        }
-
-        if (User::where('mobile', $phone['national'])
-            ->where('mobile_country_code', $phone['country_code'])
-            ->whereNotNull('phone_verified_at')
-            ->exists()) {
-            return back()->withInput()->withErrors([
-                'mobile' => 'This mobile number is already registered. Try signing in.',
-            ]);
-        }
-
-        $payload = [
+        $attributes = [
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'country_code' => $phone['country_code'],
-            'mobile' => $phone['national'],
-            'whatsapp' => preg_replace('/\D/', '', $whatsappNational) ?: $phone['national'],
-            'city' => $validated['city'],
-            'account_type' => $validated['account_type'],
+            'password' => $validated['password'],
+            'account_type' => 'customer',
+            'is_admin' => false,
+            'is_active' => true,
         ];
 
-        try {
-            $record = $this->otp->send($whatsappE164, 'register', $payload, $request->ip());
-        } catch (WhatsAppNotConfiguredException|WhatsAppDeliveryException|\RuntimeException $e) {
-            return $this->otpErrorResponse($e);
+        if ($phone) {
+            $attributes['mobile_country_code'] = $phone['country_code'];
+            $attributes['mobile'] = $phone['national'];
         }
 
-        $this->formProtection->hitRateLimiters($request, 'account_register');
-
-        $request->session()->put('account_register_password', $validated['password']);
-
-        $this->storePendingVerification($request, $record, $phone);
-
-        return redirect()->route('account.register')
-            ->with('status', config('account.copy.otp_sent_generic'));
-    }
-
-    private function completeRegister(Request $request)
-    {
-        if ($response = $this->guardOtpForm($request, 'account_register')) {
-            return $response;
-        }
-
-        $record = $this->pendingVerification($request);
-        if (! $record || $record->purpose !== 'register' || ! $record->isVerified()) {
-            return redirect()->route('account.register')
-                ->with('info', 'Verify your WhatsApp number before creating your account.');
-        }
-
-        $validated = $request->validate([
-            'consent' => 'accepted',
-        ]);
-
-        $password = $request->session()->get('account_register_password');
-        if (! is_string($password) || strlen($password) < 8) {
-            return redirect()->route('account.register', ['change_number' => 1])
-                ->with('info', 'Set your password again and resend the verification code.');
-        }
-
-        $request->session()->put('account_register_password', $password);
-
-        try {
-            $user = $this->resolveUserAfterVerification($record);
-        } catch (\RuntimeException $e) {
-            return back()->withErrors(['password' => 'Unable to complete registration. Please try again or contact the studio.']);
-        }
-
-        if (! $user->is_active) {
-            return back()->withErrors(['password' => 'This account has been disabled. Contact the studio for assistance.']);
-        }
+        $user = User::create($attributes);
+        $user->forceFill([
+            'is_admin' => false,
+            'is_active' => true,
+        ])->save();
 
         $this->loginCustomerSession($request, $user);
-        $request->session()->forget('account_pending_verification_id');
-        $request->session()->forget('account_pending_mobile_display');
-        $request->session()->forget('account_register_password');
 
-        return redirect()->intended(route('account'))
-            ->with('success', config('account.copy.success'));
+        return $this->redirectAfterAuth($request)
+            ->with('success', 'Your account has been created.');
     }
 
-    public function showForgot(Request $request)
+    public function showForgot()
     {
-        if ($request->boolean('change_number')) {
-            $request->session()->forget([
-                'account_pending_verification_id',
-                'account_pending_mobile_display',
-            ]);
+        $this->forgetRetiredOtpState(request());
 
-            return redirect()->route('account.forgot');
-        }
-
-        $forgotPending = null;
-        $forgotOtpVerified = false;
-        $pending = $this->pendingVerification($request);
-        if ($pending && $pending->purpose === 'forgot') {
-            $forgotPending = $pending;
-            $forgotOtpVerified = $pending->isVerified();
-        }
-
-        return view('account.forgot', [
-            'providerReady' => $this->otp->providerConfigured(),
-            'countryCodes' => config('account.country_codes', []),
-            'forgotPending' => $forgotPending,
-            'forgotOtpVerified' => $forgotOtpVerified,
-            'forgotMaskedMobile' => $forgotPending
-                ? $this->phones->maskE164($forgotPending->mobile_e164)
-                : null,
-            'forgotCanResend' => (bool) ($forgotPending && ! $forgotOtpVerified && $this->otp->canResend($forgotPending->mobile_e164)),
-            'forgotResendSeconds' => $forgotPending && ! $forgotOtpVerified
-                ? $this->otp->secondsUntilResend($forgotPending->mobile_e164)
-                : 0,
-        ]);
+        return view('account.forgot');
     }
 
-    public function sendForgotOtp(Request $request)
+    public function sendResetLink(Request $request)
     {
-        return $this->dispatchOtp($request, 'forgot');
-    }
-
-    public function resetForgotPassword(Request $request)
-    {
-        if ($response = $this->guardOtpForm($request, 'account_forgot_otp')) {
-            return $response;
-        }
-
-        $record = $this->pendingVerification($request);
-        if (! $record || $record->purpose !== 'forgot' || ! $record->isVerified()) {
-            return redirect()->route('account.forgot')
-                ->with('info', 'Verify your mobile number before setting a new password.');
-        }
-
         $validated = $request->validate([
-            'password' => 'required|string|min:8|confirmed',
+            'email' => 'required|email|max:255',
         ]);
 
         $user = User::query()
+            ->where('email', $validated['email'])
             ->where('is_admin', false)
-            ->whereNotNull('phone_verified_at')
-            ->get()
-            ->first(fn (User $u) => $u->mobileE164() === $record->mobile_e164);
+            ->where('is_active', true)
+            ->first();
 
-        if (! $user || ! $user->is_active) {
-            return redirect()->route('account.forgot', ['change_number' => 1])
-                ->withErrors(['password' => 'Unable to reset password for this account.']);
+        if ($user) {
+            Password::sendResetLink(['email' => $user->email]);
         }
 
-        $user->update([
-            'password' => Hash::make($validated['password']),
-        ]);
-
-        $this->loginCustomerSession($request, $user);
-        $request->session()->forget([
-            'account_pending_verification_id',
-            'account_pending_mobile_display',
-        ]);
-
-        return redirect()->intended(route('account'))
-            ->with('success', 'Your password has been updated.');
+        return back()->with('status', self::RESET_LINK_STATUS);
     }
 
-    public function showVerifyOtp(Request $request)
+    public function showReset(Request $request, string $token)
     {
-        $record = $this->pendingVerification($request);
-        if (! $record) {
-            return redirect()->route('account.login')
-                ->with('info', 'Start by requesting a verification code.');
-        }
-
-        // Inline OTP flows stay on login, register, or forgot pages.
-        if ($record->purpose === 'register') {
-            return redirect()->route('account.register');
-        }
-
-        if ($record->purpose === 'login') {
-            return redirect()->route('account.login', ['otp' => 1]);
-        }
-
-        if ($record->purpose === 'forgot') {
-            return redirect()->route('account.forgot');
-        }
-
-        return view('account.verify-otp', [
-            'maskedMobile' => $this->phones->maskE164($record->mobile_e164),
-            'purpose' => $record->purpose,
-            'resendSeconds' => $this->otp->secondsUntilResend($record->mobile_e164),
-            'canResend' => $this->otp->canResend($record->mobile_e164),
-            'providerReady' => $this->otp->providerConfigured(),
+        return view('account.reset-password', [
+            'token' => $token,
+            'email' => (string) $request->query('email', ''),
         ]);
     }
 
-    public function verifyOtp(Request $request)
+    public function resetPassword(Request $request)
     {
-        if ($response = $this->guardOtpForm($request, 'account_verify_otp')) {
-            return $response;
-        }
-
-        $record = $this->pendingVerification($request);
-        if (! $record) {
-            return redirect()->route('account.login');
-        }
-
         $validated = $request->validate([
-            'otp' => 'required|string|size:' . config('account.otp.length', 6),
+            'token' => 'required|string',
+            'email' => 'required|email|max:255',
+            'password' => ['required', 'confirmed', PasswordRule::min(8)],
         ]);
 
-        if (! $this->otp->verify($record, $validated['otp'])) {
-            $record->refresh();
-            $this->formProtection->hitRateLimiters($request, 'account_verify_otp');
+        $status = Password::reset(
+            [
+                'email' => $validated['email'],
+                'password' => $validated['password'],
+                'password_confirmation' => $request->input('password_confirmation'),
+                'token' => $validated['token'],
+            ],
+            function (User $user, string $password) use ($request) {
+                if ($user->is_admin || ! $user->is_active) {
+                    return;
+                }
 
-            $message = config('account.copy.failure');
-            if ($record->purpose === 'register') {
-                return back()->withErrors(['otp' => $message])->withInput();
+                $user->forceFill([
+                    'password' => $password,
+                    'remember_token' => Str::random(60),
+                ])->save();
+
+                event(new PasswordReset($user));
+                $this->loginCustomerSession($request, $user);
             }
+        );
 
-            return redirect($this->otpFlowRoute($record->purpose))
-                ->withErrors(['otp' => $message]);
+        if ($status === Password::PASSWORD_RESET && Auth::check()) {
+            return $this->redirectAfterAuth($request)
+                ->with('success', 'Your password has been updated.');
         }
 
-        if ($record->purpose === 'register') {
-            return redirect()->route('account.register')
-                ->with('status', 'Code verified. Review and create your account.');
-        }
-
-        if ($record->purpose === 'forgot') {
-            return redirect()->route('account.forgot')
-                ->with('status', 'Code verified. Set your new password below.');
-        }
-
-        try {
-            $user = $this->resolveUserAfterVerification($record);
-        } catch (\RuntimeException $e) {
-            return redirect()->route('account.login', ['otp' => 1])
-                ->withErrors(['otp' => 'Unable to complete sign-in. Please try again or contact the studio.']);
-        }
-
-        if (! $user->is_active) {
-            return redirect($this->otpFlowRoute($record->purpose))
-                ->withErrors(['otp' => 'This account has been disabled. Contact the studio for assistance.']);
-        }
-
-        $this->loginCustomerSession($request, $user);
-        $request->session()->forget('account_pending_verification_id');
-        $request->session()->forget('account_pending_mobile_display');
-
-        return redirect()->intended(route('account'))
-            ->with('success', config('account.copy.success'));
+        return back()
+            ->withInput($request->only('email'))
+            ->withErrors(['email' => 'This password reset link is invalid or has expired.']);
     }
 
-    public function resendOtp(Request $request)
+    public function showVerifyOtp()
     {
-        $record = $this->pendingVerification($request);
-        if (! $record) {
-            return redirect()->route('account.login');
-        }
+        $this->forgetRetiredOtpState(request());
 
-        $formKey = match ($record->purpose) {
-            'register' => 'account_register',
-            'forgot' => 'account_forgot_otp',
-            default => 'account_login_otp',
-        };
+        return redirect()->route('account.login');
+    }
 
-        if ($response = $this->guardOtpForm($request, $formKey)) {
-            return $response;
-        }
+    public function rejectRetiredOtp(Request $request)
+    {
+        $this->forgetRetiredOtpState($request);
 
-        if (! $this->otp->canResend($record->mobile_e164)) {
-            return back()->withErrors(['otp' => 'Please wait before requesting another code.']);
-        }
-
-        try {
-            $newRecord = $this->otp->resend($record, $request->ip());
-        } catch (WhatsAppNotConfiguredException|WhatsAppDeliveryException|\RuntimeException $e) {
-            return $this->otpErrorResponse($e);
-        }
-
-        $this->formProtection->hitRateLimiters($request, $formKey);
-
-        $request->session()->put('account_pending_verification_id', $newRecord->id);
-
-        if ($newRecord->purpose === 'register') {
-            return redirect()->route('account.register')
-                ->with('status', config('account.copy.otp_sent_generic'));
-        }
-
-        if ($newRecord->purpose === 'login') {
-            return redirect()->route('account.login', ['otp' => 1])
-                ->with('status', config('account.copy.otp_sent_generic'));
-        }
-
-        if ($newRecord->purpose === 'forgot') {
-            return redirect()->route('account.forgot')
-                ->with('status', config('account.copy.otp_sent_generic'));
-        }
-
-        return back()->with('status', config('account.copy.otp_sent_generic'));
+        return redirect()->route('account.login')
+            ->with('info', 'Please sign in with your email and password.');
     }
 
     public function logout(Request $request)
@@ -477,210 +234,38 @@ class AccountAuthController extends Controller
             ->with('success', 'You have been signed out.');
     }
 
-    private function dispatchOtp(Request $request, string $purpose)
-    {
-        $formKey = $purpose === 'forgot' ? 'account_forgot_otp' : 'account_login_otp';
-
-        if ($response = $this->guardOtpForm($request, $formKey)) {
-            return $response;
-        }
-
-        if (! $this->otp->providerConfigured()) {
-            return back()->withInput()->withErrors([
-                'mobile' => 'WhatsApp verification is not available yet. Please contact the studio.',
-            ]);
-        }
-
-        $validated = $request->validate([
-            'country_code' => 'required|string|max:6',
-            'mobile' => 'required|string|max:20',
-        ]);
-
-        try {
-            $phone = $this->phones->normalize($validated['country_code'], $validated['mobile']);
-        } catch (InvalidArgumentException $e) {
-            return back()->withInput()->withErrors(['mobile' => $e->getMessage()]);
-        }
-
-        $user = User::query()
-            ->where('mobile', $phone['national'])
-            ->where('mobile_country_code', $phone['country_code'])
-            ->where('is_admin', false)
-            ->whereNotNull('phone_verified_at')
-            ->first();
-
-        if ($user) {
-            try {
-                $record = $this->otp->send($phone['e164'], $purpose, null, $request->ip());
-                $this->storePendingVerification($request, $record, $phone);
-                $this->formProtection->hitRateLimiters($request, $formKey);
-            } catch (WhatsAppNotConfiguredException|WhatsAppDeliveryException|\RuntimeException $e) {
-                Log::warning('Login OTP send failed', ['mobile_e164' => $this->phones->maskE164($phone['e164']), 'error' => $e->getMessage()]);
-
-                return $this->otpErrorResponse($e);
-            }
-
-            return match ($purpose) {
-                'forgot' => redirect()->route('account.forgot')
-                    ->with('status', config('account.copy.otp_sent_generic')),
-                default => redirect()->route('account.login', ['otp' => 1])
-                    ->with('status', config('account.copy.otp_sent_generic')),
-            };
-        }
-
-        Log::info('OTP requested for unknown or unverified mobile', [
-            'mobile_e164' => $this->phones->maskE164($phone['e164']),
-            'purpose' => $purpose,
-        ]);
-
-        return back()->with('status', config('account.copy.otp_sent_generic'));
-    }
-
-    private function resolveUserAfterVerification(WhatsappOtpVerification $record): User
-    {
-        $phoneDigits = $record->mobile_e164;
-
-        if ($record->purpose === 'register') {
-            $payload = $record->payload ?? [];
-
-            $user = User::query()
-                ->where('mobile', $payload['mobile'] ?? '')
-                ->where('mobile_country_code', $payload['country_code'] ?? '+91')
-                ->where('is_admin', false)
-                ->first();
-
-            $password = session('account_register_password') ?: Str::password(32);
-
-            $attributes = [
-                'name' => $payload['name'],
-                'email' => $payload['email'],
-                'mobile_country_code' => $payload['country_code'],
-                'mobile' => $payload['mobile'],
-                'whatsapp' => $payload['whatsapp'] ?? $payload['mobile'],
-                'city' => $payload['city'],
-                'account_type' => $payload['account_type'] ?? 'customer',
-                'phone_verified_at' => now(),
-                'password' => $password,
-            ];
-
-            if ($user) {
-                if (User::where('email', $payload['email'])->where('id', '!=', $user->id)->exists()) {
-                    throw new \RuntimeException('Email already in use.');
-                }
-                $user->update($attributes);
-            } else {
-                if (User::where('email', $payload['email'])->exists()) {
-                    throw new \RuntimeException('Email already in use.');
-                }
-                $user = User::create(array_merge($attributes, ['is_admin' => false]));
-            }
-
-            return $user;
-        }
-
-        $user = User::query()
-            ->where('is_admin', false)
-            ->whereNotNull('phone_verified_at')
-            ->get()
-            ->first(fn (User $u) => $u->mobileE164() === $phoneDigits);
-
-        if (! $user) {
-            abort(403);
-        }
-
-        return $user;
-    }
-
-    private function storePendingVerification(Request $request, WhatsappOtpVerification $record, array $phone): void
-    {
-        $request->session()->put('account_pending_verification_id', $record->id);
-        $request->session()->put('account_pending_mobile_display', $phone['display']);
-    }
-
-    private function pendingVerification(Request $request): ?WhatsappOtpVerification
-    {
-        $id = $request->session()->get('account_pending_verification_id');
-        if (! $id) {
-            return null;
-        }
-
-        $record = WhatsappOtpVerification::query()->find($id);
-        if (! $record) {
-            $request->session()->forget([
-                'account_pending_verification_id',
-                'account_pending_mobile_display',
-                'account_register_password',
-            ]);
-        }
-
-        return $record;
-    }
-
-    private function loginCustomerSession(Request $request, User $user): void
+    private function loginCustomerSession(Request $request, User $user, bool $remember = false): void
     {
         AdminAccess::revoke($request);
-        Auth::login($user);
+        Auth::login($user, $remember);
         $request->session()->regenerate();
+    }
+
+    private function redirectAfterAuth(Request $request)
+    {
+        $default = $this->cart->hasBuyNow()
+            ? route('checkout.index')
+            : route('account');
+
+        $intended = $request->session()->pull('url.intended');
+        if (is_string($intended) && SafeInternalUrl::isSafe($intended)) {
+            return redirect($intended);
+        }
+
+        return redirect($default);
     }
 
     private function authView(string $tab)
     {
-        $registerPending = null;
-        $registerOtpVerified = false;
-        $registerDetails = [];
-        $loginPending = null;
-
-        if ($tab === 'register') {
-            $pending = $this->pendingVerification(request());
-            if ($pending && $pending->purpose === 'register') {
-                $registerPending = $pending;
-                $registerOtpVerified = $pending->isVerified();
-                $registerDetails = $pending->payload ?? [];
-            }
-        }
-
-        if ($tab === 'login') {
-            $pending = $this->pendingVerification(request());
-            if ($pending && $pending->purpose === 'login') {
-                $loginPending = $pending;
-            }
-        }
+        $intended = session('url.intended');
 
         return view('account.auth', [
             'tab' => $tab,
-            'showOtpLogin' => $tab === 'login' && (request()->boolean('otp') || $loginPending),
-            'providerReady' => $this->otp->providerConfigured(),
             'countryCodes' => config('account.country_codes', []),
-            'accountTypes' => config('account.account_types', []),
             'socialProviders' => $this->socialProviders(),
-            'loginPending' => $loginPending,
-            'loginMaskedMobile' => $loginPending
-                ? $this->phones->maskE164($loginPending->mobile_e164)
-                : null,
-            'loginCanResend' => (bool) ($loginPending && $this->otp->canResend($loginPending->mobile_e164)),
-            'loginResendSeconds' => $loginPending
-                ? $this->otp->secondsUntilResend($loginPending->mobile_e164)
-                : 0,
-            'registerPending' => $registerPending,
-            'registerOtpVerified' => $registerOtpVerified,
-            'registerDetails' => $registerDetails,
-            'registerMaskedMobile' => $registerPending
-                ? $this->phones->maskE164($registerPending->mobile_e164)
-                : null,
-            'registerCanResend' => (bool) ($registerPending && ! $registerOtpVerified && $this->otp->canResend($registerPending->mobile_e164)),
-            'registerResendSeconds' => $registerPending && ! $registerOtpVerified
-                ? $this->otp->secondsUntilResend($registerPending->mobile_e164)
-                : 0,
+            'purchaseIntent' => $this->cart->hasBuyNow()
+                || (is_string($intended) && str_contains($intended, '/checkout')),
         ]);
-    }
-
-    private function otpFlowRoute(string $purpose): string
-    {
-        return match ($purpose) {
-            'register' => route('account.register'),
-            'forgot' => route('account.forgot'),
-            default => route('account.login', ['otp' => 1]),
-        };
     }
 
     private function socialProviders(): array
@@ -694,56 +279,13 @@ class AccountAuthController extends Controller
         ];
     }
 
-    private function findCustomerForPasswordLogin(string $identifier): ?User
+    private function forgetRetiredOtpState(Request $request): void
     {
-        $query = User::query()
-            ->where('is_admin', false)
-            ->whereNotNull('phone_verified_at');
-
-        if (str_contains($identifier, '@')) {
-            return $query->where('email', $identifier)->first();
-        }
-
-        try {
-            $digits = preg_replace('/\D/', '', $identifier) ?? '';
-            $countryCode = str_starts_with($digits, '91') && strlen($digits) > 10 ? '+91' : '+91';
-            $phone = $this->phones->normalize($countryCode, $identifier);
-        } catch (InvalidArgumentException) {
-            return null;
-        }
-
-        return $query
-            ->where('mobile', $phone['national'])
-            ->where('mobile_country_code', $phone['country_code'])
-            ->first();
-    }
-
-    private function otpErrorResponse(\Throwable $e)
-    {
-        $message = $e instanceof WhatsAppNotConfiguredException
-            ? 'WhatsApp verification is not available yet. Please contact the studio.'
-            : 'Unable to send verification code right now. Please try again shortly.';
-
-        return back()->withInput()->withErrors(['mobile' => $message]);
-    }
-
-    /**
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\Response|null
-     */
-    private function guardOtpForm(Request $request, string $formKey)
-    {
-        $check = $this->formProtection->validateSubmission($request, $formKey, false);
-
-        if (! $check['reject']) {
-            return null;
-        }
-
-        if ($check['rate_limited']) {
-            return response(config('form_protection.messages.rate_limited'), 429);
-        }
-
-        return back()
-            ->withInput($request->except(['password', 'password_confirmation', 'cf-turnstile-response']))
-            ->withErrors(['form' => $check['message']]);
+        $request->session()->forget([
+            'account_pending_verification_id',
+            'account_pending_mobile_display',
+            'account_register_password',
+            'account_register_password_confirmed',
+        ]);
     }
 }

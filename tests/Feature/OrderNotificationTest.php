@@ -13,6 +13,7 @@ use App\Models\Product;
 use App\Models\User;
 use App\Services\OrderNotificationService;
 use App\Services\OrderPaymentService;
+use App\Services\RazorpayService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
@@ -143,6 +144,16 @@ class OrderNotificationTest extends TestCase
 
         $paymentId = 'pay_test_1';
         $signature = hash_hmac('sha256', 'order_pay_1|'.$paymentId, 'rzp_test_secret');
+
+        Http::fake([
+            'api.razorpay.com/v1/payments/*' => Http::response([
+                'id' => $paymentId,
+                'order_id' => 'order_pay_1',
+                'amount' => RazorpayService::amountPaiseFromRupees($order->total),
+                'currency' => 'INR',
+                'status' => 'captured',
+            ], 200),
+        ]);
 
         $payments = app(OrderPaymentService::class);
         $payments->verifyAndComplete($order, $paymentId, 'order_pay_1', $signature);

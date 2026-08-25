@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Support\ProductCatalog;
+use App\Support\ProductPublicationPolicy;
 use App\Support\Seo\JsonLd;
 use App\Support\Seo\ProductSeo;
 use Illuminate\View\View;
@@ -12,23 +13,23 @@ class ProductController extends Controller
 {
     public function show(string $slug): View
     {
-        $product = Product::where('slug', $slug)
-            ->where('is_active', true)
+        $product = Product::query()
+            ->where('slug', $slug)
             ->with('category')
-            ->firstOrFail();
+            ->first();
 
-        $related = Product::where('is_active', true)
-            ->unlessHiddenForStock()
+        abort_unless(ProductPublicationPolicy::isPubliclyAccessible($product), 404);
+
+        $relatedQuery = ProductPublicationPolicy::applyGalleryScope(
+            Product::query()->unlessHiddenForStock()
+        )
             ->where('id', '!=', $product->id)
-            ->when($product->category_id, fn ($q) => $q->where('category_id', $product->category_id))
-            ->inRandomOrder()
-            ->take(4)
-            ->get();
+            ->when($product->category_id, fn ($q) => $q->where('category_id', $product->category_id));
+
+        $related = (clone $relatedQuery)->inRandomOrder()->take(4)->get();
 
         if ($related->count() < 4) {
-            $more = Product::where('is_active', true)
-                ->unlessHiddenForStock()
-                ->where('id', '!=', $product->id)
+            $more = (clone $relatedQuery)
                 ->whereNotIn('id', $related->pluck('id'))
                 ->take(4 - $related->count())
                 ->get();

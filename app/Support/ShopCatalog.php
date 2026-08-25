@@ -79,7 +79,7 @@ class ShopCatalog
             'main-entrance-pvd-doors' => route('studio.show', 'main-entrance-pvd-doors'),
             'rack-systems-metal-pvd' => route('studio.show', 'metal-pvd-rack-systems'),
             'metal-furniture' => route('shop.show', 'bespoke-metal-furniture'),
-            'home-decor' => route('shop.index'),
+            'home-decor' => StorefrontRoutes::primaryShopUrl(),
             'railings' => route('railings.index'),
             default => null,
         };
@@ -109,6 +109,7 @@ class ShopCatalog
     public static function applyListingScope(Builder $query): Builder
     {
         $query = self::applyShopScope($query);
+        $query = ProductPublicationPolicy::applyGalleryScope($query);
 
         if (! self::supportsInventoryHide()) {
             return $query;
@@ -246,7 +247,7 @@ class ShopCatalog
                 }
 
                 if ($route === 'shop.index') {
-                    return true;
+                    return false;
                 }
 
                 $slug = $link['params']['slug'] ?? null;

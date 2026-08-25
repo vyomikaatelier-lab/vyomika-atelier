@@ -5,6 +5,7 @@ namespace App\Support\Seo;
 use App\Models\Product;
 use App\Support\CartGuard;
 use App\Support\MediaUrl;
+use App\Support\ProductPublicationPolicy;
 
 class JsonLd
 {
@@ -172,7 +173,7 @@ class JsonLd
      */
     public static function product(Product $product): ?array
     {
-        if (! CartGuard::isEligible($product)) {
+        if (! ProductPublicationPolicy::isStructuredDataEligible($product)) {
             return null;
         }
 
@@ -215,11 +216,10 @@ class JsonLd
             $data['mpn'] = (string) $product->mpn;
         }
 
-        $unitPrice = $product->hasSizeOptions()
-            ? $product->listingPrice()
-            : (float) $product->price;
+        $unitPrice = CartGuard::trustedUnitPrice($product, null)
+            ?? ($product->hasSizeOptions() ? $product->listingPrice() : null);
 
-        if ($unitPrice > 0 && $product->pricing_type !== Product::PRICING_QUOTATION_ONLY) {
+        if ($unitPrice !== null && $unitPrice > 0 && $product->pricing_type !== Product::PRICING_QUOTATION_ONLY) {
             $data['offers'] = [
                 '@type' => 'Offer',
                 'url' => $url,

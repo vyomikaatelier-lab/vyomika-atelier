@@ -57,14 +57,14 @@
                 <h2>{{ $bestSellers['title'] ?? 'Best-Selling Products' }}</h2>
                 <p>{{ $bestSellers['subtitle'] ?? '' }}</p>
             </div>
-            <a href="{{ StorefrontUrl::to('shop.index', [], '/shop') }}" class="am-section-head__link">{{ $bestSellers['cta_label'] ?? 'View All Products' }}</a>
+            <a href="{{ \App\Support\StorefrontRoutes::primaryShopUrl() }}" class="am-section-head__link">{{ $bestSellers['cta_label'] ?? 'Shop Mirror Frames' }}</a>
         </div>
     </div>
     @php $banner = $bestSellers['banner'] ?? []; @endphp
     <div class="am-section__body">
         <div class="am-product-grid am-product-grid--with-banner">
             @if(!empty($banner))
-            <a href="{{ url($banner['href'] ?? '/shop') }}" class="am-product-banner">
+            <a href="{{ url($banner['href'] ?? \App\Support\StorefrontRoutes::primaryShopUrl()) }}" class="am-product-banner">
                 <img src="{{ $banner['image'] ?? '' }}" alt="{{ $banner['title'] ?? '' }}" loading="lazy">
                 <h3>{{ $banner['title'] ?? '' }}</h3>
                 <p>{{ $banner['subtitle'] ?? '' }}</p>
@@ -150,7 +150,7 @@
 <section class="am-cta-band">
     <h2>{{ $ctaBand['title'] ?? '' }}</h2>
     <p>{{ $ctaBand['description'] ?? '' }}</p>
-    <a href="{{ url($ctaBand['cta_href'] ?? '/shop') }}" class="am-btn am-btn--primary am-btn--lg">{{ $ctaBand['cta_label'] ?? 'View All Products' }}</a>
+    <a href="{{ url($ctaBand['cta_href'] ?? \App\Support\StorefrontRoutes::primaryShopUrl()) }}" class="am-btn am-btn--primary am-btn--lg">{{ $ctaBand['cta_label'] ?? 'Shop Mirror Frames' }}</a>
 </section>
 @endif
 

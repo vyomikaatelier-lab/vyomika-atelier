@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
+use App\Support\StorefrontRoutes;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -51,7 +52,7 @@ class CheckoutTest extends TestCase
             ->withSession(['cart' => [$studioProduct->id => 1]])
             ->get(route('checkout.index'));
 
-        $response->assertRedirect(route('shop.index'));
+        $response->assertRedirect(StorefrontRoutes::primaryShopUrl());
         $response->assertSessionHas('error', 'Your cart is empty.');
         $this->assertEmpty(session('cart', []));
     }

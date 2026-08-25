@@ -65,14 +65,6 @@
             return request()->routeIs(['railings.index', 'studio.railings']);
         }
 
-        if ($route === 'shop.index' && request()->routeIs('shop.index') && isset($params['category'])) {
-            return request('category') === $params['category'];
-        }
-
-        if ($route === 'shop.index' && request()->routeIs('shop.index') && ! isset($params['category'])) {
-            return ! request()->has('category');
-        }
-
         if (str_ends_with($route, '.index')) {
             return request()->routeIs(str_replace('.index', '.*', $route)) || request()->routeIs($route);
         }

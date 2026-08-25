@@ -7,7 +7,9 @@ use App\Models\Product;
 use App\Models\Project;
 use App\Models\Service;
 use App\Support\BlogContent;
+use App\Support\CategoryPublicationPolicy;
 use App\Support\MirrorFramesContent;
+use App\Support\ProductPublicationPolicy;
 use App\Support\StorefrontRoutes;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Schema;
@@ -20,7 +22,6 @@ class SitemapController extends Controller
 
         $static = [
             ['loc' => route('home'), 'changefreq' => 'weekly', 'priority' => '1.0'],
-            ['loc' => route('shop.index'), 'changefreq' => 'weekly', 'priority' => '0.9'],
             ['loc' => route('studio.index'), 'changefreq' => 'monthly', 'priority' => '0.85'],
             ['loc' => route('projects.index'), 'changefreq' => 'weekly', 'priority' => '0.8'],
             ['loc' => route('blog.index'), 'changefreq' => 'weekly', 'priority' => '0.8'],
@@ -38,6 +39,10 @@ class SitemapController extends Controller
 
         foreach (StorefrontRoutes::shopCategorySlugs() as $shopSlug) {
             if ($shopSlug === 'mirror-frames') {
+                continue;
+            }
+
+            if (! CategoryPublicationPolicy::isSitemapListedBySlug($shopSlug)) {
                 continue;
             }
 
@@ -110,11 +115,11 @@ class SitemapController extends Controller
         }
 
         if (Schema::hasTable('products')) {
-            Product::query()
-                ->where('is_active', true)
-                ->where('robots_index', true)
-                ->where('section', Product::SECTION_SHOP)
-                ->unlessHiddenForStock()
+            ProductPublicationPolicy::applySitemapScope(
+                Product::query()
+                    ->where('section', Product::SECTION_SHOP)
+                    ->unlessHiddenForStock()
+            )
                 ->get(['slug', 'updated_at'])
                 ->each(function (Product $product) use (&$urls) {
                     $urls[] = [

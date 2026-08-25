@@ -4,11 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Support\CategoryPublicationPolicy;
 use App\Support\CollectionContent;
 use App\Support\ProductCatalog;
+use App\Support\ProductPublicationPolicy;
 use App\Support\Seo\JsonLd;
 use App\Support\Seo\PageSeo;
 use App\Support\StorefrontRoutes;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -27,10 +30,22 @@ class CollectionGalleryController extends Controller
             return redirect()->route('shop.mirror-frames.index');
         }
 
-        abort_unless(in_array($slug, self::slugs(), true), 404);
+        $dbCategory = Category::query()->where('slug', $slug)->where('is_active', true)->first();
+        $isDbShopCategory = $dbCategory !== null && $dbCategory->resolvedSection() === Product::SECTION_SHOP;
 
-        $page = CollectionContent::withResolvedImages(CollectionContent::page($slug));
-        abort_unless(is_array($page), 404);
+        abort_unless(
+            in_array($slug, self::slugs(), true)
+                || StorefrontRoutes::isShopCategory($slug)
+                || $isDbShopCategory,
+            404
+        );
+
+        $page = CollectionContent::page($slug);
+        if (! is_array($page)) {
+            abort_unless($isDbShopCategory && $dbCategory, 404);
+            $page = $this->fallbackPage($dbCategory);
+        }
+        $page = CollectionContent::withResolvedImages($page);
 
         $categorySlugs = $page['category_slugs'] ?? [$slug];
 
@@ -55,7 +70,7 @@ class CollectionGalleryController extends Controller
 
             abort_unless($category, 404);
 
-            $products = self::galleryProductsForCategory($category, $catalogSlugs);
+            $products = $this->paginateGallery(self::galleryProductsForCategory($category, $catalogSlugs));
 
             $pageCategoryLabel = StorefrontRoutes::isShopCategory($slug)
                 ? StorefrontRoutes::shopCategoryLabel($slug)
@@ -71,7 +86,7 @@ class CollectionGalleryController extends Controller
 
             $breadcrumbs = [
                 ['label' => 'Home', 'url' => route('home')],
-                ['label' => 'Shop', 'url' => route('shop.index')],
+                ['label' => 'Shop', 'url' => StorefrontRoutes::primaryShopUrl()],
                 ['label' => $pageCategoryLabel],
             ];
             $breadcrumbLd = JsonLd::breadcrumbs($breadcrumbs);
@@ -97,7 +112,7 @@ class CollectionGalleryController extends Controller
 
         $category = $categories->firstWhere('slug', $slug) ?? $categories->first();
 
-        $products = self::galleryProductsForCategory($category);
+        $products = $this->paginateGallery(self::galleryProductsForCategory($category));
 
         $pageCategoryLabel = StorefrontRoutes::isShopCategory($slug)
             ? StorefrontRoutes::shopCategoryLabel($slug)
@@ -113,7 +128,7 @@ class CollectionGalleryController extends Controller
 
         $breadcrumbs = [
             ['label' => 'Home', 'url' => route('home')],
-            ['label' => 'Shop', 'url' => route('shop.index')],
+            ['label' => 'Shop', 'url' => StorefrontRoutes::primaryShopUrl()],
             ['label' => $pageCategoryLabel],
         ];
         $breadcrumbLd = JsonLd::breadcrumbs($breadcrumbs);
@@ -143,11 +158,9 @@ class CollectionGalleryController extends Controller
             return collect();
         }
 
-        $query = Product::query()
-            ->with('category')
-            ->where('is_active', true)
-            ->where('is_gallery_visible', true)
-            ->unlessHiddenForStock();
+        $query = ProductPublicationPolicy::applyGalleryScope(
+            Product::query()->with('category')
+        )->unlessHiddenForStock();
 
         if ($catalogSlugs !== []) {
             $query->where(function ($q) use ($category, $catalogSlugs) {
@@ -168,5 +181,41 @@ class CollectionGalleryController extends Controller
         }
 
         return $query->orderedForDisplay()->get();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function fallbackPage(Category $category): array
+    {
+        return [
+            'meta_title' => ($category->meta_title ?: $category->name).' — Vyomika Atelier',
+            'meta_description' => $category->meta_description,
+            'og_image' => $category->og_image ?? $category->image,
+            'hero' => [
+                'title' => $category->name,
+                'image' => $category->image,
+            ],
+            'intro' => [
+                'title' => $category->name,
+                'body' => $category->description,
+            ],
+            'gallery_title' => $category->name,
+            'category_slugs' => [$category->slug],
+        ];
+    }
+
+    private function paginateGallery(Collection $products): LengthAwarePaginator
+    {
+        $perPage = max(1, (int) config('shop.gallery_per_page', 12));
+        $page = LengthAwarePaginator::resolveCurrentPage();
+
+        return new LengthAwarePaginator(
+            $products->forPage($page, $perPage)->values(),
+            $products->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
     }
 }

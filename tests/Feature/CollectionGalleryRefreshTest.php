@@ -52,6 +52,10 @@ class CollectionGalleryRefreshTest extends TestCase
         $this->get(route('shop.show', 'coffee-tables'))
             ->assertOk()
             ->assertSee('Updated Coffee Table Name', false)
+            ->assertDontSee('Updated gallery description from admin', false);
+
+        $this->get(route('shop.show', $product->slug))
+            ->assertOk()
             ->assertSee('Updated gallery description from admin', false);
     }
 
@@ -95,7 +99,7 @@ class CollectionGalleryRefreshTest extends TestCase
         $this->get(route('shop.mirror-frames.index'))
             ->assertOk()
             ->assertSee('Admin Arched Mirror', false)
-            ->assertSee('Admin mirror gallery description', false)
+            ->assertDontSee('Admin mirror gallery description', false)
             ->assertDontSee('Soft-arch profile wall mirror', false);
     }
 
@@ -124,6 +128,6 @@ class CollectionGalleryRefreshTest extends TestCase
         $this->get(route('shop.mirror-frames.index'))
             ->assertOk()
             ->assertSee('Bespoke Oval Mirror', false)
-            ->assertSee('Custom oval mirror added from admin', false);
+            ->assertDontSee('Custom oval mirror added from admin', false);
     }
 }

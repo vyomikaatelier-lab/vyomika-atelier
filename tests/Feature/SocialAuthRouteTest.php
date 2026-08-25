@@ -2,7 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Socialite\Contracts\Provider as SocialiteProvider;
+use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\User as SocialiteUser;
+use Mockery;
 use Tests\TestCase;
 
 class SocialAuthRouteTest extends TestCase
@@ -18,7 +23,7 @@ class SocialAuthRouteTest extends TestCase
             ->assertDontSee('Sign up with Google')
             ->assertDontSee('or continue with email')
             ->assertSee('Confirm password')
-            ->assertSee('OTP');
+            ->assertDontSee('OTP');
     }
 
     public function test_login_page_hides_social_buttons_when_not_configured(): void
@@ -87,5 +92,31 @@ class SocialAuthRouteTest extends TestCase
 
         $response->assertRedirect(route('account.login'))
             ->assertSessionHas('info');
+    }
+
+    public function test_social_login_does_not_mark_phone_verified(): void
+    {
+        config([
+            'services.google.client_id' => 'test-google-id',
+            'services.google.client_secret' => 'test-google-secret',
+        ]);
+
+        $socialUser = Mockery::mock(SocialiteUser::class);
+        $socialUser->shouldReceive('getId')->andReturn('google-user-1');
+        $socialUser->shouldReceive('getEmail')->andReturn('social@example.com');
+        $socialUser->shouldReceive('getName')->andReturn('Social User');
+
+        $provider = Mockery::mock(SocialiteProvider::class);
+        $provider->shouldReceive('user')->andReturn($socialUser);
+        Socialite::shouldReceive('driver')->with('google')->andReturn($provider);
+
+        $this->get(route('account.social.callback', 'google'))
+            ->assertRedirect(route('account'));
+
+        $user = User::query()->where('email', 'social@example.com')->first();
+        $this->assertNotNull($user);
+        $this->assertNull($user->phone_verified_at);
+        $this->assertFalse($user->is_admin);
+        $this->assertTrue($user->is_active);
     }
 }

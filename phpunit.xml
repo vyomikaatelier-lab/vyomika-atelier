@@ -35,5 +35,7 @@
         <env name="RAZORPAY_KEY_SECRET" value=""/>
         <env name="RAZORPAY_KEY" value=""/>
         <env name="RAZORPAY_SECRET" value=""/>
+        <env name="RAZORPAY_WEBHOOK_SECRET" value=""/>
+        <env name="CHECKOUT_REQUIRE_VERIFIED_PHONE" value="false"/>
     </php>
 </phpunit>

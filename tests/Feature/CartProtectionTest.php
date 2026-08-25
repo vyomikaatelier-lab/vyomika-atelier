@@ -25,7 +25,7 @@ class CartProtectionTest extends TestCase
         $this->assertSame(1, session('cart')[$product->id]['quantity'] ?? null);
     }
 
-    public function test_shop_buy_now_redirects_to_checkout(): void
+    public function test_shop_buy_now_redirects_guest_to_continue(): void
     {
         $category = Category::factory()->create(['slug' => 'coffee-tables']);
         $product = Product::factory()->shop()->create(['category_id' => $category->id, 'stock' => 5]);
@@ -35,8 +35,9 @@ class CartProtectionTest extends TestCase
             'buy_now' => 1,
         ]);
 
-        $response->assertRedirect(route('checkout.index'));
-        $this->assertSame(1, session('cart')[$product->id]['quantity'] ?? null);
+        $response->assertRedirect(route('account.continue'));
+        $this->assertSame($product->id, session('buy_now')['product_id']);
+        $this->assertArrayNotHasKey($product->id, session('cart', []));
     }
 
     public function test_studio_product_direct_post_is_rejected_with_enquiry_message(): void

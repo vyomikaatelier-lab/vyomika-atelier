@@ -54,10 +54,11 @@ class CartQuantityTest extends TestCase
         $this->post(route('cart.add', $productA), ['quantity' => 1]);
 
         $this->post(route('cart.add', $productB), ['quantity' => 1, 'buy_now' => 1])
-            ->assertRedirect(route('checkout.index'));
+            ->assertRedirect(route('account.continue'));
 
         $this->assertSame(1, session('cart')[$productA->id]['quantity']);
-        $this->assertSame(1, session('cart')[$productB->id]['quantity']);
+        $this->assertArrayNotHasKey($productB->id, session('cart', []));
+        $this->assertSame($productB->id, session('buy_now')['product_id']);
     }
 
     public function test_studio_and_railings_products_remain_blocked(): void

@@ -12,6 +12,7 @@ use App\Services\StockAvailability;
 use App\Support\CartGuard;
 use App\Support\CheckoutCustomer;
 use App\Support\OrderAccess;
+use App\Support\StorefrontRoutes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -29,13 +30,13 @@ class CheckoutController extends Controller
 
     public function index()
     {
-        if ($this->cart->isEmpty()) {
-            return redirect()->route('shop.index')->with('error', 'Your cart is empty.');
+        if ($this->cart->checkoutIsEmpty()) {
+            return redirect(StorefrontRoutes::primaryShopUrl())->with('error', 'Your cart is empty.');
         }
 
         $user = Auth::user();
-        $items = $this->cart->all();
-        $subtotal = $this->cart->subtotal();
+        $items = $this->cart->checkoutItems();
+        $subtotal = $this->cart->checkoutSubtotal();
         $shipping = $subtotal >= 5000 ? 0 : 199;
         $total = $subtotal + $shipping;
         $defaultAddress = $user?->addresses()->where('is_default', true)->first()
@@ -58,8 +59,8 @@ class CheckoutController extends Controller
             return redirect()->route('checkout.index')->with('error', $message);
         }
 
-        if ($this->cart->isEmpty()) {
-            return redirect()->route('shop.index')->with('error', 'Your cart is empty.');
+        if ($this->cart->checkoutIsEmpty()) {
+            return redirect(StorefrontRoutes::primaryShopUrl())->with('error', 'Your cart is empty.');
         }
 
         if (! $this->razorpay->isConfigured()) {
@@ -76,13 +77,21 @@ class CheckoutController extends Controller
             }
         }
 
-        $ineligible = $this->cart->all()->first(
-            fn (array $item) => ! CartGuard::isEligible($item['product'])
+        $ineligible = $this->cart->checkoutItems()->first(
+            fn (array $item) => ! CartGuard::isEligible($item['product'], $item['size_label'] ?? null)
+                || ($item['unit_price'] ?? 0) <= 0
         );
 
         if ($ineligible) {
             return redirect()->route('checkout.index')
-                ->with('error', CartGuard::checkoutEligibility($ineligible['product']));
+                ->with('error', CartGuard::checkoutEligibility(
+                    $ineligible['product'],
+                    $ineligible['size_label'] ?? null
+                ) ?? CartGuard::MSG_NO_PRICE);
+        }
+
+        if ($message = CartGuard::checkoutItemsEligible($this->cart->checkoutItems())) {
+            return redirect()->route('checkout.index')->with('error', $message);
         }
 
         try {
@@ -104,10 +113,16 @@ class CheckoutController extends Controller
             $snapshot['country'] ? 'Country/Region: ' . $snapshot['country'] : null,
         ]);
 
-        $items = $this->cart->all();
-        $subtotal = $this->cart->subtotal();
+        $fromBuyNow = $this->cart->hasBuyNow();
+        $items = $this->cart->checkoutItems();
+        $subtotal = $this->cart->checkoutSubtotal();
         $shipping = $subtotal >= 5000 ? 0 : 199;
         $total = $subtotal + $shipping;
+
+        if ($subtotal <= 0 || $total <= 0) {
+            return redirect()->route('cart.index')
+                ->with('error', CartGuard::MSG_NO_PRICE);
+        }
 
         foreach ($items as $item) {
             $available = StockAvailability::availableForProduct($item['product']);
@@ -116,6 +131,10 @@ class CheckoutController extends Controller
                 return redirect()->route('cart.index')
                     ->with('error', "{$item['product']->name} only has {$available} available. Please update your cart.");
             }
+        }
+
+        if ($message = CartGuard::checkoutItemsEligible($items)) {
+            return redirect()->route('cart.index')->with('error', $message);
         }
 
         $checkoutToken = $request->session()->get('checkout_submit_token');
@@ -213,6 +232,11 @@ class CheckoutController extends Controller
         $order->update(['razorpay_order_id' => $razorpayOrder['id']]);
         OrderAccess::remember($order);
 
+        if ($fromBuyNow) {
+            $request->session()->put(CartService::CHECKOUT_SOURCE_KEY, 'buy_now');
+            $this->cart->clearBuyNow();
+        }
+
         $emailSent = $this->notifications->sendOrderReceived($order->fresh('items'));
 
         return redirect()->route('checkout.pay', $order)
@@ -222,7 +246,7 @@ class CheckoutController extends Controller
     public function success(Order $order)
     {
         if (! OrderAccess::canAccess($order)) {
-            return redirect()->route('shop.index')->with('error', 'Order not found.');
+            return redirect(StorefrontRoutes::primaryShopUrl())->with('error', 'Order not found.');
         }
 
         $order->load('items');

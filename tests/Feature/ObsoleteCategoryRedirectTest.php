@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Support\StorefrontRoutes;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -9,10 +10,10 @@ class ObsoleteCategoryRedirectTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_shop_home_decor_redirects_to_shop_index(): void
+    public function test_shop_home_decor_redirects_to_primary_shop_category(): void
     {
         $this->get('/shop/home-decor')
-            ->assertRedirect(route('shop.index'));
+            ->assertRedirect(StorefrontRoutes::primaryShopUrl());
     }
 
     public function test_shop_fluted_panels_redirects_to_studio_partitions(): void

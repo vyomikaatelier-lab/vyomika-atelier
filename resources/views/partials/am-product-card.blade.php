@@ -1,28 +1,30 @@
 @php
 
+    use App\Models\Service;
+    use App\Support\CartGuard;
     use App\Support\ProductCatalog;
-
+    use App\Support\StorefrontPrice;
     use App\Support\StorefrontRoutes;
-
     use App\Support\StorefrontUrl;
-
-
 
     $isModel = $product instanceof \App\Models\Product;
     $isObject = is_object($product) && ! $isModel;
     $name = $isModel ? $product->name : ($isObject ? ($product->name ?? '') : ($product['name'] ?? ''));
     $slug = $isModel ? $product->slug : ($isObject ? ($product->slug ?? '') : ($product['slug'] ?? ''));
     $categorySlug = $isModel ? $product->category?->slug : ($isObject ? ($product->category_slug ?? null) : ($product['category_slug'] ?? null));
-    $sectionLabel = $isModel
-        ? StorefrontRoutes::productSectionLabel($product)
-        : ($isObject ? ($product->section_label ?? $product->shop_category ?? '') : ($product['section_label'] ?? $product['shop_category'] ?? ''));
-    $price = $isModel
-        ? ($product->hasSizeOptions() ? $product->listingPrice() : $product->price)
-        : ($isObject ? ($product->price ?? 0) : ($product['price'] ?? 0));
-    $priceLabel = $isModel && $product->hasSizeOptions()
-        ? 'From '.\App\Support\SiteContent::formatPrice($price)
-        : \App\Support\SiteContent::formatPrice($price);
+    $priceLabel = $isModel
+        ? StorefrontPrice::listingLabel($product)
+        : StorefrontPrice::formatInr($isObject ? ($product->price ?? null) : ($product['price'] ?? null));
+
+    if ($priceLabel === null && $isModel && $product->usesCheckoutFlow()) {
+        $priceLabel = 'Price on request';
+    }
+
+    $compareLabel = $isModel
+        ? StorefrontPrice::compareLabel($product)
+        : null;
     $comparePrice = $isModel ? $product->compare_price : ($isObject ? ($product->compare_price ?? null) : ($product['compare_price'] ?? null));
+    $price = $isModel ? $product->listingPrice() : ($isObject ? ($product->price ?? 0) : ($product['price'] ?? 0));
     $badge = $isModel ? null : ($isObject ? ($product->badge ?? null) : ($product['badge'] ?? null));
 
     if ($isModel && ! $badge && ! $product->hasSizeOptions() && $comparePrice && $comparePrice > $price) {
@@ -35,15 +37,16 @@
 
     $url = $slug
         ? ($isModel ? StorefrontRoutes::productUrl($product) : StorefrontUrl::to('shop.show', ['slug' => $slug], '/shop/'.$slug))
-        : StorefrontUrl::to('shop.index', [], '/shop');
+        : StorefrontRoutes::primaryShopUrl();
 
     $orderServiceSlug = $isModel
-        ? (\App\Models\Service::serviceSlugForProduct($slug, $categorySlug) ?? '')
+        ? (Service::serviceSlugForProduct($slug, $categorySlug) ?? '')
         : ($isObject ? ($product->service_slug ?? '') : ($product['service_slug'] ?? ''));
 
-    $useCheckout = $isModel
-        ? $product->usesCheckoutFlow()
-        : (($isObject ? ($product->section ?? 'shop') : ($product['section'] ?? 'shop')) === 'shop');
+    $canBuyNow = $isModel
+        ? CartGuard::canDisplayBuyNow($product)
+        : false;
+    $canRequestQuote = $isModel && ! $product->usesCheckoutFlow();
 @endphp
 
 <article class="am-product-card" data-product-url="{{ $url }}">
@@ -66,53 +69,43 @@
             @endif
         </a>
         <div class="am-product-card__actions">
-            @if($isModel && $useCheckout)
+            @if($canBuyNow)
             <form action="{{ route('cart.add', $product) }}" method="POST" class="am-product-card__buy-form">
                 @csrf
                 <input type="hidden" name="quantity" value="1">
                 <input type="hidden" name="buy_now" value="1">
                 <button type="submit" class="am-btn am-btn--primary am-btn--sm am-btn--full">Buy Now</button>
             </form>
-            @elseif($isModel)
+            @elseif($canRequestQuote)
             <button type="button"
                 class="am-btn am-btn--primary am-btn--sm am-btn--full"
                 data-open-order-popup
                 data-product-name="{{ $name }}"
                 data-product-slug="{{ $slug }}"
                 data-service-slug="{{ $orderServiceSlug }}">
-                Order Now
+                Request Quote
             </button>
-            @else
-            <button type="button" class="am-btn am-btn--primary am-btn--sm am-btn--full" data-order-now data-product-url="{{ $url }}">Order Now</button>
             @endif
         </div>
     </div>
 
     <div class="am-product-card__body">
-
-        @if($sectionLabel)
-
-        <p class="am-product-card__cat">{{ $sectionLabel }}</p>
-
-        @endif
-
         <h3 class="am-product-card__name"><a href="{{ $url }}">{{ $name }}</a></h3>
 
-        <div class="am-product-card__stars" aria-hidden="true">★★★★★</div>
+        @if($isModel)
+            @include('partials.am-product-rating', ['product' => $product])
+        @endif
 
         <div class="am-product-card__price">
-
+            @if($priceLabel)
             <span class="am-product-card__price-current">{{ $priceLabel }}</span>
-
-            @if($comparePrice)
-
-            <span class="am-product-card__price-old">{{ \App\Support\SiteContent::formatPrice($comparePrice) }}</span>
-
             @endif
-
+            @if($compareLabel)
+            <span class="am-product-card__price-old">{{ $compareLabel }}</span>
+            @endif
         </div>
 
+        <a href="{{ $url }}" class="am-btn am-btn--ghost am-btn--sm am-btn--full am-product-card__view">View Details</a>
     </div>
 
 </article>
-

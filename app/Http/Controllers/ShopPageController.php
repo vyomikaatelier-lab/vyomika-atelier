@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
+use App\Models\Product;
+use App\Support\CategoryPublicationPolicy;
 use App\Support\ShopCatalog;
 use App\Support\StorefrontRoutes;
 use Illuminate\Http\RedirectResponse;
@@ -23,7 +26,11 @@ class ShopPageController extends Controller
             return redirect()->route('studio.show', $studioUrl, 301);
         }
 
-        if (StorefrontRoutes::isShopCategory($slug)) {
+        if (StorefrontRoutes::isShopCategory($slug) || $this->isActiveShopCategory($slug)) {
+            if (! CategoryPublicationPolicy::isSitemapListedBySlug($slug)) {
+                abort(404);
+            }
+
             if ($slug === 'mirror-frames') {
                 return redirect()->route('shop.mirror-frames.index', [], 301);
             }
@@ -32,5 +39,12 @@ class ShopPageController extends Controller
         }
 
         return app(ProductController::class)->show($slug);
+    }
+
+    private function isActiveShopCategory(string $slug): bool
+    {
+        $category = Category::query()->where('slug', $slug)->where('is_active', true)->first();
+
+        return $category !== null && $category->resolvedSection() === Product::SECTION_SHOP;
     }
 }
