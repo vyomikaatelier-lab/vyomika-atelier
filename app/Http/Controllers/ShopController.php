@@ -36,6 +36,6 @@ class ShopController extends Controller
             return redirect()->route('search', ['q' => $request->query('search')], 301);
         }
 
-        return redirect(StorefrontRoutes::primaryShopUrl(), 301);
+        return redirect(\App\Support\StorefrontNavigation::primaryPublishedShopUrl(), 301);
     }
 }

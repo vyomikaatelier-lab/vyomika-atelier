@@ -4,12 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\BlogPost;
 use App\Models\Product;
-use App\Models\Category;
 use App\Models\Project;
 use App\Models\Service;
 use App\Support\Seo\StaticPageSeo;
 use App\Support\ShopCatalog;
 use App\Support\SiteContent;
+use App\Support\StorefrontNavigation;
 use Illuminate\Support\Facades\Schema;
 
 class HomeController extends Controller
@@ -18,10 +18,6 @@ class HomeController extends Controller
     {
         $featuredProducts = Schema::hasTable('products')
             ? ShopCatalog::applyListingScope(Product::query())->orderedForDisplay()->take(6)->get()
-            : collect();
-
-        $categories = Schema::hasTable('categories')
-            ? Category::where('is_active', true)->get()
             : collect();
 
         $featuredServices = Schema::hasTable('services')
@@ -59,7 +55,7 @@ class HomeController extends Controller
 
         return view('home', [
             'featuredProducts' => $featuredProducts,
-            'categories' => $categories,
+            'homepageCategoryTiles' => StorefrontNavigation::homepageCategoryTiles(),
             'featuredServices' => $featuredServices,
             'featuredProjects' => $featuredProjects,
             'latestPosts' => $latestPosts,

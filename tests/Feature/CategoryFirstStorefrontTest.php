@@ -54,14 +54,19 @@ class CategoryFirstStorefrontTest extends TestCase
 
     public function test_homepage_shop_links_target_category_pages(): void
     {
+        $this->seedPublishedShopNavCategories();
+
         $html = $this->get(route('home'))->assertOk()->getContent();
 
         $this->assertStringContainsString(StorefrontRoutes::primaryShopUrl(), $html);
         $this->assertStringNotContainsString('>View All Products<', $html);
+        $this->assertStringNotContainsString('All Products', $html);
     }
 
     public function test_shop_navigation_lists_category_links_without_all_products(): void
     {
+        $this->seedPublishedShopNavCategories();
+
         $html = $this->get(route('home'))->assertOk()->getContent();
 
         $this->assertStringContainsString(route('shop.mirror-frames.index'), $html);
@@ -309,6 +314,8 @@ class CategoryFirstStorefrontTest extends TestCase
 
     public function test_sitemap_excludes_generic_shop_url(): void
     {
+        $this->seedPublishedShopNavCategories();
+
         $xml = $this->get(route('sitemap'))->assertOk()->getContent();
 
         $genericShop = '<loc>'.route('shop.index').'</loc>';
@@ -333,5 +340,16 @@ class CategoryFirstStorefrontTest extends TestCase
         $approved = trim((string) shell_exec('git diff b01aa8a -- resources/views/blog 2>&1'));
 
         $this->assertSame('', $approved, 'Blog tree must remain identical to approved checkpoint b01aa8a.');
+    }
+
+    private function seedPublishedShopNavCategories(): void
+    {
+        foreach (['mirror-frames', 'coffee-tables'] as $slug) {
+            $category = $this->shopCategory($slug);
+            $this->shopProduct($category, [
+                'name' => ucwords(str_replace('-', ' ', $slug)).' Nav Product',
+                'is_gallery_visible' => true,
+            ]);
+        }
     }
 }

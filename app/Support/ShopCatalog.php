@@ -155,52 +155,18 @@ class ShopCatalog
 
     public static function isCategoryVisibleInNav(string $slug): bool
     {
-        if (! Schema::hasTable('categories')) {
-            return true;
-        }
-
-        $category = Category::query()->where('slug', $slug)->first();
-
-        if (! $category) {
-            return true;
-        }
-
-        if (! $category->is_active) {
-            return false;
-        }
-
-        if (self::supportsHideFromNav() && $category->hide_from_nav) {
-            return false;
-        }
-
-        if (! self::supportsInventoryHide() || ! $category->hide_when_unavailable) {
-            return true;
-        }
-
-        return $category->hasStorefrontAvailableProducts();
+        return StorefrontNavigation::isShopCategoryListed($slug);
     }
 
     public static function isServiceVisibleInNav(string $serviceSlug): bool
     {
         if (! Schema::hasTable('services')) {
-            return true;
+            return false;
         }
 
         $service = Service::query()->where('slug', $serviceSlug)->first();
 
-        if (! $service) {
-            return true;
-        }
-
-        if (! $service->is_active) {
-            return false;
-        }
-
-        if (self::supportsHideFromNav() && $service->hide_from_nav) {
-            return false;
-        }
-
-        return true;
+        return StorefrontNavigation::isStudioServiceListed($service);
     }
 
     /**
@@ -209,23 +175,7 @@ class ShopCatalog
      */
     public static function filterNav(array $nav): array
     {
-        if (! Schema::hasTable('categories')) {
-            return $nav;
-        }
-
-        return collect($nav)->map(function (array $item) {
-            $label = $item['label'] ?? '';
-
-            if ($label === 'Shop' && ! empty($item['children']) && is_array($item['children'])) {
-                $item['children'] = self::filterShopLinks($item['children']);
-            }
-
-            if ($label === 'Studio' && ! empty($item['children']) && is_array($item['children'])) {
-                $item['children'] = self::filterStudioLinks($item['children']);
-            }
-
-            return $item;
-        })->all();
+        return StorefrontNavigation::nav();
     }
 
     /**

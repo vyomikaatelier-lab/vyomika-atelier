@@ -77,7 +77,7 @@ class ProductPublicationPolicyTest extends TestCase
         $response = $this->get(route('shop.show', $product->slug));
 
         $response->assertNotFound();
-        $response->assertSee('name="robots" content="noindex, nofollow"', false);
+        $response->assertSee('name="robots" content="noindex,nofollow"', false);
     }
 
     public function test_inactive_product_is_absent_from_shop_gallery(): void
@@ -299,7 +299,7 @@ class ProductPublicationPolicyTest extends TestCase
 
         $this->get(route('shop.show', $hidden->slug))
             ->assertNotFound()
-            ->assertSee('name="robots" content="noindex, nofollow"', false);
+            ->assertSee('name="robots" content="noindex,nofollow"', false);
     }
 
     public function test_robots_index_false_is_excluded_from_sitemap_and_outputs_noindex(): void

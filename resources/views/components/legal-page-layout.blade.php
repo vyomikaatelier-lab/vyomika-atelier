@@ -2,6 +2,7 @@
     'title',
     'metaTitle' => null,
     'metaDescription' => null,
+    'pageSeo' => [],
     'lastUpdated' => null,
     'breadcrumbs' => [],
     'sections' => [],
@@ -10,13 +11,7 @@
 
 @extends('layouts.store')
 
-@section('title', $metaTitle ?? ($title . ' — ' . (config('legal.business.brand_name') ?? 'Vyomika Atelier')))
-
-@push('meta')
-@if($metaDescription)
-<meta name="description" content="{{ $metaDescription }}">
-@endif
-@endpush
+@section('title', $pageSeo['title'] ?? $metaTitle ?? ($title . ' — ' . (config('legal.business.brand_name') ?? 'Vyomika Atelier')))
 
 @section('content')
 @if(count($breadcrumbs))

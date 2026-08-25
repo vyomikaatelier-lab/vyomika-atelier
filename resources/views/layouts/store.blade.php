@@ -52,7 +52,7 @@
     $cartCount = $cartService->count();
     $cartItems = $cartService->all();
     $cartSubtotal = $cartService->subtotal();
-    $nav = \App\Support\ShopCatalog::filterNav(config('site.nav', []));
+    $nav = \App\Support\StorefrontNavigation::nav();
     $legalLinks = \App\Support\LegalContent::footerLinks();
     $social = \App\Support\SiteContent::social();
     $storefrontLink = fn (string $name, array $params = [], string $fallback = '#') => StorefrontUrl::to($name, $params, $fallback);
@@ -63,18 +63,22 @@
         ? $storefrontLink('account', [], '/account')
         : $storefrontLink('account.login', [], '/account/login');
     $accountLabel = $isCustomer ? 'Account' : 'Sign in';
+    $announceCta = \App\Support\StorefrontNavigation::resolveCta(
+        $announcement['link_href'] ?? null,
+        $announcement['link_label'] ?? null
+    );
 @endphp
 
 @if(!empty($announcement['text']))
 <div class="am-announce">
     <div class="am-announce__track">
         <span>{{ $announcement['text'] }}</span>
-        @if(!empty($announcement['link_label']))
-        <a href="{{ url($announcement['link_href'] ?? '/shop') }}">{{ $announcement['link_label'] }}</a>
+        @if($announceCta['label'] !== '')
+        <a href="{{ url($announceCta['href']) }}">{{ $announceCta['label'] }}</a>
         @endif
         <span aria-hidden="true">{{ $announcement['text'] }}</span>
-        @if(!empty($announcement['link_label']))
-        <a href="{{ url($announcement['link_href'] ?? '/shop') }}" aria-hidden="true">{{ $announcement['link_label'] }}</a>
+        @if($announceCta['label'] !== '')
+        <a href="{{ url($announceCta['href']) }}" aria-hidden="true">{{ $announceCta['label'] }}</a>
         @endif
     </div>
 </div>

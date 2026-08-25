@@ -2,20 +2,39 @@
 
 namespace App\View\Composers;
 
+use App\Support\LegalContent;
 use App\Support\Seo\PageSeo;
 use App\Support\Seo\StaticPageSeo;
 use Illuminate\View\View;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class StorefrontSeoComposer
 {
     public function compose(View $view): void
     {
+        if ($this->isNotFoundView($view)) {
+            $view->with('pageSeo', PageSeo::make([
+                'title' => 'Page not found — Vyomika Atelier',
+                'robots' => 'noindex,nofollow',
+            ]));
+
+            return;
+        }
+
         $existing = $view->offsetExists('pageSeo') ? $view->offsetGet('pageSeo') : null;
         if (is_array($existing) && $existing !== []) {
             return;
         }
 
         $name = request()->route()?->getName();
+
+        if (is_string($name) && str_starts_with($name, 'legal.')) {
+            $view->with('pageSeo', LegalContent::seoForRoute($name));
+
+            return;
+        }
+
         $robots = null;
 
         if (is_string($name) && (
@@ -60,5 +79,21 @@ class StorefrontSeoComposer
         }
 
         $view->with('pageSeo', StaticPageSeo::forSlug($slug, $robots));
+    }
+
+    private function isNotFoundView(View $view): bool
+    {
+        if (! $view->offsetExists('exception')) {
+            return false;
+        }
+
+        $exception = $view->offsetGet('exception');
+
+        if ($exception instanceof NotFoundHttpException) {
+            return true;
+        }
+
+        return $exception instanceof HttpExceptionInterface
+            && $exception->getStatusCode() === 404;
     }
 }
