@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Service;
+use App\Models\SiteSetting;
 use App\Support\ProductImageSizes;
 use App\Support\StorefrontRoutes;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -199,6 +201,33 @@ class ProductGalleryImageLayoutTest extends TestCase
         $this->assertStringContainsString('name="service_slug" value="corten-steel-facade"', $html);
         $this->assertStringContainsString('name="type" value="service_inquiry"', $html);
         $this->assertStringContainsString('The Vyomika Difference', $html);
+    }
+
+    public function test_homepage_studio_spotlights_prefer_service_and_landing_page_hero_images(): void
+    {
+        Service::query()->create([
+            'name' => 'PVD Partitions',
+            'slug' => 'partitions',
+            'summary' => 'Studio partitions.',
+            'image' => 'storage/services/partitions-spotlight.jpg',
+            'lead_form' => 'popup',
+            'is_active' => true,
+        ]);
+
+        SiteSetting::setValue('landing_pages', [
+            'railings' => [
+                'hero' => ['image' => 'storage/landing-pages/railings-spotlight.jpg'],
+            ],
+            'corten-steel' => [
+                'hero' => ['image' => 'storage/landing-pages/corten-spotlight.jpg'],
+            ],
+        ]);
+
+        $html = $this->get(route('home'))->assertOk()->getContent();
+
+        $this->assertStringContainsString('/storage/services/partitions-spotlight.jpg', $html);
+        $this->assertStringContainsString('/storage/landing-pages/railings-spotlight.jpg', $html);
+        $this->assertStringContainsString('/storage/landing-pages/corten-spotlight.jpg', $html);
     }
 
     public function test_homepage_featured_products_use_grid_without_side_banner(): void

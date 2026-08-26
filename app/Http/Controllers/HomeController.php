@@ -55,6 +55,7 @@ class HomeController extends Controller
         return view('home', [
             'featuredProducts' => $featuredProducts,
             'homepageCategoryTiles' => StorefrontNavigation::homepageCategoryTiles(),
+            'studioSpotlights' => StorefrontNavigation::homepageStudioSpotlights(),
             'featuredServices' => $featuredServices,
             'featuredProjects' => $featuredProjects,
             'latestPosts' => $latestPosts,
