@@ -142,6 +142,7 @@ class HomeNavFooterLegalSeoTest extends TestCase
 
         $html = $this->get(route('home'))->assertOk()->getContent();
 
+        $this->assertStringContainsString('Visible Home Table', $html);
         $this->assertStringNotContainsString('Secret Inactive Home Table', $html);
         $this->assertStringNotContainsString('Gallery Hidden Home Table', $html);
         $this->assertStringNotContainsString('Unclassified Home Table', $html);

@@ -9,13 +9,21 @@
     use App\Support\StorefrontNavigation;
     use App\Support\StorefrontUrl;
     $heroSlides = SiteContent::heroSlides();
+    $bestSellers = SiteContent::bestSellers();
     $homepageCategoryTiles = $homepageCategoryTiles ?? StorefrontNavigation::homepageCategoryTiles();
     $collectionSection = SiteContent::get('homepage.collections', []);
+    $studioSpotlights = SiteContent::homepageStudioSpotlights();
+    $homepageUsps = SiteContent::homepageUsps();
+    $trending = SiteContent::trending();
     $ctaBand = SiteContent::get('cta_band', []);
     $testimonials = SiteContent::testimonials();
     $blogSection = SiteContent::blogSection();
     $trustBadges = SiteContent::trustBadges();
 
+    $bestSellerProducts = $shopItems->isNotEmpty() ? $shopItems->take(6) : collect($bestSellers['products'] ?? []);
+    $trendingProducts = isset($trendingFromDb) && $trendingFromDb->isNotEmpty()
+        ? $trendingFromDb->take(4)
+        : collect($trending['products'] ?? []);
     $blogPosts = $blogItems->isNotEmpty() ? $blogItems->take(3) : collect($blogSection['posts'] ?? []);
 @endphp
 
@@ -44,9 +52,31 @@
     </div>
 </section>
 
+{{-- Signature finishes ribbon --}}
+<section class="am-finish-strip am-reveal" aria-label="Signature PVD finishes">
+    <div class="am-finish-strip__inner">
+        <p class="am-finish-strip__eyebrow">The Atelier Palette</p>
+        <ul class="am-finish-strip__swatches">
+            <li>
+                <span class="am-finish-swatch am-finish-swatch--champagne" aria-hidden="true"></span>
+                <span>Champagne</span>
+            </li>
+            <li>
+                <span class="am-finish-swatch am-finish-swatch--rose" aria-hidden="true"></span>
+                <span>Rose Gold</span>
+            </li>
+            <li>
+                <span class="am-finish-swatch am-finish-swatch--black" aria-hidden="true"></span>
+                <span>Matte Black</span>
+            </li>
+        </ul>
+        <p class="am-finish-strip__note">Grade 304/316 stainless · Fabricated in Delhi · Delivered across India</p>
+    </div>
+</section>
+
 {{-- Collection row --}}
 @if(SiteContent::homepageSectionEnabled('category_banners') && $homepageCategoryTiles !== [])
-<section class="am-section am-section--edge">
+<section class="am-section am-section--edge am-reveal am-reveal--delay">
     <div class="am-section__intro">
         <div class="am-section-head">
             <h2>{{ $collectionSection['title'] ?? 'Explore Our Collections' }}</h2>
@@ -54,10 +84,11 @@
         </div>
     </div>
     <div class="am-section__body">
-        <div class="am-cat-scroll-wrap">
+        <div class="am-cat-scroll-wrap" data-cat-carousel>
             <div class="am-cat-scroll" tabindex="0" role="region" aria-label="Shop and studio collections">
-                @foreach($homepageCategoryTiles as $cat)
-                <a href="{{ url($cat['href']) }}" class="am-cat-tile">
+                @foreach($homepageCategoryTiles as $i => $cat)
+                <a href="{{ url($cat['href']) }}" class="am-cat-tile am-reveal" style="transition-delay: {{ min($i, 4) * 0.08 }}s">
+                    <span class="am-cat-tile__index" aria-hidden="true">{{ str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) }}</span>
                     @if(!empty($cat['image']))
                     <img src="{{ $cat['image'] }}" alt="{{ $cat['title'] ?? '' }}" loading="lazy">
                     @endif
@@ -68,7 +99,164 @@
                     <span class="am-btn am-btn--white am-btn--sm">{{ $cat['cta'] ?? 'View collection' }}</span>
                 </a>
                 @endforeach
+                @foreach($homepageCategoryTiles as $i => $cat)
+                <a href="{{ url($cat['href']) }}" class="am-cat-tile am-cat-tile--clone" tabindex="-1" aria-hidden="true">
+                    @if(!empty($cat['image']))
+                    <img src="{{ $cat['image'] }}" alt="" loading="lazy">
+                    @endif
+                    <h3>{{ $cat['title'] ?? '' }}</h3>
+                    @if(!empty($cat['subtitle']))
+                    <p>{{ $cat['subtitle'] }}</p>
+                    @endif
+                    <span class="am-btn am-btn--white am-btn--sm">{{ $cat['cta'] ?? 'View collection' }}</span>
+                </a>
+                @endforeach
             </div>
+            <div class="am-cat-scroll__hint" aria-hidden="true">Swipe to explore</div>
+            <div class="am-cat-scroll__dots" role="tablist" aria-label="Collection slides">
+                @foreach($homepageCategoryTiles as $i => $cat)
+                <button type="button" class="am-cat-scroll__dot {{ $i === 0 ? 'is-active' : '' }}" role="tab" aria-label="{{ $cat['title'] ?? 'Collection '.($i + 1) }}" aria-selected="{{ $i === 0 ? 'true' : 'false' }}"></button>
+                @endforeach
+            </div>
+        </div>
+    </div>
+</section>
+@endif
+
+{{-- Studio capabilities: partitions + calculator, railings, corten --}}
+@if(SiteContent::homepageSectionEnabled('studio_spotlights') && !empty($studioSpotlights['items']))
+<section class="am-section am-section--white am-section--edge am-reveal">
+    <div class="am-section__intro">
+        <div class="am-section-head">
+            <h2>{{ $studioSpotlights['title'] ?? 'Bespoke Studio Capabilities' }}</h2>
+            <p>{{ $studioSpotlights['subtitle'] ?? '' }}</p>
+        </div>
+    </div>
+    <div class="am-section__body">
+        <div class="am-studio-spotlights am-studio-spotlights--portrait">
+            @foreach($studioSpotlights['items'] as $spotlight)
+            <article class="am-studio-spotlight am-studio-spotlight--portrait {{ !empty($spotlight['has_calculator']) ? 'am-studio-spotlight--calc' : '' }}{{ !empty($spotlight['has_form']) ? ' am-studio-spotlight--form' : '' }}">
+                <a href="{{ url($spotlight['href'] ?? '#') }}" class="am-studio-spotlight__media">
+                    @if(!empty($spotlight['image']))
+                    <img src="{{ $spotlight['image'] }}" alt="{{ $spotlight['title'] ?? '' }}" loading="lazy">
+                    @endif
+                    @if(!empty($spotlight['badge']))
+                    <span class="am-studio-spotlight__badge">{{ $spotlight['badge'] }}</span>
+                    @endif
+                </a>
+                <div class="am-studio-spotlight__body">
+                    <h3><a href="{{ url($spotlight['href'] ?? '#') }}">{{ $spotlight['title'] ?? '' }}</a></h3>
+                    <p>{{ $spotlight['subtitle'] ?? '' }}</p>
+                    @if(!empty($spotlight['has_calculator']))
+                    <div class="am-studio-spotlight__calc">
+                        @include('partials.am-calculator', [
+                            'rate' => $spotlight['rate'] ?? 1800,
+                            'serviceSlug' => 'partitions',
+                            'serviceName' => 'PVD Partitions',
+                            'calcTitle' => 'Estimate your partition',
+                            'hideOrderButton' => true,
+                        ])
+                        @include('partials.am-studio-spotlight-actions', [
+                            'primaryType' => 'order',
+                            'primaryLabel' => 'Order Now',
+                            'orderServiceSlug' => 'partitions',
+                            'orderServiceName' => 'PVD Partitions',
+                            'exploreHref' => $spotlight['href'] ?? '#',
+                            'exploreLabel' => $spotlight['cta'] ?? 'Learn more',
+                        ])
+                    </div>
+                    @elseif(!empty($spotlight['has_form']) && !empty($spotlight['form']))
+                    @php
+                        $spotlightFormId = 'studio-spotlight-' . preg_replace('/[^a-z0-9-]+/i', '-', $spotlight['form']['service_slug'] ?? 'enquiry');
+                    @endphp
+                    <div class="am-studio-spotlight__form">
+                        @include('partials.am-studio-spotlight-form', [
+                            'title' => $spotlight['form']['title'] ?? 'Quick quote',
+                            'type' => $spotlight['form']['type'] ?? 'service_inquiry',
+                            'serviceSlug' => $spotlight['form']['service_slug'] ?? '',
+                            'subject' => $spotlight['form']['subject'] ?? '',
+                            'submitLabel' => $spotlight['form']['submit_label'] ?? 'Send enquiry',
+                            'messagePlaceholder' => $spotlight['form']['message_placeholder'] ?? 'Brief project details — location, dimensions, timeline…',
+                            'formKey' => $spotlight['form']['form_key'] ?? 'service_inquiry',
+                        ])
+                        @include('partials.am-studio-spotlight-actions', [
+                            'primaryType' => 'submit',
+                            'primaryLabel' => $spotlight['form']['submit_label'] ?? 'Send enquiry',
+                            'formId' => $spotlightFormId . '-form',
+                            'exploreHref' => $spotlight['href'] ?? '#',
+                            'exploreLabel' => $spotlight['cta'] ?? 'Learn more',
+                        ])
+                    </div>
+                    @endif
+                </div>
+            </article>
+            @endforeach
+        </div>
+    </div>
+</section>
+@endif
+
+{{-- Best sellers (product grid only — no side banner) --}}
+@if(SiteContent::homepageSectionEnabled('best_sellers'))
+<section class="am-section am-section--white am-section--edge am-reveal">
+    <div class="am-section__intro">
+        <div class="am-section-head am-section-head--row">
+            <div>
+                <h2>{{ $bestSellers['title'] ?? 'Best-Selling Products' }}</h2>
+                <p>{{ $bestSellers['subtitle'] ?? '' }}</p>
+            </div>
+            <a href="{{ StorefrontNavigation::resolveHref(\App\Support\StorefrontRoutes::primaryShopUrl()) }}" class="am-section-head__link">{{ StorefrontNavigation::resolveCta(\App\Support\StorefrontRoutes::primaryShopUrl(), $bestSellers['cta_label'] ?? null)['label'] }}</a>
+        </div>
+    </div>
+    <div class="am-section__body">
+        <div class="am-product-grid am-product-grid--6 am-product-grid--portrait">
+            @foreach($bestSellerProducts as $product)
+                @include('partials.am-product-card', ['product' => $product])
+            @endforeach
+        </div>
+    </div>
+</section>
+@endif
+
+{{-- Trending --}}
+@if(SiteContent::homepageSectionEnabled('trending'))
+<section class="am-section am-section--edge am-reveal am-reveal--delay">
+    <div class="am-section__intro">
+        <div class="am-section-head">
+            <h2>{{ $trending['title'] ?? 'Trending Metal Finds' }}</h2>
+            <p>{{ $trending['subtitle'] ?? '' }}</p>
+        </div>
+    </div>
+    <div class="am-section__body">
+        <div class="am-product-grid am-product-grid--4 am-product-grid--portrait">
+            @foreach($trendingProducts as $product)
+                @include('partials.am-product-card', ['product' => $product])
+            @endforeach
+        </div>
+    </div>
+</section>
+@endif
+
+{{-- USP highlights --}}
+@if(SiteContent::homepageSectionEnabled('usps') && !empty($homepageUsps['items']))
+<section class="am-section am-section--cream am-section--edge am-reveal">
+    <div class="am-section__intro">
+        <div class="am-section-head">
+            <h2>{{ $homepageUsps['title'] ?? 'The Vyomika Difference' }}</h2>
+            <p>{{ $homepageUsps['subtitle'] ?? '' }}</p>
+        </div>
+    </div>
+    <div class="am-section__body">
+        <div class="am-usp-grid">
+            @foreach($homepageUsps['items'] as $usp)
+            <div class="am-usp-item">
+                <div class="am-usp-item__icon">
+                    @include('partials.am-usp-icon', ['icon' => $usp['icon'] ?? 'quality'])
+                </div>
+                <h3>{{ $usp['title'] ?? '' }}</h3>
+                <p>{{ $usp['text'] ?? '' }}</p>
+            </div>
+            @endforeach
         </div>
     </div>
 </section>

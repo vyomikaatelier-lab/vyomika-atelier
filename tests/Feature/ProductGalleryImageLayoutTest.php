@@ -31,6 +31,10 @@ class ProductGalleryImageLayoutTest extends TestCase
             $css
         );
         $this->assertMatchesRegularExpression(
+            '/\.am-section__body \.am-product-card__thumb\s*\{[^}]*aspect-ratio:\s*3\s*\/\s*4/',
+            $css
+        );
+        $this->assertMatchesRegularExpression(
             '/\.am-section__body \.am-product-card__thumb img\s*\{[^}]*object-fit:\s*cover/',
             $css
         );
@@ -52,6 +56,18 @@ class ProductGalleryImageLayoutTest extends TestCase
         );
         $this->assertMatchesRegularExpression(
             '/\.am-work-gallery__media img\s*\{[^}]*object-fit:\s*cover/',
+            $css
+        );
+        $this->assertMatchesRegularExpression(
+            '/\.am-studio-spotlight__media\s*\{[^}]*aspect-ratio:\s*3\s*\/\s*4/',
+            $css
+        );
+        $this->assertMatchesRegularExpression(
+            '/\.am-studio-spotlight__media img\s*\{[^}]*object-fit:\s*cover/',
+            $css
+        );
+        $this->assertStringNotContainsString(
+            '.am-studio-spotlight:first-child .am-studio-spotlight__media { aspect-ratio: 16 / 9; }',
             $css
         );
     }
@@ -165,9 +181,27 @@ class ProductGalleryImageLayoutTest extends TestCase
         $this->assertStringContainsString('/images/shop-heroes/mirror-frames-hero.png', $html);
         $this->assertStringNotContainsString('am-product-grid--with-banner', $html);
         $this->assertStringNotContainsString('PVD Craft, Elevated for Interiors', $html);
+        $this->assertStringContainsString('Bespoke Studio Capabilities', $html);
+        $this->assertStringContainsString('am-studio-spotlights--portrait', $html);
+        $this->assertStringContainsString('am-studio-spotlight--portrait', $html);
+        $this->assertStringContainsString('PVD Partitions', $html);
+        $this->assertStringContainsString('Designer Railings', $html);
+        $this->assertStringContainsString('Corten Steel', $html);
+        $this->assertStringContainsString('/studio/pvd-partitions', $html);
+        $this->assertStringContainsString('/railings', $html);
+        $this->assertStringContainsString('/corten-steel', $html);
+        $this->assertStringContainsString('Sq Ft Calculator', $html);
+        $this->assertStringContainsString('am-studio-spotlight__form', $html);
+        $this->assertStringContainsString('am-studio-spotlight-form', $html);
+        $this->assertStringContainsString('Railing quick quote', $html);
+        $this->assertStringContainsString('Corten quick quote', $html);
+        $this->assertStringContainsString('name="service_slug" value="railings"', $html);
+        $this->assertStringContainsString('name="service_slug" value="corten-steel-facade"', $html);
+        $this->assertStringContainsString('name="type" value="service_inquiry"', $html);
+        $this->assertStringContainsString('The Vyomika Difference', $html);
     }
 
-    public function test_homepage_does_not_render_removed_product_grids(): void
+    public function test_homepage_featured_products_use_grid_without_side_banner(): void
     {
         $category = Category::query()->firstOrCreate(
             ['slug' => 'door-handles'],
@@ -189,10 +223,15 @@ class ProductGalleryImageLayoutTest extends TestCase
             'is_gallery_visible' => true,
         ]);
 
-        $this->get(route('home'))
-            ->assertOk()
-            ->assertDontSee('Homepage Featured Handle', false)
-            ->assertDontSee('am-product-grid--with-banner', false);
+        $html = $this->get(route('home'))->assertOk()->getContent();
+
+        $this->assertStringContainsString('am-product-grid--portrait', $html);
+        $this->assertStringContainsString('am-product-card__thumb', $html);
+        $this->assertStringContainsString('Homepage Featured Handle', $html);
+        $this->assertStringContainsString('am-product-grid--6', $html);
+        $this->assertStringNotContainsString('am-product-grid--with-banner', $html);
+        $this->assertStringNotContainsString('am-product-banner', $html);
+        $this->assertStringNotContainsString('Discover Your Signature Finish', $html);
     }
 
     public function test_mirror_frames_gallery_uses_portrait_cover_layout(): void
