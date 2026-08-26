@@ -232,6 +232,33 @@ class StorefrontNavigation
         return $tiles;
     }
 
+    /**
+     * Homepage studio capability cards with admin/DB-resolved hero images.
+     *
+     * @return array{title?: string, subtitle?: string, items: list<array<string, mixed>>}
+     */
+    public static function homepageStudioSpotlights(): array
+    {
+        $section = SiteContent::homepageStudioSpotlights();
+        $items = $section['items'] ?? [];
+
+        if (! is_array($items) || $items === []) {
+            return $section;
+        }
+
+        $section['items'] = array_values(array_map(function (mixed $item): array {
+            if (! is_array($item)) {
+                return [];
+            }
+
+            $item['image'] = self::resolveStudioSpotlightImage($item);
+
+            return $item;
+        }, $items));
+
+        return $section;
+    }
+
     public static function publicServicesRedirectUrl(?string $serviceSlug = null): string
     {
         $serviceSlug = trim((string) $serviceSlug);
@@ -420,6 +447,116 @@ class StorefrontNavigation
         $og = $category->og_image;
 
         return filled($og) ? (MediaUrl::resolve($og) ?? $og) : null;
+    }
+
+    /** @param  array<string, mixed>  $item */
+    private static function resolveStudioSpotlightImage(array $item): string
+    {
+        $fallback = self::resolvePublicImage((string) ($item['image'] ?? ''));
+
+        foreach (self::studioSpotlightLandingSlugs($item) as $landingSlug) {
+            $heroImage = data_get(LandingPageContent::page($landingSlug), 'hero.image');
+            if (is_string($heroImage) && $heroImage !== '') {
+                return self::resolvePublicImage($heroImage);
+            }
+        }
+
+        foreach (self::studioSpotlightServiceSlugs($item) as $serviceSlug) {
+            $image = self::serviceSpotlightImage($serviceSlug);
+            if ($image !== null) {
+                return $image;
+            }
+        }
+
+        return $fallback;
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     * @return list<string>
+     */
+    private static function studioSpotlightLandingSlugs(array $item): array
+    {
+        $path = self::spotlightHrefPath($item['href'] ?? null);
+
+        return match ($path) {
+            '/railings' => ['railings'],
+            '/corten-steel' => ['corten-steel'],
+            default => [],
+        };
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     * @return list<string>
+     */
+    private static function studioSpotlightServiceSlugs(array $item): array
+    {
+        $slugs = [];
+
+        $formSlug = data_get($item, 'form.service_slug');
+        if (is_string($formSlug) && $formSlug !== '') {
+            $slugs[] = $formSlug;
+        }
+
+        $path = self::spotlightHrefPath($item['href'] ?? null);
+        if ($path !== null && preg_match('#/studio/([^/]+)$#', $path, $matches) === 1) {
+            $serviceSlug = StorefrontRoutes::serviceSlugForStudioUrl($matches[1]);
+            if ($serviceSlug !== null) {
+                $slugs[] = $serviceSlug;
+            }
+        }
+
+        return array_values(array_unique($slugs));
+    }
+
+    private static function serviceSpotlightImage(string $serviceSlug): ?string
+    {
+        if (! Schema::hasTable('services')) {
+            return null;
+        }
+
+        $service = Service::query()->where('slug', $serviceSlug)->first();
+        if (! $service) {
+            return null;
+        }
+
+        if (filled($service->image)) {
+            return self::resolvePublicImage($service->image);
+        }
+
+        $hero = ServicePageHero::heroForService($service);
+        $heroImage = data_get($hero, 'image');
+
+        return is_string($heroImage) && $heroImage !== ''
+            ? self::resolvePublicImage($heroImage)
+            : null;
+    }
+
+    private static function spotlightHrefPath(mixed $href): ?string
+    {
+        if (! is_string($href) || trim($href) === '') {
+            return null;
+        }
+
+        $path = parse_url($href, PHP_URL_PATH);
+
+        if (! is_string($path) || $path === '') {
+            return null;
+        }
+
+        $normalized = rtrim($path, '/');
+
+        return $normalized === '' ? '/' : $normalized;
+    }
+
+    private static function resolvePublicImage(string $path): string
+    {
+        if ($path === '') {
+            return '';
+        }
+
+        return MediaUrl::resolve($path) ?? $path;
     }
 
     private static function plainText(?string $value): string

@@ -12,7 +12,7 @@
     $bestSellers = SiteContent::bestSellers();
     $homepageCategoryTiles = $homepageCategoryTiles ?? StorefrontNavigation::homepageCategoryTiles();
     $collectionSection = SiteContent::get('homepage.collections', []);
-    $studioSpotlights = SiteContent::homepageStudioSpotlights();
+    $studioSpotlights = $studioSpotlights ?? StorefrontNavigation::homepageStudioSpotlights();
     $homepageUsps = SiteContent::homepageUsps();
     $trending = SiteContent::trending();
     $ctaBand = SiteContent::get('cta_band', []);
