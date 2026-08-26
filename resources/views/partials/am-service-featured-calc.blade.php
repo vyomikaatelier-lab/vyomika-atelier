@@ -30,7 +30,7 @@
                 <p class="am-featured__desc">{{ $summary }}</p>
                 <p class="am-featured__viewers">Use the calculator to estimate your project — then Order Now for a studio quote.</p>
                 @if($design)
-                    <a href="{{ route('services.show', $service->slug) }}" class="am-featured__view-link">← All {{ $service->name }} designs</a>
+                    <a href="{{ \App\Support\StorefrontNavigation::publicServicesRedirectUrl($service->slug) }}" class="am-featured__view-link">← All {{ $service->name }} designs</a>
                 @elseif($service->has_designs && $service->designs->isNotEmpty())
                     <p class="am-featured__meta" style="margin-top:0.5rem">{{ $service->designs->count() }} design{{ $service->designs->count() === 1 ? '' : 's' }} available below</p>
                 @endif

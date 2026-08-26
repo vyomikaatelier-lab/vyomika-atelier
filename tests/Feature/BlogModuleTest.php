@@ -253,7 +253,7 @@ class BlogModuleTest extends TestCase
             ->assertOk()
             ->assertSee('Related Products', false)
             ->assertSee($product->name, false)
-            ->assertSee('Related Services', false)
+            ->assertSee('Related Studio Collections', false)
             ->assertSee($service->name, false);
     }
 

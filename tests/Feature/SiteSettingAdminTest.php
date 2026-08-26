@@ -140,27 +140,27 @@ class SiteSettingAdminTest extends TestCase
     public function test_homepage_section_hidden_when_toggled_off(): void
     {
         $admin = User::factory()->admin()->create();
-        $trendingTitle = config('site.trending.title', 'Trending Metal Finds');
+        $blogTitle = config('site.blog.title', 'Guides, Tips & Inspiration');
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.settings.update'), [
                 'current_password' => 'password',
                 'brand_name' => 'Vyomika Atelier',
                 'email' => 'hello@vyomikaatelier.com',
-                'homepage_section_trending' => '0',
+                'homepage_section_blog' => '0',
             ])
             ->assertRedirect()
             ->assertSessionHas('success');
 
         $sections = SiteSetting::getValue('homepage')['sections'] ?? [];
-        $this->assertFalse($sections['trending'] ?? true);
+        $this->assertFalse($sections['blog'] ?? true);
 
         CmsSettings::hydrate();
-        $this->assertFalse(SiteContent::homepageSectionEnabled('trending'));
+        $this->assertFalse(SiteContent::homepageSectionEnabled('blog'));
 
         $this->get(route('home'))
             ->assertOk()
-            ->assertDontSee($trendingTitle, false);
+            ->assertDontSee($blogTitle, false);
     }
 
     public function test_homepage_sections_default_to_visible_before_admin_save(): void

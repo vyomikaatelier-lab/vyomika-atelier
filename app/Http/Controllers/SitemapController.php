@@ -126,14 +126,13 @@ class SitemapController extends Controller
                 ->where('is_active', true)
                 ->get(['slug', 'updated_at'])
                 ->each(function (Service $service) use (&$urls) {
-                    if (StorefrontRoutes::studioUrlForService($service->slug)) {
+                    $studioUrl = StorefrontRoutes::studioUrlForService($service->slug);
+                    if (! $studioUrl) {
                         return;
                     }
-                    if (in_array($service->slug, Service::adminHiddenSlugs(), true)) {
-                        return;
-                    }
+
                     $urls[] = [
-                        'loc' => route('services.show', $service->slug),
+                        'loc' => route('studio.show', $studioUrl),
                         'lastmod' => $service->updated_at?->toAtomString(),
                         'changefreq' => 'monthly',
                         'priority' => '0.7',
