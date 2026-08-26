@@ -9,6 +9,10 @@ class SiteContent
     {
         return [
             'category_banners' => 'Collection row',
+            'studio_spotlights' => 'Studio capabilities',
+            'best_sellers' => 'Best sellers product grid',
+            'trending' => 'Trending products',
+            'usps' => 'USP highlights',
             'cta_band' => 'CTA band',
             'testimonials' => 'Testimonials',
             'blog' => 'Blog strip',
@@ -91,6 +95,16 @@ class SiteContent
     public static function trustBadges(): array
     {
         return self::get('trust_badges', []);
+    }
+
+    public static function homepageStudioSpotlights(): array
+    {
+        return self::arrayValue('homepage.studio_spotlights');
+    }
+
+    public static function homepageUsps(): array
+    {
+        return self::arrayValue('homepage.usps');
     }
 
     public static function footer(): array

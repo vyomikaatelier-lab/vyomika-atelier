@@ -36,7 +36,21 @@ class HomeController extends Controller
 
         $portfolio = $this->withConfigPreview($featuredProjects, Project::class, $site['portfolio'] ?? []);
         $services = $this->withConfigPreview($featuredServices, Service::class, $site['services'] ?? []);
+        $shopItems = $this->withConfigPreview($featuredProducts, Product::class, $site['shop'] ?? []);
         $blogItems = $this->withConfigPreview($latestPosts, BlogPost::class, $site['blog']['posts'] ?? []);
+
+        $trendingSlugs = collect($site['trending']['products'] ?? [])->pluck('slug')->filter();
+        $trendingFromDb = ($trendingSlugs->isNotEmpty() && Schema::hasTable('products'))
+            ? ShopCatalog::applyListingScope(
+                Product::query()->whereIn('slug', $trendingSlugs)
+            )->orderedForDisplay()->get()
+            : collect();
+        if ($trendingFromDb->count() < 4 && Schema::hasTable('products')) {
+            $trendingFromDb = $trendingFromDb->concat(
+                ShopCatalog::applyListingScope(Product::query()->whereNotIn('id', $trendingFromDb->pluck('id')))
+                    ->orderedForDisplay()->take(4 - $trendingFromDb->count())->get()
+            )->unique('id')->sortByDesc(fn (Product $product) => [$product->sort_order, $product->id])->values();
+        }
 
         return view('home', [
             'featuredProducts' => $featuredProducts,
@@ -47,7 +61,9 @@ class HomeController extends Controller
             'site' => $site,
             'portfolio' => $portfolio,
             'services' => $services,
+            'shopItems' => $shopItems,
             'blogItems' => $blogItems,
+            'trendingFromDb' => $trendingFromDb,
             'pageSeo' => StaticPageSeo::forSlug('home'),
         ]);
     }
