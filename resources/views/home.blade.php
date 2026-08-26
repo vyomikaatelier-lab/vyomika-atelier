@@ -9,19 +9,13 @@
     use App\Support\StorefrontNavigation;
     use App\Support\StorefrontUrl;
     $heroSlides = SiteContent::heroSlides();
-    $bestSellers = SiteContent::bestSellers();
     $homepageCategoryTiles = $homepageCategoryTiles ?? StorefrontNavigation::homepageCategoryTiles();
-    $trending = SiteContent::trending();
-    $spotlights = SiteContent::spotlights();
+    $collectionSection = SiteContent::get('homepage.collections', []);
     $ctaBand = SiteContent::get('cta_band', []);
     $testimonials = SiteContent::testimonials();
     $blogSection = SiteContent::blogSection();
     $trustBadges = SiteContent::trustBadges();
 
-    $bestSellerProducts = $shopItems->isNotEmpty() ? $shopItems->take(6) : collect($bestSellers['products'] ?? []);
-    $trendingProducts = isset($trendingFromDb) && $trendingFromDb->isNotEmpty()
-        ? $trendingFromDb->take(4)
-        : collect($trending['products'] ?? []);
     $blogPosts = $blogItems->isNotEmpty() ? $blogItems->take(3) : collect($blogSection['posts'] ?? []);
 @endphp
 
@@ -50,100 +44,31 @@
     </div>
 </section>
 
-{{-- Best sellers --}}
-@if(SiteContent::homepageSectionEnabled('best_sellers'))
-<section class="am-section am-section--white am-section--edge">
-    <div class="am-section__intro">
-        <div class="am-section-head am-section-head--row">
-            <div>
-                <h2>{{ $bestSellers['title'] ?? 'Best-Selling Products' }}</h2>
-                <p>{{ $bestSellers['subtitle'] ?? '' }}</p>
-            </div>
-            <a href="{{ StorefrontNavigation::resolveHref(\App\Support\StorefrontRoutes::primaryShopUrl()) }}" class="am-section-head__link">{{ StorefrontNavigation::resolveCta(\App\Support\StorefrontRoutes::primaryShopUrl(), $bestSellers['cta_label'] ?? null)['label'] }}</a>
-        </div>
-    </div>
-    @php $banner = $bestSellers['banner'] ?? []; @endphp
-    <div class="am-section__body">
-        <div class="am-product-grid am-product-grid--with-banner">
-            @if(!empty($banner))
-            <a href="{{ StorefrontNavigation::resolveHref($banner['href'] ?? StorefrontNavigation::primaryPublishedShopUrl()) }}" class="am-product-banner">
-                <img src="{{ $banner['image'] ?? '' }}" alt="{{ $banner['title'] ?? '' }}" loading="lazy">
-                <h3>{{ $banner['title'] ?? '' }}</h3>
-                <p>{{ $banner['subtitle'] ?? '' }}</p>
-                <span class="am-btn am-btn--white am-btn--sm">{{ $banner['cta'] ?? 'Shop now' }}</span>
-            </a>
-            @endif
-            @foreach($bestSellerProducts as $product)
-                @include('partials.am-product-card', ['product' => $product])
-            @endforeach
-        </div>
-    </div>
-</section>
-@endif
-
-{{-- Category banners --}}
+{{-- Collection row --}}
 @if(SiteContent::homepageSectionEnabled('category_banners') && $homepageCategoryTiles !== [])
 <section class="am-section am-section--edge">
-    <div class="am-section__body">
-        <div class="am-cat-grid">
-            @foreach($homepageCategoryTiles as $cat)
-            <a href="{{ url($cat['href']) }}" class="am-cat-tile">
-                @if(!empty($cat['image']))
-                <img src="{{ $cat['image'] }}" alt="{{ $cat['title'] ?? '' }}" loading="lazy">
-                @endif
-                <h3>{{ $cat['title'] ?? '' }}</h3>
-                <p>{{ $cat['subtitle'] ?? '' }}</p>
-                <span class="am-btn am-btn--white am-btn--sm">{{ $cat['cta'] ?? 'View collection' }}</span>
-            </a>
-            @endforeach
-        </div>
-    </div>
-</section>
-@endif
-
-{{-- Trending --}}
-@if(SiteContent::homepageSectionEnabled('trending'))
-<section class="am-section am-section--white am-section--edge">
     <div class="am-section__intro">
         <div class="am-section-head">
-            <h2>{{ $trending['title'] ?? 'Trending Metal Finds' }}</h2>
-            <p>{{ $trending['subtitle'] ?? '' }}</p>
+            <h2>{{ $collectionSection['title'] ?? 'Explore Our Collections' }}</h2>
+            <p>{{ $collectionSection['subtitle'] ?? '' }}</p>
         </div>
     </div>
     <div class="am-section__body">
-        <div class="am-product-grid am-product-grid--4">
-            @foreach($trendingProducts as $product)
-                @include('partials.am-product-card', ['product' => $product])
-            @endforeach
-        </div>
-    </div>
-</section>
-@endif
-
-{{-- Spotlights --}}
-@if(SiteContent::homepageSectionEnabled('spotlights'))
-<section class="am-section am-section--edge">
-    <div class="am-section__intro">
-        <div class="am-section-head">
-            <h2>{{ $spotlights['title'] ?? '' }}</h2>
-            <p>{{ $spotlights['subtitle'] ?? '' }}</p>
-        </div>
-    </div>
-    <div class="am-section__body">
-        <div class="am-spotlight-grid">
-            @foreach($spotlights['items'] ?? [] as $item)
-            <div class="am-spotlight">
-                <div class="am-spotlight__image">
-                    <img src="{{ $item['image'] ?? '' }}" alt="{{ $item['title'] ?? '' }}" loading="lazy">
-                </div>
-                <div class="am-spotlight__body">
-                    <h3>{{ $item['title'] ?? '' }}</h3>
-                    <p>{{ $item['description'] ?? '' }}</p>
-                    <p class="am-spotlight__price">{{ SiteContent::formatPrice($item['price'] ?? 0) }} <span style="font-weight:400;font-size:0.85rem;color:var(--am-muted)">{{ $item['price_unit'] ?? '' }}</span></p>
-                    <a href="{{ url(StorefrontNavigation::resolveHref($item['href'] ?? null)) }}" class="am-btn am-btn--primary">{{ $item['cta'] ?? 'Buy now' }}</a>
-                </div>
+        <div class="am-cat-scroll-wrap">
+            <div class="am-cat-scroll" tabindex="0" role="region" aria-label="Shop and studio collections">
+                @foreach($homepageCategoryTiles as $cat)
+                <a href="{{ url($cat['href']) }}" class="am-cat-tile">
+                    @if(!empty($cat['image']))
+                    <img src="{{ $cat['image'] }}" alt="{{ $cat['title'] ?? '' }}" loading="lazy">
+                    @endif
+                    <h3>{{ $cat['title'] ?? '' }}</h3>
+                    @if(!empty($cat['subtitle']))
+                    <p>{{ $cat['subtitle'] }}</p>
+                    @endif
+                    <span class="am-btn am-btn--white am-btn--sm">{{ $cat['cta'] ?? 'View collection' }}</span>
+                </a>
+                @endforeach
             </div>
-            @endforeach
         </div>
     </div>
 </section>

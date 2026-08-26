@@ -47,13 +47,13 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RailingsController;
 use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\SearchController;
-use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\ShopPageController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SocialAuthController;
 use App\Http\Controllers\StudioController;
 use App\Http\Controllers\VendorProposalController;
+use App\Support\StorefrontNavigation;
 use App\Support\StorefrontRoutes;
 use Illuminate\Support\Facades\Route;
 use Laravel\Passkeys\Http\Controllers\PasskeyLoginController;
@@ -88,7 +88,6 @@ Route::middleware('checkout.customer')->group(function () {
 
 Route::post('/webhooks/razorpay', RazorpayWebhookController::class)->name('webhooks.razorpay');
 
-Route::get('/services', [ServiceController::class, 'index'])->name('services.index');
 Route::get('/corten-steel', [CortenSteelController::class, 'show'])->name('corten-steel.show');
 Route::redirect('/services/corten-steel-facade', '/corten-steel', 301);
 Route::redirect('/services/bespoke-metal-furniture', '/shop/bespoke-metal-furniture');
@@ -96,8 +95,13 @@ Route::redirect('/services/partitions', '/studio/pvd-partitions');
 Route::redirect('/services/slim-profile-door-system', '/studio/slim-profile-door-systems');
 Route::redirect('/services/main-entrance-pvd-doors', '/studio/main-entrance-pvd-doors');
 Route::redirect('/services/rack-systems-metal-pvd', '/studio/metal-pvd-rack-systems');
-Route::get('/services/{slug}', [ServiceController::class, 'show'])->name('services.show');
-Route::get('/services/{serviceSlug}/{designSlug}', [ServiceController::class, 'design'])->name('services.design');
+Route::get('/services', fn () => redirect(StorefrontNavigation::publicServicesRedirectUrl(), 301))->name('services.index');
+Route::get('/services/{slug}', function (string $slug) {
+    return redirect(StorefrontNavigation::publicServicesRedirectUrl($slug), 301);
+})->where('slug', '[A-Za-z0-9\-]+')->name('services.show');
+Route::get('/services/{serviceSlug}/{designSlug}', function (string $serviceSlug) {
+    return redirect(StorefrontNavigation::publicServicesRedirectUrl($serviceSlug), 301);
+})->where(['serviceSlug' => '[A-Za-z0-9\-]+', 'designSlug' => '[A-Za-z0-9\-]+'])->name('services.design');
 
 Route::get('/studio', [StudioController::class, 'index'])->name('studio.index');
 Route::get('/studio/{slug}', [StudioController::class, 'show'])

@@ -23,11 +23,12 @@ return [
     ],
 
     'homepage' => [
+        'collections' => [
+            'title' => 'Explore Our Collections',
+            'subtitle' => 'Experience thoughtfully crafted PVD partitions and furniture that elevate your interiors across India.',
+        ],
         'sections' => [
             'category_banners' => true,
-            'best_sellers' => true,
-            'trending' => true,
-            'spotlights' => true,
             'cta_band' => true,
             'testimonials' => true,
             'blog' => true,
@@ -71,7 +72,7 @@ return [
                 'kicker' => 'LIMITED TIME OFFER',
                 'title' => 'Define Spaces With PVD Partitions',
                 'description' => 'Champagne gold, rose gold, and matte black finishes — precision stainless partitions crafted for modern Indian interiors.',
-                'image' => 'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg',
+                'image' => '/images/blog/heroes/glass-partitions-open-plan-hero-card.jpg',
                 'cta_label' => 'Explore PVD Partitions',
                 'cta_href' => '/studio/pvd-partitions',
             ],
@@ -164,7 +165,7 @@ return [
             'subtitle' => 'Wave, fluted & laser-cut dividers',
             'cta' => 'Shop Now',
             'href' => '/studio/pvd-partitions',
-            'image' => 'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg',
+            'image' => '/images/blog/heroes/glass-partitions-open-plan-hero-card.jpg',
         ],
         [
             'title' => 'Fluted Panels',
@@ -237,7 +238,7 @@ return [
                 'description' => 'Calculate PVD partition costs by area, finish, and pattern. Get an instant estimate for your project dimensions.',
                 'price' => 1800,
                 'price_unit' => 'per sq ft',
-                'image' => 'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg',
+                'image' => '/images/blog/heroes/glass-partitions-open-plan-hero-card.jpg',
                 'cta' => 'Calculate Now',
                 'href' => '/services',
             ],
@@ -305,7 +306,7 @@ return [
                 'date' => '28 June 2026',
                 'title' => 'PVD Partition Design Ideas for Modern Offices and Showrooms',
                 'excerpt' => 'Wave, fluted, and laser-cut PVD partitions that define zones without blocking light.',
-                'image' => 'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg',
+                'image' => '/images/blog/heroes/glass-partitions-open-plan-hero-card.jpg',
                 'slug' => 'pvd-partition-design-ideas',
             ],
             [
@@ -363,7 +364,7 @@ return [
     'shop' => [
         ['name' => 'Champagne Wave Partition', 'category' => 'PVD Partitions', 'price' => 28999, 'compare_price' => 38999, 'badge' => '-25%', 'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg', 'slug' => 'champagne-wave-partition'],
         ['name' => 'Veil Fluted Panel', 'category' => 'Fluted Panels', 'price' => 24999, 'compare_price' => null, 'badge' => 'NEW', 'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg', 'slug' => 'veil-fluted-panel'],
-        ['name' => 'Rose Gold Room Divider', 'category' => 'Room Dividers', 'price' => 32999, 'compare_price' => 42999, 'badge' => '-25%', 'image' => 'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg', 'slug' => 'rose-gold-room-divider'],
+        ['name' => 'Rose Gold Room Divider', 'category' => 'Room Dividers', 'price' => 32999, 'compare_price' => 42999, 'badge' => '-25%', 'image' => '/images/blog/heroes/glass-partitions-open-plan-hero-card.jpg', 'slug' => 'rose-gold-room-divider'],
         ['name' => 'Matte Black PVD Partition', 'category' => 'PVD Partitions', 'price' => 26999, 'compare_price' => 35999, 'badge' => '-25%', 'image' => 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80', 'slug' => 'matte-black-pvd-partition'],
         ['name' => 'Brushed Brass Coffee Table', 'category' => 'Coffee Tables', 'price' => 18900, 'compare_price' => null, 'image' => 'https://images.unsplash.com/photo-1532372320572-127d86b32558?w=800&q=80', 'slug' => 'brushed-brass-coffee-table'],
         ['name' => 'PVD Door Pull Handle', 'category' => 'Door Handles', 'price' => 2400, 'compare_price' => 3200, 'badge' => '-25%', 'image' => 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80', 'slug' => 'pvd-door-pull-handle'],

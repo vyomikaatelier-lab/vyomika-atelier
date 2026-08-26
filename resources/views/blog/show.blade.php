@@ -154,24 +154,24 @@
                         </article>
                         @endforeach
                     </div>
-                    <p class="am-blog-block__more"><a href="{{ route('shop.index') }}">Browse all products</a></p>
+                    <p class="am-blog-block__more"><a href="{{ \App\Support\StorefrontNavigation::primaryPublishedShopUrl() }}">Browse collections</a></p>
                 </section>
                 @endif
 
                 @if($relatedServices->isNotEmpty())
                 <section class="am-blog-block" aria-labelledby="blog-services-title">
-                    <h2 id="blog-services-title" class="am-blog-block__title">Related Services</h2>
+                    <h2 id="blog-services-title" class="am-blog-block__title">Related Studio Collections</h2>
                     <div class="am-blog-related-grid">
                         @foreach($relatedServices as $service)
                         <article class="am-blog-related-card">
-                            <a href="{{ route('services.show', $service->slug) }}" class="am-blog-related-card__link">
+                            <a href="{{ \App\Support\StorefrontNavigation::publicServicesRedirectUrl($service->slug) }}" class="am-blog-related-card__link">
                                 @if($service->image)
                                 <div class="am-blog-related-card__thumb">
                                     <img src="{{ $service->image }}" alt="{{ $service->name }} — Vyomika Atelier" loading="lazy">
                                 </div>
                                 @endif
                                 <h3 class="am-blog-related-card__title">{{ $service->name }}</h3>
-                                <span class="am-blog-related-card__cta">View service →</span>
+                                <span class="am-blog-related-card__cta">View collection →</span>
                             </a>
                         </article>
                         @endforeach

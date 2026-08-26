@@ -8,10 +8,7 @@ class SiteContent
     public static function homepageSectionLabels(): array
     {
         return [
-            'category_banners' => 'Category banners',
-            'best_sellers' => 'Best sellers product grid',
-            'trending' => 'Trending products',
-            'spotlights' => 'Spotlights',
+            'category_banners' => 'Collection row',
             'cta_band' => 'CTA band',
             'testimonials' => 'Testimonials',
             'blog' => 'Blog strip',

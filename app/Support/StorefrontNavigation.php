@@ -134,48 +134,115 @@ class StorefrontNavigation
     }
 
     /**
-     * Homepage category tiles: the same published Shop + Studio sets as nav/footer.
+     * Homepage collection row: five curated Shop + Studio tiles with self-hosted fallbacks.
      *
-     * @return list<array{title: string, subtitle: string, href: string, image: ?string, cta: string}>
+     * @return list<array{title: string, subtitle: string, href: string, image: string, cta: string}>
      */
     public static function homepageCategoryTiles(): array
     {
+        $definitions = [
+            [
+                'kind' => 'shop',
+                'slug' => 'mirror-frames',
+                'title' => 'Mirror Frames',
+                'fallback_image' => '/images/shop-heroes/mirror-frames-hero.png',
+                'fallback_subtitle' => 'Designer mirrors in premium PVD finishes for living spaces and hospitality.',
+            ],
+            [
+                'kind' => 'shop',
+                'slug' => 'corner-tables',
+                'title' => 'Corner Tables',
+                'fallback_image' => '/images/shop-heroes/corner-tables-hero.png',
+                'fallback_subtitle' => 'Sculptural side tables and accent pieces in champagne, rose gold, and matte black.',
+            ],
+            [
+                'kind' => 'shop',
+                'slug' => 'coffee-tables',
+                'title' => 'Coffee Tables',
+                'fallback_image' => '/images/shop-heroes/coffee-tables-hero.png',
+                'fallback_subtitle' => 'Statement coffee tables engineered for modern Indian interiors.',
+            ],
+            [
+                'kind' => 'studio',
+                'url_slug' => 'pvd-partitions',
+                'service_slug' => 'partitions',
+                'title' => 'PVD Partitions',
+                'fallback_image' => '/images/blog/heroes/glass-partitions-open-plan-hero-card.jpg',
+                'fallback_subtitle' => 'Custom-made, fluted, and laser-cut PVD partition systems for offices and homes.',
+            ],
+            [
+                'kind' => 'studio',
+                'url_slug' => 'slim-profile-door-systems',
+                'service_slug' => 'slim-profile-door-system',
+                'title' => 'Slim Profile Door Systems',
+                'fallback_image' => '/images/shop-heroes/slim-profile-doors-hero.png',
+                'fallback_subtitle' => 'Ultra-slim PVD door frames with premium glass and concealed hardware.',
+            ],
+        ];
+
         $tiles = [];
 
-        foreach (self::shopLinks() as $link) {
-            $slug = $link['slug'] ?? ($link['params']['slug'] ?? null);
-            $category = is_string($slug)
-                ? Category::query()->where('slug', $slug)->first()
-                : null;
+        foreach ($definitions as $definition) {
+            if (($definition['kind'] ?? '') === 'shop') {
+                $slug = (string) ($definition['slug'] ?? '');
+                if ($slug === '' || ! self::isShopCategoryListed($slug)) {
+                    continue;
+                }
 
-            $tiles[] = [
-                'title' => $link['label'],
-                'subtitle' => self::plainText($category?->description ?? 'Shop collection'),
-                'href' => $link['href'],
-                'image' => self::categoryImage($category),
-                'cta' => 'View collection',
-            ];
-        }
+                $category = Category::query()->where('slug', $slug)->first();
+                $subtitle = self::plainText($category?->description ?? '');
+                $tiles[] = [
+                    'title' => $definition['title'],
+                    'subtitle' => $subtitle !== '' ? $subtitle : ($definition['fallback_subtitle'] ?? ''),
+                    'href' => $slug === 'mirror-frames'
+                        ? route('shop.mirror-frames.index')
+                        : route('shop.show', $slug),
+                    'image' => self::categoryImage($category) ?? ($definition['fallback_image'] ?? ''),
+                    'cta' => 'View collection',
+                ];
 
-        foreach (self::studioLinks() as $link) {
-            $urlSlug = $link['params']['slug'] ?? '';
-            $serviceSlug = StorefrontRoutes::serviceSlugForStudioUrl((string) $urlSlug);
-            $service = $serviceSlug
+                continue;
+            }
+
+            $urlSlug = (string) ($definition['url_slug'] ?? '');
+            $serviceSlug = (string) ($definition['service_slug'] ?? '');
+            $service = $serviceSlug !== ''
                 ? Service::query()->where('slug', $serviceSlug)->first()
                 : null;
 
+            if (! self::isStudioServiceListed($service)) {
+                continue;
+            }
+
+            $image = null;
+            if ($service && filled($service->image)) {
+                $image = MediaUrl::resolve($service->image) ?? $service->image;
+            }
+
+            $subtitle = self::plainText($service?->summary ?? '');
             $tiles[] = [
-                'title' => $link['label'],
-                'subtitle' => self::plainText($service?->summary ?? 'Studio collection'),
-                'href' => $link['href'],
-                'image' => $service && filled($service->image)
-                    ? (MediaUrl::resolve($service->image) ?? $service->image)
-                    : null,
+                'title' => $definition['title'],
+                'subtitle' => $subtitle !== '' ? $subtitle : ($definition['fallback_subtitle'] ?? ''),
+                'href' => route('studio.show', $urlSlug),
+                'image' => $image ?? ($definition['fallback_image'] ?? ''),
                 'cta' => 'View collection',
             ];
         }
 
         return $tiles;
+    }
+
+    public static function publicServicesRedirectUrl(?string $serviceSlug = null): string
+    {
+        $serviceSlug = trim((string) $serviceSlug);
+        if ($serviceSlug !== '') {
+            $studioUrl = StorefrontRoutes::studioUrlForService($serviceSlug);
+            if ($studioUrl) {
+                return route('studio.show', $studioUrl);
+            }
+        }
+
+        return self::primaryPublishedShopUrl();
     }
 
     public static function primaryPublishedShopUrl(): string

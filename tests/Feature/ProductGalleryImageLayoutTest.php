@@ -134,7 +134,40 @@ class ProductGalleryImageLayoutTest extends TestCase
             ->assertSee('Category Gallery Coffee Table', false);
     }
 
-    public function test_homepage_featured_products_use_square_cover_product_cards(): void
+    public function test_homepage_collection_row_renders_published_category_tiles(): void
+    {
+        foreach (['mirror-frames', 'corner-tables', 'coffee-tables'] as $slug) {
+            $category = Category::query()->firstOrCreate(
+                ['slug' => $slug],
+                ['name' => StorefrontRoutes::shopCategoryLabel($slug), 'section' => 'shop', 'is_active' => true]
+            );
+
+            Product::query()->create([
+                'category_id' => $category->id,
+                'name' => StorefrontRoutes::shopCategoryLabel($slug).' Tile Product',
+                'slug' => $slug.'-tile-product',
+                'price' => 12000,
+                'stock' => 2,
+                'section' => Product::SECTION_SHOP,
+                'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+                'pricing_type' => Product::PRICING_FIXED,
+                'is_active' => true,
+                'is_gallery_visible' => true,
+            ]);
+        }
+
+        $html = $this->get(route('home'))->assertOk()->getContent();
+
+        $this->assertStringContainsString('am-cat-scroll', $html);
+        $this->assertStringContainsString('Mirror Frames', $html);
+        $this->assertStringContainsString('Corner Tables', $html);
+        $this->assertStringContainsString('Coffee Tables', $html);
+        $this->assertStringContainsString('/images/shop-heroes/mirror-frames-hero.png', $html);
+        $this->assertStringNotContainsString('am-product-grid--with-banner', $html);
+        $this->assertStringNotContainsString('PVD Craft, Elevated for Interiors', $html);
+    }
+
+    public function test_homepage_does_not_render_removed_product_grids(): void
     {
         $category = Category::query()->firstOrCreate(
             ['slug' => 'door-handles'],
@@ -158,50 +191,8 @@ class ProductGalleryImageLayoutTest extends TestCase
 
         $this->get(route('home'))
             ->assertOk()
-            ->assertSee('am-product-card__thumb', false)
-            ->assertSee('Homepage Featured Handle', false);
-    }
-
-    public function test_homepage_new_products_section_lists_newest_product_first(): void
-    {
-        $category = Category::query()->firstOrCreate(
-            ['slug' => 'coffee-tables'],
-            ['name' => 'Coffee Tables', 'section' => 'shop', 'is_active' => true]
-        );
-
-        Product::query()->create([
-            'category_id' => $category->id,
-            'name' => 'Older Coffee Table',
-            'slug' => 'older-coffee-table',
-            'price' => 12000,
-            'stock' => 2,
-            'sort_order' => 1,
-            'section' => Product::SECTION_SHOP,
-            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
-            'pricing_type' => Product::PRICING_FIXED,
-            'is_active' => true,
-        ]);
-
-        Product::query()->create([
-            'category_id' => $category->id,
-            'name' => 'Newest Coffee Table',
-            'slug' => 'newest-coffee-table',
-            'price' => 14000,
-            'stock' => 2,
-            'sort_order' => 2,
-            'section' => Product::SECTION_SHOP,
-            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
-            'pricing_type' => Product::PRICING_FIXED,
-            'is_active' => true,
-        ]);
-
-        $html = $this->get(route('home'))->assertOk()->getContent();
-
-        $this->assertLessThan(
-            strpos($html, 'Older Coffee Table'),
-            strpos($html, 'Newest Coffee Table'),
-            'Homepage product grid should render newest products before older ones (left to right).'
-        );
+            ->assertDontSee('Homepage Featured Handle', false)
+            ->assertDontSee('am-product-grid--with-banner', false);
     }
 
     public function test_mirror_frames_gallery_uses_portrait_cover_layout(): void
