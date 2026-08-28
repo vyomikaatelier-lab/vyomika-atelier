@@ -19,13 +19,7 @@ class AccountDashboardController extends Controller
         $user = Auth::user();
 
         $orders = Order::query()
-            ->where(function ($q) use ($user) {
-                $q->where('user_id', $user->id)
-                    ->orWhere('customer_email', $user->email);
-                if ($user->mobile) {
-                    $q->orWhere('customer_phone', 'like', '%' . $user->mobile);
-                }
-            })
+            ->where('user_id', $user->id)
             ->latest()
             ->take(10)
             ->get();
