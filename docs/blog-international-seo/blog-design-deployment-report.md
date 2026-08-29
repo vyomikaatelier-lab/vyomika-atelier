@@ -60,7 +60,7 @@ Verified in `database/content/blog/manifest.php`:
 | `pvd-coating-explained` | `/images/blog/heroes/pvd-coating-explained-hero.jpg` | Self-hosted ✓ |
 | `corten-steel-modern-facades` | `/images/blog/heroes/corten-steel-modern-facades-hero.jpg` | Self-hosted ✓ |
 
-Draft articles still reference `delhiduniya.com` hotlinks — expected; `--global-only` import preserves draft status and does not publish them.
+Draft articles still reference third-party hotlinks — expected; `--global-only` import preserves draft status and does not publish them.
 
 ---
 

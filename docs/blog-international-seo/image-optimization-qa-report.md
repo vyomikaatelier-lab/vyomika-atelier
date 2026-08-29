@@ -100,7 +100,7 @@ All 10 pillar JPEG + WebP derivatives returned HTTP 200.
 | WebP + JPEG fallback | Confirmed via `BlogHeroImageTest` with self-hosted paths |
 | Viewport 1440 / 1024 / 390 | Responsive CSS grid; no viewport-specific breakage (static HTML/CSS audit) |
 
-**Note:** Local DB posts still reference legacy external hero URLs (`vyomikaatelier.com/assets/…`, `delhiduniya.com/…`). WebP/card pipeline activates once import applies manifest `image` + `og_image`. Behaviour validated with seeded posts in `BlogHeroImageTest`.
+**Note:** Local DB posts still reference legacy external hero URLs (`vyomikaatelier.com/assets/…`). WebP/card pipeline activates once import applies manifest `image` + `og_image`. Behaviour validated with seeded posts in `BlogHeroImageTest`.
 
 ---
 

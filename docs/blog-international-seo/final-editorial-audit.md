@@ -70,32 +70,32 @@ Temporary audit runners (`_audit-temp.php`, `_dedupe-boilerplate-once.php`, `_dr
 | # | Slug | Hero URL | Source | Dims | Visible content | Matches article? | Vyomika work? | Copyright | Alt text quality | Verdict |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 1 | glass-partitions-open-plan | `…/campaign-partitions.jpeg` | vyomikaatelier.com | — | **404 Not Found** | N/A | Unknown | Unknown | Good (partition) | **REPLACE — broken URL** |
-| 2 | pvd-coating-explained | `…/372645.jpeg` | delhiduniya.com/vyomika | 450×600 | Gold PVD geometric partition, luxury interior | Yes | Likely Vyomika product photo | Third-party host; verify licence | Good | **KEEP** (upgrade to ≥1200px wide) |
-| 3 | corten-steel-modern-facades | `…/722414.jpeg` | delhiduniya.com/vyomika | 450×600 | Gold PVD partition w/ marble infill | **No — not Corten** | Likely Vyomika | Third-party host | Claims Corten patina | **REPLACE immediately** |
-| 4 | pvd-partitions-materials-finishes-applications-cost-factors | `…/722414.jpeg` | delhiduniya | 450×600 | PVD partition screen | Yes | Likely Vyomika | Third-party host | Good | **KEEP** (resize) |
-| 5 | pvd-partition-price-in-india-what-determines-final-cost | `…/372645.jpeg` | delhiduniya | 450×600 | PVD partition | Yes | Likely Vyomika | Third-party host | Good | **KEEP** (resize) |
+| 2 | pvd-coating-explained | former third-party JPEG | third-party host | 450×600 | Gold PVD geometric partition, luxury interior | Yes | Likely Vyomika product photo | Third-party host; verify licence | Good | **KEEP** (upgrade to ≥1200px wide) |
+| 3 | corten-steel-modern-facades | former third-party JPEG | third-party host | 450×600 | Gold PVD partition w/ marble infill | **No — not Corten** | Likely Vyomika | Third-party host | Claims Corten patina | **REPLACE immediately** |
+| 4 | pvd-partitions-materials-finishes-applications-cost-factors | former third-party JPEG | third-party | 450×600 | PVD partition screen | Yes | Likely Vyomika | Third-party host | Good | **KEEP** (resize) |
+| 5 | pvd-partition-price-in-india-what-determines-final-cost | former third-party JPEG | third-party | 450×600 | PVD partition | Yes | Likely Vyomika | Third-party host | Good | **KEEP** (resize) |
 | 6 | pvd-partitions-vs-powder-coated-metal-partitions | `…/campaign-partitions.jpeg` | vyomikaatelier.com | — | **404** | N/A | — | — | Good | **REPLACE — broken** |
-| 7 | how-to-select-metal-partition-for-living-room | `…/722414.jpeg` | delhiduniya | 450×600 | PVD partition | Yes | Likely Vyomika | Third-party host | Good | **KEEP** (resize) |
-| 8 | slim-profile-doors-hinged-sliding-telescopic-compared | `…/372645.jpeg` | delhiduniya | 450×600 | Partition, not door | **No** | Likely Vyomika | Third-party host | Claims sliding door | **REPLACE** |
-| 9 | fluted-glass-slim-profile-doors-design-privacy-guide | `…/722414.jpeg` | delhiduniya | 450×600 | Partition, not door | **No** | Likely Vyomika | Third-party host | Claims fluted door | **REPLACE** |
-| 10 | how-to-choose-luxury-main-entrance-door | `…/372645.jpeg` | delhiduniya | 450×600 | Partition, not entrance | **No** | Likely Vyomika | Third-party host | Claims entrance door | **REPLACE** |
-| 11 | stainless-steel-glass-etched-entrance-doors-compared | `…/722414.jpeg` | delhiduniya | 450×600 | Partition, not door | **No** | Likely Vyomika | Third-party host | Claims etched door | **REPLACE** |
+| 7 | how-to-select-metal-partition-for-living-room | former third-party JPEG | third-party | 450×600 | PVD partition | Yes | Likely Vyomika | Third-party host | Good | **KEEP** (resize) |
+| 8 | slim-profile-doors-hinged-sliding-telescopic-compared | former third-party JPEG | third-party | 450×600 | Partition, not door | **No** | Likely Vyomika | Third-party host | Claims sliding door | **REPLACE** |
+| 9 | fluted-glass-slim-profile-doors-design-privacy-guide | former third-party JPEG | third-party | 450×600 | Partition, not door | **No** | Likely Vyomika | Third-party host | Claims fluted door | **REPLACE** |
+| 10 | how-to-choose-luxury-main-entrance-door | former third-party JPEG | third-party | 450×600 | Partition, not entrance | **No** | Likely Vyomika | Third-party host | Claims entrance door | **REPLACE** |
+| 11 | stainless-steel-glass-etched-entrance-doors-compared | former third-party JPEG | third-party | 450×600 | Partition, not door | **No** | Likely Vyomika | Third-party host | Claims etched door | **REPLACE** |
 | 12 | stainless-steel-railings-types-finishes-selection-guide | `…/campaign-partitions.jpeg` | vyomikaatelier.com | — | **404** | N/A | — | — | Claims staircase railing | **REPLACE — broken** |
-| 13 | glass-railings-staircases-balconies-planning-checklist | `…/372645.jpeg` | delhiduniya | 450×600 | Partition, not railing | **No** | Likely Vyomika | Third-party host | Claims balcony railing | **REPLACE** |
-| 14 | interior-vs-exterior-railings-material-finish | `…/722414.jpeg` | delhiduniya | 450×600 | Partition, not railing | **No** | Likely Vyomika | Third-party host | Claims exterior railing | **REPLACE** |
+| 13 | glass-railings-staircases-balconies-planning-checklist | former third-party JPEG | third-party | 450×600 | Partition, not railing | **No** | Likely Vyomika | Third-party host | Claims balcony railing | **REPLACE** |
+| 14 | interior-vs-exterior-railings-material-finish | former third-party JPEG | third-party | 450×600 | Partition, not railing | **No** | Likely Vyomika | Third-party host | Claims exterior railing | **REPLACE** |
 | 15 | what-is-corten-steel-and-how-does-it-weather | `…/campaign-partitions.jpeg` | vyomikaatelier.com | — | **404** | N/A | — | — | Claims Corten patina | **REPLACE — broken** |
-| 16 | corten-steel-facades-design-drainage-weathering | `…/372645.jpeg` | delhiduniya | 450×600 | PVD partition | **No** | Likely Vyomika | Third-party host | Claims Corten façade | **REPLACE** |
-| 17 | corten-steel-cladding-vs-conventional-painted-steel | `…/722414.jpeg` | delhiduniya | 450×600 | PVD partition | **No** | Likely Vyomika | Third-party host | Claims Corten vs paint | **REPLACE** |
+| 16 | corten-steel-facades-design-drainage-weathering | former third-party JPEG | third-party | 450×600 | PVD partition | **No** | Likely Vyomika | Third-party host | Claims Corten façade | **REPLACE** |
+| 17 | corten-steel-cladding-vs-conventional-painted-steel | former third-party JPEG | third-party | 450×600 | PVD partition | **No** | Likely Vyomika | Third-party host | Claims Corten vs paint | **REPLACE** |
 | 18 | reduce-rust-run-off-staining-around-corten-steel | `…/campaign-partitions.jpeg` | vyomikaatelier.com | — | **404** | N/A | — | — | Claims Corten drip strip | **REPLACE — broken** |
-| 19 | pvd-door-handles-finishes-sizes-selection-guide | `…/372645.jpeg` | delhiduniya | 450×600 | Partition, not handles | **No** | Likely Vyomika | Third-party host | Claims pull handles | **REPLACE** |
-| 20 | select-pull-handle-length-for-main-door | `…/722414.jpeg` | delhiduniya | 450×600 | Partition, not handle | **No** | Likely Vyomika | Third-party host | Claims long pull | **REPLACE** |
-| 21 | pvd-furniture-care-finishes-customization | `…/372645.jpeg` | delhiduniya | 450×600 | Partition in foyer context | Partial | Likely Vyomika | Third-party host | Claims console table | **REPLACE** |
-| 22 | choosing-metal-coffee-table-luxury-interior | `…/722414.jpeg` | delhiduniya | 450×600 | Partition, not table | **No** | Likely Vyomika | Third-party host | Claims coffee table | **REPLACE** |
+| 19 | pvd-door-handles-finishes-sizes-selection-guide | former third-party JPEG | third-party | 450×600 | Partition, not handles | **No** | Likely Vyomika | Third-party host | Claims pull handles | **REPLACE** |
+| 20 | select-pull-handle-length-for-main-door | former third-party JPEG | third-party | 450×600 | Partition, not handle | **No** | Likely Vyomika | Third-party host | Claims long pull | **REPLACE** |
+| 21 | pvd-furniture-care-finishes-customization | former third-party JPEG | third-party | 450×600 | Partition in foyer context | Partial | Likely Vyomika | Third-party host | Claims console table | **REPLACE** |
+| 22 | choosing-metal-coffee-table-luxury-interior | former third-party JPEG | third-party | 450×600 | Partition, not table | **No** | Likely Vyomika | Third-party host | Claims coffee table | **REPLACE** |
 | 23 | pvd-finish-selection-guide-gold-rose-gold-champagne-black | `…/campaign-partitions.jpeg` | vyomikaatelier.com | — | **404** | N/A | — | — | Claims sample board | **REPLACE — broken** |
-| 24 | architects-specify-custom-architectural-metalwork | `…/372645.jpeg` | delhiduniya | 450×600 | Installed partition | Partial (metalwork) | Likely Vyomika | Third-party host | Claims shop drawings | **REPLACE** (project/factory photo preferred) |
-| 25 | drawing-to-installation-custom-metal-fabrication-process | `…/722414.jpeg` | delhiduniya | 450×600 | Installed partition | Partial | Likely Vyomika | Third-party host | Claims packaged panels | **REPLACE** (QC/packaging photo) |
+| 24 | architects-specify-custom-architectural-metalwork | former third-party JPEG | third-party | 450×600 | Installed partition | Partial (metalwork) | Likely Vyomika | Third-party host | Claims shop drawings | **REPLACE** (project/factory photo preferred) |
+| 25 | drawing-to-installation-custom-metal-fabrication-process | former third-party JPEG | third-party | 450×600 | Installed partition | Partial | Likely Vyomika | Third-party host | Claims packaged panels | **REPLACE** (QC/packaging photo) |
 
-**Summary:** 6 articles use a **broken** hero URL. 2 product JPEGs (`372645`, `722414`) are valid Vyomika PVD partition photography but are **reused as generic placeholders** for Corten, railings, doors, handles, and furniture — topic mismatch on 18+ articles. All verified JPEGs are **450×600** — below the 1200px blog card guideline.
+**Summary:** 6 articles use a **broken** hero URL. Two former third-party product JPEGs are valid Vyomika PVD partition photography but are **reused as generic placeholders** for Corten, railings, doors, handles, and furniture — topic mismatch on 18+ articles. All verified JPEGs are **450×600** — below the 1200px blog card guideline.
 
 ---
 
@@ -105,7 +105,7 @@ Temporary audit runners (`_audit-temp.php`, `_dedupe-boilerplate-once.php`, `_dr
 
 | Slug | Issue | Recommended replacement |
 |---|---|---|
-| `glass-partitions-open-plan` | Hero URL 404 | Host `campaign-partitions.jpeg` on CDN **or** use `372645`/`722414` with correct partition alt until bespoke hero ready |
+| `glass-partitions-open-plan` | Hero URL 404 | Host `campaign-partitions.jpeg` on CDN **or** use a self-hosted partition photo with correct alt until a bespoke hero is ready |
 | `corten-steel-modern-facades` | PVD partition photo, not weathering steel | Corten entrance screen / façade from `/projects/corten-entrance-screen` or new site photography |
 
 ### Unpublished — set to draft until hero fixed (done in manifest)
@@ -187,7 +187,7 @@ No exact duplicate paragraphs remain after dedupe pass. **Keyword stuffing:** br
 | FAQs | 4 (peel, outdoors, TiN, tapware matching) |
 | Internal links | `/blog/pvd-partitions-vs-*`, `/blog/pvd-finish-selection-*`, `/studio/pvd-partitions`, `/shop/door-handles`, `/contact`, `/professionals` |
 | Claims needing confirmation | Exterior PVD suitability (flagged as project-specific in FAQ) |
-| Hero | 372645 — PVD partition — **acceptable** |
+| Hero | Former third-party JPEG — PVD partition — **acceptable** |
 | First ~250 words | Defines PVD, vacuum deposition, 304/316 stainless, contrast with plating/powder coat |
 | Technical middle | "PVD compared with powder coating" — edge wear, metallic clarity |
 | Conclusion | Coordinate finish across partitions, doors, hardware |
@@ -203,7 +203,7 @@ No exact duplicate paragraphs remain after dedupe pass. **Keyword stuffing:** br
 | Word count | ~920 |
 | H2 outline | Materials → finishes → applications → structure → cost → Vyomika workflow → measurement → scenarios → handover → Conclusion |
 | FAQs | 5 |
-| Hero | 722414 — matches PVD partition topic |
+| Hero | Former third-party JPEG — matches PVD partition topic |
 | Claims | Grade 316 "may be considered" — OK; no fixed pricing |
 
 ### 7.3 `slim-profile-doors-hinged-sliding-telescopic-compared`
@@ -288,7 +288,7 @@ Duration: 5.25s
 
 1. **Owner:** Replace heroes per §4 — especially published `glass-partitions-open-plan` and `corten-steel-modern-facades`.
 2. **Owner:** Restore or retire `campaign-partitions.jpeg` on production CDN.
-3. **Owner:** Confirm delhiduniya.com image licence / migrate heroes to vyomikaatelier.com hosting.
+3. **Owner:** Confirm a third-party host image licence / migrate heroes to vyomikaatelier.com hosting.
 4. **Owner:** Review `docs/blog-international-seo/owner-confirmation-required.md` before any `blog:import-content` apply.
 5. **Optional editorial:** Shorten shared Site measurement boilerplate on non-fabrication articles (railings, Corten).
 6. **Optional:** Fix 19 failing product-admin tests on `hotfix/production-regressions` (separate from blog scope).

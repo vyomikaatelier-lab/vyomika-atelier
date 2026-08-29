@@ -49,7 +49,7 @@ All other global slugs: UPDATE with status and `published_at` preserved from des
 
 ## Image-gated drafts
 
-No image-gated drafts in global set. All 25 use Vyomika/delhiduniya photography with complete hero alt text.
+No image-gated drafts in global set. All 25 use Vyomika photography (or a former third-party placeholder since removed) with complete hero alt text.
 
 | Slug | Hero relevant | Alt complete | Replacement required | Recommendation |
 |---|---|---|---|---|

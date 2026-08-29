@@ -106,9 +106,9 @@ class CatalogSyncSeeder extends Seeder
                 'has_designs' => true,
                 'lead_form' => 'popup',
                 'designs' => [
-                    ['name' => 'Wave Partition', 'slug' => 'wave-partition', 'product_slug' => 'champagne-wave-partition', 'description' => 'Sculptural wave profile with champagne or rose gold PVD finish.', 'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg'],
-                    ['name' => 'Fluted Panel', 'slug' => 'fluted-panel', 'product_slug' => 'veil-fluted-panel', 'description' => 'Vertical fluting for light diffusion and acoustic softening.', 'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg'],
-                    ['name' => 'Laser-Cut Screen', 'slug' => 'laser-cut-screen', 'product_slug' => 'laser-cut-partition', 'description' => 'Custom patterns cut in stainless with precision CNC finishing.', 'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg'],
+                    ['name' => 'Wave Partition', 'slug' => 'wave-partition', 'product_slug' => 'champagne-wave-partition', 'description' => 'Sculptural wave profile with champagne or rose gold PVD finish.', 'image' => ''],
+                    ['name' => 'Fluted Panel', 'slug' => 'fluted-panel', 'product_slug' => 'veil-fluted-panel', 'description' => 'Vertical fluting for light diffusion and acoustic softening.', 'image' => ''],
+                    ['name' => 'Laser-Cut Screen', 'slug' => 'laser-cut-screen', 'product_slug' => 'laser-cut-partition', 'description' => 'Custom patterns cut in stainless with precision CNC finishing.', 'image' => ''],
                     ['name' => 'Frameless Glass + Metal', 'slug' => 'frameless-glass-metal', 'product_slug' => 'rose-gold-room-divider', 'description' => 'Hybrid partition combining PVD metal frames with glass infill.', 'image' => 'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg'],
                 ],
             ],

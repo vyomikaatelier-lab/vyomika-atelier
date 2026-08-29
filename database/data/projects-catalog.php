@@ -24,8 +24,6 @@ return [
         'image' => 'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg',
         'gallery' => [
             'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg',
-            'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg',
-            'https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg',
             'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80',
         ],
         'meta_title' => 'Champagne Wave Office Lobby — PVD Partitions in Mumbai | Vyomika Atelier LLP',
@@ -49,9 +47,8 @@ return [
         'testimonial_quote' => 'The rose gold finish photographs beautifully and has held up perfectly under daily foot traffic.',
         'testimonial_author' => 'Store Design Lead',
         'testimonial_role' => 'Luxury Retail — Bangalore',
-        'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg',
+        'image' => '',
         'gallery' => [
-            'https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg',
             'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg',
             'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1200&q=80',
         ],
@@ -77,7 +74,6 @@ return [
         'gallery' => [
             'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80',
             'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&q=80',
-            'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg',
         ],
         'meta_title' => 'Matte Black Co-working Partitions — Pune | Vyomika Atelier LLP',
         'meta_description' => 'Matte black PVD office partitions for a Pune co-working suite — custom modular metalwork by Vyomika Atelier LLP.',

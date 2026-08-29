@@ -85,7 +85,7 @@ Blog URLs in sitemap: **4** (expected post-import baseline for published-only gl
 
 ### Pre-deploy pillar markup baseline (public HTML)
 
-| Slug | `<picture>` | delhiduniya/unsplash | OG absolute | JSON-LD |
+| Slug | `<picture>` | third-party/unsplash | OG absolute | JSON-LD |
 |---|---|---|---|---|
 | `glass-partitions-open-plan` | NO | YES (legacy hotlinks) | YES | YES |
 | `pvd-coating-explained` | NO | YES | YES | YES |
@@ -236,7 +236,7 @@ Then verify:
 
 - [ ] `curl -I` 200 on `/blog`, 3 pillar URLs, `/sitemap.xml`
 - [ ] Hero JPG/WebP/card assets HTTP 200
-- [ ] `<picture>` markup on pillars; no delhiduniya/unsplash on pillars
+- [ ] `<picture>` markup on pillars; no third-party/unsplash on pillars
 - [ ] OG tags use absolute URLs; JSON-LD present
 - [ ] Sitemap lists published articles only (4 blog URLs)
 - [ ] No SYNC-TRACE or AI trace strings

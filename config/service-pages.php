@@ -91,7 +91,7 @@ return [
             ],
             'cta_primary' => ['label' => 'Browse Designs', 'href' => '#service-gallery'],
             'cta_secondary' => ['label' => 'Request Quote', 'href' => '/custom-order'],
-            'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg',
+            'image' => '',
         ],
         'intro' => [
             'title' => 'Rack Systems Built for Display',

@@ -4,7 +4,7 @@ Articles imported via `blog:import-content` are **image-gated**: unsuitable or m
 
 ## Accepted hero images
 
-- Vyomika-hosted product or campaign photography (`vyomikaatelier.com`, `delhiduniya.com/vyomika/…`)
+- Vyomika-hosted product or campaign photography (`vyomikaatelier.com`)
 - Project-specific photography with accurate `hero_image_alt` text
 - Minimum practical size: 1200px wide JPEG/WebP for blog index cards
 
@@ -26,7 +26,7 @@ The importer flags and downgrades to draft when `image` matches any of:
 | File | Slug | Reason |
 |---|---|---|
 | `m4wAc-e0a938ce-1199-4a72-bdf5-1083476eac16.jpg` | `corten-steel-modern-facades` | Grok watermark; not copied to `public/` |
-| delhiduniya.com hotlinks | `glass-partitions-open-plan`, `pvd-coating-explained`, `corten-steel-modern-facades` | Replaced with self-hosted heroes |
+| Third-party hotlinks | `glass-partitions-open-plan`, `pvd-coating-explained`, `corten-steel-modern-facades` | Replaced with self-hosted heroes |
 
 **Owner-approved heroes (2026-08-23):** see [owner-image-assessment.md](./owner-image-assessment.md) — three pillar slugs self-hosted under `/images/blog/heroes/`; JPEG only (sources &lt;1200px wide).
 
