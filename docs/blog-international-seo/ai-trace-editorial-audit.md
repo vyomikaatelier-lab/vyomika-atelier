@@ -115,10 +115,10 @@ See `final-editorial-audit.md` §3–§4 for full hero verification table.
 **Summary (25 global):**
 
 - 6 articles reference **broken** `campaign-partitions.jpeg` (404).
-- 2 delhiduniya JPEGs (`372645`, `722414`) are valid Vyomika PVD partition photos but **topic-mismatched** on 18+ non-partition articles.
+- 2 former third-party JPEGs are valid Vyomika PVD partition photos but **topic-mismatched** on 18+ non-partition articles.
 - All verified JPEGs are 450×600 — below 1200px card guideline.
 - Alt text is descriptive; no prompt text or generator filenames in alt/caption fields.
-- Third-party host (`delhiduniya.com`) — copyright/licence to be confirmed by owner before production hero promotion.
+- Third-party host — copyright/licence to be confirmed by owner before production hero promotion.
 - Stock/partition photos are **not** labelled as Corten, railing, door, or handle project photography where mismatched.
 
 ---
@@ -211,7 +211,7 @@ Tests:    47 passed (674 assertions)
 ### Remaining owner actions
 
 1. Replace broken/mismatched hero images (see `final-editorial-audit.md` §4).
-2. Confirm delhiduniya.com image licence or migrate heroes to vyomikaatelier.com CDN.
+2. Confirm a third-party host image licence or migrate heroes to vyomikaatelier.com CDN.
 3. Review `owner-confirmation-required.md` before any content import apply.
 4. Optionally shorten shared measurement boilerplate on railing/Corten articles.
 

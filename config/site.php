@@ -144,22 +144,6 @@ return [
                 'cta_label' => 'Explore PVD Partitions',
                 'cta_href' => '/studio/pvd-partitions',
             ],
-            [
-                'kicker' => 'BESPOKE FABRICATION',
-                'title' => 'Wave & Fluted Metal Dividers',
-                'description' => 'Statement room dividers in wave, fluted, and laser-cut patterns — engineered for offices, showrooms, and luxury homes.',
-                'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg',
-                'cta_label' => 'Explore Collection',
-                'cta_href' => '/studio/pvd-partitions',
-            ],
-            [
-                'kicker' => 'METAL FURNITURE',
-                'title' => 'Bespoke Tables & Rack Systems',
-                'description' => 'Coffee tables, console tables, and PVD rack systems — custom sizes with Pan-India delivery from our Delhi studio.',
-                'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg',
-                'cta_label' => 'Shop Furniture',
-                'cta_href' => '/shop/coffee-tables',
-            ],
         ],
     ],
 
@@ -240,7 +224,7 @@ return [
             'subtitle' => 'Up to 20% off bestsellers',
             'cta' => 'Shop Now',
             'href' => '/studio/pvd-partitions',
-            'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg',
+            'image' => '',
         ],
         [
             'title' => 'Metal Furniture',
@@ -267,7 +251,7 @@ return [
                 'price' => 31999,
                 'compare_price' => 41999,
                 'badge' => '-25%',
-                'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg',
+                'image' => '',
                 'slug' => 'laser-cut-partition',
             ],
             [
@@ -360,7 +344,7 @@ return [
         'viewers' => 32,
         'sizes' => ['Standard (6×8 ft)', 'Large (8×10 ft)', 'Custom Size'],
         'default_size' => 'Standard (6×8 ft)',
-        'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg',
+        'image' => '',
         'slug' => 'champagne-wave-partition',
         'rate_per_sqft' => 1800,
     ],
@@ -430,8 +414,8 @@ return [
 
     // Legacy keys kept for inner pages / fallbacks
     'shop' => [
-        ['name' => 'Champagne Wave Partition', 'category' => 'PVD Partitions', 'price' => 28999, 'compare_price' => 38999, 'badge' => '-25%', 'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg', 'slug' => 'champagne-wave-partition'],
-        ['name' => 'Veil Fluted Panel', 'category' => 'Fluted Panels', 'price' => 24999, 'compare_price' => null, 'badge' => 'NEW', 'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg', 'slug' => 'veil-fluted-panel'],
+        ['name' => 'Champagne Wave Partition', 'category' => 'PVD Partitions', 'price' => 28999, 'compare_price' => 38999, 'badge' => '-25%', 'image' => '', 'slug' => 'champagne-wave-partition'],
+        ['name' => 'Veil Fluted Panel', 'category' => 'Fluted Panels', 'price' => 24999, 'compare_price' => null, 'badge' => 'NEW', 'image' => '', 'slug' => 'veil-fluted-panel'],
         ['name' => 'Rose Gold Room Divider', 'category' => 'Room Dividers', 'price' => 32999, 'compare_price' => 42999, 'badge' => '-25%', 'image' => '/images/blog/heroes/glass-partitions-open-plan-hero-card.jpg', 'slug' => 'rose-gold-room-divider'],
         ['name' => 'Matte Black PVD Partition', 'category' => 'PVD Partitions', 'price' => 26999, 'compare_price' => 35999, 'badge' => '-25%', 'image' => 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80', 'slug' => 'matte-black-pvd-partition'],
         ['name' => 'Brushed Brass Coffee Table', 'category' => 'Coffee Tables', 'price' => 18900, 'compare_price' => null, 'image' => 'https://images.unsplash.com/photo-1532372320572-127d86b32558?w=800&q=80', 'slug' => 'brushed-brass-coffee-table'],

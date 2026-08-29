@@ -29,6 +29,9 @@
 
     function resetTimer() {
       clearInterval(timer);
+      if (slides.length < 2) {
+        return;
+      }
       timer = setInterval(next, 6000);
     }
 

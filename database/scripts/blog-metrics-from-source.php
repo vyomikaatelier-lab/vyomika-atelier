@@ -25,7 +25,7 @@ foreach ($global as $entry) {
 
     $image = (string) ($entry['image'] ?? '');
     $heroReady = 'owner required';
-    if ($image !== '' && ! str_contains($image, 'delhiduniya.com') && ! str_contains($image, 'unsplash.com')) {
+    if ($image !== '' && ! str_contains($image, 'unsplash.com')) {
         if (str_contains($image, 'campaign-partitions')) {
             $heroReady = 'broken URL';
         } elseif (str_starts_with($image, '/images/') || str_contains($image, 'vyomikaatelier.com/assets/')) {
@@ -33,8 +33,6 @@ foreach ($global as $entry) {
         } else {
             $heroReady = 'external';
         }
-    } elseif (str_contains($image, 'delhiduniya.com')) {
-        $heroReady = 'delhiduniya hotlink';
     }
 
     $rows[] = [

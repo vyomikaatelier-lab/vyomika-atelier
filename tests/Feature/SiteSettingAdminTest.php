@@ -61,7 +61,7 @@ class SiteSettingAdminTest extends TestCase
             ];
         }
 
-        $payload['hero_slides'][1]['image_file'] = UploadedFile::fake()->image('hero-1.jpg');
+        $payload['hero_slides'][0]['image_file'] = UploadedFile::fake()->image('hero-0.jpg');
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.settings.update'), $payload)
@@ -70,8 +70,8 @@ class SiteSettingAdminTest extends TestCase
 
         $slides = SiteSetting::getValue('hero')['slides'] ?? [];
         $this->assertSame('Hero title 0', $slides[0]['title'] ?? null);
-        $this->assertSame('Hero title 2', $slides[2]['title'] ?? null);
-        $this->assertStringContainsString('hero/', $slides[1]['image'] ?? '');
+        $this->assertCount(1, $slides);
+        $this->assertStringContainsString('hero/', $slides[0]['image'] ?? '');
     }
 
     public function test_admin_can_upload_mobile_and_tablet_hero_images(): void

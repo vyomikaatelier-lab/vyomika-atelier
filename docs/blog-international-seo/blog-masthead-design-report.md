@@ -73,7 +73,7 @@ Verified in `database/content/blog/manifest.php` and `public/images/blog/heroes/
 | `pvd-coating-explained` | `/images/blog/heroes/pvd-coating-explained-hero.jpg` | `…-hero-card.jpg` | ✓ (+ WebP) |
 | `corten-steel-modern-facades` | `/images/blog/heroes/corten-steel-modern-facades-hero.jpg` | same as hero | ✓ (+ WebP) |
 
-Draft articles retain external `delhiduniya.com` hotlinks — expected; `--global-only` import preserves draft status.
+Draft articles retain external third-party hotlinks — expected; `--global-only` import preserves draft status.
 
 ---
 

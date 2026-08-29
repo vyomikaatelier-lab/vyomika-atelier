@@ -15,7 +15,7 @@
 | `pvd-coating-explained` | **APPROVED** — IMG_0285 authorized for website | Vyomika studio/product photography (on-product labelling) | `/images/blog/heroes/pvd-coating-explained-hero.jpg` | **No** — 1024×682; do not upscale |
 | `corten-steel-modern-facades` | **APPROVED** — OpenAI-generated editorial visual | Representative visual **not** a completed Vyomika project or photographed Indian building; alt must not imply Vyomika site work | `/images/blog/heroes/corten-steel-modern-facades-hero.jpg` | **No** — 1024×576; do not upscale |
 
-**Rejected (prior):** Grok watermark candidate `m4wAc-e0a938ce-…jpg`; delhiduniya hotlinks for these three slugs.
+**Rejected (prior):** Grok watermark candidate `m4wAc-e0a938ce-…jpg`; third-party hotlinks for these three slugs.
 
 **Originals preserved:** `public/images/blog/heroes/originals/{slug}-source.jpg` (unchanged source copies).
 

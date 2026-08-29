@@ -87,7 +87,7 @@ Never use `git reset --hard`, `git checkout --` on production trees, or database
 
 ## Image-gated drafts
 
-No hero-image placeholder flags on global articles (all use Vyomika/delhiduniya photography). Image gate rules documented in `image-requirements.md`.
+No hero-image placeholder flags on global articles (all use Vyomika photography, with former third-party placeholders since removed). Image gate rules documented in `image-requirements.md`.
 
 ## Regional articles (excluded from default import)
 

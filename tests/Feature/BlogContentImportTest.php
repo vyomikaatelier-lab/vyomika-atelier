@@ -420,10 +420,15 @@ class BlogContentImportTest extends TestCase
             'Invalid project relationship',
             'Invalid service relationship',
             'Invalid related article',
-            'Hero image is placeholder',
             'Excerpt length',
         ] as $flag) {
             $this->assertStringNotContainsString($flag, $output, $output);
         }
+
+        $this->assertStringContainsString(
+            'Hero image is placeholder or unsuitable',
+            $output,
+            'Empty former third-party heroes must stay gated as unsuitable until owner images exist.'
+        );
     }
 }

@@ -7,8 +7,8 @@
  */
 return (function () {
     $images = [
-        'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg',
-        'https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg',
+        '',
+        '',
         'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg',
         'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80',
         'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80',

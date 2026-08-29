@@ -62,11 +62,11 @@ Verified local assets: `public/images/shop-heroes/*.png` (railings, slim-profile
 |---|---|---|---|---|---|---|---|
 | 1 | glass-partitions-open-plan | **OWNER IMAGE REQUIRED** | PVD glass partition | Vyomika | — | — | No — broken `campaign-partitions.jpeg` 404 |
 | 2 | pvd-coating-explained | `/images/blog/heroes/pvd-coating-explained-hero.jpg` | PVD plaque close-up | Vyomika (self-hosted) | 1024×682 | Good — on-product labelling | **Mapped — 1024px; upgrade to ≥1200w for derivatives** |
-| 3 | corten-steel-modern-facades | **OWNER IMAGE REQUIRED** | Corten façade patina | Vyomika | ≥1200w | Grok candidate rejected; manifest still delhiduniya PVD placeholder | No |
-| 4 | pvd-partitions-materials-finishes-applications-cost-factors | **OWNER IMAGE REQUIRED** | Fluted PVD partition | Vyomika | ≥1200w | Good if partition | No — delhiduniya |
-| 5 | pvd-partition-price-in-india-what-determines-final-cost | **OWNER IMAGE REQUIRED** | Partition site measure | Vyomika | ≥1200w | Partial | No — delhiduniya |
+| 3 | corten-steel-modern-facades | **OWNER IMAGE REQUIRED** | Corten façade patina | Vyomika | ≥1200w | Grok candidate rejected; manifest still third-party PVD placeholder | No |
+| 4 | pvd-partitions-materials-finishes-applications-cost-factors | **OWNER IMAGE REQUIRED** | Fluted PVD partition | Vyomika | ≥1200w | Good if partition | No — third-party |
+| 5 | pvd-partition-price-in-india-what-determines-final-cost | **OWNER IMAGE REQUIRED** | Partition site measure | Vyomika | ≥1200w | Partial | No — third-party |
 | 6 | pvd-partitions-vs-powder-coated-metal-partitions | **OWNER IMAGE REQUIRED** | PVD vs powder partition | Vyomika | ≥1200w | Good if partition | No — broken campaign URL |
-| 7 | how-to-select-metal-partition-for-living-room | **OWNER IMAGE REQUIRED** | Living-room divider | Vyomika | ≥1200w | Good if partition | No — delhiduniya |
+| 7 | how-to-select-metal-partition-for-living-room | **OWNER IMAGE REQUIRED** | Living-room divider | Vyomika | ≥1200w | Good if partition | No — third-party |
 | 8 | slim-profile-doors-hinged-sliding-telescopic-compared | `/images/shop-heroes/slim-profile-doors-hero.png` | Slim profile door | Self-hosted | 172950 B PNG | Category hero | **Mapped — owner confirm** |
 | 9 | fluted-glass-slim-profile-doors-design-privacy-guide | `/images/shop-heroes/slim-profile-doors-hero.png` | Fluted glass door | Self-hosted | PNG | Category hero | **Mapped — owner confirm** |
 | 10 | how-to-choose-luxury-main-entrance-door | `/images/shop-heroes/slim-profile-doors-hero.png` | Main entrance door | Self-hosted | PNG | Category hero | **Mapped — owner confirm** |
@@ -75,18 +75,18 @@ Verified local assets: `public/images/shop-heroes/*.png` (railings, slim-profile
 | 13 | glass-railings-staircases-balconies-planning-checklist | `/images/shop-heroes/railings-hero.png` | Glass railing | Self-hosted | PNG | Category hero | **Mapped — owner confirm** |
 | 14 | interior-vs-exterior-railings-material-finish | `/images/shop-heroes/railings-hero.png` | Exterior railing | Self-hosted | PNG | Category hero | **Mapped — owner confirm** |
 | 15 | what-is-corten-steel-and-how-does-it-weather | **OWNER IMAGE REQUIRED** | Corten patina stages | Vyomika | ≥1200w | — | No — broken campaign URL |
-| 16 | corten-steel-facades-design-drainage-weathering | **OWNER IMAGE REQUIRED** | Corten façade detail | Vyomika | ≥1200w | Wrong (PVD) | No — delhiduniya |
-| 17 | corten-steel-cladding-vs-conventional-painted-steel | **OWNER IMAGE REQUIRED** | Corten vs painted mock-up | Vyomika | ≥1200w | Wrong (PVD) | No — delhiduniya |
+| 16 | corten-steel-facades-design-drainage-weathering | **OWNER IMAGE REQUIRED** | Corten façade detail | Vyomika | ≥1200w | Wrong (PVD) | No — third-party |
+| 17 | corten-steel-cladding-vs-conventional-painted-steel | **OWNER IMAGE REQUIRED** | Corten vs painted mock-up | Vyomika | ≥1200w | Wrong (PVD) | No — third-party |
 | 18 | reduce-rust-run-off-staining-around-corten-steel | **OWNER IMAGE REQUIRED** | Corten drip detail | Vyomika | ≥1200w | — | No — broken campaign URL |
 | 19 | pvd-door-handles-finishes-sizes-selection-guide | `/images/shop-heroes/door-handles-hero.png` | PVD pull handles | Self-hosted | PNG | Category hero | **Mapped — owner confirm** |
 | 20 | select-pull-handle-length-for-main-door | `/images/shop-heroes/door-handles-hero.png` | Long pull handle | Self-hosted | PNG | Category hero | **Mapped — owner confirm** |
 | 21 | pvd-furniture-care-finishes-customization | `/images/shop-heroes/bespoke-metal-furniture-hero.png` | PVD console | Self-hosted | PNG | Category hero | **Mapped — owner confirm** |
 | 22 | choosing-metal-coffee-table-luxury-interior | `/images/shop-heroes/coffee-tables-hero.png` | Metal coffee table | Self-hosted | PNG | Category hero | **Mapped — owner confirm** |
 | 23 | pvd-finish-selection-guide-gold-rose-gold-champagne-black | **OWNER IMAGE REQUIRED** | PVD sample board | Vyomika | ≥1200w | — | No — broken campaign URL |
-| 24 | architects-specify-custom-architectural-metalwork | **OWNER IMAGE REQUIRED** | Shop drawings / studio | Vyomika | ≥1200w | Partial | No — delhiduniya |
-| 25 | drawing-to-installation-custom-metal-fabrication-process | **OWNER IMAGE REQUIRED** | QC / packaging | Vyomika | ≥1200w | Partial | No — delhiduniya |
+| 24 | architects-specify-custom-architectural-metalwork | **OWNER IMAGE REQUIRED** | Shop drawings / studio | Vyomika | ≥1200w | Partial | No — third-party |
+| 25 | drawing-to-installation-custom-metal-fabrication-process | **OWNER IMAGE REQUIRED** | QC / packaging | Vyomika | ≥1200w | Partial | No — third-party |
 
-**Manifest updates applied:** 12 slugs mapped to self-hosted `shop-heroes` PNGs. **No delhiduniya.com URLs retained for new mappings.** All 25 global entries remain `draft`.
+**Manifest updates applied:** 12 slugs mapped to self-hosted `shop-heroes` PNGs. **No third-party URLs retained for new mappings.** All 25 global entries remain `draft`.
 
 ---
 
@@ -109,12 +109,12 @@ Source: `docs/blog-international-seo/metrics-from-source.json` (generated 2026-0
 | Slug | Words | H2 | FAQ | Links | Status | Hero | Primary intent |
 |---|---:|---:|---:|---:|---|---|---|
 | glass-partitions-open-plan | 906 | 12 | 5 | 8 | draft | broken | informational |
-| pvd-coating-explained | 644 | 9 | 4 | 7 | draft | delhiduniya | informational |
-| corten-steel-modern-facades | 771 | 9 | 5 | 8 | draft | delhiduniya | informational |
-| pvd-partitions-materials-finishes-applications-cost-factors | 876 | 12 | 5 | 9 | draft | delhiduniya | informational |
-| pvd-partition-price-in-india-what-determines-final-cost | 787 | 12 | 5 | 8 | draft | delhiduniya | commercial |
+| pvd-coating-explained | 644 | 9 | 4 | 7 | draft | third-party | informational |
+| corten-steel-modern-facades | 771 | 9 | 5 | 8 | draft | third-party | informational |
+| pvd-partitions-materials-finishes-applications-cost-factors | 876 | 12 | 5 | 9 | draft | third-party | informational |
+| pvd-partition-price-in-india-what-determines-final-cost | 787 | 12 | 5 | 8 | draft | third-party | commercial |
 | pvd-partitions-vs-powder-coated-metal-partitions | 637 | 9 | 5 | 7 | draft | broken | comparison |
-| how-to-select-metal-partition-for-living-room | 646 | 9 | 5 | 9 | draft | delhiduniya | informational |
+| how-to-select-metal-partition-for-living-room | 646 | 9 | 5 | 9 | draft | third-party | informational |
 | slim-profile-doors-hinged-sliding-telescopic-compared | 614 | 9 | 5 | 7 | draft | self-hosted | comparison |
 | fluted-glass-slim-profile-doors-design-privacy-guide | 566 | 9 | 5 | 8 | draft | self-hosted | informational |
 | how-to-choose-luxury-main-entrance-door | 564 | 9 | 5 | 10 | draft | self-hosted | informational |
@@ -123,16 +123,16 @@ Source: `docs/blog-international-seo/metrics-from-source.json` (generated 2026-0
 | glass-railings-staircases-balconies-planning-checklist | 533 | 9 | 5 | 7 | draft | self-hosted | informational |
 | interior-vs-exterior-railings-material-finish | 531 | 9 | 5 | 8 | draft | self-hosted | comparison |
 | what-is-corten-steel-and-how-does-it-weather | 575 | 9 | 5 | 8 | draft | broken | informational |
-| corten-steel-facades-design-drainage-weathering | 524 | 9 | 5 | 8 | draft | delhiduniya | informational |
-| corten-steel-cladding-vs-conventional-painted-steel | 901 | 14 | 5 | 12 | draft | delhiduniya | comparison |
+| corten-steel-facades-design-drainage-weathering | 524 | 9 | 5 | 8 | draft | third-party | informational |
+| corten-steel-cladding-vs-conventional-painted-steel | 901 | 14 | 5 | 12 | draft | third-party | comparison |
 | reduce-rust-run-off-staining-around-corten-steel | 889 | 16 | 5 | 8 | draft | broken | informational |
 | pvd-door-handles-finishes-sizes-selection-guide | 916 | 17 | 5 | 15 | draft | self-hosted | informational |
 | select-pull-handle-length-for-main-door | 891 | 16 | 5 | 10 | draft | self-hosted | informational |
 | pvd-furniture-care-finishes-customization | 910 | 18 | 5 | 13 | draft | self-hosted | informational |
 | choosing-metal-coffee-table-luxury-interior | 910 | 19 | 5 | 11 | draft | self-hosted | informational |
 | pvd-finish-selection-guide-gold-rose-gold-champagne-black | 911 | 18 | 5 | 10 | draft | broken | informational |
-| architects-specify-custom-architectural-metalwork | 882 | 19 | 5 | 13 | draft | delhiduniya | informational |
-| drawing-to-installation-custom-metal-fabrication-process | 893 | 19 | 5 | 12 | draft | delhiduniya | informational |
+| architects-specify-custom-architectural-metalwork | 882 | 19 | 5 | 13 | draft | third-party | informational |
+| drawing-to-installation-custom-metal-fabrication-process | 893 | 19 | 5 | 12 | draft | third-party | informational |
 
 **Duplicate status:** No within-article boilerplate duplicates remain. Cross-article similarity highest in expected clusters (Corten pillar + explainer ~11%; partition pricing pair ~12%) — acceptable.
 
@@ -184,7 +184,7 @@ Product-admin fixes (same branch, not blog scope):
 
 1. **Upload partition hero** — replace broken `campaign-partitions.jpeg` or provide ≥1200px PVD partition JPEG in `public/` or media library
 2. **Upload Corten heroes** — patina façade, drip detail, sample board (5+ articles blocked)
-3. **Self-host PVD coating macro** — replace delhiduniya `372645.jpeg` without upscaling
+3. **Self-host PVD coating macro** — replace the former third-party JPEG without upscaling
 4. **Confirm shop-hero PNGs** — category heroes are acceptable interim or replace with project photography
 5. **Re-run** `php artisan blog:import-content --dry-run --global-only` after hero upload (do not run live import until staging sign-off)
 

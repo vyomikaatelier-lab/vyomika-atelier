@@ -45,11 +45,13 @@
         </div>
         @endforeach
     </div>
+    @if(count($heroSlides) > 1)
     <div class="am-hero__dots">
         @foreach($heroSlides as $i => $slide)
         <button type="button" class="am-hero__dot {{ $i === 0 ? 'is-active' : '' }}" aria-label="Slide {{ $i + 1 }}"></button>
         @endforeach
     </div>
+    @endif
 </section>
 
 {{-- Signature finishes ribbon --}}
