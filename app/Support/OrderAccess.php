@@ -7,7 +7,11 @@ use Illuminate\Support\Facades\Auth;
 
 /**
  * Limits who may view or complete payment for a storefront order.
- * Prevents enumerating /checkout/pay/{id} and /checkout/success/{id}.
+ *
+ * Owned orders (non-null user_id) are exclusive to that customer. Session,
+ * email and phone must never override a foreign owner. Legacy orders with
+ * null user_id are authorized only by an exact placing-session match on
+ * checkout_order_id — never by email or phone matching.
  */
 class OrderAccess
 {
@@ -25,33 +29,13 @@ class OrderAccess
 
     public static function canAccess(Order $order): bool
     {
-        if ((int) session(self::SESSION_KEY) === (int) $order->id) {
-            return true;
+        if ($order->user_id !== null) {
+            $user = Auth::user();
+
+            return $user !== null
+                && (int) $order->user_id === (int) $user->id;
         }
 
-        $user = Auth::user();
-
-        if (! $user) {
-            return false;
-        }
-
-        if ($order->customer_email && strcasecmp($order->customer_email, (string) $user->email) === 0) {
-            return true;
-        }
-
-        if ($order->user_id && (int) $order->user_id === (int) $user->id) {
-            return true;
-        }
-
-        if ($user->mobile && $order->customer_phone) {
-            $mobile = preg_replace('/\D/', '', (string) $user->mobile);
-            $phone = preg_replace('/\D/', '', (string) $order->customer_phone);
-
-            if ($mobile !== '' && $phone !== '' && str_ends_with($phone, $mobile)) {
-                return true;
-            }
-        }
-
-        return false;
+        return (int) session(self::SESSION_KEY) === (int) $order->id;
     }
 }
