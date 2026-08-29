@@ -15,6 +15,9 @@
     <script>try{var p=new URLSearchParams(location.search),qh=p.get('hero'),t=localStorage.getItem('ssmetal-theme'),h=qh||localStorage.getItem('ssmetal-hero');document.documentElement.dataset.theme=t||'atelier';document.documentElement.dataset.hero=(h&&['split','fullscreen','centered','compact'].includes(h))?h:'fullscreen';if(qh)localStorage.setItem('ssmetal-hero',qh)}catch(e){document.documentElement.dataset.theme='atelier';document.documentElement.dataset.hero='fullscreen'}</script>
     @endif
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap">
     @php
         $assetCssVer = @filemtime(public_path('css/amerce.css')) ?: time();
         $assetThemeVer = @filemtime(public_path('css/amerce-themes.css')) ?: $assetCssVer;

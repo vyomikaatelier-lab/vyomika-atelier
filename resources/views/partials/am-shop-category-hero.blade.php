@@ -25,7 +25,7 @@
             'am-shop-category-hero__media--fixed' => $isCompact,
         ])>
             @if($hasImage)
-                @include('partials.am-hero-picture', ['slide' => $hero, 'priority' => true])
+                @include('partials.am-hero-picture', ['slide' => $hero, 'priority' => true, 'fallbackDesktop' => $fallbackDesktop ?? null])
             @endif
         </div>
         @endif
@@ -113,7 +113,7 @@
             'am-shop-category-hero__media--fixed' => $isCompact,
         ])>
             @if($hasImage)
-                @include('partials.am-hero-picture', ['slide' => $hero, 'priority' => true])
+                @include('partials.am-hero-picture', ['slide' => $hero, 'priority' => true, 'fallbackDesktop' => $fallbackDesktop ?? null])
             @endif
         </div>
         @endif
