@@ -56,11 +56,245 @@ class ResponsiveHero
 
     public static function resolveUrl(?string $path): ?string
     {
-        if (! filled($path)) {
+        if (! is_string($path)) {
+            return null;
+        }
+
+        $path = trim(str_replace('\\', '/', $path));
+        if ($path === '') {
             return null;
         }
 
         return MediaUrl::resolve($path) ?? $path;
+    }
+
+    public static function localPath(?string $url): ?string
+    {
+        if (! is_string($url) || trim($url) === '') {
+            return null;
+        }
+
+        $parsedPath = parse_url(trim($url), PHP_URL_PATH);
+        $path = is_string($parsedPath) && $parsedPath !== '' ? $parsedPath : trim($url);
+        $path = str_replace('\\', '/', $path);
+        $relative = ltrim($path, '/');
+
+        $candidates = [];
+        if (str_starts_with($relative, 'storage/')) {
+            $stored = substr($relative, strlen('storage/'));
+            $candidates[] = storage_path('app/public/'.$stored);
+            $candidates[] = public_path('storage/'.$stored);
+        }
+
+        $candidates[] = public_path($relative);
+        $candidates[] = storage_path('app/public/'.$relative);
+
+        foreach (array_unique($candidates) as $candidate) {
+            if (is_file($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return null;
+    }
+
+    /** @return array{width: int, height: int, mime: ?string}|null */
+    public static function dimensions(?string $url): ?array
+    {
+        $local = self::localPath($url);
+        if ($local === null) {
+            return null;
+        }
+
+        $size = @getimagesize($local);
+        if ($size === false) {
+            return null;
+        }
+
+        return [
+            'width' => (int) $size[0],
+            'height' => (int) $size[1],
+            'mime' => isset($size['mime']) ? (string) $size['mime'] : null,
+        ];
+    }
+
+    public static function mimeType(?string $url): ?string
+    {
+        $dims = self::dimensions($url);
+        if (is_string($dims['mime'] ?? null) && $dims['mime'] !== '') {
+            return $dims['mime'];
+        }
+
+        if (! is_string($url) || $url === '') {
+            return null;
+        }
+
+        $path = strtolower((string) (parse_url($url, PHP_URL_PATH) ?: $url));
+
+        return match (true) {
+            str_ends_with($path, '.webp') => 'image/webp',
+            str_ends_with($path, '.jpg'), str_ends_with($path, '.jpeg') => 'image/jpeg',
+            str_ends_with($path, '.png') => 'image/png',
+            default => null,
+        };
+    }
+
+    public static function webpTwinUrl(?string $url): ?string
+    {
+        if (! is_string($url) || trim($url) === '') {
+            return null;
+        }
+
+        $twin = preg_replace('/\.(jpe?g|png)(\?.*)?$/i', '.webp$2', $url);
+        if (! is_string($twin) || $twin === $url) {
+            return null;
+        }
+
+        return self::localPath($twin) !== null ? $twin : null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $hero
+     * @return list<array{media: string, srcset: string, type: ?string}>
+     */
+    public static function pictureSources(array $hero, ?string $fallbackDesktop = null): array
+    {
+        $urls = self::urls($hero, $fallbackDesktop);
+        $sources = [];
+
+        foreach ([
+            'mobile' => '(max-width: 767px)',
+            'tablet' => '(max-width: 1023px)',
+        ] as $key => $media) {
+            $url = $urls[$key] ?? null;
+            if (! is_string($url) || $url === '') {
+                continue;
+            }
+
+            $webp = self::webpTwinUrl($url);
+            if ($webp !== null) {
+                $sources[] = [
+                    'media' => $media,
+                    'srcset' => $webp,
+                    'type' => 'image/webp',
+                ];
+            }
+
+            $type = self::mimeType($url);
+            $sources[] = [
+                'media' => $media,
+                'srcset' => $url,
+                'type' => $type === 'image/webp' ? 'image/webp' : null,
+            ];
+        }
+
+        return $sources;
+    }
+
+    /**
+     * @param  array<string, mixed>  $hero
+     * @return array{src: string, srcset: string, sizes: string, width: ?int, height: ?int, sources: list<array{media: string, srcset: string, type: ?string}>}|null
+     */
+    public static function picture(array $hero, ?string $fallbackDesktop = null, string $sizes = '100vw'): ?array
+    {
+        $urls = self::urls($hero, $fallbackDesktop);
+        $src = $urls['desktop'] ?? $urls['tablet'] ?? $urls['mobile'] ?? null;
+        if (! is_string($src) || $src === '') {
+            return null;
+        }
+
+        $dims = self::dimensions($src) ?? self::dimensions($urls['mobile'] ?? null);
+        $srcset = $src;
+        if ($dims !== null) {
+            $srcset = $src.' '.$dims['width'].'w';
+        }
+
+        return [
+            'src' => $src,
+            'srcset' => $srcset,
+            'sizes' => $sizes,
+            'width' => $dims['width'] ?? null,
+            'height' => $dims['height'] ?? null,
+            'sources' => self::pictureSources($hero, $fallbackDesktop),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $hero
+     * @return list<array{href: string, media: ?string, type: ?string}>
+     */
+    public static function preloadLinks(array $hero, ?string $fallbackDesktop = null): array
+    {
+        $urls = self::urls($hero, $fallbackDesktop);
+
+        $href = static function (?string $url): ?string {
+            if (! is_string($url) || $url === '') {
+                return null;
+            }
+
+            return self::webpTwinUrl($url) ?? $url;
+        };
+
+        $mobileHref = $href($urls['mobile'] ?? null);
+        $tabletHref = $href($urls['tablet'] ?? null);
+        $desktopHref = $href($urls['desktop'] ?? null) ?? $tabletHref ?? $mobileHref;
+
+        if ($tabletHref === null) {
+            $tabletHref = $desktopHref;
+        }
+        if ($mobileHref === null) {
+            $mobileHref = $tabletHref;
+        }
+
+        if ($mobileHref === null) {
+            return [];
+        }
+
+        $ranges = [
+            ['min' => 0, 'max' => 767, 'href' => $mobileHref],
+            ['min' => 768, 'max' => 1023, 'href' => $tabletHref],
+            ['min' => 1024, 'max' => null, 'href' => $desktopHref],
+        ];
+
+        $collapsed = [];
+        foreach ($ranges as $range) {
+            $last = $collapsed === [] ? null : array_key_last($collapsed);
+            if ($last !== null && $collapsed[$last]['href'] === $range['href']) {
+                $collapsed[$last]['max'] = $range['max'];
+                continue;
+            }
+
+            $collapsed[] = $range;
+        }
+
+        $links = [];
+        foreach ($collapsed as $range) {
+            $type = self::mimeType($range['href']);
+            $links[] = [
+                'href' => $range['href'],
+                'media' => self::preloadMediaQuery($range['min'], $range['max']),
+                'type' => $type === 'image/webp' ? 'image/webp' : null,
+            ];
+        }
+
+        return $links;
+    }
+
+    private static function preloadMediaQuery(int $min, ?int $max): ?string
+    {
+        if ($min <= 0 && $max === null) {
+            return null;
+        }
+
+        if ($min <= 0) {
+            return '(max-width: '.$max.'px)';
+        }
+
+        if ($max === null) {
+            return '(min-width: '.$min.'px)';
+        }
+
+        return '(min-width: '.$min.'px) and (max-width: '.$max.'px)';
     }
 
     /**

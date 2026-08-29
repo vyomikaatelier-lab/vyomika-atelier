@@ -1,5 +1,16 @@
 @extends('layouts.store')
 
+@php
+    $homepageHeroPreloads = \App\Support\ResponsiveHero::preloadLinks(
+        \App\Support\SiteContent::heroSlides()[0] ?? []
+    );
+@endphp
+@push('meta')
+@foreach($homepageHeroPreloads as $heroPreload)
+    <link rel="preload" as="image" href="{{ $heroPreload['href'] }}"@if(!empty($heroPreload['media'])) media="{{ $heroPreload['media'] }}"@endif @if(!empty($heroPreload['type'])) type="{{ $heroPreload['type'] }}"@endif fetchpriority="high">
+@endforeach
+@endpush
+
 @section('title', $pageSeo['title'] ?? 'Vyomika Atelier | PVD Partitions & Architectural Metalwork India')
 
 @section('content')
@@ -40,7 +51,7 @@
                 <a href="{{ url($heroCta['href']) }}" class="am-btn am-btn--primary am-btn--lg">{{ $heroCta['label'] !== '' ? $heroCta['label'] : 'Explore' }}</a>
             </div>
             <div class="am-hero__image">
-                @include('partials.am-hero-picture', ['slide' => $slide, 'priority' => $i === 0])
+                @include('partials.am-hero-picture', ['slide' => $slide, 'priority' => $i === 0, 'sizes' => '(max-width: 1024px) 100vw, 50vw'])
             </div>
         </div>
         @endforeach
@@ -91,9 +102,7 @@
                 @foreach($homepageCategoryTiles as $i => $cat)
                 <a href="{{ url($cat['href']) }}" class="am-cat-tile am-reveal" style="transition-delay: {{ min($i, 4) * 0.08 }}s">
                     <span class="am-cat-tile__index" aria-hidden="true">{{ str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) }}</span>
-                    @if(!empty($cat['image']))
-                    <img src="{{ $cat['image'] }}" alt="{{ $cat['title'] ?? '' }}" loading="lazy">
-                    @endif
+                    @include('partials.am-storefront-img', ['src' => $cat['image'] ?? null, 'alt' => $cat['title'] ?? '', 'lazy' => true])
                     <h3>{{ $cat['title'] ?? '' }}</h3>
                     @if(!empty($cat['subtitle']))
                     <p>{{ $cat['subtitle'] }}</p>
@@ -103,9 +112,7 @@
                 @endforeach
                 @foreach($homepageCategoryTiles as $i => $cat)
                 <a href="{{ url($cat['href']) }}" class="am-cat-tile am-cat-tile--clone" tabindex="-1" aria-hidden="true">
-                    @if(!empty($cat['image']))
-                    <img src="{{ $cat['image'] }}" alt="" loading="lazy">
-                    @endif
+                    @include('partials.am-storefront-img', ['src' => $cat['image'] ?? null, 'alt' => '', 'lazy' => true])
                     <h3>{{ $cat['title'] ?? '' }}</h3>
                     @if(!empty($cat['subtitle']))
                     <p>{{ $cat['subtitle'] }}</p>
@@ -139,9 +146,7 @@
             @foreach($studioSpotlights['items'] as $spotlight)
             <article class="am-studio-spotlight am-studio-spotlight--portrait {{ !empty($spotlight['has_calculator']) ? 'am-studio-spotlight--calc' : '' }}{{ !empty($spotlight['has_form']) ? ' am-studio-spotlight--form' : '' }}">
                 <a href="{{ url($spotlight['href'] ?? '#') }}" class="am-studio-spotlight__media">
-                    @if(!empty($spotlight['image']))
-                    <img src="{{ $spotlight['image'] }}" alt="{{ $spotlight['title'] ?? '' }}" loading="lazy">
-                    @endif
+                    @include('partials.am-storefront-img', ['src' => $spotlight['image'] ?? null, 'alt' => $spotlight['title'] ?? '', 'lazy' => true])
                     @if(!empty($spotlight['badge']))
                     <span class="am-studio-spotlight__badge">{{ $spotlight['badge'] }}</span>
                     @endif
@@ -328,7 +333,7 @@
             <article class="am-blog-card">
                 <a href="{{ $url }}">
                     <div class="am-blog-card__thumb">
-                        @if($image)<img src="{{ $image }}" alt="{{ $title }}" loading="lazy">@endif
+                        @include('partials.am-storefront-img', ['src' => $image, 'alt' => $title, 'lazy' => true])
                     </div>
                     <div class="am-blog-card__body">
                         <div class="am-blog-card__meta">

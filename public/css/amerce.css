@@ -1,5 +1,4 @@
 /* Vyomika Atelier LLP — Amerce-inspired eCommerce design system */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap');
 
 :root {
   --am-ink: #1a1410;
@@ -636,6 +635,7 @@ ul { list-style: none; }
   color: var(--am-cream);
 }
 .am-cat-tile img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+.am-cat-tile picture { position: absolute; inset: 0; width: 100%; height: 100%; }
 .am-cat-tile:hover img { transform: scale(1.06); }
 .am-cat-tile::after {
   content: '';
@@ -816,6 +816,7 @@ ul { list-style: none; }
   object-position: center;
   transition: transform 0.55s ease;
 }
+.am-studio-spotlight__media picture { display: block; width: 100%; height: 100%; }
 .am-studio-spotlight__media:hover img { transform: scale(1.05); }
 .am-studio-spotlight__badge {
   position: absolute;
@@ -1604,6 +1605,8 @@ ul { list-style: none; }
 }
 .am-blog-card:hover { box-shadow: var(--am-shadow); }
 .am-blog-card__thumb { overflow: hidden; }
+.am-blog-card__thumb picture { display: block; width: 100%; }
+.am-blog-card__thumb img { width: 100%; height: auto; }
 .am-blog-card__thumb .blog-image-frame { border-radius: 0; }
 .am-blog-card:hover .blog-image-frame img { transform: scale(1.04); transition: transform 0.4s; }
 .am-blog-card__body { padding: 1.25rem; flex: 1; }
