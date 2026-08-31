@@ -153,9 +153,29 @@ class ResponsiveHero
         return self::localPath($twin) !== null ? $twin : null;
     }
 
+    /** @return array{width: int, height: int}|null */
+    private static function sourceDimensions(?string $url): ?array
+    {
+        $dims = self::dimensions($url);
+        if ($dims === null) {
+            return null;
+        }
+
+        $width = (int) ($dims['width'] ?? 0);
+        $height = (int) ($dims['height'] ?? 0);
+        if ($width <= 0 || $height <= 0) {
+            return null;
+        }
+
+        return [
+            'width' => $width,
+            'height' => $height,
+        ];
+    }
+
     /**
      * @param  array<string, mixed>  $hero
-     * @return list<array{media: string, srcset: string, type: ?string}>
+     * @return list<array{media: string, srcset: string, type: ?string, width: ?int, height: ?int}>
      */
     public static function pictureSources(array $hero, ?string $fallbackDesktop = null): array
     {
@@ -171,21 +191,33 @@ class ResponsiveHero
                 continue;
             }
 
+            $sourceDims = self::sourceDimensions($url);
+
             $webp = self::webpTwinUrl($url);
             if ($webp !== null) {
-                $sources[] = [
+                $source = [
                     'media' => $media,
                     'srcset' => $webp,
                     'type' => 'image/webp',
                 ];
+                if ($sourceDims !== null) {
+                    $source['width'] = $sourceDims['width'];
+                    $source['height'] = $sourceDims['height'];
+                }
+                $sources[] = $source;
             }
 
             $type = self::mimeType($url);
-            $sources[] = [
+            $source = [
                 'media' => $media,
                 'srcset' => $url,
                 'type' => $type === 'image/webp' ? 'image/webp' : null,
             ];
+            if ($sourceDims !== null) {
+                $source['width'] = $sourceDims['width'];
+                $source['height'] = $sourceDims['height'];
+            }
+            $sources[] = $source;
         }
 
         return $sources;
@@ -193,7 +225,7 @@ class ResponsiveHero
 
     /**
      * @param  array<string, mixed>  $hero
-     * @return array{src: string, srcset: string, sizes: string, width: ?int, height: ?int, sources: list<array{media: string, srcset: string, type: ?string}>}|null
+     * @return array{src: string, srcset: string, sizes: string, width: ?int, height: ?int, sources: list<array{media: string, srcset: string, type: ?string, width: ?int, height: ?int}>}|null
      */
     public static function picture(array $hero, ?string $fallbackDesktop = null, string $sizes = '100vw'): ?array
     {
@@ -203,18 +235,18 @@ class ResponsiveHero
             return null;
         }
 
-        $dims = self::dimensions($src) ?? self::dimensions($urls['mobile'] ?? null);
+        $desktopDims = self::sourceDimensions($src);
         $srcset = $src;
-        if ($dims !== null) {
-            $srcset = $src.' '.$dims['width'].'w';
+        if ($desktopDims !== null) {
+            $srcset = $src.' '.$desktopDims['width'].'w';
         }
 
         return [
             'src' => $src,
             'srcset' => $srcset,
             'sizes' => $sizes,
-            'width' => $dims['width'] ?? null,
-            'height' => $dims['height'] ?? null,
+            'width' => $desktopDims['width'] ?? null,
+            'height' => $desktopDims['height'] ?? null,
             'sources' => self::pictureSources($hero, $fallbackDesktop),
         ];
     }

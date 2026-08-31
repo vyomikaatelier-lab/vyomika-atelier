@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\SiteSetting;
+use App\Models\Category;
 use App\Support\CmsSettings;
 use App\Support\ResponsiveHero;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -21,6 +22,7 @@ class HomepageMobileLcpTest extends TestCase
         $this->assertNotSame('', $hero);
         $this->assertStringContainsString('fetchpriority="high"', $hero);
         $this->assertStringNotContainsString('loading="lazy"', $hero);
+        $this->assertStringNotContainsString('decoding="async"', $hero);
         $this->assertStringContainsString('srcset="', $hero);
         $this->assertStringContainsString('sizes="(max-width: 1024px) 100vw, 50vw"', $hero);
         $this->assertStringContainsString('width="768"', $hero);
@@ -65,6 +67,89 @@ class HomepageMobileLcpTest extends TestCase
         $this->assertStringContainsString('family=Playfair+Display', $html);
         $this->assertStringNotContainsString("@import url('https://fonts.googleapis.com", $css);
         $this->assertStringContainsString('css/amerce.css?v=', $html);
+        $this->assertStringContainsString('css/amerce-themes.css?v=', $html);
+        $this->assertStringContainsString('css/responsive.css?v=', $html);
+        $this->assertStringNotContainsString('media="print"', $html);
+        $this->assertStringNotContainsString("onload=\"this.media='all'\"", $html);
+
+        $amercePos = strpos($html, 'css/amerce.css?v=');
+        $themesPos = strpos($html, 'css/amerce-themes.css?v=');
+        $responsivePos = strpos($html, 'css/responsive.css?v=');
+        $this->assertNotFalse($amercePos);
+        $this->assertNotFalse($themesPos);
+        $this->assertNotFalse($responsivePos);
+        $this->assertLessThan($themesPos, $amercePos);
+        $this->assertLessThan($responsivePos, $themesPos);
+    }
+
+    public function test_picture_sources_emit_breakpoint_specific_dimensions(): void
+    {
+        $hero = [
+            'image' => '/images/blog/heroes/glass-partitions-open-plan-hero-card.jpg',
+            'image_tablet' => '/images/blog/heroes/corten-steel-modern-facades-hero.jpg',
+            'image_mobile' => '/images/blog/heroes/glass-partitions-open-plan-hero.jpg',
+        ];
+
+        $picture = ResponsiveHero::picture($hero);
+        $this->assertNotNull($picture);
+        $this->assertSame(768, $picture['width']);
+        $this->assertSame(432, $picture['height']);
+
+        $mobileSource = $this->sourceForMedia($picture['sources'], '(max-width: 767px)', 'glass-partitions-open-plan-hero.jpg');
+        $tabletSource = $this->sourceForMedia($picture['sources'], '(max-width: 1023px)', 'corten-steel-modern-facades-hero.jpg');
+
+        $this->assertSame(768, $mobileSource['width']);
+        $this->assertSame(1024, $mobileSource['height']);
+        $this->assertSame(1024, $tabletSource['width']);
+        $this->assertSame(576, $tabletSource['height']);
+    }
+
+    public function test_picture_omits_dimensions_for_unreadable_files(): void
+    {
+        $picture = ResponsiveHero::picture([
+            'image' => 'https://example.com/cms-desktop.webp',
+            'image_tablet' => 'https://example.com/cms-tablet.webp',
+            'image_mobile' => 'https://example.com/cms-mobile.webp',
+        ]);
+
+        $this->assertNotNull($picture);
+        $this->assertNull($picture['width']);
+        $this->assertNull($picture['height']);
+
+        foreach ($picture['sources'] as $source) {
+            $this->assertArrayNotHasKey('width', $source);
+            $this->assertArrayNotHasKey('height', $source);
+        }
+    }
+
+    public function test_non_priority_hero_is_lazy_with_async_decoding(): void
+    {
+        $html = view('partials.am-hero-picture', [
+            'slide' => [
+                'title' => 'Secondary hero',
+                'image' => '/images/blog/heroes/glass-partitions-open-plan-hero-card.jpg',
+            ],
+            'priority' => false,
+        ])->render();
+
+        $this->assertStringContainsString('loading="lazy"', $html);
+        $this->assertStringContainsString('decoding="async"', $html);
+        $this->assertStringNotContainsString('fetchpriority="high"', $html);
+    }
+
+    public function test_shop_category_hero_keeps_default_sizes(): void
+    {
+        Category::query()->firstOrCreate(
+            ['slug' => 'coffee-tables'],
+            ['name' => 'Coffee Tables', 'section' => 'shop', 'is_active' => true]
+        );
+
+        $html = $this->get(route('shop.show', 'coffee-tables'))->assertOk()->getContent();
+
+        preg_match('/<section[^>]*class="[^"]*\bam-shop-category-hero\b[^"]*"[\s\S]*?<picture>[\s\S]*?<\/picture>/', $html, $match);
+        $this->assertNotEmpty($match[0]);
+        $this->assertStringContainsString('sizes="100vw"', $match[0]);
+        $this->assertStringNotContainsString('sizes="(max-width: 1024px) 100vw, 50vw"', $match[0]);
     }
 
     public function test_cms_hero_preload_uses_mobile_tablet_and_desktop_candidates_not_config_fallback(): void
@@ -209,6 +294,26 @@ class HomepageMobileLcpTest extends TestCase
                 ],
             ],
         ];
+    }
+
+    /** @param  list<array{media: string, srcset: string, type: ?string, width?: int, height?: int}>  $sources */
+    private function sourceForMedia(array $sources, string $media, string $filename): array
+    {
+        foreach ($sources as $source) {
+            if (($source['media'] ?? null) !== $media) {
+                continue;
+            }
+            if (! str_contains($source['srcset'], $filename)) {
+                continue;
+            }
+            if (($source['type'] ?? null) === 'image/webp') {
+                continue;
+            }
+
+            return $source;
+        }
+
+        $this->fail('Missing source for '.$media.' '.$filename);
     }
 
     private function heroPictureHtml(string $html): string
