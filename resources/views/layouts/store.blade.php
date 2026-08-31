@@ -28,12 +28,8 @@
     @endphp
     <link rel="preload" href="{{ $cssAmerce }}" as="style">
     <link rel="stylesheet" href="{{ $cssAmerce }}">
-    <link rel="stylesheet" href="{{ $cssThemes }}" media="print" onload="this.media='all'">
-    <link rel="stylesheet" href="{{ $cssResponsive }}" media="print" onload="this.media='all'">
-    <noscript>
-        <link rel="stylesheet" href="{{ $cssThemes }}">
-        <link rel="stylesheet" href="{{ $cssResponsive }}">
-    </noscript>
+    <link rel="stylesheet" href="{{ $cssThemes }}">
+    <link rel="stylesheet" href="{{ $cssResponsive }}">
     @stack('styles')
 </head>
 <body @if(config('app.preview_bar')) class="has-preview-bar" @endif>
