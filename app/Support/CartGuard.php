@@ -169,7 +169,7 @@ class CartGuard
             return false;
         }
 
-        if ($product->hasSizeOptions() || self::requiresFinishSelection($product)) {
+        if ($product->hasSizeOptions() || self::exposesFinishSelector($product)) {
             return false;
         }
 
@@ -177,23 +177,26 @@ class CartGuard
     }
 
     /**
-     * Finish is a shared studio swatch list with a valid default, so cards may
-     * Buy Now without a picker. Hide Buy Now only when a product-specific
-     * finish list exists and has more than one choice.
+     * Shop and mirror-frame PDPs always render the shared PVD finish selector.
+     * Cards must not silently Buy Now when that picker is shown.
      */
-    public static function requiresFinishSelection(?Product $product): bool
+    public static function exposesFinishSelector(?Product $product): bool
     {
         if (! $product) {
             return false;
         }
 
-        $configured = $product->finish_options ?? null;
+        return FinishSwatches::all() !== [];
+    }
 
-        if (! is_array($configured) || $configured === []) {
+    /** Listing-card CTA when size or finish must be chosen on the PDP. */
+    public static function canDisplayChooseOptions(?Product $product): bool
+    {
+        if (! self::canPurchaseOnPdp($product)) {
             return false;
         }
 
-        return count($configured) > 1;
+        return $product->hasSizeOptions() || self::exposesFinishSelector($product);
     }
 
     /** Add to Bag / Buy Now block on the product-detail page. */

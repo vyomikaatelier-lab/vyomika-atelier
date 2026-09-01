@@ -27,7 +27,7 @@ class CartQuantityTest extends TestCase
         $category = $this->shopCategory();
         $product = Product::factory()->shop()->create(['category_id' => $category->id, 'stock' => 5]);
 
-        $this->post(route('cart.add', $product), ['quantity' => 1])
+        $this->post(route('cart.add', $product), $this->purchaseInput())
             ->assertRedirect()
             ->assertSessionHas('success');
 
@@ -39,8 +39,8 @@ class CartQuantityTest extends TestCase
         $category = $this->shopCategory();
         $product = Product::factory()->shop()->create(['category_id' => $category->id, 'stock' => 5]);
 
-        $this->post(route('cart.add', $product), ['quantity' => 1]);
-        $this->post(route('cart.add', $product), ['quantity' => 1]);
+        $this->post(route('cart.add', $product), $this->purchaseInput());
+        $this->post(route('cart.add', $product), $this->purchaseInput());
 
         $this->assertSame(2, $this->sessionCartLine($product)['quantity'] ?? null);
     }
@@ -51,9 +51,9 @@ class CartQuantityTest extends TestCase
         $productA = Product::factory()->shop()->create(['category_id' => $category->id, 'stock' => 5]);
         $productB = Product::factory()->shop()->create(['category_id' => $category->id, 'stock' => 5]);
 
-        $this->post(route('cart.add', $productA), ['quantity' => 1]);
+        $this->post(route('cart.add', $productA), $this->purchaseInput());
 
-        $this->post(route('cart.add', $productB), ['quantity' => 1, 'buy_now' => 1])
+        $this->post(route('cart.add', $productB), $this->purchaseInput(['buy_now' => 1]))
             ->assertRedirect(route('account.continue'));
 
         $this->assertSame(1, $this->sessionCartLine($productA)['quantity'] ?? null);
@@ -98,17 +98,17 @@ class CartQuantityTest extends TestCase
         $category = $this->shopCategory();
         $product = Product::factory()->shop()->create(['category_id' => $category->id, 'stock' => 10]);
 
-        $this->post(route('cart.add', $product), ['quantity' => 'abc']);
+        $this->post(route('cart.add', $product), $this->purchaseInput(['quantity' => 'abc']));
         $this->assertSame(1, $this->sessionCartLine($product)['quantity'] ?? null);
 
         session()->forget('cart');
 
-        $this->post(route('cart.add', $product), ['quantity' => -5]);
+        $this->post(route('cart.add', $product), $this->purchaseInput(['quantity' => -5]));
         $this->assertSame(1, $this->sessionCartLine($product)['quantity'] ?? null);
 
         session()->forget('cart');
 
-        $this->post(route('cart.add', $product), ['quantity' => 500]);
+        $this->post(route('cart.add', $product), $this->purchaseInput(['quantity' => 500]));
         $this->assertSame(10, $this->sessionCartLine($product)['quantity'] ?? null);
     }
 
@@ -117,7 +117,7 @@ class CartQuantityTest extends TestCase
         $category = $this->shopCategory();
         $product = Product::factory()->shop()->create(['category_id' => $category->id, 'stock' => 5]);
 
-        $this->post(route('cart.add', $product), ['quantity' => 2]);
+        $this->post(route('cart.add', $product), $this->purchaseInput(['quantity' => 2]));
         $this->patch(route('cart.update', $product), ['quantity' => 0])
             ->assertRedirect()
             ->assertSessionHas('success');

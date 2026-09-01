@@ -18,11 +18,20 @@ class CartService
     public const NOTICE_KEY = 'cart_notice';
 
     /**
-     * Stable cart line identity: product + validated size + validated finish.
+     * Collision-free line identity: versioned SHA-256 of a canonical JSON tuple.
      */
     public static function lineKey(int $productId, ?string $sizeLabel, ?string $finishSlug): string
     {
-        return $productId.'|'.(string) $sizeLabel.'|'.(string) $finishSlug;
+        $canonical = json_encode(
+            [
+                'product_id' => $productId,
+                'size_label' => $sizeLabel,
+                'finish_slug' => $finishSlug,
+            ],
+            JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE
+        );
+
+        return 'v1:'.hash('sha256', $canonical);
     }
 
     /**
@@ -32,6 +41,7 @@ class CartService
     {
         if (is_array($value)) {
             return [
+                'product_id' => isset($value['product_id']) ? (int) $value['product_id'] : null,
                 'quantity' => max(1, (int) ($value['quantity'] ?? 1)),
                 'finish_slug' => filled($value['finish_slug'] ?? null) ? (string) $value['finish_slug'] : null,
                 'finish_name' => filled($value['finish_name'] ?? null) ? (string) $value['finish_name'] : null,
@@ -41,6 +51,7 @@ class CartService
         }
 
         return [
+            'product_id' => null,
             'quantity' => max(1, (int) $value),
             'finish_slug' => null,
             'finish_name' => null,
@@ -112,6 +123,7 @@ class CartService
                 $rebuilt[$lineKey]['quantity'] += $normalized['quantity'];
             } else {
                 $rebuilt[$lineKey] = [
+                    'product_id' => $product->id,
                     'quantity' => $normalized['quantity'],
                     'finish_slug' => $variant['finish_slug'],
                     'finish_name' => $variant['finish_name'],
@@ -220,16 +232,16 @@ class CartService
 
     private function productIdFromKey(int|string $key, mixed $line): ?int
     {
+        if (is_array($line) && isset($line['product_id'])) {
+            return (int) $line['product_id'];
+        }
+
         if (is_numeric($key)) {
             return (int) $key;
         }
 
-        if (is_string($key) && str_contains($key, '|')) {
+        if (is_string($key) && ! str_starts_with($key, 'v1:') && str_contains($key, '|')) {
             return (int) explode('|', $key, 3)[0];
-        }
-
-        if (is_array($line) && isset($line['product_id'])) {
-            return (int) $line['product_id'];
         }
 
         return null;
@@ -282,7 +294,7 @@ class CartService
     {
         $this->sanitizedItems();
 
-        $variant = $this->validatedVariant($product, $sizeLabel, $finishSlug, true);
+        $variant = $this->validatedVariant($product, $sizeLabel, $finishSlug, false);
 
         if ($variant === null) {
             return ['quantity' => 0, 'clamped' => false];
@@ -304,6 +316,7 @@ class CartService
         $unitPrice = CartGuard::trustedUnitPrice($product, $variant['size_label']) ?? 0.0;
 
         $cart[$lineKey] = [
+            'product_id' => $product->id,
             'quantity' => $newQty,
             'finish_slug' => $variant['finish_slug'],
             'finish_name' => $variant['finish_name'],
@@ -361,6 +374,7 @@ class CartService
         }
 
         $cart[$lineKey] = [
+            'product_id' => $product->id,
             'quantity' => $qty,
             'finish_slug' => $existing['finish_slug'],
             'finish_name' => $existing['finish_name'],
@@ -397,17 +411,18 @@ class CartService
 
     public function setBuyNow(Product $product, int $quantity = 1, ?string $finishSlug = null, ?string $sizeLabel = null): void
     {
-        $finish = FinishSwatches::resolve($finishSlug);
-        $size = $product->hasSizeOptions() && filled($sizeLabel)
-            ? $this->resolveSizeSelection($product, $sizeLabel)
-            : ['label' => null, 'unit_price' => CartGuard::trustedUnitPrice($product, null) ?? 0.0];
+        $variant = $this->validatedVariant($product, $sizeLabel, $finishSlug, false);
+
+        if ($variant === null) {
+            return;
+        }
 
         session([self::BUY_NOW_KEY => [
             'product_id' => $product->id,
             'quantity' => max(1, $quantity),
-            'finish_slug' => $finish['slug'],
-            'finish_name' => $finish['name'],
-            'size_label' => $size['label'],
+            'finish_slug' => $variant['finish_slug'],
+            'finish_name' => $variant['finish_name'],
+            'size_label' => $variant['size_label'],
             'created_at' => now()->timestamp,
         ]]);
     }
@@ -512,27 +527,6 @@ class CartService
         }
 
         return false;
-    }
-
-    /**
-     * @return array{label: ?string, unit_price: float}
-     */
-    private function resolveSizeSelection(Product $product, ?string $sizeLabel): array
-    {
-        if (! $product->hasSizeOptions()) {
-            return [
-                'label' => null,
-                'unit_price' => CartGuard::trustedUnitPrice($product, null) ?? 0.0,
-            ];
-        }
-
-        $option = CartGuard::exactSizeOption($product, $sizeLabel);
-        $label = $option['label'] ?? null;
-
-        return [
-            'label' => $label,
-            'unit_price' => CartGuard::trustedUnitPrice($product, $label) ?? 0.0,
-        ];
     }
 
     private function resolveExistingLineKey(Product $product, ?string $sizeLabel, ?string $finishSlug): ?string

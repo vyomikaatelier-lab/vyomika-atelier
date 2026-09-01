@@ -17,7 +17,7 @@ class CartProtectionTest extends TestCase
         $category = Category::factory()->create(['slug' => 'coffee-tables']);
         $product = Product::factory()->shop()->create(['category_id' => $category->id, 'stock' => 5]);
 
-        $response = $this->post(route('cart.add', $product), ['quantity' => 1]);
+        $response = $this->post(route('cart.add', $product), $this->purchaseInput());
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
@@ -30,10 +30,9 @@ class CartProtectionTest extends TestCase
         $category = Category::factory()->create(['slug' => 'coffee-tables']);
         $product = Product::factory()->shop()->create(['category_id' => $category->id, 'stock' => 5]);
 
-        $response = $this->post(route('cart.add', $product), [
-            'quantity' => 1,
+        $response = $this->post(route('cart.add', $product), $this->purchaseInput([
             'buy_now' => 1,
-        ]);
+        ]));
 
         $response->assertRedirect(route('account.continue'));
         $this->assertSame($product->id, session('buy_now')['product_id']);

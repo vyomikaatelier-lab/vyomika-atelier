@@ -216,7 +216,7 @@ class CategoryFirstStorefrontTest extends TestCase
         $category = Category::factory()->create(['slug' => 'partitions']);
         $studio = Product::factory()->studio()->create(['category_id' => $category->id]);
 
-        $this->post(route('cart.add', $studio), ['quantity' => 1, 'buy_now' => 1])
+        $this->post(route('cart.add', $studio), $this->purchaseInput(['buy_now' => 1]))
             ->assertSessionHas('error', CartGuard::MSG_STUDIO);
     }
 
@@ -225,7 +225,7 @@ class CategoryFirstStorefrontTest extends TestCase
         $category = $this->shopCategory();
         $product = $this->shopProduct($category);
 
-        $this->post(route('cart.add', $product), ['quantity' => 1, 'buy_now' => 1])
+        $this->post(route('cart.add', $product), $this->purchaseInput(['buy_now' => 1]))
             ->assertRedirect(route('account.continue'));
     }
 
@@ -238,7 +238,7 @@ class CategoryFirstStorefrontTest extends TestCase
             'password' => Hash::make('secret-password'),
         ]);
 
-        $this->post(route('cart.add', $product), ['quantity' => 1, 'buy_now' => 1])
+        $this->post(route('cart.add', $product), $this->purchaseInput(['buy_now' => 1]))
             ->assertRedirect(route('account.continue'));
 
         $this->post(route('account.login.email'), [
@@ -254,7 +254,7 @@ class CategoryFirstStorefrontTest extends TestCase
         $category = $this->shopCategory();
         $product = $this->shopProduct($category, ['name' => 'Register Restore Lamp']);
 
-        $this->post(route('cart.add', $product), ['quantity' => 1, 'buy_now' => 1])
+        $this->post(route('cart.add', $product), $this->purchaseInput(['buy_now' => 1]))
             ->assertRedirect(route('account.continue'));
 
         $this->post(route('account.register.send'), [
@@ -288,13 +288,12 @@ class CategoryFirstStorefrontTest extends TestCase
         $product = $this->shopProduct($category, ['price' => 5000]);
         $user = User::factory()->create();
 
-        $this->actingAs($user)->post(route('cart.add', $product), [
-            'quantity' => 1,
+        $this->actingAs($user)->post(route('cart.add', $product), $this->purchaseInput([
             'buy_now' => 1,
             'unit_price' => 1,
             'price' => 1,
             'total' => 1,
-        ])->assertRedirect(route('checkout.index'));
+        ]))->assertRedirect(route('checkout.index'));
 
         $items = app(CartService::class)->checkoutItems();
         $this->assertSame(5000.0, (float) $items->first()['unit_price']);
@@ -305,7 +304,7 @@ class CategoryFirstStorefrontTest extends TestCase
         $category = $this->shopCategory();
         $product = $this->shopProduct($category);
 
-        $this->post(route('cart.add', $product), ['quantity' => 2])
+        $this->post(route('cart.add', $product), $this->purchaseInput(['quantity' => 2]))
             ->assertRedirect()
             ->assertSessionHas('success');
 

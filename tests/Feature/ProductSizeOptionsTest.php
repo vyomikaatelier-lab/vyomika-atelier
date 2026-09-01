@@ -296,6 +296,7 @@ class ProductSizeOptionsTest extends TestCase
         $this->post(route('cart.add', $product), [
             'quantity' => 2,
             'size_label' => '12"',
+            'finish_slug' => $this->canonicalFinishSlug(),
         ])->assertRedirect();
 
         $line = $this->sessionCartLine($product, '12"');

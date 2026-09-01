@@ -8,6 +8,20 @@ use App\Support\FinishSwatches;
 
 trait InteractsWithCartSession
 {
+    protected function canonicalFinishSlug(): string
+    {
+        return FinishSwatches::defaultSlug();
+    }
+
+    /** @param  array<string, mixed>  $overrides */
+    protected function purchaseInput(array $overrides = []): array
+    {
+        return array_merge([
+            'quantity' => 1,
+            'finish_slug' => $this->canonicalFinishSlug(),
+        ], $overrides);
+    }
+
     protected function sessionCartLine(Product $product, ?string $sizeLabel = null, ?string $finishSlug = null): ?array
     {
         $cart = session('cart', []);
@@ -24,22 +38,25 @@ trait InteractsWithCartSession
             return is_array($line) ? $line : ['quantity' => (int) $line];
         }
 
-        foreach ($cart as $sessionKey => $line) {
+        foreach ($cart as $line) {
             if (! is_array($line)) {
                 continue;
             }
 
-            if ((string) $sessionKey === (string) $product->id || str_starts_with((string) $sessionKey, $product->id.'|')) {
-                if (($line['size_label'] ?? null) !== $sizeLabel) {
-                    continue;
-                }
-
-                if (($line['finish_slug'] ?? null) !== $finishSlug) {
-                    continue;
-                }
-
-                return $line;
+            $lineProductId = isset($line['product_id']) ? (int) $line['product_id'] : null;
+            if ($lineProductId !== (int) $product->id) {
+                continue;
             }
+
+            if (($line['size_label'] ?? null) !== $sizeLabel) {
+                continue;
+            }
+
+            if (($line['finish_slug'] ?? null) !== $finishSlug) {
+                continue;
+            }
+
+            return $line;
         }
 
         return null;

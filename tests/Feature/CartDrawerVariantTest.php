@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Services\CartService;
 use App\Support\CartGuard;
 use App\Support\FinishSwatches;
+use App\Support\StorefrontRoutes;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -52,7 +53,7 @@ class CartDrawerVariantTest extends TestCase
         $origin = route('shop.show', $product->slug);
 
         $location = urldecode((string) $this->from($origin)
-            ->post(route('cart.add', $product), ['quantity' => 1])
+            ->post(route('cart.add', $product), $this->purchaseInput())
             ->assertSessionHas('success', 'Added to cart.')
             ->headers->get('Location'));
 
@@ -65,7 +66,7 @@ class CartDrawerVariantTest extends TestCase
     {
         $product = $this->shopProduct();
 
-        $this->post(route('cart.add', $product), ['quantity' => 1, 'buy_now' => 1])
+        $this->post(route('cart.add', $product), $this->purchaseInput(['buy_now' => 1]))
             ->assertRedirect(route('account.continue'));
 
         $this->assertSame($product->id, session('buy_now')['product_id']);
@@ -135,15 +136,15 @@ class CartDrawerVariantTest extends TestCase
     {
         $product = $this->shopProduct(['stock' => 5]);
 
-        $this->post(route('cart.add', $product), ['quantity' => 4]);
-        $this->post(route('cart.add', $product), ['quantity' => 4])
+        $this->post(route('cart.add', $product), $this->purchaseInput(['quantity' => 4]));
+        $this->post(route('cart.add', $product), $this->purchaseInput(['quantity' => 4]))
             ->assertSessionHas('info');
 
         $this->assertSame(5, $this->sessionCartLine($product)['quantity'] ?? null);
 
         $highStock = $this->shopProduct(['stock' => 200, 'name' => 'Bulk Table']);
-        $this->post(route('cart.add', $highStock), ['quantity' => 80]);
-        $this->post(route('cart.add', $highStock), ['quantity' => 40]);
+        $this->post(route('cart.add', $highStock), $this->purchaseInput(['quantity' => 80]));
+        $this->post(route('cart.add', $highStock), $this->purchaseInput(['quantity' => 40]));
 
         $this->assertSame(99, $this->sessionCartLine($highStock)['quantity'] ?? null);
     }
@@ -197,12 +198,12 @@ class CartDrawerVariantTest extends TestCase
     {
         $product = $this->shopProduct(['price' => 4000, 'stock' => 2]);
 
-        $this->post(route('cart.add', $product), [
+        $this->post(route('cart.add', $product), $this->purchaseInput([
             'quantity' => 2,
             'price' => 1,
             'unit_price' => 1,
             'total' => 1,
-        ]);
+        ]));
 
         $item = app(CartService::class)->all()->first();
         $this->assertSame(4000.0, $item['unit_price']);
@@ -266,8 +267,136 @@ class CartDrawerVariantTest extends TestCase
         $product = $this->sizedProduct();
 
         $this->assertFalse(CartGuard::canDisplayBuyNow($product));
+        $this->assertTrue(CartGuard::canDisplayChooseOptions($product));
         $this->get(route('shop.show', $product->category->slug))
             ->assertOk()
-            ->assertDontSee('name="buy_now"', false);
+            ->assertDontSee('name="buy_now"', false)
+            ->assertSee('Choose options', false);
+    }
+
+    public function test_finish_selectable_cards_link_to_pdp_instead_of_buy_now(): void
+    {
+        $product = $this->shopProduct([
+            'name' => 'Finish Select Table',
+            'slug' => 'finish-select-table',
+            'is_gallery_visible' => true,
+        ]);
+        $pdp = StorefrontRoutes::productUrl($product);
+
+        $this->assertTrue(CartGuard::exposesFinishSelector($product));
+        $this->assertFalse(CartGuard::canDisplayBuyNow($product));
+        $this->assertTrue(CartGuard::canDisplayChooseOptions($product));
+
+        $card = view('partials.am-product-card', ['product' => $product])->render();
+        $this->assertStringNotContainsString('name="buy_now"', $card);
+        $this->assertStringContainsString('Choose options', $card);
+        $this->assertStringContainsString($pdp, $card);
+
+        $gallery = view('partials.am-design-gallery-card', [
+            'showUrl' => $pdp,
+            'title' => $product->name,
+            'product' => $product,
+        ])->render();
+        $this->assertStringNotContainsString('name="buy_now"', $gallery);
+        $this->assertStringContainsString('Choose options', $gallery);
+        $this->assertStringContainsString($pdp, $gallery);
+
+        $html = $this->get(route('shop.show', $product->category->slug))->assertOk()->getContent();
+        $this->assertStringContainsString('Choose options', $html);
+        $this->assertStringNotContainsString('name="buy_now"', $html);
+    }
+
+    public function test_add_to_bag_without_required_finish_is_rejected_and_preserves_input(): void
+    {
+        $product = $this->shopProduct();
+
+        $this->from(route('shop.show', $product->slug))
+            ->post(route('cart.add', $product), ['quantity' => 3])
+            ->assertSessionHas('error', CartGuard::MSG_INVALID_FINISH)
+            ->assertSessionHasInput('quantity', 3);
+
+        $this->assertEmpty(session('cart', []));
+    }
+
+    public function test_buy_now_without_required_finish_creates_neither_cart_nor_buy_now(): void
+    {
+        $product = $this->shopProduct();
+
+        $this->post(route('cart.add', $product), ['quantity' => 1, 'buy_now' => 1])
+            ->assertSessionHas('error', CartGuard::MSG_INVALID_FINISH);
+
+        $this->assertNull(session('buy_now'));
+        $this->assertEmpty(session('cart', []));
+    }
+
+    public function test_pdp_submits_the_canonical_visible_finish(): void
+    {
+        $product = $this->shopProduct();
+        $canonical = FinishSwatches::defaultSlug();
+
+        $this->assertSame('gold-mirror', $canonical);
+        $this->assertSame($canonical, config('finishes.swatches.0.slug'));
+
+        $html = $this->get(route('shop.show', $product->slug))->assertOk()->getContent();
+
+        $this->assertStringContainsString('name="finish_slug" value="'.$canonical.'"', $html);
+        $this->assertStringContainsString('data-finish-slug="'.$canonical.'"', $html);
+        $this->assertStringNotContainsString('name="finish_slug" value="champagne-mirror"', $html);
+
+        $this->from(route('shop.show', $product->slug))
+            ->post(route('cart.add', $product), $this->purchaseInput())
+            ->assertSessionHas('success');
+
+        $this->assertSame($canonical, $this->sessionCartLine($product)['finish_slug'] ?? null);
+    }
+
+    public function test_pipe_in_size_label_cannot_collide_with_another_tuple(): void
+    {
+        $product = Product::factory()->shop()->create([
+            'category_id' => $this->shopCategory('door-handles')->id,
+            'stock' => 10,
+            'price' => 20000,
+            'size_options' => [
+                ['label' => 'Small|gold-mirror', 'price' => 14000],
+                ['label' => 'Small', 'price' => 16000],
+            ],
+        ]);
+
+        $this->assertNotSame(
+            CartService::lineKey($product->id, 'Small|gold-mirror', 'black-brush'),
+            CartService::lineKey($product->id, 'Small', 'gold-mirror|black-brush')
+        );
+
+        $this->post(route('cart.add', $product), [
+            'quantity' => 1,
+            'size_label' => 'Small|gold-mirror',
+            'finish_slug' => 'black-brush',
+        ])->assertSessionHas('success');
+        $this->post(route('cart.add', $product), [
+            'quantity' => 1,
+            'size_label' => 'Small',
+            'finish_slug' => 'gold-mirror',
+        ])->assertSessionHas('success');
+
+        $this->assertCount(2, session('cart'));
+        $this->assertSame(1, $this->sessionCartLine($product, 'Small|gold-mirror', 'black-brush')['quantity'] ?? null);
+        $this->assertSame(1, $this->sessionCartLine($product, 'Small', 'gold-mirror')['quantity'] ?? null);
+
+        $this->patch(route('cart.update', $product), [
+            'quantity' => 2,
+            'size_label' => 'Small|gold-mirror',
+            'finish_slug' => 'black-brush',
+        ])->assertSessionHas('success');
+
+        $this->assertSame(2, $this->sessionCartLine($product, 'Small|gold-mirror', 'black-brush')['quantity'] ?? null);
+        $this->assertSame(1, $this->sessionCartLine($product, 'Small', 'gold-mirror')['quantity'] ?? null);
+
+        $this->delete(route('cart.remove', $product), [
+            'size_label' => 'Small|gold-mirror',
+            'finish_slug' => 'black-brush',
+        ])->assertSessionHas('success');
+
+        $this->assertNull($this->sessionCartLine($product, 'Small|gold-mirror', 'black-brush'));
+        $this->assertSame(1, $this->sessionCartLine($product, 'Small', 'gold-mirror')['quantity'] ?? null);
     }
 }

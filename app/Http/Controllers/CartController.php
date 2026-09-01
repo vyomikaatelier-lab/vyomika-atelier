@@ -42,24 +42,28 @@ class CartController extends Controller
         $finishSlug = $this->stringInput($request, 'finish_slug');
 
         if ($message = CartGuard::checkoutEligibility($product, $sizeLabel)) {
-            return back()->with('error', $message);
+            return back()->withInput()->with('error', $message);
         }
 
         if (! $product->inStock()) {
-            return back()->with('error', CartGuard::MSG_INACTIVE);
+            return back()->withInput()->with('error', CartGuard::MSG_INACTIVE);
         }
 
         $available = StockAvailability::availableForProduct($product);
         if ($available < 1) {
-            return back()->with('error', CartGuard::MSG_INACTIVE);
+            return back()->withInput()->with('error', CartGuard::MSG_INACTIVE);
         }
 
-        if (filled($finishSlug) && FinishSwatches::findBySlug($finishSlug) === null) {
-            return back()->with('error', CartGuard::MSG_INVALID_FINISH);
+        if (CartGuard::exposesFinishSelector($product)) {
+            if (! filled($finishSlug) || FinishSwatches::findBySlug($finishSlug) === null) {
+                return back()->withInput()->with('error', CartGuard::MSG_INVALID_FINISH);
+            }
+        } elseif (filled($finishSlug) && FinishSwatches::findBySlug($finishSlug) === null) {
+            return back()->withInput()->with('error', CartGuard::MSG_INVALID_FINISH);
         }
 
-        if ($this->cart->validatedVariant($product, $sizeLabel, $finishSlug, ! filled($finishSlug)) === null) {
-            return back()->with('error', filled($finishSlug) ? CartGuard::MSG_INVALID_FINISH : CartGuard::MSG_VARIANT_REQUIRED);
+        if ($this->cart->validatedVariant($product, $sizeLabel, $finishSlug, false) === null) {
+            return back()->withInput()->with('error', filled($finishSlug) ? CartGuard::MSG_INVALID_FINISH : CartGuard::MSG_VARIANT_REQUIRED);
         }
 
         $quantity = max(1, (int) $request->input('quantity', 1));
@@ -68,7 +72,7 @@ class CartController extends Controller
 
         if ($request->boolean('buy_now')) {
             if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts('buy-now:'.$request->ip(), 8)) {
-                return back()->with('error', 'Please wait a moment before trying again.');
+                return back()->withInput()->with('error', 'Please wait a moment before trying again.');
             }
             \Illuminate\Support\Facades\RateLimiter::hit('buy-now:'.$request->ip(), 60);
 
@@ -87,7 +91,7 @@ class CartController extends Controller
         $result = $this->cart->add($product, $quantity, $finishSlug, $sizeLabel);
 
         if ($result['quantity'] < 1) {
-            return back()->with('error', 'This item does not have enough stock to add to your bag.');
+            return back()->withInput()->with('error', 'This item does not have enough stock to add to your bag.');
         }
 
         $redirect = $this->redirectToOriginWithDrawer($request, $product)

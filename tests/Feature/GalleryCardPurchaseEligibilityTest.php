@@ -261,9 +261,11 @@ class GalleryCardPurchaseEligibilityTest extends TestCase
 
         $html = $this->categoryGalleryHtml($product);
         $this->assertStringContainsString('Purchasable Coffee Table', $html);
-        $this->assertStringContainsString('>Buy Now</button>', $html);
+        $this->assertStringContainsString('Choose options', $html);
+        $this->assertStringNotContainsString('name="buy_now"', $html);
+        $this->assertStringContainsString(route('shop.show', $product->slug), $html);
 
-        $this->post(route('cart.add', $product), ['quantity' => 1])
+        $this->post(route('cart.add', $product), $this->purchaseInput())
             ->assertSessionHas('success');
 
         $this->assertSame(1, $this->sessionCartLine($product)['quantity'] ?? null);
@@ -282,10 +284,9 @@ class GalleryCardPurchaseEligibilityTest extends TestCase
             ],
         ]);
 
-        $this->post(route('cart.add', $product), [
-            'quantity' => 1,
+        $this->post(route('cart.add', $product), $this->purchaseInput([
             'size_label' => 'Small',
-        ])->assertSessionHas('success');
+        ]))->assertSessionHas('success');
 
         $item = app(CartService::class)->all()->first();
         $this->assertSame(14000.0, $item['unit_price']);
@@ -316,12 +317,11 @@ class GalleryCardPurchaseEligibilityTest extends TestCase
         $category = $this->shopCategory();
         $product = $this->galleryProduct($category, ['price' => 15000]);
 
-        $this->post(route('cart.add', $product), [
-            'quantity' => 1,
+        $this->post(route('cart.add', $product), $this->purchaseInput([
             'price' => 1,
             'unit_price' => 1,
             'total' => 1,
-        ])->assertSessionHas('success');
+        ]))->assertSessionHas('success');
 
         $item = app(CartService::class)->all()->first();
         $this->assertSame(15000.0, $item['unit_price']);

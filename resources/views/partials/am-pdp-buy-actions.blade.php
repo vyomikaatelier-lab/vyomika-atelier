@@ -8,8 +8,10 @@
         return;
     }
 
-    $defaultFinish = FinishSwatches::resolve(null);
-    $defaultSize = $product->resolveSizeOption(null);
+    $selectedSlug = old('finish_slug', FinishSwatches::defaultSlug());
+    $defaultFinish = FinishSwatches::findBySlug($selectedSlug) ?? FinishSwatches::resolve(null);
+    $oldSize = old('size_label');
+    $defaultSize = $product->resolveSizeOption(is_string($oldSize) ? $oldSize : null);
     $hasSizeOptions = $product->hasSizeOptions();
 @endphp
 
@@ -27,7 +29,7 @@
             @include('partials.am-pdp-size-options', ['product' => $product, 'compact' => true])
             <div class="am-pdp-buy__qty">
                 <label for="pdp-qty" class="am-pdp-buy__qty-label">Quantity</label>
-                <input type="number" id="pdp-qty" name="quantity" value="1" min="1" max="{{ min($product->stock, 99) }}" class="am-input am-pdp-buy__qty-input" inputmode="numeric">
+                <input type="number" id="pdp-qty" name="quantity" value="{{ old('quantity', 1) }}" min="1" max="{{ min($product->stock, 99) }}" class="am-input am-pdp-buy__qty-input" inputmode="numeric">
             </div>
         </div>
         @if($defaultSize)
@@ -37,7 +39,7 @@
         <div class="am-pdp-buy__row">
             <div class="am-pdp-buy__qty">
                 <label for="pdp-qty" class="am-pdp-buy__qty-label">Quantity</label>
-                <input type="number" id="pdp-qty" name="quantity" value="1" min="1" max="{{ min($product->stock, 99) }}" class="am-input am-pdp-buy__qty-input" inputmode="numeric">
+                <input type="number" id="pdp-qty" name="quantity" value="{{ old('quantity', 1) }}" min="1" max="{{ min($product->stock, 99) }}" class="am-input am-pdp-buy__qty-input" inputmode="numeric">
             </div>
         </div>
         @endif
