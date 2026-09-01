@@ -28,13 +28,20 @@ class CartBuyNowRedirectTest extends TestCase
         ], $overrides));
     }
 
-    public function test_add_to_cart_redirects_to_cart(): void
+    public function test_add_to_cart_returns_to_product_page_and_opens_drawer(): void
     {
         $product = $this->shopProduct($this->shopCategory());
+        $origin = route('shop.show', $product->slug);
 
-        $this->post(route('cart.add', $product), ['quantity' => 1])
-            ->assertRedirect(route('cart.index'))
-            ->assertSessionHas('success');
+        $location = urldecode((string) $this->from($origin)
+            ->post(route('cart.add', $product), ['quantity' => 1])
+            ->assertSessionHas('success')
+            ->headers->get('Location'));
+
+        $this->assertStringContainsString($product->slug, $location);
+        $this->assertStringContainsString('cart=open', $location);
+        $this->assertStringContainsString('#am-cart-drawer', $location);
+        $this->assertStringNotContainsString('/cart', parse_url($location, PHP_URL_PATH) ?? '');
     }
 
     public function test_add_to_cart_modifies_cart_but_not_buy_now(): void
@@ -42,9 +49,9 @@ class CartBuyNowRedirectTest extends TestCase
         $product = $this->shopProduct($this->shopCategory());
 
         $this->post(route('cart.add', $product), ['quantity' => 2])
-            ->assertRedirect(route('cart.index'));
+            ->assertRedirect();
 
-        $this->assertSame(2, session('cart')[$product->id]['quantity'] ?? null);
+        $this->assertSame(2, $this->sessionCartLine($product)['quantity'] ?? null);
         $this->assertNull(session('buy_now'));
     }
 

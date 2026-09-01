@@ -22,7 +22,7 @@ class CartProtectionTest extends TestCase
         $response->assertRedirect();
         $response->assertSessionHas('success');
         $response->assertSessionMissing('error');
-        $this->assertSame(1, session('cart')[$product->id]['quantity'] ?? null);
+        $this->assertSame(1, $this->sessionCartLine($product)['quantity'] ?? null);
     }
 
     public function test_shop_buy_now_redirects_guest_to_continue(): void

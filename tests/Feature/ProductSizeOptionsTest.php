@@ -298,9 +298,9 @@ class ProductSizeOptionsTest extends TestCase
             'size_label' => '12"',
         ])->assertRedirect();
 
-        $cart = session('cart');
-        $this->assertSame('12"', $cart[$product->id]['size_label']);
-        $this->assertSame(1500.0, (float) $cart[$product->id]['unit_price']);
+        $line = $this->sessionCartLine($product, '12"');
+        $this->assertSame('12"', $line['size_label'] ?? null);
+        $this->assertSame(1500.0, (float) ($line['unit_price'] ?? 0));
 
         $items = app(CartService::class)->all();
         $this->assertSame(3000.0, $items->first()['line_total']);

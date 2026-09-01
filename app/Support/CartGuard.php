@@ -23,6 +23,8 @@ class CartGuard
 
     public const MSG_VARIANT_REQUIRED = 'Please select a valid size or variant before continuing.';
 
+    public const MSG_INVALID_FINISH = 'Please select a valid finish before continuing.';
+
     /**
      * Trusted unit price from the database only — never browser/session input.
      */
@@ -41,7 +43,7 @@ class CartGuard
                 return null;
             }
 
-            $option = $product->resolveSizeOption($sizeLabel);
+            $option = self::exactSizeOption($product, $sizeLabel);
             if (! $option) {
                 return null;
             }
@@ -91,8 +93,10 @@ class CartGuard
             return self::MSG_NO_PRICE;
         }
 
-        if ($product->hasSizeOptions() && ! filled($sizeLabel)) {
-            return self::MSG_VARIANT_REQUIRED;
+        if ($product->hasSizeOptions()) {
+            if (! filled($sizeLabel) || self::exactSizeOption($product, $sizeLabel) === null) {
+                return self::MSG_VARIANT_REQUIRED;
+            }
         }
 
         if (self::trustedUnitPrice($product, $sizeLabel) === null) {
@@ -134,6 +138,26 @@ class CartGuard
         return null;
     }
 
+    /**
+     * Exact size match only — never fall back to the cheapest option.
+     *
+     * @return array<string, mixed>|null
+     */
+    public static function exactSizeOption(Product $product, ?string $sizeLabel): ?array
+    {
+        if (! filled($sizeLabel)) {
+            return null;
+        }
+
+        foreach ($product->normalizedSizeOptions() as $option) {
+            if (($option['label'] ?? null) === $sizeLabel) {
+                return $option;
+            }
+        }
+
+        return null;
+    }
+
     /** Buy Now on gallery/search cards (no inline variant picker). */
     public static function canDisplayBuyNow(?Product $product): bool
     {
@@ -145,7 +169,31 @@ class CartGuard
             return false;
         }
 
-        return ! $product->hasSizeOptions();
+        if ($product->hasSizeOptions() || self::requiresFinishSelection($product)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Finish is a shared studio swatch list with a valid default, so cards may
+     * Buy Now without a picker. Hide Buy Now only when a product-specific
+     * finish list exists and has more than one choice.
+     */
+    public static function requiresFinishSelection(?Product $product): bool
+    {
+        if (! $product) {
+            return false;
+        }
+
+        $configured = $product->finish_options ?? null;
+
+        if (! is_array($configured) || $configured === []) {
+            return false;
+        }
+
+        return count($configured) > 1;
     }
 
     /** Add to Bag / Buy Now block on the product-detail page. */

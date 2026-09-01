@@ -15,6 +15,16 @@ class CartService
 
     public const CHECKOUT_SOURCE_KEY = 'checkout_source';
 
+    public const NOTICE_KEY = 'cart_notice';
+
+    /**
+     * Stable cart line identity: product + validated size + validated finish.
+     */
+    public static function lineKey(int $productId, ?string $sizeLabel, ?string $finishSlug): string
+    {
+        return $productId.'|'.(string) $sizeLabel.'|'.(string) $finishSlug;
+    }
+
     /**
      * @return array{quantity: int, finish_slug: ?string, finish_name: ?string, size_label: ?string, unit_price: ?float}
      */
@@ -40,9 +50,19 @@ class CartService
     }
 
     /**
-     * Current cart contents, revalidated against CartGuard on every read.
+     * Current cart contents, revalidated against CartGuard, live price and stock.
+     *
+     * @return Collection<int, array{product: Product, quantity: int, finish_slug: ?string, finish_name: ?string, size_label: ?string, unit_price: float, line_total: float, line_key: string, max_quantity: int}>
      */
     public function all(): Collection
+    {
+        return $this->sanitizedItems();
+    }
+
+    /**
+     * @return Collection<int, array{product: Product, quantity: int, finish_slug: ?string, finish_name: ?string, size_label: ?string, unit_price: float, line_total: float, line_key: string, max_quantity: int}>
+     */
+    private function sanitizedItems(): Collection
     {
         $cart = session(self::SESSION_KEY, []);
 
@@ -50,94 +70,298 @@ class CartService
             return collect();
         }
 
-        $products = Product::with('category')->whereIn('id', array_keys($cart))->get()->keyBy('id');
-        $invalidIds = [];
+        $notices = [];
+        $rebuilt = [];
+        $productIds = [];
 
-        $items = collect($cart)->map(function ($line, $productId) use ($products, &$invalidIds) {
-            $product = $products->get($productId);
-            $normalized = $this->normalizeLine($line);
+        foreach ($cart as $key => $value) {
+            $productId = $this->productIdFromKey($key, $value);
+            if ($productId !== null) {
+                $productIds[] = $productId;
+            }
+        }
 
-            if (! CartGuard::isEligible($product, $normalized['size_label'])) {
-                $invalidIds[] = $productId;
+        $products = $productIds === []
+            ? collect()
+            : Product::with('category')->whereIn('id', array_unique($productIds))->get()->keyBy('id');
 
-                return null;
+        foreach ($cart as $key => $value) {
+            $normalized = $this->normalizeLine($value);
+            $productId = $this->productIdFromKey($key, $value);
+            $product = $productId !== null ? $products->get($productId) : null;
+
+            $variant = $this->validatedVariant($product, $normalized['size_label'], $normalized['finish_slug'], true);
+
+            if ($variant === null || $product === null || ! CartGuard::isEligible($product, $variant['size_label'])) {
+                $notices[] = 'An item was removed from your bag because it is no longer available.';
+
+                continue;
             }
 
-            $unitPrice = CartGuard::trustedUnitPrice($product, $normalized['size_label']);
+            $unitPrice = CartGuard::trustedUnitPrice($product, $variant['size_label']);
 
             if ($unitPrice === null) {
-                $invalidIds[] = $productId;
+                $notices[] = 'An item was removed from your bag because its price is no longer available.';
 
-                return null;
+                continue;
             }
+
+            $lineKey = self::lineKey($product->id, $variant['size_label'], $variant['finish_slug']);
+
+            if (isset($rebuilt[$lineKey])) {
+                $rebuilt[$lineKey]['quantity'] += $normalized['quantity'];
+            } else {
+                $rebuilt[$lineKey] = [
+                    'quantity' => $normalized['quantity'],
+                    'finish_slug' => $variant['finish_slug'],
+                    'finish_name' => $variant['finish_name'],
+                    'size_label' => $variant['size_label'],
+                    'unit_price' => $unitPrice,
+                ];
+            }
+        }
+
+        $rebuilt = $this->clampStock($rebuilt, $products, $notices);
+
+        if ($rebuilt !== $cart) {
+            session([self::SESSION_KEY => $rebuilt]);
+        }
+
+        $this->flashNotices($notices);
+
+        return collect($rebuilt)->map(function (array $line, string $lineKey) use ($products) {
+            $productId = $this->productIdFromKey($lineKey, $line);
+            $product = $products->get($productId);
+            $unitPrice = CartGuard::trustedUnitPrice($product, $line['size_label']);
 
             return [
                 'product' => $product,
-                'quantity' => $normalized['quantity'],
-                'finish_slug' => $normalized['finish_slug'],
-                'finish_name' => $normalized['finish_name'],
-                'size_label' => $normalized['size_label'],
+                'quantity' => $line['quantity'],
+                'finish_slug' => $line['finish_slug'],
+                'finish_name' => $line['finish_name'],
+                'size_label' => $line['size_label'],
                 'unit_price' => $unitPrice,
-                'line_total' => $unitPrice * $normalized['quantity'],
+                'line_total' => $unitPrice * $line['quantity'],
+                'line_key' => $lineKey,
+                'max_quantity' => $line['quantity'],
             ];
-        })->filter()->values();
+        })->filter(fn (array $item) => $item['product'] && $item['unit_price'] !== null)->values()
+            ->map(function (array $item) use ($rebuilt) {
+                $usedOthers = $this->quantityForProduct($item['product']->id, $rebuilt, $item['line_key']);
+                $available = StockAvailability::availableForProduct($item['product']);
+                $item['max_quantity'] = min(99, max($item['quantity'], max(0, $available - $usedOthers)));
 
-        if ($invalidIds !== []) {
-            $this->removeMany($invalidIds);
-        }
-
-        return $items;
+                return $item;
+            });
     }
 
-    public function add(Product $product, int $quantity = 1, ?string $finishSlug = null, ?string $sizeLabel = null): void
+    /**
+     * @param  array<string, array{quantity: int, finish_slug: ?string, finish_name: ?string, size_label: ?string, unit_price: float}>  $cart
+     * @param  Collection<int, Product>  $products
+     * @param  list<string>  $notices
+     * @return array<string, array{quantity: int, finish_slug: ?string, finish_name: ?string, size_label: ?string, unit_price: float}>
+     */
+    private function clampStock(array $cart, Collection $products, array &$notices): array
     {
-        $cart = session(self::SESSION_KEY, []);
-        $existingQty = isset($cart[$product->id])
-            ? $this->normalizeLine($cart[$product->id])['quantity']
-            : 0;
-        $existing = $this->normalizeLine($cart[$product->id] ?? null);
-        $finish = FinishSwatches::resolve($finishSlug ?? $existing['finish_slug']);
-        $resolvedSizeLabel = $sizeLabel ?? $existing['size_label'];
-        $size = $product->hasSizeOptions() && filled($resolvedSizeLabel)
-            ? $this->resolveSizeSelection($product, $resolvedSizeLabel)
-            : ['label' => null, 'unit_price' => CartGuard::trustedUnitPrice($product, null) ?? 0.0];
+        $grouped = [];
+        foreach ($cart as $lineKey => $line) {
+            $productId = $this->productIdFromKey($lineKey, $line);
+            $grouped[$productId][$lineKey] = $line;
+        }
 
-        $cart[$product->id] = [
-            'quantity' => $existingQty + $quantity,
+        $clamped = [];
+
+        foreach ($grouped as $productId => $lines) {
+            $product = $products->get($productId);
+            $remaining = $product ? StockAvailability::availableForProduct($product) : 0;
+
+            foreach ($lines as $lineKey => $line) {
+                $desired = min(99, $line['quantity']);
+                $qty = min($desired, $remaining);
+
+                if ($qty < $line['quantity'] && $qty >= 1) {
+                    $notices[] = ($product?->name ?? 'An item').' quantity was limited to available stock.';
+                }
+
+                if ($qty < 1) {
+                    $notices[] = ($product?->name ?? 'An item').' was removed because it is out of stock.';
+
+                    continue;
+                }
+
+                $line['quantity'] = $qty;
+                $clamped[$lineKey] = $line;
+                $remaining = max(0, $remaining - $qty);
+            }
+        }
+
+        return $clamped;
+    }
+
+    /**
+     * @param  array<string, array{quantity: int}>  $cart
+     */
+    private function quantityForProduct(int $productId, array $cart, ?string $exceptKey = null): int
+    {
+        $total = 0;
+
+        foreach ($cart as $key => $line) {
+            if ($exceptKey !== null && $key === $exceptKey) {
+                continue;
+            }
+
+            if ($this->productIdFromKey($key, $line) === $productId) {
+                $total += $this->normalizeLine($line)['quantity'];
+            }
+        }
+
+        return $total;
+    }
+
+    private function productIdFromKey(int|string $key, mixed $line): ?int
+    {
+        if (is_numeric($key)) {
+            return (int) $key;
+        }
+
+        if (is_string($key) && str_contains($key, '|')) {
+            return (int) explode('|', $key, 3)[0];
+        }
+
+        if (is_array($line) && isset($line['product_id'])) {
+            return (int) $line['product_id'];
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array{size_label: ?string, finish_slug: string, finish_name: string}|null
+     */
+    public function validatedVariant(?Product $product, ?string $sizeLabel, ?string $finishSlug, bool $allowDefaultFinish = false): ?array
+    {
+        if (! $product) {
+            return null;
+        }
+
+        $size = filled($sizeLabel) ? trim((string) $sizeLabel) : null;
+        if ($size === '') {
+            $size = null;
+        }
+
+        if ($product->hasSizeOptions()) {
+            if (! filled($size) || CartGuard::exactSizeOption($product, $size) === null) {
+                return null;
+            }
+        } elseif (filled($size)) {
+            return null;
+        }
+
+        $finish = filled($finishSlug) ? FinishSwatches::findBySlug($finishSlug) : null;
+
+        if ($finish === null && $allowDefaultFinish && ! filled($finishSlug)) {
+            $finish = FinishSwatches::findBySlug(FinishSwatches::defaultSlug())
+                ?? (FinishSwatches::all()[0] ?? null);
+        }
+
+        if ($finish === null) {
+            return null;
+        }
+
+        return [
+            'size_label' => $size,
             'finish_slug' => $finish['slug'],
             'finish_name' => $finish['name'],
-            'size_label' => $size['label'],
-            'unit_price' => $size['unit_price'],
+        ];
+    }
+
+    /**
+     * @return array{quantity: int, clamped: bool}
+     */
+    public function add(Product $product, int $quantity = 1, ?string $finishSlug = null, ?string $sizeLabel = null): array
+    {
+        $this->sanitizedItems();
+
+        $variant = $this->validatedVariant($product, $sizeLabel, $finishSlug, true);
+
+        if ($variant === null) {
+            return ['quantity' => 0, 'clamped' => false];
+        }
+
+        $lineKey = self::lineKey($product->id, $variant['size_label'], $variant['finish_slug']);
+        $cart = session(self::SESSION_KEY, []);
+        $existingQty = isset($cart[$lineKey]) ? $this->normalizeLine($cart[$lineKey])['quantity'] : 0;
+        $usedOthers = $this->quantityForProduct($product->id, $cart, $lineKey);
+        $available = StockAvailability::availableForProduct($product);
+        $maxForLine = min(99, max(0, $available - $usedOthers));
+        $incoming = max(1, $quantity);
+        $newQty = min($existingQty + $incoming, $maxForLine);
+
+        if ($newQty < 1) {
+            return ['quantity' => 0, 'clamped' => true];
+        }
+
+        $unitPrice = CartGuard::trustedUnitPrice($product, $variant['size_label']) ?? 0.0;
+
+        $cart[$lineKey] = [
+            'quantity' => $newQty,
+            'finish_slug' => $variant['finish_slug'],
+            'finish_name' => $variant['finish_name'],
+            'size_label' => $variant['size_label'],
+            'unit_price' => $unitPrice,
         ];
 
         session([self::SESSION_KEY => $cart]);
+
+        return [
+            'quantity' => $newQty,
+            'clamped' => $newQty < ($existingQty + $incoming),
+        ];
     }
 
-    /** @param array<int, int|string> $productIds */
-    public function removeMany(array $productIds): void
+    /** @param  list<int|string>  $lineKeys */
+    public function removeMany(array $lineKeys): void
     {
         $cart = session(self::SESSION_KEY, []);
-        foreach ($productIds as $productId) {
-            unset($cart[$productId]);
+        foreach ($lineKeys as $lineKey) {
+            unset($cart[$lineKey]);
         }
         session([self::SESSION_KEY => $cart]);
     }
 
-    public function update(Product $product, int $quantity): void
+    public function update(Product $product, int $quantity, ?string $sizeLabel = null, ?string $finishSlug = null): bool
     {
+        $this->sanitizedItems();
+
+        $lineKey = $this->resolveExistingLineKey($product, $sizeLabel, $finishSlug);
         $cart = session(self::SESSION_KEY, []);
 
-        if ($quantity <= 0) {
-            unset($cart[$product->id]);
-
-            session([self::SESSION_KEY => $cart]);
-
-            return;
+        if ($lineKey === null || ! isset($cart[$lineKey])) {
+            return false;
         }
 
-        $existing = $this->normalizeLine($cart[$product->id] ?? ['quantity' => $quantity]);
-        $cart[$product->id] = [
-            'quantity' => $quantity,
+        if ($quantity <= 0) {
+            unset($cart[$lineKey]);
+            session([self::SESSION_KEY => $cart]);
+
+            return true;
+        }
+
+        $existing = $this->normalizeLine($cart[$lineKey]);
+        $usedOthers = $this->quantityForProduct($product->id, $cart, $lineKey);
+        $available = StockAvailability::availableForProduct($product);
+        $maxForLine = min(99, max(0, $available - $usedOthers));
+        $qty = min(max(1, $quantity), $maxForLine);
+
+        if ($qty < 1) {
+            unset($cart[$lineKey]);
+            session([self::SESSION_KEY => $cart]);
+
+            return true;
+        }
+
+        $cart[$lineKey] = [
+            'quantity' => $qty,
             'finish_slug' => $existing['finish_slug'],
             'finish_name' => $existing['finish_name'],
             'size_label' => $existing['size_label'],
@@ -145,13 +369,25 @@ class CartService
         ];
 
         session([self::SESSION_KEY => $cart]);
+
+        return true;
     }
 
-    public function remove(Product $product): void
+    public function remove(Product $product, ?string $sizeLabel = null, ?string $finishSlug = null): bool
     {
+        $this->sanitizedItems();
+
+        $lineKey = $this->resolveExistingLineKey($product, $sizeLabel, $finishSlug);
         $cart = session(self::SESSION_KEY, []);
-        unset($cart[$product->id]);
+
+        if ($lineKey === null || ! isset($cart[$lineKey])) {
+            return false;
+        }
+
+        unset($cart[$lineKey]);
         session([self::SESSION_KEY => $cart]);
+
+        return true;
     }
 
     public function clear(): void
@@ -254,8 +490,7 @@ class CartService
 
     public function count(): int
     {
-        return (int) collect(session(self::SESSION_KEY, []))
-            ->sum(fn ($line) => $this->normalizeLine($line)['quantity']);
+        return (int) $this->all()->sum('quantity');
     }
 
     public function subtotal(): float
@@ -266,6 +501,17 @@ class CartService
     public function isEmpty(): bool
     {
         return $this->all()->isEmpty();
+    }
+
+    public function containsProduct(int $productId): bool
+    {
+        foreach (session(self::SESSION_KEY, []) as $key => $line) {
+            if ($this->productIdFromKey($key, $line) === $productId) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -280,12 +526,46 @@ class CartService
             ];
         }
 
-        $option = $product->resolveSizeOption($sizeLabel);
+        $option = CartGuard::exactSizeOption($product, $sizeLabel);
         $label = $option['label'] ?? null;
 
         return [
             'label' => $label,
             'unit_price' => CartGuard::trustedUnitPrice($product, $label) ?? 0.0,
         ];
+    }
+
+    private function resolveExistingLineKey(Product $product, ?string $sizeLabel, ?string $finishSlug): ?string
+    {
+        $cart = session(self::SESSION_KEY, []);
+        $variant = $this->validatedVariant($product, $sizeLabel, $finishSlug, ! filled($finishSlug));
+
+        if ($variant !== null) {
+            $key = self::lineKey($product->id, $variant['size_label'], $variant['finish_slug']);
+            if (isset($cart[$key])) {
+                return $key;
+            }
+        }
+
+        $matches = [];
+        foreach ($cart as $key => $line) {
+            if ($this->productIdFromKey($key, $line) === $product->id) {
+                $matches[] = (string) $key;
+            }
+        }
+
+        return count($matches) === 1 ? $matches[0] : null;
+    }
+
+    /** @param  list<string>  $notices */
+    private function flashNotices(array $notices): void
+    {
+        $notices = array_values(array_unique(array_filter($notices)));
+
+        if ($notices === []) {
+            return;
+        }
+
+        session()->flash(self::NOTICE_KEY, $notices);
     }
 }

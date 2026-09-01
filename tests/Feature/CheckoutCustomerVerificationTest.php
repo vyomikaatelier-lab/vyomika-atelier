@@ -134,7 +134,7 @@ class CheckoutCustomerVerificationTest extends TestCase
 
         $this->assertSame($buyNow->id, session('buy_now')['product_id']);
         $this->assertSame(2, session('buy_now')['quantity']);
-        $this->assertArrayHasKey($other->id, session('cart'));
+        $this->assertTrue($this->sessionCartHasProduct($other));
 
         $this->post(route('account.login.email'), [
             'email' => $user->email,
@@ -148,7 +148,7 @@ class CheckoutCustomerVerificationTest extends TestCase
         $this->assertCount(1, $items);
         $this->assertSame($buyNow->id, $items->first()['product']->id);
         $this->assertSame(2, $items->first()['quantity']);
-        $this->assertArrayHasKey($other->id, session('cart'));
+        $this->assertTrue($this->sessionCartHasProduct($other));
     }
 
     public function test_buy_now_returns_to_checkout_after_registration(): void

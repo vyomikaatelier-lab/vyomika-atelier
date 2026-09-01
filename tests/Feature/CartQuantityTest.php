@@ -31,7 +31,7 @@ class CartQuantityTest extends TestCase
             ->assertRedirect()
             ->assertSessionHas('success');
 
-        $this->assertSame(1, session('cart')[$product->id]['quantity']);
+        $this->assertSame(1, $this->sessionCartLine($product)['quantity'] ?? null);
     }
 
     public function test_second_add_increments_quantity_to_two(): void
@@ -42,7 +42,7 @@ class CartQuantityTest extends TestCase
         $this->post(route('cart.add', $product), ['quantity' => 1]);
         $this->post(route('cart.add', $product), ['quantity' => 1]);
 
-        $this->assertSame(2, session('cart')[$product->id]['quantity']);
+        $this->assertSame(2, $this->sessionCartLine($product)['quantity'] ?? null);
     }
 
     public function test_buy_now_does_not_increment_unrelated_cart_line(): void
@@ -56,7 +56,7 @@ class CartQuantityTest extends TestCase
         $this->post(route('cart.add', $productB), ['quantity' => 1, 'buy_now' => 1])
             ->assertRedirect(route('account.continue'));
 
-        $this->assertSame(1, session('cart')[$productA->id]['quantity']);
+        $this->assertSame(1, $this->sessionCartLine($productA)['quantity'] ?? null);
         $this->assertArrayNotHasKey($productB->id, session('cart', []));
         $this->assertSame($productB->id, session('buy_now')['product_id']);
     }
@@ -99,17 +99,17 @@ class CartQuantityTest extends TestCase
         $product = Product::factory()->shop()->create(['category_id' => $category->id, 'stock' => 10]);
 
         $this->post(route('cart.add', $product), ['quantity' => 'abc']);
-        $this->assertSame(1, session('cart')[$product->id]['quantity']);
+        $this->assertSame(1, $this->sessionCartLine($product)['quantity'] ?? null);
 
         session()->forget('cart');
 
         $this->post(route('cart.add', $product), ['quantity' => -5]);
-        $this->assertSame(1, session('cart')[$product->id]['quantity']);
+        $this->assertSame(1, $this->sessionCartLine($product)['quantity'] ?? null);
 
         session()->forget('cart');
 
         $this->post(route('cart.add', $product), ['quantity' => 500]);
-        $this->assertSame(10, session('cart')[$product->id]['quantity']);
+        $this->assertSame(10, $this->sessionCartLine($product)['quantity'] ?? null);
     }
 
     public function test_update_to_zero_removes_line(): void
@@ -122,7 +122,7 @@ class CartQuantityTest extends TestCase
             ->assertRedirect()
             ->assertSessionHas('success');
 
-        $this->assertArrayNotHasKey($product->id, session('cart', []));
+        $this->assertNull($this->sessionCartLine($product));
     }
 
     public function test_checkout_totals_use_database_prices_not_browser_input(): void

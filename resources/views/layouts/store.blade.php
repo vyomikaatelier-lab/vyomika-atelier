@@ -48,9 +48,9 @@
     $announcement = \App\Support\SiteContent::announcement();
     $footer = \App\Support\SiteContent::footer();
     $cartService = app(\App\Services\CartService::class);
-    $cartCount = $cartService->count();
     $cartItems = $cartService->all();
-    $cartSubtotal = $cartService->subtotal();
+    $cartCount = $cartItems->sum('quantity');
+    $cartSubtotal = $cartItems->sum('line_total');
     $nav = \App\Support\StorefrontNavigation::nav();
     $legalLinks = \App\Support\LegalContent::footerLinks();
     $social = \App\Support\SiteContent::social();
@@ -123,8 +123,18 @@
 @if(session('success'))
 <div class="am-alert am-alert--success">{{ session('success') }}</div>
 @endif
+@if(session('info'))
+<div class="am-alert am-alert--info">{{ session('info') }}</div>
+@endif
 @if(session('error'))
 <div class="am-alert am-alert--error">{{ session('error') }}</div>
+@endif
+@if(session(\App\Services\CartService::NOTICE_KEY))
+<div class="am-alert am-alert--info" role="status">
+    @foreach((array) session(\App\Services\CartService::NOTICE_KEY) as $notice)
+        <p>{{ $notice }}</p>
+    @endforeach
+</div>
 @endif
 @if(isset($errors) && $errors->any())
 <div class="am-alert am-alert--error">
@@ -141,19 +151,42 @@
 <aside class="am-drawer" id="am-cart-drawer" aria-label="Shopping cart">
     <div class="am-drawer__head">
         <h3>Shopping Cart</h3>
-        <button type="button" id="am-cart-close" aria-label="Close cart">✕</button>
+        <a href="#" class="am-drawer__close" id="am-cart-close" aria-label="Close cart">✕</a>
     </div>
     <div class="am-drawer__body">
         @if($cartItems->isNotEmpty())
         <ul class="am-cart-lines">
             @foreach($cartItems as $item)
+            @php
+                $lineId = \Illuminate\Support\Str::slug($item['line_key'] ?? $item['product']->id);
+            @endphp
             <li class="am-cart-line">
                 @if($item['product']->imageUrl())
                 <img src="{{ $item['product']->imageUrl() }}" alt="" class="am-cart-line__thumb">
                 @endif
                 <div class="am-cart-line__body">
                     <a href="{{ $storefrontLink('shop.show', ['slug' => $item['product']->slug], '/shop/'.$item['product']->slug) }}" class="am-cart-line__name">{{ $item['product']->name }}</a>
+                    @if(!empty($item['size_label']))
+                    <p class="am-cart-line__meta">Size: {{ $item['size_label'] }}</p>
+                    @endif
+                    @if(!empty($item['finish_name']))
+                    <p class="am-cart-line__meta">Finish: {{ $item['finish_name'] }}</p>
+                    @endif
                     <p class="am-cart-line__meta">Qty {{ $item['quantity'] }} · ₹{{ number_format($item['line_total'], 0) }}</p>
+                    <form action="{{ route('cart.update', $item['product']) }}" method="POST" class="am-cart-line__qty-form">
+                        @csrf @method('PATCH')
+                        <input type="hidden" name="size_label" value="{{ $item['size_label'] }}">
+                        <input type="hidden" name="finish_slug" value="{{ $item['finish_slug'] }}">
+                        <label class="am-visually-hidden" for="drawer-qty-{{ $lineId }}">Quantity for {{ $item['product']->name }}</label>
+                        <input type="number" id="drawer-qty-{{ $lineId }}" name="quantity" value="{{ $item['quantity'] }}" min="1" max="{{ $item['max_quantity'] ?? min($item['product']->stock, 99) }}" class="am-qty-input">
+                        <button type="submit" class="am-btn am-btn--outline am-btn--sm">Update</button>
+                    </form>
+                    <form action="{{ route('cart.remove', $item['product']) }}" method="POST" class="am-cart-line__remove-form">
+                        @csrf @method('DELETE')
+                        <input type="hidden" name="size_label" value="{{ $item['size_label'] }}">
+                        <input type="hidden" name="finish_slug" value="{{ $item['finish_slug'] }}">
+                        <button type="submit" class="am-cart-row__remove">Remove</button>
+                    </form>
                 </div>
             </li>
             @endforeach
@@ -164,7 +197,8 @@
         @endif
     </div>
     <div class="am-drawer__foot">
-        <a href="{{ $storefrontLink('cart.index', [], '/cart') }}" class="am-btn am-btn--primary am-btn--full">View Cart</a>
+        <a href="{{ $storefrontLink('checkout.index', [], '/checkout') }}" class="am-btn am-btn--primary am-btn--full">Checkout</a>
+        <a href="{{ $storefrontLink('cart.index', [], '/cart') }}" class="am-btn am-btn--outline am-btn--full" style="margin-top:0.5rem">View Cart</a>
         <a href="{{ \App\Support\StorefrontRoutes::primaryShopUrl() }}" class="am-btn am-btn--outline am-btn--full" style="margin-top:0.5rem">Continue Shopping</a>
     </div>
 </aside>

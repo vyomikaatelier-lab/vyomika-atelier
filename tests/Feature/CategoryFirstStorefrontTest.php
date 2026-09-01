@@ -309,7 +309,7 @@ class CategoryFirstStorefrontTest extends TestCase
             ->assertRedirect()
             ->assertSessionHas('success');
 
-        $this->assertSame(2, session('cart')[$product->id]['quantity']);
+        $this->assertSame(2, $this->sessionCartLine($product)['quantity'] ?? null);
     }
 
     public function test_sitemap_excludes_generic_shop_url(): void

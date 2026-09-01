@@ -266,7 +266,7 @@ class GalleryCardPurchaseEligibilityTest extends TestCase
         $this->post(route('cart.add', $product), ['quantity' => 1])
             ->assertSessionHas('success');
 
-        $this->assertSame(1, session('cart')[$product->id]['quantity'] ?? null);
+        $this->assertSame(1, $this->sessionCartLine($product)['quantity'] ?? null);
     }
 
     public function test_valid_selected_variant_uses_trusted_price(): void
