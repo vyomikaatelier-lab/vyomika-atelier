@@ -26,7 +26,7 @@ class CheckoutCustomerVerificationTest extends TestCase
     {
         [$product] = $this->shopCart();
 
-        $response = $this->post(route('cart.add', $product), ['quantity' => 1]);
+        $response = $this->post(route('cart.add', $product), $this->purchaseInput());
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
@@ -127,14 +127,14 @@ class CheckoutCustomerVerificationTest extends TestCase
 
         $this->withSession([
             'cart' => [$other->id => ['quantity' => 1, 'finish_slug' => null, 'finish_name' => null]],
-        ])->post(route('cart.add', $buyNow), [
+        ])->post(route('cart.add', $buyNow), $this->purchaseInput([
             'quantity' => 2,
             'buy_now' => 1,
-        ])->assertRedirect(route('account.continue'));
+        ]))->assertRedirect(route('account.continue'));
 
         $this->assertSame($buyNow->id, session('buy_now')['product_id']);
         $this->assertSame(2, session('buy_now')['quantity']);
-        $this->assertArrayHasKey($other->id, session('cart'));
+        $this->assertTrue($this->sessionCartHasProduct($other));
 
         $this->post(route('account.login.email'), [
             'email' => $user->email,
@@ -148,7 +148,7 @@ class CheckoutCustomerVerificationTest extends TestCase
         $this->assertCount(1, $items);
         $this->assertSame($buyNow->id, $items->first()['product']->id);
         $this->assertSame(2, $items->first()['quantity']);
-        $this->assertArrayHasKey($other->id, session('cart'));
+        $this->assertTrue($this->sessionCartHasProduct($other));
     }
 
     public function test_buy_now_returns_to_checkout_after_registration(): void
@@ -160,10 +160,9 @@ class CheckoutCustomerVerificationTest extends TestCase
             'stock' => 4,
         ]);
 
-        $this->post(route('cart.add', $product), [
-            'quantity' => 1,
+        $this->post(route('cart.add', $product), $this->purchaseInput([
             'buy_now' => 1,
-        ])->assertRedirect(route('account.continue'));
+        ]))->assertRedirect(route('account.continue'));
 
         $this->post(route('account.register.send'), [
             'name' => 'New Shopper',
@@ -182,10 +181,9 @@ class CheckoutCustomerVerificationTest extends TestCase
         [$product] = $this->shopCart();
         $user = User::factory()->unverified()->create();
 
-        $this->actingAs($user)->post(route('cart.add', $product), [
-            'quantity' => 1,
+        $this->actingAs($user)->post(route('cart.add', $product), $this->purchaseInput([
             'buy_now' => 1,
-        ])->assertRedirect(route('checkout.index'));
+        ]))->assertRedirect(route('checkout.index'));
     }
 
     public function test_checkout_requires_a_valid_delivery_mobile_number(): void
@@ -226,16 +224,14 @@ class CheckoutCustomerVerificationTest extends TestCase
             ->assertRedirect(route('cart.index'))
             ->assertSessionHas('error', CheckoutCustomer::MSG_ADMIN);
 
-        $this->actingAs($admin)->post(route('cart.add', $product), [
-            'quantity' => 1,
+        $this->actingAs($admin)->post(route('cart.add', $product), $this->purchaseInput([
             'buy_now' => 1,
-        ])->assertRedirect(route('checkout.index'));
+        ]))->assertRedirect(route('checkout.index'));
 
         $this->actingAs($admin)->followingRedirects()
-            ->post(route('cart.add', $product), [
-                'quantity' => 1,
+            ->post(route('cart.add', $product), $this->purchaseInput([
                 'buy_now' => 1,
-            ])
+            ]))
             ->assertOk()
             ->assertSee(CheckoutCustomer::MSG_ADMIN);
     }

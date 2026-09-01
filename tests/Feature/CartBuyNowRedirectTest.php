@@ -28,23 +28,30 @@ class CartBuyNowRedirectTest extends TestCase
         ], $overrides));
     }
 
-    public function test_add_to_cart_redirects_to_cart(): void
+    public function test_add_to_cart_returns_to_product_page_and_opens_drawer(): void
     {
         $product = $this->shopProduct($this->shopCategory());
+        $origin = route('shop.show', $product->slug);
 
-        $this->post(route('cart.add', $product), ['quantity' => 1])
-            ->assertRedirect(route('cart.index'))
-            ->assertSessionHas('success');
+        $location = urldecode((string) $this->from($origin)
+            ->post(route('cart.add', $product), $this->purchaseInput())
+            ->assertSessionHas('success')
+            ->headers->get('Location'));
+
+        $this->assertStringContainsString($product->slug, $location);
+        $this->assertStringContainsString('cart=open', $location);
+        $this->assertStringContainsString('#am-cart-drawer', $location);
+        $this->assertStringNotContainsString('/cart', parse_url($location, PHP_URL_PATH) ?? '');
     }
 
     public function test_add_to_cart_modifies_cart_but_not_buy_now(): void
     {
         $product = $this->shopProduct($this->shopCategory());
 
-        $this->post(route('cart.add', $product), ['quantity' => 2])
-            ->assertRedirect(route('cart.index'));
+        $this->post(route('cart.add', $product), $this->purchaseInput(['quantity' => 2]))
+            ->assertRedirect();
 
-        $this->assertSame(2, session('cart')[$product->id]['quantity'] ?? null);
+        $this->assertSame(2, $this->sessionCartLine($product)['quantity'] ?? null);
         $this->assertNull(session('buy_now'));
     }
 
@@ -52,7 +59,7 @@ class CartBuyNowRedirectTest extends TestCase
     {
         $product = $this->shopProduct($this->shopCategory());
 
-        $this->post(route('cart.add', $product), ['quantity' => 1, 'buy_now' => 1])
+        $this->post(route('cart.add', $product), $this->purchaseInput(['buy_now' => 1]))
             ->assertRedirect(route('account.continue'))
             ->assertSessionHas('info');
 
@@ -68,7 +75,7 @@ class CartBuyNowRedirectTest extends TestCase
             'password' => Hash::make('secret-password'),
         ]);
 
-        $this->post(route('cart.add', $product), ['quantity' => 1, 'buy_now' => 1])
+        $this->post(route('cart.add', $product), $this->purchaseInput(['buy_now' => 1]))
             ->assertRedirect(route('account.continue'));
 
         $this->post(route('account.login.email'), [
@@ -85,7 +92,7 @@ class CartBuyNowRedirectTest extends TestCase
     {
         $product = $this->shopProduct($this->shopCategory(), ['name' => 'Register Buy Now Lamp']);
 
-        $this->post(route('cart.add', $product), ['quantity' => 1, 'buy_now' => 1])
+        $this->post(route('cart.add', $product), $this->purchaseInput(['buy_now' => 1]))
             ->assertRedirect(route('account.continue'));
 
         $this->post(route('account.register.send'), [
@@ -105,10 +112,9 @@ class CartBuyNowRedirectTest extends TestCase
         $product = $this->shopProduct($this->shopCategory());
         $user = User::factory()->unverified()->create();
 
-        $this->actingAs($user)->post(route('cart.add', $product), [
-            'quantity' => 1,
+        $this->actingAs($user)->post(route('cart.add', $product), $this->purchaseInput([
             'buy_now' => 1,
-        ])->assertRedirect(route('checkout.index'));
+        ]))->assertRedirect(route('checkout.index'));
     }
 
     public function test_authenticated_customer_with_valid_buy_now_on_continue_redirects_to_checkout(): void
@@ -203,7 +209,7 @@ class CartBuyNowRedirectTest extends TestCase
         $studioCategory = Category::factory()->create(['slug' => 'partitions']);
         $studio = Product::factory()->studio()->create(['category_id' => $studioCategory->id]);
 
-        $this->post(route('cart.add', $studio), ['quantity' => 1, 'buy_now' => 1])
+        $this->post(route('cart.add', $studio), $this->purchaseInput(['buy_now' => 1]))
             ->assertSessionHas('error', CartGuard::MSG_STUDIO);
         $this->assertNull(session('buy_now'));
 
@@ -214,7 +220,7 @@ class CartBuyNowRedirectTest extends TestCase
             'stock' => 5,
         ]);
 
-        $this->post(route('cart.add', $noPrice), ['quantity' => 1, 'buy_now' => 1])
+        $this->post(route('cart.add', $noPrice), $this->purchaseInput(['buy_now' => 1]))
             ->assertSessionHas('error', CartGuard::MSG_NO_PRICE);
         $this->assertNull(session('buy_now'));
     }
@@ -224,13 +230,12 @@ class CartBuyNowRedirectTest extends TestCase
         $product = $this->shopProduct($this->shopCategory(), ['price' => 5000]);
         $user = User::factory()->create();
 
-        $this->actingAs($user)->post(route('cart.add', $product), [
-            'quantity' => 1,
+        $this->actingAs($user)->post(route('cart.add', $product), $this->purchaseInput([
             'buy_now' => 1,
             'unit_price' => 1,
             'price' => 1,
             'total' => 1,
-        ])->assertRedirect(route('checkout.index'));
+        ]))->assertRedirect(route('checkout.index'));
 
         $items = app(CartService::class)->checkoutItems();
         $this->assertSame(5000.0, $items->first()['unit_price']);
@@ -241,10 +246,9 @@ class CartBuyNowRedirectTest extends TestCase
         $product = $this->shopProduct($this->shopCategory(), ['name' => 'Trusted Summary Chair']);
         $user = User::factory()->unverified()->create();
 
-        $this->actingAs($user)->post(route('cart.add', $product), [
-            'quantity' => 1,
+        $this->actingAs($user)->post(route('cart.add', $product), $this->purchaseInput([
             'buy_now' => 1,
-        ])->assertRedirect(route('checkout.index'));
+        ]))->assertRedirect(route('checkout.index'));
 
         $this->get(route('checkout.index'))
             ->assertOk()

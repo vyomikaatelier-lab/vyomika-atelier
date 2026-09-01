@@ -17,7 +17,10 @@
 
     $canBuyNow = $product instanceof \App\Models\Product
         ? CartGuard::canDisplayBuyNow($product)
-        : (bool) $useCheckout;
+        : false;
+    $canChooseOptions = $product instanceof \App\Models\Product
+        ? CartGuard::canDisplayChooseOptions($product)
+        : false;
 
     $priceLabel = $product instanceof \App\Models\Product
         ? StorefrontPrice::listingLabel($product)
@@ -62,6 +65,8 @@
             <a href="{{ $showUrl }}" class="am-btn am-btn--card-view">View Details</a>
             @if($canBuyNow)
             @include('partials.am-gallery-buy-now-btn', ['product' => $product])
+            @elseif($canChooseOptions)
+            <a href="{{ $showUrl }}" class="am-btn am-btn--card-primary">Choose options</a>
             @elseif($product instanceof \App\Models\Product && ! $product->usesCheckoutFlow())
             @include('partials.am-gallery-order-now-btn', [
                 'name' => $title,

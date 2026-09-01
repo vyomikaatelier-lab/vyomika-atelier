@@ -101,9 +101,8 @@ class CheckoutTest extends TestCase
             ->get(route('checkout.index'));
 
         $response->assertOk();
-        $cart = session('cart', []);
-        $this->assertArrayHasKey($shopProduct->id, $cart);
-        $this->assertArrayNotHasKey($studioProduct->id, $cart);
+        $this->assertTrue($this->sessionCartHasProduct($shopProduct));
+        $this->assertFalse($this->sessionCartHasProduct($studioProduct));
     }
 
     public function test_checkout_without_razorpay_configured_creates_no_order(): void

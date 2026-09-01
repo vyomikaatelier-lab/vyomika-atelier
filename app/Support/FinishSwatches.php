@@ -71,7 +71,7 @@ class FinishSwatches
 
     public static function defaultSlug(): string
     {
-        return config('finishes.swatches.0.slug', 'champagne-mirror');
+        return config('finishes.swatches.0.slug', 'gold-mirror');
     }
 
     /** @return array{slug: string, name: string, image: string, hex: string, rate: int, is_black: bool}|null */

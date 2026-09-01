@@ -7,7 +7,6 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
-use App\Support\FinishSwatches;
 use App\Support\OrderAccess;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -27,9 +26,9 @@ class FinishCartTest extends TestCase
         ]);
 
         $response->assertRedirect();
-        $cart = session('cart');
-        $this->assertSame('black-mirror', $cart[$product->id]['finish_slug']);
-        $this->assertSame('Black Mirror', $cart[$product->id]['finish_name']);
+        $line = $this->sessionCartLine($product, null, 'black-mirror');
+        $this->assertSame('black-mirror', $line['finish_slug'] ?? null);
+        $this->assertSame('Black Mirror', $line['finish_name'] ?? null);
     }
 
     public function test_checkout_stores_finish_on_order_item(): void
@@ -85,7 +84,7 @@ class FinishCartTest extends TestCase
         $this->assertSame('Rose Gold Brush', $item->finish_name);
     }
 
-    public function test_invalid_finish_slug_falls_back_to_default(): void
+    public function test_invalid_finish_slug_is_rejected(): void
     {
         $category = Category::factory()->create(['slug' => 'coffee-tables']);
         $product = Product::factory()->create(['category_id' => $category->id]);
@@ -93,9 +92,8 @@ class FinishCartTest extends TestCase
         $this->post(route('cart.add', $product), [
             'quantity' => 1,
             'finish_slug' => 'not-a-real-finish',
-        ]);
+        ])->assertSessionHas('error', \App\Support\CartGuard::MSG_INVALID_FINISH);
 
-        $cart = session('cart');
-        $this->assertSame(FinishSwatches::defaultSlug(), $cart[$product->id]['finish_slug']);
+        $this->assertEmpty(session('cart', []));
     }
 }

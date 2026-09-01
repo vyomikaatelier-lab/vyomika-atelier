@@ -18,6 +18,13 @@
         @if(session('info'))
         <div class="am-alert am-alert--info" style="margin-bottom:1.25rem" role="status">{{ session('info') }}</div>
         @endif
+        @if(session(\App\Services\CartService::NOTICE_KEY))
+        <div class="am-alert am-alert--info" style="margin-bottom:1.25rem" role="status">
+            @foreach((array) session(\App\Services\CartService::NOTICE_KEY) as $notice)
+                <p>{{ $notice }}</p>
+            @endforeach
+        </div>
+        @endif
         @if(session('error'))
         <div class="am-alert am-alert--error" style="margin-bottom:1.25rem" role="alert">{{ session('error') }}</div>
         @endif
@@ -71,8 +78,10 @@
                                     @endif
                                     <form action="{{ route('cart.update', $item['product']) }}" method="POST" class="am-cart-row__qty-form">
                                         @csrf @method('PATCH')
-                                        <label for="qty-{{ $item['product']->id }}">Quantity</label>
-                                        <input type="number" id="qty-{{ $item['product']->id }}" name="quantity" value="{{ $item['quantity'] }}" min="1" max="{{ $item['product']->stock }}" class="am-qty-input">
+                                        <input type="hidden" name="size_label" value="{{ $item['size_label'] }}">
+                                        <input type="hidden" name="finish_slug" value="{{ $item['finish_slug'] }}">
+                                        <label for="qty-{{ \Illuminate\Support\Str::slug($item['line_key'] ?? $item['product']->id) }}">Quantity</label>
+                                        <input type="number" id="qty-{{ \Illuminate\Support\Str::slug($item['line_key'] ?? $item['product']->id) }}" name="quantity" value="{{ $item['quantity'] }}" min="1" max="{{ $item['max_quantity'] ?? min($item['product']->stock, 99) }}" class="am-qty-input">
                                         <button type="submit" class="am-btn am-btn--outline am-btn--sm">Update</button>
                                     </form>
                                 </div>
@@ -80,6 +89,8 @@
                                     <p class="am-cart-row__line-total">₹{{ number_format($item['line_total'], 0) }}</p>
                                     <form action="{{ route('cart.remove', $item['product']) }}" method="POST">
                                         @csrf @method('DELETE')
+                                        <input type="hidden" name="size_label" value="{{ $item['size_label'] }}">
+                                        <input type="hidden" name="finish_slug" value="{{ $item['finish_slug'] }}">
                                         <button type="submit" class="am-cart-row__remove">Remove</button>
                                     </form>
                                 </div>

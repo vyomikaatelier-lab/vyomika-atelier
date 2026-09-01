@@ -46,6 +46,9 @@
     $canBuyNow = $isModel
         ? CartGuard::canDisplayBuyNow($product)
         : false;
+    $canChooseOptions = $isModel
+        ? CartGuard::canDisplayChooseOptions($product)
+        : false;
     $canRequestQuote = $isModel && ! $product->usesCheckoutFlow();
 @endphp
 
@@ -76,6 +79,8 @@
                 <input type="hidden" name="buy_now" value="1">
                 <button type="submit" class="am-btn am-btn--primary am-btn--sm am-btn--full">Buy Now</button>
             </form>
+            @elseif($canChooseOptions)
+            <a href="{{ $url }}" class="am-btn am-btn--primary am-btn--sm am-btn--full am-product-card__choose">Choose options</a>
             @elseif($canRequestQuote)
             <button type="button"
                 class="am-btn am-btn--primary am-btn--sm am-btn--full"

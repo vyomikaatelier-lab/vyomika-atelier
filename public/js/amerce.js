@@ -145,8 +145,19 @@
     };
 
     openBtn?.addEventListener('click', (e) => { e.preventDefault(); open(); });
-    closeBtn?.addEventListener('click', shut);
+    closeBtn?.addEventListener('click', (e) => {
+      e.preventDefault();
+      shut();
+      if (window.location.hash === '#am-cart-drawer') {
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+    });
     overlay?.addEventListener('click', shut);
+
+    const params = new URLSearchParams(window.location.search);
+    if (window.location.hash === '#am-cart-drawer' || params.get('cart') === 'open') {
+      open();
+    }
   }
 
   /* Order Now on product cards — go to product page */
