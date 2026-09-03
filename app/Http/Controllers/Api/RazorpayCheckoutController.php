@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Services\OrderPaymentService;
 use App\Services\RazorpayService;
 use App\Support\OrderAccess;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use RuntimeException;
@@ -89,6 +90,8 @@ class RazorpayCheckoutController extends Controller
 
         try {
             $payload = $payments->razorpayCheckoutPayload($order);
+        } catch (LockTimeoutException) {
+            return response()->json(['message' => 'Payment is already being started. Please wait a moment.'], 409);
         } catch (RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], $e->getCode() ?: 500);
         }
