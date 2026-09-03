@@ -93,9 +93,25 @@ class OrderPaymentService
                     }
 
                     throw $e;
+                } catch (\Throwable $e) {
+                    $this->logCreatePersistFailed($locked, $newId, $e);
+
+                    throw new RuntimeException(
+                        'Could not start payment. Please try again.',
+                        500,
+                        $e
+                    );
                 }
 
-                return (string) $locked->fresh()->razorpay_order_id;
+                $persisted = (string) ($locked->fresh()->razorpay_order_id ?? '');
+
+                if ($persisted === '') {
+                    $this->logCreatePersistFailed($locked, $newId, new RuntimeException('razorpay_order_id missing after update'));
+
+                    throw new RuntimeException('Could not start payment. Please try again.', 500);
+                }
+
+                return $persisted;
             }
         );
     }
@@ -266,6 +282,19 @@ class OrderPaymentService
             'expired' => $order->isExpired(),
             'razorpay_order_id' => $order->razorpay_order_id,
             'payment_id' => $razorpayPaymentId,
+        ]);
+    }
+
+    private function logCreatePersistFailed(Order $order, string $razorpayOrderId, \Throwable $error): void
+    {
+        Log::warning('Razorpay order created but local persistence failed.', [
+            'event' => 'razorpay.create_persist_failed',
+            'order_id' => $order->id,
+            'order_number' => $order->order_number,
+            'receipt' => $order->order_number,
+            'razorpay_order_id' => $razorpayOrderId,
+            'local_status' => $order->status,
+            'error' => $error->getMessage(),
         ]);
     }
 

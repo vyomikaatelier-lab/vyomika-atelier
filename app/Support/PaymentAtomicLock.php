@@ -39,7 +39,7 @@ class PaymentAtomicLock
 
         return Cache::store('database')->lock(
             'checkout:customer:'.$userId,
-            (int) config('checkout.customer_lock_seconds', 20)
+            (int) config('checkout.customer_lock_seconds', 60)
         );
     }
 
@@ -49,7 +49,7 @@ class PaymentAtomicLock
 
         return Cache::store('database')->lock(
             'razorpay:order:'.$orderId,
-            (int) config('checkout.razorpay_lock_seconds', 20)
+            (int) config('checkout.razorpay_lock_seconds', 60)
         );
     }
 

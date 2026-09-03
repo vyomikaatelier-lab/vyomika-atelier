@@ -204,6 +204,81 @@ class CheckoutPaymentStateSafetyTest extends TestCase
         $this->assertSame('paid', $paid->fresh()->status);
     }
 
+    public function test_fulfilled_statuses_show_confirmed_wording(): void
+    {
+        $user = $this->customer();
+        $product = $this->shopProduct();
+
+        foreach (['processing', 'shipped', 'delivered'] as $status) {
+            $order = $this->makePendingOrder($user, $product, [
+                'status' => $status,
+                'order_number' => Order::generateOrderNumber(),
+            ]);
+
+            $this->actingAs($user)->get(route('checkout.success', $order))
+                ->assertOk()
+                ->assertSee('Order Confirmed', false)
+                ->assertSee('placed successfully', false);
+        }
+    }
+
+    public function test_non_fulfilled_statuses_never_show_confirmed_wording_on_pay_or_success(): void
+    {
+        $user = $this->customer();
+        $product = $this->shopProduct();
+
+        $pending = $this->makePendingOrder($user, $product, ['order_number' => Order::generateOrderNumber()]);
+        $this->actingAs($user)->get(route('checkout.success', $pending))
+            ->assertRedirect(route('checkout.pay', $pending));
+        $this->actingAs($user)->get(route('checkout.pay', $pending))
+            ->assertDontSee('Order Confirmed', false)
+            ->assertDontSee('placed successfully', false);
+
+        $expired = $this->makePendingOrder($user, $product, [
+            'order_number' => Order::generateOrderNumber(),
+            'expires_at' => now()->subMinute(),
+        ]);
+        $this->actingAs($user)->get(route('checkout.pay', $expired))
+            ->assertDontSee('Order Confirmed', false)
+            ->assertDontSee('placed successfully', false);
+
+        $cancelled = $this->makePendingOrder($user, $product, [
+            'order_number' => Order::generateOrderNumber(),
+            'status' => 'cancelled',
+            'expires_at' => null,
+        ]);
+        $this->actingAs($user)->get(route('checkout.pay', $cancelled))
+            ->assertDontSee('Order Confirmed', false)
+            ->assertDontSee('placed successfully', false);
+    }
+
+    public function test_api_create_order_lock_timeout_returns_controlled_409(): void
+    {
+        config([
+            'cache.default' => 'database',
+            'cache.stores.database.connection' => 'sqlite',
+            'checkout.razorpay_lock_wait' => 1,
+        ]);
+
+        Http::fake([
+            'api.razorpay.com/v1/orders' => Http::response(['id' => 'order_locked_out', 'amount' => 119900, 'currency' => 'INR'], 200),
+        ]);
+
+        $user = $this->customer();
+        $order = $this->makePendingOrder($user, $this->shopProduct(), ['razorpay_order_id' => null]);
+        $lock = \App\Support\PaymentAtomicLock::forRazorpayOrder((int) $order->id);
+        $this->assertTrue($lock->get());
+
+        try {
+            $this->actingAs($user)
+                ->postJson(route('api.create-order'), ['store_order_id' => $order->id])
+                ->assertStatus(409)
+                ->assertJson(['message' => 'Payment is already being started. Please wait a moment.']);
+        } finally {
+            $lock->release();
+        }
+    }
+
     public function test_foreign_order_access_remains_denied(): void
     {
         $owner = User::factory()->create();

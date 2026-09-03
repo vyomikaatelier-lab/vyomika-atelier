@@ -77,12 +77,26 @@ class RazorpayService
             ];
         }
 
-        $response = $this->api()->post('https://api.razorpay.com/v1/orders', [
-            'amount' => $amountPaise,
-            'currency' => 'INR',
-            'receipt' => $receipt,
-            'notes' => $notes,
-        ]);
+        try {
+            $response = $this->createOrderApi()->post('https://api.razorpay.com/v1/orders', [
+                'amount' => $amountPaise,
+                'currency' => 'INR',
+                'receipt' => $receipt,
+                'notes' => $notes,
+            ]);
+        } catch (ConnectionException $e) {
+            Log::warning('Razorpay order create connection failed.', [
+                'event' => 'razorpay.create_connection_failed',
+                'receipt' => $receipt,
+                'error' => 'connection_failed',
+            ]);
+
+            return [
+                'success' => false,
+                'status' => 503,
+                'message' => 'Could not create Razorpay order.',
+            ];
+        }
 
         return $this->mapCreateOrderResponse($response);
     }
@@ -190,5 +204,12 @@ class RazorpayService
     private function api()
     {
         return Http::withBasicAuth($this->key(), $this->secret());
+    }
+
+    private function createOrderApi()
+    {
+        return Http::withBasicAuth($this->key(), $this->secret())
+            ->connectTimeout((int) config('checkout.razorpay_connect_timeout', 5))
+            ->timeout((int) config('checkout.razorpay_create_timeout', 15));
     }
 }

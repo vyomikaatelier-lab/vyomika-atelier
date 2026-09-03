@@ -247,7 +247,7 @@ class CheckoutPaymentIdempotencyTest extends TestCase
         Mail::assertQueued(OrderReceivedMail::class, 1);
     }
 
-    public function test_concurrent_create_order_requests_reuse_one_razorpay_order_id(): void
+    public function test_sequential_create_order_requests_reuse_one_razorpay_order_id(): void
     {
         Http::fake(['api.razorpay.com/v1/orders' => Http::response(['id' => 'order_concurrent', 'amount' => 119900, 'currency' => 'INR'], 200)]);
 
@@ -320,6 +320,48 @@ class CheckoutPaymentIdempotencyTest extends TestCase
             ->post(route('checkout.store'), $this->checkoutPayload())
             ->assertRedirect(route('account.login'));
         $this->assertSame(0, Order::query()->count());
+    }
+
+    public function test_create_persist_failure_logs_reconciliation_context(): void
+    {
+        Http::fake(['api.razorpay.com/v1/orders' => Http::response(['id' => 'order_persist_fail', 'amount' => 119900, 'currency' => 'INR'], 200)]);
+
+        $user = $this->customer();
+        $order = $this->makePendingOrder($user, $this->shopProduct(), ['razorpay_order_id' => null]);
+
+        $persistAttempted = false;
+        Order::updating(function () use (&$persistAttempted) {
+            if ($persistAttempted) {
+                return;
+            }
+
+            $persistAttempted = true;
+
+            throw new \RuntimeException('simulated persist failure');
+        });
+
+        \Illuminate\Support\Facades\Event::fake([
+            \Illuminate\Log\Events\MessageLogged::class,
+        ]);
+
+        try {
+            app(OrderPaymentService::class)->ensureRazorpayOrderId($order);
+            $this->fail('Expected persistence failure.');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame('Could not start payment. Please try again.', $exception->getMessage());
+        } finally {
+            Order::flushEventListeners();
+        }
+
+        \Illuminate\Support\Facades\Event::assertDispatched(
+            \Illuminate\Log\Events\MessageLogged::class,
+            function (\Illuminate\Log\Events\MessageLogged $event): bool {
+                return $event->level === 'warning'
+                    && $event->message === 'Razorpay order created but local persistence failed.'
+                    && ($event->context['event'] ?? null) === 'razorpay.create_persist_failed'
+                    && ($event->context['razorpay_order_id'] ?? null) === 'order_persist_fail';
+            }
+        );
     }
 
     public function test_unique_index_migration_remains_unchanged(): void
