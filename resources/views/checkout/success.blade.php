@@ -29,19 +29,9 @@
                 <p class="am-checkout-success-card__email">Order details for <strong>{{ $order->customer_email }}</strong>. If you do not receive an email shortly, contact us at <a href="mailto:{{ config('site.brand.email') }}">{{ config('site.brand.email') }}</a>.</p>
                 @endif
 
-                @if($order->status === 'paid')
                 <div class="am-checkout-notice am-checkout-notice--success">
                     <p>Payment received. We will begin processing your order shortly.@if($paymentEmailSent) A payment confirmation email has been sent.@endif</p>
                 </div>
-                @elseif($order->payment_method === 'razorpay')
-                <div class="am-checkout-notice">
-                    <p>Your order is awaiting payment. Please complete checkout to confirm your order.</p>
-                </div>
-                @else
-                <div class="am-checkout-notice am-checkout-notice--success">
-                    <p>Your order is confirmed. Thank you for shopping with Vyomika Atelier.</p>
-                </div>
-                @endif
 
                 @if($order->items->isNotEmpty())
                 <div class="am-checkout-summary-block">

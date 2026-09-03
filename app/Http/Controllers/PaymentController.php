@@ -24,13 +24,21 @@ class PaymentController extends Controller
             return redirect(StorefrontRoutes::primaryShopUrl())->with('error', 'Order not found.');
         }
 
-        if ($order->payment_method !== 'razorpay' || $order->status !== 'pending') {
+        if ($order->isFulfilled()) {
             return redirect()->route('checkout.success', $order);
         }
 
+        if ($order->isCancelled()) {
+            return view('checkout.payment-cancelled', ['order' => $order]);
+        }
+
         if ($order->isExpired()) {
+            return view('checkout.payment-expired', ['order' => $order]);
+        }
+
+        if ($order->status !== 'pending' || $order->payment_method !== 'razorpay') {
             return redirect(StorefrontRoutes::primaryShopUrl())
-                ->with('error', 'This order has expired. Please place a new order.');
+                ->with('error', 'This order is not awaiting payment.');
         }
 
         if (! $this->razorpay->isConfigured()) {
@@ -50,8 +58,21 @@ class PaymentController extends Controller
             return redirect(StorefrontRoutes::primaryShopUrl())->with('error', 'Order not found.');
         }
 
-        if ($order->status !== 'pending') {
+        if ($order->isFulfilled()) {
             return redirect()->route('checkout.success', $order);
+        }
+
+        if ($order->isCancelled()) {
+            return view('checkout.payment-cancelled', ['order' => $order->fresh()]);
+        }
+
+        if ($order->isExpired()) {
+            return view('checkout.payment-expired', ['order' => $order->fresh()]);
+        }
+
+        if ($order->status !== 'pending') {
+            return redirect(StorefrontRoutes::primaryShopUrl())
+                ->with('error', 'This order is not awaiting payment.');
         }
 
         $validated = $request->validate([
@@ -72,8 +93,7 @@ class PaymentController extends Controller
                 ->with('error', $e->getMessage());
         } catch (RuntimeException $e) {
             if ($order->fresh()?->isExpired()) {
-                return redirect(StorefrontRoutes::primaryShopUrl())
-                    ->with('error', $e->getMessage());
+                return view('checkout.payment-expired', ['order' => $order->fresh()]);
             }
 
             return redirect()->route('checkout.pay', $order)

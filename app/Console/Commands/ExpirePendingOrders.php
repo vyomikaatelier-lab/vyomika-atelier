@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Order;
+use App\Services\PendingOrderExpiry;
 use Illuminate\Console\Command;
 
 class ExpirePendingOrders extends Command
@@ -13,24 +14,25 @@ class ExpirePendingOrders extends Command
 
     public function handle(): int
     {
-        $expired = Order::query()
+        $candidates = Order::query()
             ->where('status', 'pending')
             ->whereNotNull('expires_at')
             ->where('expires_at', '<=', now())
             ->get();
 
-        $count = 0;
+        $processed = 0;
+        $skipped = 0;
 
-        foreach ($expired as $order) {
-            $order->update([
-                'status' => 'cancelled',
-                'expires_at' => null,
-            ]);
-            $count++;
-            $this->line("Cancelled expired order {$order->order_number}");
+        foreach ($candidates as $order) {
+            if (PendingOrderExpiry::expireIfStillPending($order)) {
+                $processed++;
+                $this->line("Cancelled expired order {$order->order_number}");
+            } else {
+                $skipped++;
+            }
         }
 
-        $this->info("Expired {$count} pending order(s).");
+        $this->info("Expired {$processed} pending order(s); skipped {$skipped}.");
 
         return self::SUCCESS;
     }
