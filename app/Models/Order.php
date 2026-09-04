@@ -101,6 +101,24 @@ class Order extends Model
             && $this->expires_at->isPast();
     }
 
+    public function isCancelled(): bool
+    {
+        return $this->status === 'cancelled';
+    }
+
+    public function isAwaitingPayment(): bool
+    {
+        return $this->isPending() && ! $this->isExpired();
+    }
+
+    /**
+     * Paid or later fulfilment states that may show confirmed/success UI.
+     */
+    public function isFulfilled(): bool
+    {
+        return in_array($this->status, ['paid', 'processing', 'shipped', 'delivered'], true);
+    }
+
     public static function pendingExpiryHours(): int
     {
         return max(1, (int) config('orders.pending_expiry_hours', 24));

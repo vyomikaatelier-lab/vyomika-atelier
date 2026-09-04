@@ -6,6 +6,8 @@ use App\Exceptions\RazorpayReconciliationRequiredException;
 use App\Models\Order;
 use App\Services\StockAvailability;
 use App\Support\CartGuard;
+use App\Support\PaymentAtomicLock;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
@@ -27,26 +29,91 @@ class OrderPaymentService
             throw new RuntimeException($message, 422);
         }
 
-        if ($order->razorpay_order_id) {
-            return $this->buildPayload($order->razorpay_order_id, $order);
+        $razorpayOrderId = $this->ensureRazorpayOrderId($order);
+
+        return $this->buildPayload($razorpayOrderId, $order->fresh() ?? $order);
+    }
+
+    /**
+     * One local order may receive only one Razorpay order ID.
+     * Concurrent callers wait, re-read, and reuse the persisted ID.
+     */
+    public function ensureRazorpayOrderId(Order $order): string
+    {
+        if (filled($order->razorpay_order_id)) {
+            return (string) $order->razorpay_order_id;
         }
 
-        $result = $this->razorpay->createPaymentOrder(
-            RazorpayService::amountPaiseFromRupees($order->total),
-            $order->order_number,
-            [
-                'order_id' => (string) $order->id,
-                'customer_email' => $order->customer_email,
-            ]
+        return PaymentAtomicLock::run(
+            PaymentAtomicLock::forRazorpayOrder((int) $order->id),
+            PaymentAtomicLock::razorpayWaitSeconds(),
+            function () use ($order) {
+                $locked = Order::query()->find($order->id);
+
+                if (! $locked) {
+                    throw new RuntimeException('Order not found.', 404);
+                }
+
+                if (filled($locked->razorpay_order_id)) {
+                    return (string) $locked->razorpay_order_id;
+                }
+
+                $result = $this->razorpay->createPaymentOrder(
+                    RazorpayService::amountPaiseFromRupees($locked->total),
+                    $locked->order_number,
+                    [
+                        'order_id' => (string) $locked->id,
+                        'customer_email' => $locked->customer_email,
+                    ]
+                );
+
+                if (! $result['success']) {
+                    throw new RuntimeException($result['message'], $result['status']);
+                }
+
+                $locked->refresh();
+
+                if (filled($locked->razorpay_order_id)) {
+                    return (string) $locked->razorpay_order_id;
+                }
+
+                $newId = (string) ($result['data']['order_id'] ?? '');
+
+                if ($newId === '') {
+                    throw new RuntimeException('Could not create Razorpay order.', 500);
+                }
+
+                try {
+                    $locked->update(['razorpay_order_id' => $newId]);
+                } catch (UniqueConstraintViolationException $e) {
+                    $locked->refresh();
+
+                    if (filled($locked->razorpay_order_id)) {
+                        return (string) $locked->razorpay_order_id;
+                    }
+
+                    throw $e;
+                } catch (\Throwable $e) {
+                    $this->logCreatePersistFailed($locked, $newId, $e);
+
+                    throw new RuntimeException(
+                        'Could not start payment. Please try again.',
+                        500,
+                        $e
+                    );
+                }
+
+                $persisted = (string) ($locked->fresh()->razorpay_order_id ?? '');
+
+                if ($persisted === '') {
+                    $this->logCreatePersistFailed($locked, $newId, new RuntimeException('razorpay_order_id missing after update'));
+
+                    throw new RuntimeException('Could not start payment. Please try again.', 500);
+                }
+
+                return $persisted;
+            }
         );
-
-        if (! $result['success']) {
-            throw new RuntimeException($result['message'], $result['status']);
-        }
-
-        $order->update(['razorpay_order_id' => $result['data']['order_id']]);
-
-        return $this->buildPayload($result['data']['order_id'], $order);
     }
 
     public function verifyAndComplete(
@@ -215,6 +282,19 @@ class OrderPaymentService
             'expired' => $order->isExpired(),
             'razorpay_order_id' => $order->razorpay_order_id,
             'payment_id' => $razorpayPaymentId,
+        ]);
+    }
+
+    private function logCreatePersistFailed(Order $order, string $razorpayOrderId, \Throwable $error): void
+    {
+        Log::warning('Razorpay order created but local persistence failed.', [
+            'event' => 'razorpay.create_persist_failed',
+            'order_id' => $order->id,
+            'order_number' => $order->order_number,
+            'receipt' => $order->order_number,
+            'razorpay_order_id' => $razorpayOrderId,
+            'local_status' => $order->status,
+            'error' => $error->getMessage(),
         ]);
     }
 

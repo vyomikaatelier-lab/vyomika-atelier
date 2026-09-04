@@ -22,6 +22,9 @@
         @if(session('error'))
         <p class="am-checkout-notice am-checkout-notice--error" role="alert">{{ session('error') }}</p>
         @endif
+        @if(session('info'))
+        <p class="am-checkout-notice" role="status">{{ session('info') }}</p>
+        @endif
 
         <p class="am-checkout-pay__error" id="rzp-error" role="alert" hidden></p>
 
@@ -103,6 +106,8 @@
             </div>
 
             <p class="am-checkout-pay-card__help am-checkout-pay-card__help--centered">
+                <a href="{{ route('cart.index') }}" class="am-link-btn">Return to cart</a>
+                <a href="{{ \App\Support\StorefrontRoutes::primaryShopUrl() }}" class="am-link-btn">Continue shopping</a>
                 <button type="button" class="am-link-btn" data-open-contact-studio data-contact-context="Checkout help">Need help?</button>
                 <span>Confirmation to {{ $order->customer_email }}</span>
             </p>
@@ -184,6 +189,12 @@
                         contact: @json($order->customer_phone),
                     },
                     theme: { color: '#b38b42' },
+                    modal: {
+                        ondismiss: function () {
+                            showError('Payment was not completed');
+                            setBusy(false);
+                        }
+                    },
                     method: {
                         upi: button.dataset.payMethod === 'upi',
                         card: button.dataset.payMethod === 'card',
