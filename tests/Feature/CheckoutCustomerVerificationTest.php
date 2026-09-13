@@ -132,9 +132,10 @@ class CheckoutCustomerVerificationTest extends TestCase
             'buy_now' => 1,
         ]))->assertRedirect(route('account.continue'));
 
-        $this->assertSame($buyNow->id, session('buy_now')['product_id']);
-        $this->assertSame(2, session('buy_now')['quantity']);
+        $this->assertTrue($this->sessionCartHasProduct($buyNow));
+        $this->assertSame(2, $this->sessionCartLine($buyNow)['quantity'] ?? null);
         $this->assertTrue($this->sessionCartHasProduct($other));
+        $this->assertNull(session('buy_now'));
 
         $this->post(route('account.login.email'), [
             'email' => $user->email,
@@ -142,13 +143,13 @@ class CheckoutCustomerVerificationTest extends TestCase
         ])->assertRedirect(route('checkout.index'));
 
         $checkout = $this->get(route('checkout.index'));
-        $checkout->assertOk()->assertSee('Buy Now Table');
+        $checkout->assertOk()->assertSee('Buy Now Table')->assertSee('Unrelated Cart Chair');
 
         $items = app(\App\Services\CartService::class)->checkoutItems();
-        $this->assertCount(1, $items);
-        $this->assertSame($buyNow->id, $items->first()['product']->id);
-        $this->assertSame(2, $items->first()['quantity']);
+        $this->assertCount(2, $items);
+        $this->assertTrue($items->contains(fn (array $item) => $item['product']->id === $buyNow->id && $item['quantity'] === 2));
         $this->assertTrue($this->sessionCartHasProduct($other));
+        $this->get(route('cart.index'))->assertOk()->assertSee('Buy Now Table')->assertSee('Unrelated Cart Chair');
     }
 
     public function test_buy_now_returns_to_checkout_after_registration(): void

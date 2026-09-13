@@ -43,7 +43,7 @@ class CheckoutController extends Controller
     public function index()
     {
         if ($this->cart->checkoutIsEmpty()) {
-            return redirect(StorefrontRoutes::primaryShopUrl())->with('error', 'Your cart is empty.');
+            return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
         }
 
         $user = Auth::user();
@@ -72,7 +72,16 @@ class CheckoutController extends Controller
         }
 
         if ($this->cart->checkoutIsEmpty()) {
-            return redirect(StorefrontRoutes::primaryShopUrl())->with('error', 'Your cart is empty.');
+            $user = Auth::user();
+            if ($user) {
+                $this->expireStalePendingOrders((int) $user->id);
+                $existing = $this->activePayableOrderFor((int) $user->id);
+                if ($existing) {
+                    return $this->resumePayableOrder($existing);
+                }
+            }
+
+            return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
         }
 
         if (! $this->razorpay->isConfigured()) {
@@ -158,7 +167,6 @@ class CheckoutController extends Controller
                     $request,
                     $user->id,
                     $source,
-                    $fromBuyNow,
                     $desiredSnapshot,
                     $snapshot,
                     $validatedAddress,
@@ -223,7 +231,6 @@ class CheckoutController extends Controller
         Request $request,
         int $userId,
         string $source,
-        bool $fromBuyNow,
         array $desiredSnapshot,
         array $snapshot,
         array $validatedAddress,
@@ -239,7 +246,10 @@ class CheckoutController extends Controller
 
         if ($existing) {
             if (CheckoutSnapshot::matches(CheckoutSnapshot::fromOrder($existing), $desiredSnapshot)) {
-                return $this->resumePayableOrder($existing);
+                $redirect = $this->resumePayableOrder($existing);
+                $this->cart->consumeCheckedOutItems($items);
+
+                return $redirect;
             }
 
             return redirect()->route('checkout.index')
@@ -265,10 +275,7 @@ class CheckoutController extends Controller
 
         OrderAccess::remember($order);
 
-        if ($fromBuyNow) {
-            $request->session()->put(CartService::CHECKOUT_SOURCE_KEY, 'buy_now');
-            $this->cart->clearBuyNow();
-        }
+        $this->cart->consumeCheckedOutItems($items);
 
         $emailSent = $this->notifications->sendOrderReceived($order->fresh('items'));
 

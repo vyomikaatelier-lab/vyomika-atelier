@@ -17,7 +17,6 @@ class OrderPaymentService
     public function __construct(
         private RazorpayService $razorpay,
         private OrderNotificationService $notifications,
-        private CartService $cart,
     ) {}
 
     /**
@@ -262,12 +261,6 @@ class OrderPaymentService
         $order->refresh();
 
         if ($order->status === 'paid') {
-            if (session(CartService::CHECKOUT_SOURCE_KEY) === 'buy_now') {
-                $this->cart->clearBuyNow();
-                session()->forget(CartService::CHECKOUT_SOURCE_KEY);
-            } else {
-                $this->cart->clear();
-            }
             $this->notifications->sendPaymentConfirmed($order);
         }
     }

@@ -961,6 +961,17 @@
     });
   }
 
+  function initFlashNotices() {
+    document.querySelectorAll('[data-am-flash] .am-alert__close').forEach((button) => {
+      if (button.dataset.bound === '1') return;
+      button.dataset.bound = '1';
+      button.addEventListener('click', () => {
+        const item = button.closest('.am-alert');
+        if (item) item.remove();
+      });
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     initPopupFormModal();
     initHero();
@@ -982,6 +993,7 @@
     initWorkLightbox();
     initCheckoutPayMethods();
     initAddressForms();
+    initFlashNotices();
   });
 
   document.addEventListener('am-content-ready', () => {
@@ -1001,5 +1013,6 @@
     initWorkLightbox();
     initCheckoutPayMethods();
     initAddressForms();
+    initFlashNotices();
   });
 })();

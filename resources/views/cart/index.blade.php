@@ -16,21 +16,21 @@
         @include('partials.am-checkout-steps', ['current' => 1])
 
         @if(session('info'))
-        <div class="am-alert am-alert--info" style="margin-bottom:1.25rem" role="status">{{ session('info') }}</div>
+        <div class="am-alert am-alert--info am-alert--inline" role="status">{{ session('info') }}</div>
         @endif
         @if(session(\App\Services\CartService::NOTICE_KEY))
-        <div class="am-alert am-alert--info" style="margin-bottom:1.25rem" role="status">
+        <div class="am-alert am-alert--info am-alert--inline" role="status">
             @foreach((array) session(\App\Services\CartService::NOTICE_KEY) as $notice)
                 <p>{{ $notice }}</p>
             @endforeach
         </div>
         @endif
         @if(session('error'))
-        <div class="am-alert am-alert--error" style="margin-bottom:1.25rem" role="alert">{{ session('error') }}</div>
+        <div class="am-alert am-alert--error am-alert--inline" role="alert">{{ session('error') }}</div>
         @endif
 
         @if(!empty($pendingOrder))
-        <div class="am-alert am-alert--info" style="margin-bottom:1.25rem">
+        <div class="am-alert am-alert--info am-alert--inline">
             Order <strong>{{ $pendingOrder->order_number }}</strong> is awaiting payment.
             <a href="{{ route('checkout.pay', $pendingOrder) }}" class="am-btn am-btn--primary am-btn--sm" style="margin-left:0.75rem">Complete Payment</a>
         </div>

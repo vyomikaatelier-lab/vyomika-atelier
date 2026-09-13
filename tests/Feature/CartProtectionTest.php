@@ -35,8 +35,8 @@ class CartProtectionTest extends TestCase
         ]));
 
         $response->assertRedirect(route('account.continue'));
-        $this->assertSame($product->id, session('buy_now')['product_id']);
-        $this->assertArrayNotHasKey($product->id, session('cart', []));
+        $this->assertTrue($this->sessionCartHasProduct($product));
+        $this->assertNull(session('buy_now'));
     }
 
     public function test_studio_product_direct_post_is_rejected_with_enquiry_message(): void

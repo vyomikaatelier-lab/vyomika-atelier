@@ -53,6 +53,7 @@ class CartBuyNowRedirectTest extends TestCase
 
         $this->assertSame(2, $this->sessionCartLine($product)['quantity'] ?? null);
         $this->assertNull(session('buy_now'));
+        $this->assertFalse((bool) session('buy_now_intent'));
     }
 
     public function test_guest_buy_now_redirects_to_account_continue(): void
@@ -63,8 +64,9 @@ class CartBuyNowRedirectTest extends TestCase
             ->assertRedirect(route('account.continue'))
             ->assertSessionHas('info');
 
-        $this->assertSame($product->id, session('buy_now')['product_id']);
-        $this->assertArrayNotHasKey($product->id, session('cart', []));
+        $this->assertTrue($this->sessionCartHasProduct($product));
+        $this->assertTrue((bool) session('buy_now_intent'));
+        $this->assertNull(session('buy_now'));
     }
 
     public function test_login_after_buy_now_redirects_to_checkout(): void
@@ -86,6 +88,10 @@ class CartBuyNowRedirectTest extends TestCase
         $this->get(route('checkout.index'))
             ->assertOk()
             ->assertSee('Login Buy Now Table');
+
+        $this->get(route('cart.index'))
+            ->assertOk()
+            ->assertSee('Login Buy Now Table');
     }
 
     public function test_registration_after_buy_now_redirects_to_checkout(): void
@@ -105,6 +111,10 @@ class CartBuyNowRedirectTest extends TestCase
         $this->get(route('checkout.index'))
             ->assertOk()
             ->assertSee('Register Buy Now Lamp');
+
+        $this->get(route('cart.index'))
+            ->assertOk()
+            ->assertSee('Register Buy Now Lamp');
     }
 
     public function test_authenticated_buy_now_redirects_directly_to_checkout(): void
@@ -115,6 +125,8 @@ class CartBuyNowRedirectTest extends TestCase
         $this->actingAs($user)->post(route('cart.add', $product), $this->purchaseInput([
             'buy_now' => 1,
         ]))->assertRedirect(route('checkout.index'));
+
+        $this->assertTrue($this->sessionCartHasProduct($product));
     }
 
     public function test_authenticated_customer_with_valid_buy_now_on_continue_redirects_to_checkout(): void
