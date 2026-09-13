@@ -106,8 +106,9 @@ class OrderAccessTest extends TestCase
                 'razorpay_signature' => 'invalid',
             ]);
 
+        // The callback route is stateless, so it redirects to the session-backed
+        // payment page rather than flashing an error of its own.
         $response->assertRedirect(route('checkout.pay', $order));
-        $response->assertSessionHas('error');
         $this->assertSame('pending', $order->fresh()->status);
     }
 

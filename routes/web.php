@@ -76,7 +76,6 @@ Route::middleware('checkout.customer')->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:checkout')->name('checkout.store');
     Route::get('/checkout/pay/{order}', [PaymentController::class, 'show'])->name('checkout.pay');
-    Route::post('/checkout/pay/{order}', [PaymentController::class, 'verify'])->name('checkout.pay.verify');
     Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
 
     Route::post('/api/create-order', [RazorpayCheckoutController::class, 'createOrder'])
@@ -85,6 +84,36 @@ Route::middleware('checkout.customer')->group(function () {
     Route::post('/api/verify-payment', [RazorpayCheckoutController::class, 'verifyPayment'])
         ->name('api.verify-payment');
 });
+
+// Razorpay's redirect callback is a cross-site POST: with SameSite=Lax the
+// storefront session cookie is not sent, so this route cannot sit behind the
+// customer gate and is authorised solely by the HMAC signature bound to the
+// order's stored Razorpay order ID.
+//
+// It is also stateless. Without the session middleware the request cannot
+// start, read, rotate, persist or replace the customer's session cookie, so a
+// paid customer is never signed out by their own payment callback.
+//
+// ValidateCsrfToken must be excluded together with StartSession: even on its
+// exempt path it calls $request->session()->token() to refresh XSRF-TOKEN, and
+// ShareErrorsFromSession reads the session unconditionally. CaptureAttribution
+// also reads the session on GET; it is excluded so a later change cannot make
+// this POST start a session. Because no error bag is shared,
+// PaymentController::verify must only ever redirect — it must not render a
+// view or flash a message.
+//
+// SubstituteBindings (route model binding), SecurityHeaders and every global
+// middleware stay in place.
+Route::post('/checkout/pay/{order}', [PaymentController::class, 'verify'])
+    ->withoutMiddleware([
+        \Illuminate\Cookie\Middleware\EncryptCookies::class,
+        \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+        \Illuminate\Session\Middleware\StartSession::class,
+        \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+        \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+        \App\Http\Middleware\CaptureAttribution::class,
+    ])
+    ->name('checkout.pay.verify');
 
 Route::post('/webhooks/razorpay', RazorpayWebhookController::class)->name('webhooks.razorpay');
 

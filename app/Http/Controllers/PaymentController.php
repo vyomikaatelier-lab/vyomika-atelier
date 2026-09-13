@@ -52,54 +52,77 @@ class PaymentController extends Controller
         ]);
     }
 
+    /**
+     * Stateless Razorpay redirect callback.
+     *
+     * This action runs without session middleware (see routes/web.php), so it
+     * must never render a view, flash a message or read authentication state.
+     * Every branch returns a redirect to a session-backed GET route, which
+     * re-applies the customer's own cookie and enforces order access there.
+     */
     public function verify(Request $request, Order $order)
     {
-        if (! OrderAccess::canAccess($order)) {
-            return redirect(StorefrontRoutes::primaryShopUrl())->with('error', 'Order not found.');
+        $paymentId = $this->stringInput($request, 'razorpay_payment_id');
+        $submittedOrderId = $this->stringInput($request, 'razorpay_order_id');
+        $signature = $this->stringInput($request, 'razorpay_signature');
+
+        // Razorpay signs every redirect callback, so the signature is the only
+        // authorisation. An authenticated session is never an alternative.
+        if (! $this->callbackIsAuthentic($order, $submittedOrderId, $paymentId, $signature)) {
+            return redirect()->route('checkout.pay', $order);
         }
 
         if ($order->isFulfilled()) {
             return redirect()->route('checkout.success', $order);
         }
 
-        if ($order->isCancelled()) {
-            return view('checkout.payment-cancelled', ['order' => $order->fresh()]);
+        // Cancelled, expired or otherwise unpayable: the payment page renders
+        // the correct state for the customer under their own session.
+        if (! $order->isAwaitingPayment()) {
+            return redirect()->route('checkout.pay', $order);
         }
-
-        if ($order->isExpired()) {
-            return view('checkout.payment-expired', ['order' => $order->fresh()]);
-        }
-
-        if ($order->status !== 'pending') {
-            return redirect(StorefrontRoutes::primaryShopUrl())
-                ->with('error', 'This order is not awaiting payment.');
-        }
-
-        $validated = $request->validate([
-            'razorpay_payment_id' => 'required|string',
-            'razorpay_order_id' => 'required|string',
-            'razorpay_signature' => 'required|string',
-        ]);
 
         try {
-            $this->payments->verifyAndComplete(
-                $order,
-                $validated['razorpay_payment_id'],
-                $validated['razorpay_order_id'],
-                $validated['razorpay_signature'],
-            );
-        } catch (RazorpayReconciliationRequiredException $e) {
-            return redirect(StorefrontRoutes::primaryShopUrl())
-                ->with('error', $e->getMessage());
-        } catch (RuntimeException $e) {
-            if ($order->fresh()?->isExpired()) {
-                return view('checkout.payment-expired', ['order' => $order->fresh()]);
-            }
-
-            return redirect()->route('checkout.pay', $order)
-                ->with('error', $e->getMessage());
+            $this->payments->verifyAndComplete($order, $paymentId, $submittedOrderId, $signature);
+        } catch (RazorpayReconciliationRequiredException|RuntimeException) {
+            return redirect()->route('checkout.pay', $order);
         }
 
         return redirect()->route('checkout.success', $order->fresh());
+    }
+
+    /**
+     * The callback carries no session, so ownership cannot be proven by cookie.
+     * A signature over this order's own stored Razorpay order ID proves the
+     * gateway sent it and cannot be replayed against a different local order.
+     */
+    private function callbackIsAuthentic(
+        Order $order,
+        string $submittedOrderId,
+        string $paymentId,
+        string $signature,
+    ): bool {
+        if (! $this->razorpay->isConfigured()) {
+            return false;
+        }
+
+        $storedOrderId = (string) $order->razorpay_order_id;
+
+        if ($storedOrderId === '' || $paymentId === '' || $signature === '') {
+            return false;
+        }
+
+        if (! hash_equals($storedOrderId, $submittedOrderId)) {
+            return false;
+        }
+
+        return $this->razorpay->verifySignature($storedOrderId, $paymentId, $signature);
+    }
+
+    private function stringInput(Request $request, string $key): string
+    {
+        $value = $request->input($key);
+
+        return is_string($value) ? $value : '';
     }
 }
