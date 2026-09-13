@@ -76,7 +76,6 @@ Route::middleware('checkout.customer')->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:checkout')->name('checkout.store');
     Route::get('/checkout/pay/{order}', [PaymentController::class, 'show'])->name('checkout.pay');
-    Route::post('/checkout/pay/{order}', [PaymentController::class, 'verify'])->name('checkout.pay.verify');
     Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
 
     Route::post('/api/create-order', [RazorpayCheckoutController::class, 'createOrder'])
@@ -85,6 +84,12 @@ Route::middleware('checkout.customer')->group(function () {
     Route::post('/api/verify-payment', [RazorpayCheckoutController::class, 'verifyPayment'])
         ->name('api.verify-payment');
 });
+
+// Razorpay's redirect callback is a cross-site POST, so with SameSite=Lax the
+// storefront session cookie is not sent and this route cannot sit behind the
+// customer gate. PaymentController authorises it by the HMAC signature bound to
+// the order's stored Razorpay order ID.
+Route::post('/checkout/pay/{order}', [PaymentController::class, 'verify'])->name('checkout.pay.verify');
 
 Route::post('/webhooks/razorpay', RazorpayWebhookController::class)->name('webhooks.razorpay');
 

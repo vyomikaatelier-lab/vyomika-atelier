@@ -18,7 +18,7 @@ class RazorpayCheckoutController extends Controller
     public function createOrder(Request $request, RazorpayService $razorpay, OrderPaymentService $payments): JsonResponse
     {
         $validated = $request->validate([
-            'store_order_id' => 'required|integer|exists:orders,id',
+            'store_order_id' => 'required|integer',
         ]);
 
         return $this->createOrderForStoreOrder($validated['store_order_id'], $payments, $razorpay);
@@ -27,15 +27,17 @@ class RazorpayCheckoutController extends Controller
     public function verifyPayment(Request $request, OrderPaymentService $payments): JsonResponse
     {
         $validated = $request->validate([
-            'store_order_id' => 'required|integer|exists:orders,id',
+            'store_order_id' => 'required|integer',
             'razorpay_payment_id' => 'required|string',
             'razorpay_order_id' => 'required|string',
             'razorpay_signature' => 'required|string',
         ]);
 
-        $order = Order::query()->findOrFail($validated['store_order_id']);
+        $order = Order::query()->find($validated['store_order_id']);
 
-        if (! OrderAccess::canAccess($order)) {
+        // Unknown and foreign order IDs answer identically so neither can be
+        // used to enumerate order IDs.
+        if (! $order || ! OrderAccess::canAccess($order)) {
             return response()->json(['message' => 'Order not found.'], 404);
         }
 
@@ -70,9 +72,9 @@ class RazorpayCheckoutController extends Controller
         OrderPaymentService $payments,
         RazorpayService $razorpay,
     ): JsonResponse {
-        $order = Order::query()->findOrFail($storeOrderId);
+        $order = Order::query()->find($storeOrderId);
 
-        if (! OrderAccess::canAccess($order)) {
+        if (! $order || ! OrderAccess::canAccess($order)) {
             return response()->json(['message' => 'Order not found.'], 404);
         }
 

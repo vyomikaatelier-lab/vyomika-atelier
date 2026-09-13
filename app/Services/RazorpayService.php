@@ -138,8 +138,16 @@ class RazorpayService
 
     public function verifySignature(string $razorpayOrderId, string $paymentId, string $signature): bool
     {
+        $secret = (string) $this->secret();
+
+        // An absent secret would otherwise HMAC with an empty key, which any
+        // caller can reproduce. Never treat that as a verified signature.
+        if ($secret === '') {
+            return false;
+        }
+
         $payload = $razorpayOrderId.'|'.$paymentId;
-        $expected = hash_hmac('sha256', $payload, (string) $this->secret());
+        $expected = hash_hmac('sha256', $payload, $secret);
 
         return hash_equals($expected, $signature);
     }
@@ -203,7 +211,9 @@ class RazorpayService
 
     private function api()
     {
-        return Http::withBasicAuth($this->key(), $this->secret());
+        return Http::withBasicAuth($this->key(), $this->secret())
+            ->connectTimeout((int) config('checkout.razorpay_connect_timeout', 5))
+            ->timeout((int) config('checkout.razorpay_create_timeout', 15));
     }
 
     private function createOrderApi()

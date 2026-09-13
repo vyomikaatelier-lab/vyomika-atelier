@@ -8,6 +8,7 @@ use App\Services\OrderPaymentService;
 use App\Services\RazorpayService;
 use App\Support\OrderAccess;
 use App\Support\StorefrontRoutes;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use RuntimeException;
 
@@ -54,12 +55,14 @@ class PaymentController extends Controller
 
     public function verify(Request $request, Order $order)
     {
-        if (! OrderAccess::canAccess($order)) {
+        $sessionAuthorised = OrderAccess::canAccess($order);
+
+        if (! $sessionAuthorised && ! $this->callbackSignatureMatchesOrder($request, $order)) {
             return redirect(StorefrontRoutes::primaryShopUrl())->with('error', 'Order not found.');
         }
 
         if ($order->isFulfilled()) {
-            return redirect()->route('checkout.success', $order);
+            return $this->afterPaymentRecorded($order, $sessionAuthorised);
         }
 
         if ($order->isCancelled()) {
@@ -100,6 +103,62 @@ class PaymentController extends Controller
                 ->with('error', $e->getMessage());
         }
 
-        return redirect()->route('checkout.success', $order->fresh());
+        return $this->afterPaymentRecorded($order->fresh(), $sessionAuthorised);
+    }
+
+    /**
+     * The gateway redirect callback reaches us without the storefront session,
+     * so ownership cannot be proven by cookie. A signature over this order's
+     * own stored Razorpay order ID is proof the gateway sent the request, and
+     * it cannot be replayed against a different local order.
+     */
+    private function callbackSignatureMatchesOrder(Request $request, Order $order): bool
+    {
+        if (! $this->razorpay->isConfigured()) {
+            return false;
+        }
+
+        $storedOrderId = (string) $order->razorpay_order_id;
+
+        if ($storedOrderId === '') {
+            return false;
+        }
+
+        $submittedOrderId = $this->stringInput($request, 'razorpay_order_id');
+        $paymentId = $this->stringInput($request, 'razorpay_payment_id');
+        $signature = $this->stringInput($request, 'razorpay_signature');
+
+        if ($paymentId === '' || $signature === '') {
+            return false;
+        }
+
+        if (! hash_equals($storedOrderId, $submittedOrderId)) {
+            return false;
+        }
+
+        return $this->razorpay->verifySignature($storedOrderId, $paymentId, $signature);
+    }
+
+    private function stringInput(Request $request, string $key): string
+    {
+        $value = $request->input($key);
+
+        return is_string($value) ? $value : '';
+    }
+
+    /**
+     * A signature-authorised callback has no session to carry, so the customer
+     * signs in again to reach the confirmation. The payment is already recorded.
+     */
+    private function afterPaymentRecorded(Order $order, bool $sessionAuthorised): RedirectResponse
+    {
+        if ($sessionAuthorised) {
+            return redirect()->route('checkout.success', $order);
+        }
+
+        return redirect()->route('account.login')->with(
+            'info',
+            'Payment received for order #'.$order->order_number.'. Please sign in to view your confirmation.'
+        );
     }
 }
