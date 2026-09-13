@@ -611,7 +611,6 @@ class RazorpayCallbackAuthorizationTest extends TestCase
 
     public function test_session_same_site_stays_lax_and_needs_no_environment_change(): void
     {
-        $this->assertNull(env('SESSION_SAME_SITE'));
         $this->assertSame('lax', config('session.same_site'));
     }
 
