@@ -94,9 +94,11 @@ class SocialAuthController extends Controller
             ])->save();
         }
 
+        $preserved = $this->cart->snapshotForAuth();
         AdminAccess::revoke($request);
         Auth::login($user);
         $request->session()->regenerate();
+        $this->cart->restoreAfterAuth($preserved);
 
         $default = $this->cart->hasBuyNow()
             ? route('checkout.index')

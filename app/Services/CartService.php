@@ -13,6 +13,8 @@ class CartService
 
     private const BUY_NOW_KEY = 'buy_now';
 
+    public const BUY_NOW_INTENT_KEY = 'buy_now_intent';
+
     public const CHECKOUT_SOURCE_KEY = 'checkout_source';
 
     public const NOTICE_KEY = 'cart_notice';
@@ -409,42 +411,98 @@ class CartService
         session()->forget(self::SESSION_KEY);
     }
 
-    public function setBuyNow(Product $product, int $quantity = 1, ?string $finishSlug = null, ?string $sizeLabel = null): void
+    /**
+     * Buy Now writes the same canonical cart as Add to Bag, then records a
+     * checkout intent so guests can skip the cart page after authentication.
+     *
+     * @return array{quantity: int, clamped: bool}
+     */
+    public function setBuyNow(Product $product, int $quantity = 1, ?string $finishSlug = null, ?string $sizeLabel = null): array
     {
-        $variant = $this->validatedVariant($product, $sizeLabel, $finishSlug, false);
+        $result = $this->add($product, $quantity, $finishSlug, $sizeLabel);
 
-        if ($variant === null) {
-            return;
+        if ($result['quantity'] >= 1) {
+            session([self::BUY_NOW_INTENT_KEY => true]);
         }
 
-        session([self::BUY_NOW_KEY => [
-            'product_id' => $product->id,
-            'quantity' => max(1, $quantity),
-            'finish_slug' => $variant['finish_slug'],
-            'finish_name' => $variant['finish_name'],
-            'size_label' => $variant['size_label'],
-            'created_at' => now()->timestamp,
-        ]]);
+        return $result;
     }
 
     public function clearBuyNow(): void
     {
-        session()->forget(self::BUY_NOW_KEY);
+        session()->forget([self::BUY_NOW_KEY, self::BUY_NOW_INTENT_KEY]);
     }
 
     public function hasBuyNow(): bool
     {
-        return $this->buyNowItems()->isNotEmpty();
+        if ($this->absorbBuyNowIntoCart()) {
+            session([self::BUY_NOW_INTENT_KEY => true]);
+        }
+
+        return (bool) session(self::BUY_NOW_INTENT_KEY) && $this->all()->isNotEmpty();
     }
 
     /**
-     * Items charged at checkout: the Buy Now snapshot when present, otherwise the cart.
+     * Items charged at checkout: the canonical cart, including any leftover
+     * Buy Now snapshot absorbed from a previous session format.
      */
     public function checkoutItems(): Collection
     {
-        $buyNow = $this->buyNowItems();
+        $this->absorbBuyNowIntoCart();
 
-        return $buyNow->isNotEmpty() ? $buyNow : $this->all();
+        return $this->all();
+    }
+
+    /**
+     * Capture cart-related session keys so they can be restored after a
+     * session-fixation-safe regenerate().
+     *
+     * @return array{cart: array<string, mixed>, buy_now: mixed, intent: mixed, checkout_source: mixed, url_intended: mixed}
+     */
+    public function snapshotForAuth(): array
+    {
+        return [
+            'cart' => session(self::SESSION_KEY, []),
+            'buy_now' => session(self::BUY_NOW_KEY),
+            'intent' => session(self::BUY_NOW_INTENT_KEY),
+            'checkout_source' => session(self::CHECKOUT_SOURCE_KEY),
+            'url_intended' => session('url.intended'),
+        ];
+    }
+
+    /**
+     * Restore and merge guest cart state after Auth::login() regenerates the session.
+     *
+     * @param  array{cart?: mixed, buy_now?: mixed, intent?: mixed, checkout_source?: mixed, url_intended?: mixed}  $snapshot
+     */
+    public function restoreAfterAuth(array $snapshot): void
+    {
+        $incoming = is_array($snapshot['cart'] ?? null) ? $snapshot['cart'] : [];
+        $current = session(self::SESSION_KEY, []);
+
+        if (! is_array($current) || $current === []) {
+            session([self::SESSION_KEY => $incoming]);
+        } elseif ($incoming !== []) {
+            session([self::SESSION_KEY => $this->mergeCartArrays($incoming, $current, false)]);
+        }
+
+        if (! empty($snapshot['buy_now']) && empty(session(self::BUY_NOW_KEY))) {
+            session([self::BUY_NOW_KEY => $snapshot['buy_now']]);
+        }
+
+        if (! empty($snapshot['intent'])) {
+            session([self::BUY_NOW_INTENT_KEY => true]);
+        }
+
+        if (! empty($snapshot['checkout_source'])) {
+            session([self::CHECKOUT_SOURCE_KEY => $snapshot['checkout_source']]);
+        }
+
+        if (is_string($snapshot['url_intended'] ?? null) && $snapshot['url_intended'] !== '') {
+            session(['url.intended' => $snapshot['url_intended']]);
+        }
+
+        $this->absorbBuyNowIntoCart();
     }
 
     public function checkoutSubtotal(): float
@@ -549,6 +607,76 @@ class CartService
         }
 
         return count($matches) === 1 ? $matches[0] : null;
+    }
+
+    /**
+     * Fold a leftover `buy_now` snapshot into the canonical cart.
+     */
+    public function absorbBuyNowIntoCart(): bool
+    {
+        $items = $this->buyNowItems();
+
+        if ($items->isEmpty()) {
+            return false;
+        }
+
+        foreach ($items as $item) {
+            $finishSlug = $item['finish_slug'] ?? null;
+            if (! filled($finishSlug)) {
+                $finishSlug = FinishSwatches::defaultSlug();
+            }
+
+            $this->add(
+                $item['product'],
+                $item['quantity'],
+                $finishSlug,
+                $item['size_label'] ?? null,
+            );
+        }
+
+        session()->forget(self::BUY_NOW_KEY);
+
+        return true;
+    }
+
+    /**
+     * @param  array<int|string, mixed>  $left
+     * @param  array<int|string, mixed>  $right
+     * @return array<string, array{product_id: int, quantity: int, finish_slug: ?string, finish_name: ?string, size_label: ?string, unit_price: ?float}>
+     */
+    private function mergeCartArrays(array $left, array $right, bool $sumQuantities = true): array
+    {
+        $merged = [];
+
+        foreach ([$left, $right] as $source) {
+            foreach ($source as $key => $value) {
+                $normalized = $this->normalizeLine($value);
+                $productId = $this->productIdFromKey($key, $value);
+
+                if ($productId === null) {
+                    continue;
+                }
+
+                $lineKey = self::lineKey($productId, $normalized['size_label'], $normalized['finish_slug']);
+
+                if (isset($merged[$lineKey])) {
+                    $merged[$lineKey]['quantity'] = $sumQuantities
+                        ? $merged[$lineKey]['quantity'] + $normalized['quantity']
+                        : max($merged[$lineKey]['quantity'], $normalized['quantity']);
+                } else {
+                    $merged[$lineKey] = [
+                        'product_id' => $productId,
+                        'quantity' => $normalized['quantity'],
+                        'finish_slug' => $normalized['finish_slug'],
+                        'finish_name' => $normalized['finish_name'],
+                        'size_label' => $normalized['size_label'],
+                        'unit_price' => $normalized['unit_price'],
+                    ];
+                }
+            }
+        }
+
+        return $merged;
     }
 
     /** @param  list<string>  $notices */

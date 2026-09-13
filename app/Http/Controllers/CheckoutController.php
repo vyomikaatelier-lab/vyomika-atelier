@@ -43,7 +43,7 @@ class CheckoutController extends Controller
     public function index()
     {
         if ($this->cart->checkoutIsEmpty()) {
-            return redirect(StorefrontRoutes::primaryShopUrl())->with('error', 'Your cart is empty.');
+            return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
         }
 
         $user = Auth::user();
@@ -72,7 +72,7 @@ class CheckoutController extends Controller
         }
 
         if ($this->cart->checkoutIsEmpty()) {
-            return redirect(StorefrontRoutes::primaryShopUrl())->with('error', 'Your cart is empty.');
+            return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
         }
 
         if (! $this->razorpay->isConfigured()) {

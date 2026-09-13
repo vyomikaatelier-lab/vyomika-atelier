@@ -216,7 +216,7 @@ class ProductPublicationPolicyTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('checkout.index'))
-            ->assertRedirect(StorefrontRoutes::primaryShopUrl());
+            ->assertRedirect(route('cart.index'));
     }
 
     public function test_inactive_product_cannot_reach_razorpay_order_creation(): void

@@ -236,9 +236,11 @@ class AccountAuthController extends Controller
 
     private function loginCustomerSession(Request $request, User $user, bool $remember = false): void
     {
+        $preserved = $this->cart->snapshotForAuth();
         AdminAccess::revoke($request);
         Auth::login($user, $remember);
         $request->session()->regenerate();
+        $this->cart->restoreAfterAuth($preserved);
     }
 
     private function redirectAfterAuth(Request $request)

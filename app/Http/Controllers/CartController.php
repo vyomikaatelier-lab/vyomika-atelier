@@ -76,7 +76,11 @@ class CartController extends Controller
             }
             \Illuminate\Support\Facades\RateLimiter::hit('buy-now:'.$request->ip(), 60);
 
-            $this->cart->setBuyNow($product, min($quantity, min($available, 99)), $finishSlug, $sizeLabel);
+            $result = $this->cart->setBuyNow($product, min($quantity, min($available, 99)), $finishSlug, $sizeLabel);
+
+            if ($result['quantity'] < 1) {
+                return back()->withInput()->with('error', 'This item does not have enough stock to add to your bag.');
+            }
 
             if (! auth()->check()) {
                 $request->session()->put('url.intended', route('checkout.index'));

@@ -62,15 +62,15 @@ class CartDrawerVariantTest extends TestCase
         $this->assertStringContainsString('#am-cart-drawer', $location);
     }
 
-    public function test_buy_now_still_skips_cart_and_does_not_write_bag(): void
+    public function test_buy_now_still_skips_cart_page_and_writes_canonical_bag(): void
     {
         $product = $this->shopProduct();
 
         $this->post(route('cart.add', $product), $this->purchaseInput(['buy_now' => 1]))
             ->assertRedirect(route('account.continue'));
 
-        $this->assertSame($product->id, session('buy_now')['product_id']);
-        $this->assertFalse($this->sessionCartHasProduct($product));
+        $this->assertTrue($this->sessionCartHasProduct($product));
+        $this->assertNull(session('buy_now'));
     }
 
     public function test_same_variant_merges_quantity(): void
