@@ -30,6 +30,14 @@
             <label class="block text-sm mb-1" for="disable_password">Current admin password</label>
             <input id="disable_password" type="password" name="current_password" required autocomplete="current-password"
                    class="w-full border px-3 py-2 rounded @error('current_password') border-red-500 @enderror">
+            @error('current_password')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+        </div>
+        <div>
+            <label class="block text-sm mb-1" for="disable_code">Current authenticator code</label>
+            <input id="disable_code" type="text" name="code" required inputmode="numeric" autocomplete="one-time-code"
+                   pattern="[0-9]*" maxlength="16" placeholder="6-digit code"
+                   class="w-full border px-3 py-2 rounded @error('code') border-red-500 @enderror">
+            @error('code')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
         </div>
         <button type="submit" class="bg-red-700 text-white px-4 py-2 rounded text-sm"
                 onclick="return confirm('Disable MFA and re-enroll now?')">Disable MFA</button>
