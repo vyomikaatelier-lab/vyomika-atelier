@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Admin\Concerns;
 
 use App\Models\MediaFile;
 use App\Support\AdminImageUpload;
+use App\Support\MediaReferenceScanner;
 use App\Support\ResponsiveHero;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 trait HandlesAdminUploads
@@ -90,27 +92,49 @@ trait HandlesAdminUploads
         return array_filter($persisted, fn ($value) => filled($value));
     }
 
+    /**
+     * Safely delete a locally stored media file once nothing references it.
+     *
+     * Remote URLs are never touched. The reference check and deletion are
+     * deferred to the end of the request so rows removed or updated by the
+     * current request no longer count as references, while anything still
+     * referencing the path (including when no media_files row exists) blocks
+     * removal. If reference determination fails, deletion is refused.
+     */
     protected function deleteStoredPath(?string $path): void
     {
-        if (! $path || str_starts_with($path, 'http')) {
+        $normalized = MediaReferenceScanner::normalizeLocalPath($path);
+
+        if ($normalized === null) {
+            // Blank, remote http(s)/protocol-relative URL, or invalid path —
+            // there is no local file that may be deleted.
             return;
         }
 
-        $media = MediaFile::query()->where('path', $path)->first();
+        $media = MediaFile::query()->where('path', $normalized)->first();
+        $disks = $media ? [$media->disk] : ['public', 'local'];
 
-        if ($media) {
-            if ($media->referenceCount() > 0) {
-                return;
+        app()->terminating(function () use ($normalized, $disks) {
+            try {
+                if (app(MediaReferenceScanner::class)->isReferenced($normalized)) {
+                    return; // still in use — an in-use asset is never removed
+                }
+            } catch (\Throwable $e) {
+                Log::warning('media.delete_refused', [
+                    'path' => $normalized,
+                    'reason' => 'reference_scan_failed',
+                    'error' => $e->getMessage(),
+                ]);
+
+                return; // fail closed
             }
 
-            Storage::disk($media->disk)->delete($path);
-            $media->delete();
+            foreach ($disks as $disk) {
+                Storage::disk($disk)->delete($normalized);
+            }
 
-            return;
-        }
-
-        Storage::disk('public')->delete($path);
-        Storage::disk('local')->delete($path);
+            MediaFile::query()->where('path', $normalized)->first()?->delete();
+        });
     }
 
     /** @return array<int, string>|null */

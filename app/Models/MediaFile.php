@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Support\MediaReferenceScanner;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class MediaFile extends Model
@@ -34,23 +36,24 @@ class MediaFile extends Model
         return str_starts_with($this->mime ?? '', 'image/');
     }
 
+    /**
+     * Number of first-party records referencing this file's path.
+     *
+     * Fails closed: when references cannot be determined the file is treated
+     * as referenced so it can never be deleted on an indeterminate result.
+     */
     public function referenceCount(): int
     {
-        $path = $this->path;
-        $count = 0;
+        try {
+            return app(MediaReferenceScanner::class)->referenceCount((string) $this->path);
+        } catch (\Throwable $e) {
+            Log::warning('media.reference_scan_failed', [
+                'media_file_id' => $this->id,
+                'path' => $this->path,
+                'error' => $e->getMessage(),
+            ]);
 
-        $count += Product::query()->where('image', $path)->orWhere('gallery', 'like', '%' . $path . '%')->count();
-        $count += Category::query()->where('image', $path)->count();
-        $count += Project::query()->where('image_path', $path)->count();
-        $count += BlogPost::query()->where('image', $path)->orWhere('gallery', 'like', '%' . $path . '%')->count();
-        $count += Exhibition::query()->where('cover_image', $path)->orWhere('gallery', 'like', '%' . $path . '%')->count();
-        $count += Service::query()->where('image', $path)->count();
-
-        $landing = SiteSetting::getValue('landing_pages', []);
-        if (is_array($landing) && $path !== '' && str_contains(json_encode($landing), $path)) {
-            $count++;
+            return 1;
         }
-
-        return $count;
     }
 }
