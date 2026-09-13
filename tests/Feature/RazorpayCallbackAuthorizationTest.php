@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Http\Middleware\CaptureAttribution;
+use App\Http\Middleware\SecurityHeaders;
 use App\Mail\PaymentSuccessfulMail;
 use App\Models\Category;
 use App\Models\Order;
@@ -10,10 +12,17 @@ use App\Models\Product;
 use App\Models\User;
 use App\Services\RazorpayService;
 use App\Support\OrderAccess;
-use App\Support\StorefrontRoutes;
+use Illuminate\Contracts\Http\Kernel as HttpKernel;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Routing\Route;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 use ReflectionMethod;
 use Tests\TestCase;
 
@@ -131,6 +140,23 @@ class RazorpayCallbackAuthorizationTest extends TestCase
         return $this->post(route('checkout.pay.verify', $order), $payload);
     }
 
+    private function callbackRoute(): Route
+    {
+        $route = collect(app('router')->getRoutes()->getRoutes())
+            ->first(fn (Route $route) => $route->getName() === 'checkout.pay.verify');
+
+        $this->assertNotNull($route, 'The checkout.pay.verify route is missing.');
+
+        return $route;
+    }
+
+    private function useCookieSessionDriver(): void
+    {
+        config(['session.driver' => 'cookie']);
+        $this->app->forgetInstance('session');
+        $this->app->forgetInstance('session.store');
+    }
+
     public function test_gateway_callback_without_a_session_completes_a_captured_payment(): void
     {
         Mail::fake();
@@ -144,8 +170,7 @@ class RazorpayCallbackAuthorizationTest extends TestCase
             'razorpay_signature' => $this->signature('order_cb_ok', 'pay_cb_ok'),
         ]);
 
-        $response->assertRedirect(route('account.login'));
-        $response->assertSessionHas('info');
+        $response->assertRedirect(route('checkout.success', $order));
 
         $fresh = $order->fresh();
         $this->assertSame('paid', $fresh->status);
@@ -168,8 +193,7 @@ class RazorpayCallbackAuthorizationTest extends TestCase
             'razorpay_signature' => 'not-a-real-signature',
         ]);
 
-        $response->assertRedirect(StorefrontRoutes::primaryShopUrl());
-        $response->assertSessionHas('error', 'Order not found.');
+        $response->assertRedirect(route('checkout.pay', $order));
         $this->assertSame('pending', $order->fresh()->status);
         $this->assertNull($order->fresh()->payment_id);
     }
@@ -189,7 +213,7 @@ class RazorpayCallbackAuthorizationTest extends TestCase
             'razorpay_signature' => $this->signature('order_cb_attacker', 'pay_cb_replay'),
         ]);
 
-        $response->assertRedirect(StorefrontRoutes::primaryShopUrl());
+        $response->assertRedirect(route('checkout.pay', $victim));
         $this->assertSame('pending', $victim->fresh()->status);
         $this->assertSame('pending', $attacker->fresh()->status);
     }
@@ -206,7 +230,7 @@ class RazorpayCallbackAuthorizationTest extends TestCase
             'razorpay_signature' => $this->signature('order_cb_nostored', 'pay_cb_nostored'),
         ]);
 
-        $response->assertRedirect(StorefrontRoutes::primaryShopUrl());
+        $response->assertRedirect(route('checkout.pay', $order));
         $this->assertSame('pending', $order->fresh()->status);
     }
 
@@ -225,7 +249,7 @@ class RazorpayCallbackAuthorizationTest extends TestCase
             'razorpay_signature' => hash_hmac('sha256', 'order_cb_unconfigured|pay_cb_unconfigured', ''),
         ]);
 
-        $response->assertRedirect(StorefrontRoutes::primaryShopUrl());
+        $response->assertRedirect(route('checkout.pay', $order));
         $this->assertSame('pending', $order->fresh()->status);
     }
 
@@ -292,7 +316,7 @@ class RazorpayCallbackAuthorizationTest extends TestCase
         $this->postGatewayCallback($order, $payload);
         $second = $this->postGatewayCallback($order, $payload);
 
-        $second->assertRedirect(route('account.login'));
+        $second->assertRedirect(route('checkout.success', $order));
         $this->assertSame('paid', $order->fresh()->status);
         $this->assertSame(4, $product->fresh()->stock);
         Mail::assertQueued(PaymentSuccessfulMail::class, 1);
@@ -325,7 +349,7 @@ class RazorpayCallbackAuthorizationTest extends TestCase
             'razorpay_payment_id' => 'pay_cb_race',
             'razorpay_order_id' => 'order_cb_race',
             'razorpay_signature' => $this->signature('order_cb_race', 'pay_cb_race'),
-        ])->assertRedirect(route('account.login'));
+        ])->assertRedirect(route('checkout.success', $order));
 
         $this->assertSame('paid', $order->fresh()->status);
         $this->assertSame(4, $product->fresh()->stock);
@@ -346,10 +370,14 @@ class RazorpayCallbackAuthorizationTest extends TestCase
         ]);
 
         $body = $response->getContent();
+        $location = (string) $response->headers->get('Location');
+        $this->assertStringNotContainsString('?', $location);
         $this->assertStringNotContainsString(self::SECRET, $body);
+        $this->assertStringNotContainsString(self::SECRET, $location);
         $this->assertStringNotContainsString('pay_cb_leak', $body);
+        $this->assertStringNotContainsString('pay_cb_leak', $location);
         $this->assertStringNotContainsString('order_cb_leak', $body);
-        $this->assertStringNotContainsString(self::SECRET, (string) json_encode(session()->all()));
+        $this->assertStringNotContainsString('order_cb_leak', $location);
     }
 
     public function test_owner_with_a_session_still_lands_on_the_confirmation_page(): void
@@ -386,6 +414,205 @@ class RazorpayCallbackAuthorizationTest extends TestCase
             (int) config('checkout.razorpay_create_timeout'),
             (int) ($options['timeout'] ?? 0)
         );
+    }
+
+    public function test_callback_route_runs_without_any_session_middleware(): void
+    {
+        // Instantiating the HTTP kernel is what syncs the middleware groups into
+        // the router, so the "web" group expands to its concrete classes here.
+        app(HttpKernel::class);
+
+        $middleware = app('router')->gatherRouteMiddleware($this->callbackRoute());
+
+        $this->assertNotContains('web', $middleware);
+
+        // StartSession is the only thing that issues or replaces the session
+        // cookie. ValidateCsrfToken and ShareErrorsFromSession must go with it:
+        // both dereference $request->session() unconditionally.
+        foreach ([
+            EncryptCookies::class,
+            AddQueuedCookiesToResponse::class,
+            StartSession::class,
+            ShareErrorsFromSession::class,
+            ValidateCsrfToken::class,
+            CaptureAttribution::class,
+        ] as $excluded) {
+            $this->assertNotContains($excluded, $middleware);
+        }
+
+        // Route binding and the security headers are preserved.
+        $this->assertContains(SubstituteBindings::class, $middleware);
+        $this->assertContains(SecurityHeaders::class, $middleware);
+    }
+
+    public function test_callback_response_does_not_issue_or_replace_the_session_cookie(): void
+    {
+        Mail::fake();
+        // The array driver never emits a session cookie, which would make this
+        // assertion vacuous. Use a persistent driver so a stateful route really
+        // does set one, then prove the callback does not.
+        $this->useCookieSessionDriver();
+        $sessionCookie = config('session.cookie');
+
+        $stateful = $this->get(route('cart.index'));
+        $stateful->assertOk();
+        $stateful->assertCookie($sessionCookie);
+        $this->assertNotNull($stateful->headers->getCookies()[0] ?? null);
+
+        // SameSite=Lax means the gateway POST does not receive the storefront
+        // cookie. Clear the test client's jar so this request matches that.
+        $this->defaultCookies = [];
+        $this->unencryptedCookies = [];
+
+        $order = $this->makeOwnedOrder('order_cb_cookie');
+        $this->addShopItem($order);
+        $this->fakeCapturedPayment('pay_cb_cookie', 'order_cb_cookie');
+
+        $callback = $this->postGatewayCallback($order, [
+            'razorpay_payment_id' => 'pay_cb_cookie',
+            'razorpay_order_id' => 'order_cb_cookie',
+            'razorpay_signature' => $this->signature('order_cb_cookie', 'pay_cb_cookie'),
+        ]);
+
+        $callback->assertRedirect(route('checkout.success', $order));
+        $callback->assertCookieMissing($sessionCookie);
+        // XSRF-TOKEN is set on every stateful web response regardless of driver,
+        // so its absence proves the session/CSRF stack did not run.
+        $callback->assertCookieMissing('XSRF-TOKEN');
+        $stateful->assertCookie('XSRF-TOKEN');
+        $this->assertSame([], $callback->headers->getCookies());
+        $this->assertSame('paid', $order->fresh()->status);
+    }
+
+    public function test_cross_site_callback_succeeds_without_receiving_a_session_cookie(): void
+    {
+        Mail::fake();
+        $this->useCookieSessionDriver();
+
+        $this->assertSame([], $this->defaultCookies);
+        $this->assertSame([], $this->unencryptedCookies);
+
+        $order = $this->makeOwnedOrder('order_cb_nocookie');
+        $this->addShopItem($order);
+        $this->fakeCapturedPayment('pay_cb_nocookie', 'order_cb_nocookie');
+
+        $callback = $this->postGatewayCallback($order, [
+            'razorpay_payment_id' => 'pay_cb_nocookie',
+            'razorpay_order_id' => 'order_cb_nocookie',
+            'razorpay_signature' => $this->signature('order_cb_nocookie', 'pay_cb_nocookie'),
+        ]);
+
+        $callback->assertRedirect(route('checkout.success', $order));
+        $this->assertSame([], $callback->headers->getCookies());
+        $this->assertSame('paid', $order->fresh()->status);
+    }
+
+    public function test_callback_keeps_security_headers_and_route_binding(): void
+    {
+        Mail::fake();
+        $order = $this->makeOwnedOrder('order_cb_headers');
+        $this->addShopItem($order);
+        $this->fakeCapturedPayment('pay_cb_headers', 'order_cb_headers');
+
+        $response = $this->postGatewayCallback($order, [
+            'razorpay_payment_id' => 'pay_cb_headers',
+            'razorpay_order_id' => 'order_cb_headers',
+            'razorpay_signature' => $this->signature('order_cb_headers', 'pay_cb_headers'),
+        ]);
+
+        $response->assertHeader('X-Frame-Options', 'SAMEORIGIN');
+        $response->assertHeader('X-Content-Type-Options', 'nosniff');
+        // The order was resolved from the URI, so route binding still applies.
+        $this->assertSame('paid', $order->fresh()->status);
+    }
+
+    public function test_a_pre_existing_customer_session_still_works_on_the_success_page(): void
+    {
+        Mail::fake();
+        $owner = User::factory()->create();
+        $order = $this->makeOrder(['user_id' => $owner->id, 'razorpay_order_id' => 'order_cb_keep']);
+        $this->addShopItem($order);
+        $this->fakeCapturedPayment('pay_cb_keep', 'order_cb_keep');
+
+        // The gateway callback arrives with no session and issues no cookie.
+        $this->postGatewayCallback($order, [
+            'razorpay_payment_id' => 'pay_cb_keep',
+            'razorpay_order_id' => 'order_cb_keep',
+            'razorpay_signature' => $this->signature('order_cb_keep', 'pay_cb_keep'),
+        ])->assertRedirect(route('checkout.success', $order));
+
+        // The customer's own session, untouched, follows the same-site redirect.
+        $confirmation = $this->actingAs($owner)
+            ->withSession([OrderAccess::SESSION_KEY => $order->id])
+            ->get(route('checkout.success', $order));
+
+        $confirmation->assertOk();
+        $confirmation->assertSee($order->order_number, false);
+        $this->assertSame('paid', $order->fresh()->status);
+    }
+
+    public function test_anonymous_callback_records_payment_then_uses_the_normal_login_flow(): void
+    {
+        Mail::fake();
+        $owner = User::factory()->create();
+        $order = $this->makeOrder(['user_id' => $owner->id, 'razorpay_order_id' => 'order_cb_anon']);
+        $this->addShopItem($order);
+        $this->fakeCapturedPayment('pay_cb_anon', 'order_cb_anon');
+
+        $this->postGatewayCallback($order, [
+            'razorpay_payment_id' => 'pay_cb_anon',
+            'razorpay_order_id' => 'order_cb_anon',
+            'razorpay_signature' => $this->signature('order_cb_anon', 'pay_cb_anon'),
+        ])->assertRedirect(route('checkout.success', $order));
+
+        $this->assertSame('paid', $order->fresh()->status);
+
+        // An expired or absent session hits the protected success route, which
+        // preserves the confirmation as the post-login destination.
+        $guest = $this->get(route('checkout.success', $order));
+        $guest->assertRedirect(route('account.login'));
+        $this->assertSame(route('checkout.success', $order), session('url.intended'));
+    }
+
+    public function test_forged_signature_cannot_use_an_authenticated_session_as_a_bypass(): void
+    {
+        Http::preventStrayRequests();
+        $owner = User::factory()->create();
+        $order = $this->makeOrder(['user_id' => $owner->id, 'razorpay_order_id' => 'order_cb_bypass']);
+        $this->addShopItem($order);
+
+        $response = $this->actingAs($owner)
+            ->withSession([OrderAccess::SESSION_KEY => $order->id])
+            ->post(route('checkout.pay.verify', $order), [
+                'razorpay_payment_id' => 'pay_cb_bypass',
+                'razorpay_order_id' => 'order_cb_bypass',
+                'razorpay_signature' => 'forged',
+            ]);
+
+        $response->assertRedirect(route('checkout.pay', $order));
+        $this->assertSame('pending', $order->fresh()->status);
+        $this->assertNull($order->fresh()->payment_id);
+    }
+
+    public function test_missing_signature_fields_cannot_use_an_authenticated_session_as_a_bypass(): void
+    {
+        Http::preventStrayRequests();
+        $owner = User::factory()->create();
+        $order = $this->makeOrder(['user_id' => $owner->id, 'razorpay_order_id' => 'order_cb_nofields']);
+        $this->addShopItem($order);
+
+        $response = $this->actingAs($owner)
+            ->withSession([OrderAccess::SESSION_KEY => $order->id])
+            ->post(route('checkout.pay.verify', $order), []);
+
+        $response->assertRedirect(route('checkout.pay', $order));
+        $this->assertSame('pending', $order->fresh()->status);
+    }
+
+    public function test_session_same_site_stays_lax_and_needs_no_environment_change(): void
+    {
+        $this->assertNull(env('SESSION_SAME_SITE'));
+        $this->assertSame('lax', config('session.same_site'));
     }
 
     public function test_unknown_and_foreign_order_ids_answer_identically(): void
