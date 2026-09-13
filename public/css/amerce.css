@@ -2237,22 +2237,102 @@ body:has(#am-cart-drawer:target) #am-overlay {
   font-size: 0.85rem;
 }
 .am-pagination .is-active { background: var(--am-gold); color: var(--am-btn-on-gold-fg); border-color: var(--am-gold); }
-.am-alert {
+.am-flash {
   position: fixed;
-  top: calc(var(--am-announce-h) + var(--am-header-h) + 8px);
-  left: 50%;
-  transform: translateX(-50%);
+  top: calc(var(--am-announce-h, 0px) + var(--am-header-h, 0px) + 12px);
+  right: 16px;
+  left: auto;
+  z-index: 800;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  width: min(28rem, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  pointer-events: none;
+  transform: none;
+  box-sizing: border-box;
+}
+.am-flash .am-alert {
+  position: relative;
+  top: auto;
+  left: auto;
   right: auto;
-  z-index: 600;
-  text-align: center;
+  transform: none;
+  pointer-events: auto;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  text-align: left;
+  margin: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.am-alert {
+  position: relative;
   padding: 0.75rem 1.25rem;
   font-size: 0.875rem;
   border-radius: var(--am-radius);
-  max-width: min(520px, 92vw);
+  max-width: 100%;
+  box-sizing: border-box;
   box-shadow: var(--am-shadow);
 }
 .am-alert--success { background: var(--am-gold); color: var(--am-btn-on-gold-fg); }
 .am-alert--error { background: var(--am-accent-rust, #d4623a); color: #fff; }
+.am-alert--info { background: var(--am-charcoal); color: #fff; }
+.am-alert__text { margin: 0; flex: 1 1 auto; min-width: 0; }
+.am-alert__close {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  margin: -0.25rem -0.4rem -0.25rem 0;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.am-alert__close:hover,
+.am-alert__close:focus-visible {
+  background: rgba(255, 255, 255, 0.18);
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.am-alert--inline {
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  transform: none;
+  margin-bottom: 1.25rem;
+  box-shadow: none;
+  max-width: 100%;
+}
+@media (max-width: 640px) {
+  .am-flash {
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .am-flash,
+  .am-alert,
+  .am-flash .am-alert {
+    animation: none !important;
+    transition: none !important;
+  }
+}
 
 .am-product-grid--shop .am-product-card__cat { display: block; }
 .am-featured__actions-row {
@@ -3740,19 +3820,6 @@ body:has(#am-cart-drawer:target) #am-overlay {
 }
 .am-pagination .is-disabled { opacity: 0.4; pointer-events: none; }
 .am-pagination__gap { padding: 0 0.25rem; color: var(--am-muted); }
-
-.am-alert {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 600;
-  background: var(--am-success);
-  color: white;
-  text-align: center;
-  padding: 0.75rem;
-  font-size: 0.875rem;
-}
 
 /* Corten Steel landing page */
 .am-corten-hero {

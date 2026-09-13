@@ -120,27 +120,7 @@
 
 @include('partials.am-mobile-nav')
 
-@if(session('success'))
-<div class="am-alert am-alert--success">{{ session('success') }}</div>
-@endif
-@if(session('info'))
-<div class="am-alert am-alert--info">{{ session('info') }}</div>
-@endif
-@if(session('error'))
-<div class="am-alert am-alert--error">{{ session('error') }}</div>
-@endif
-@if(session(\App\Services\CartService::NOTICE_KEY))
-<div class="am-alert am-alert--info" role="status">
-    @foreach((array) session(\App\Services\CartService::NOTICE_KEY) as $notice)
-        <p>{{ $notice }}</p>
-    @endforeach
-</div>
-@endif
-@if(isset($errors) && $errors->any())
-<div class="am-alert am-alert--error">
-    @foreach($errors->all() as $error){{ $error }}@if(!$loop->last) · @endif @endforeach
-</div>
-@endif
+@include('partials.am-flash')
 
 <main>@yield('content')</main>
 
