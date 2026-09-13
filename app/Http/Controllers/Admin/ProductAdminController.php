@@ -400,7 +400,7 @@ class ProductAdminController extends Controller
         $validated['tab_specifications'] = Product::normalizeTabLines($validated['tab_specifications'] ?? null);
         $validated['tab_packaging'] = Product::normalizeTabLines($validated['tab_packaging'] ?? null);
         $validated['tab_shipping'] = Product::normalizeTabLines($validated['tab_shipping'] ?? null);
-        $validated['robots_index'] = $request->boolean('robots_index', true);
+        $validated['robots_index'] = $this->checkboxBoolean($request, 'robots_index');
         $validated['sku'] = filled($validated['sku'] ?? null)
             ? JsonLd::normalizeSku((string) $validated['sku']) ?: null
             : null;
