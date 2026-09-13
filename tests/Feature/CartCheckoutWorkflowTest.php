@@ -444,6 +444,6 @@ class CartCheckoutWorkflowTest extends TestCase
             ->assertRedirect(route('checkout.pay', $order));
 
         $this->assertSame(1, Order::query()->count());
-        $this->assertTrue($this->sessionCartHasProduct($product));
+        $this->assertFalse($this->sessionCartHasProduct($product));
     }
 }

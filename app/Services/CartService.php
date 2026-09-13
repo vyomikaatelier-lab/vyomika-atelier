@@ -412,6 +412,35 @@ class CartService
     }
 
     /**
+     * Remove the exact checked-out lines after a durable pending order exists.
+     * Unrelated lines (added in another tab or after handoff) are retained.
+     *
+     * @param  iterable<int, array<string, mixed>>  $items
+     */
+    public function consumeCheckedOutItems(iterable $items): void
+    {
+        $this->absorbBuyNowIntoCart();
+
+        $keys = [];
+        foreach ($items as $item) {
+            $product = $item['product'] ?? null;
+            if (! $product) {
+                continue;
+            }
+
+            $keys[] = self::lineKey(
+                (int) $product->id,
+                filled($item['size_label'] ?? null) ? (string) $item['size_label'] : null,
+                filled($item['finish_slug'] ?? null) ? (string) $item['finish_slug'] : null,
+            );
+        }
+
+        $this->removeMany($keys);
+        $this->clearBuyNow();
+        session()->forget(self::CHECKOUT_SOURCE_KEY);
+    }
+
+    /**
      * Buy Now writes the same canonical cart as Add to Bag, then records a
      * checkout intent so guests can skip the cart page after authentication.
      *
