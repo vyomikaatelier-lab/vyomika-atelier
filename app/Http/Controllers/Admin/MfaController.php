@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Support\AdminAccess;
+use App\Support\AdminAuthFlow;
 use App\Support\AdminMfa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -61,7 +62,7 @@ class MfaController extends Controller
             'ip' => $request->ip(),
         ]);
 
-        return redirect()->intended(route('admin.dashboard'));
+        return AdminAuthFlow::intendedAdminRedirect($request);
     }
 
     public function showEnroll(Request $request)
@@ -210,12 +211,29 @@ class MfaController extends Controller
             return redirect()->route('admin.login');
         }
 
-        $request->validate([
+        $validated = $request->validate([
             'current_password' => ['required', 'current_password'],
+            'code' => ['required', 'string', 'max:16'],
         ]);
 
         if (! $this->mfa->hasMfaEnabled($user)) {
             return redirect()->route('admin.mfa.enroll');
+        }
+
+        // Only a live authenticator code may disable MFA. Recovery codes are
+        // deliberately not accepted here: they exist to regain access, not to
+        // remove the second factor. verifyTotp() also rejects a code already
+        // used in this session, so a replayed code cannot disable MFA.
+        if (! $this->mfa->verifyTotp($user, $validated['code'])) {
+            Log::warning('admin.mfa_disable_failed', [
+                'user_id' => $user->id,
+                'ip' => $request->ip(),
+                'reason' => 'invalid_totp',
+            ]);
+
+            throw ValidationException::withMessages([
+                'code' => 'Enter the current 6-digit code from your authenticator app.',
+            ]);
         }
 
         $this->mfa->disable($user);

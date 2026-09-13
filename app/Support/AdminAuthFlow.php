@@ -36,6 +36,13 @@ class AdminAuthFlow
                 ->withErrors(['email' => self::FAIL_MESSAGE]);
         }
 
+        if ($via === 'passkey') {
+            // Passkey verification authenticates the user on the pre-login
+            // session id. Rotate it before any admin state is granted so a
+            // session fixated before sign-in can never become an admin session.
+            $request->session()->regenerate(true);
+        }
+
         AdminAccess::revoke($request);
         $request->session()->forget([AdminMfa::SESSION_SETUP_SECRET, AdminMfa::SESSION_LAST_TOTP]);
 
@@ -53,7 +60,7 @@ class AdminAuthFlow
                     'via' => $via,
                 ]);
 
-                return redirect()->intended(route('admin.dashboard'));
+                return self::intendedAdminRedirect($request);
             }
 
             $request->session()->put(AdminMfa::SESSION_PENDING, $user->id);
@@ -92,9 +99,28 @@ class AdminAuthFlow
             'via' => $via,
         ]);
 
-        return redirect()
-            ->intended(route('admin.dashboard'))
+        return self::intendedAdminRedirect($request)
             ->with('info', 'Please enroll two-factor authentication before '
                 .optional($user->two_factor_grace_ends_at)->timezone(config('app.timezone'))->format('d M Y H:i').'.');
+    }
+
+    /**
+     * Consume a stored intended URL only when it is a safe internal destination.
+     *
+     * redirect()->intended() replays whatever sits in url.intended without
+     * checking it, so a planted value could send a freshly authenticated admin
+     * off-site. Anything not provably internal falls back to the dashboard.
+     */
+    public static function intendedAdminRedirect(Request $request): RedirectResponse
+    {
+        $intended = $request->session()->pull('url.intended');
+
+        // Backslashes are rejected outright: browsers normalize them to "/",
+        // so "/\evil.test" would escape a path-only check.
+        if (is_string($intended) && ! str_contains($intended, '\\') && SafeInternalUrl::isSafe($intended)) {
+            return redirect()->to($intended);
+        }
+
+        return redirect()->route('admin.dashboard');
     }
 }
