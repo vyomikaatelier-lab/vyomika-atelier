@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\User;
+use App\Services\StaffIdentityService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -11,7 +12,10 @@ class AdminAuthFlow
 {
     private const FAIL_MESSAGE = 'Invalid email or password.';
 
-    public function __construct(private readonly AdminMfa $mfa) {}
+    public function __construct(
+        private readonly AdminMfa $mfa,
+        private readonly StaffIdentityService $staffIdentities,
+    ) {}
 
     /**
      * After password or passkey verification: enforce admin rules and MFA before panel access.
@@ -50,7 +54,8 @@ class AdminAuthFlow
 
         if ($this->mfa->hasMfaEnabled($user)) {
             if ($via === 'passkey') {
-                AdminAccess::grant($request);
+                $this->staffIdentities->recordLogin($user, $request->ip());
+                AdminAccess::grant($request, $user);
 
                 Log::info('admin.login_succeeded', [
                     'user_id' => $user->id,
@@ -89,7 +94,8 @@ class AdminAuthFlow
                 ->with('info', 'Two-factor authentication is required for admin access.');
         }
 
-        AdminAccess::grant($request);
+        $this->staffIdentities->recordLogin($user, $request->ip());
+        AdminAccess::grant($request, $user);
 
         Log::info('admin.login_succeeded', [
             'user_id' => $user->id,
