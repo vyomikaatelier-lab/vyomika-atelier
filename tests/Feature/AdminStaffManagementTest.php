@@ -70,6 +70,56 @@ class AdminStaffManagementTest extends TestCase
             ->assertDontSee($acceptUrl, false);
     }
 
+    public function test_invitation_reveal_is_isolated_first_party_and_not_recoverable_later(): void
+    {
+        Mail::fake();
+        $owner = $this->owner();
+
+        $response = $this->asVerifiedAdmin($owner)->post(route('admin.staff.invite'), [
+            'name' => 'Catalog Staff',
+            'email' => 'isolated@example.com',
+            'admin_role' => AdminRole::CATALOG_MANAGER,
+        ]);
+
+        $response->assertOk();
+        $content = $response->getContent();
+        [, $token, $acceptUrl] = $this->extractInvitationReveal($response, 'isolated@example.com');
+
+        $cacheControl = strtolower((string) $response->headers->get('Cache-Control'));
+        $this->assertStringContainsString('no-store', $cacheControl);
+        $this->assertStringContainsString('private', $cacheControl);
+        $this->assertStringContainsString('max-age=0', $cacheControl);
+        $this->assertSame('no-cache', $response->headers->get('Pragma'));
+        $this->assertSame('no-referrer', $response->headers->get('Referrer-Policy'));
+        $this->assertSame('noindex, nofollow, noarchive', $response->headers->get('X-Robots-Tag'));
+        $this->assertSame('nosniff', $response->headers->get('X-Content-Type-Options'));
+
+        $csp = (string) $response->headers->get('Content-Security-Policy');
+        $this->assertStringContainsString("default-src 'none'", $csp);
+        $this->assertStringContainsString("script-src 'self'", $csp);
+        $this->assertStringContainsString("style-src 'self'", $csp);
+        $this->assertStringContainsString("connect-src 'none'", $csp);
+
+        $this->assertStringNotContainsString('cdn.tailwindcss.com', $content);
+        $this->assertDoesNotMatchRegularExpression('/<script(?![^>]*\bsrc=)/i', $content);
+        $this->assertStringContainsString('/js/admin-invitation-reveal.js', $content);
+        $this->assertStringContainsString('/css/admin-invitation-reveal.css', $content);
+        $this->assertDoesNotMatchRegularExpression(
+            '/href=(["\'])[^"\']*'.preg_quote($token, '/').'[^"\']*\1/',
+            $content,
+        );
+
+        $this->assertNoThirdPartyAssetReferences($content);
+        $this->assertFirstPartyCopyScriptHasNoNetworkBehavior();
+
+        $history = $this->asVerifiedAdmin($owner)->get(route('admin.staff.index'));
+        $history->assertOk()
+            ->assertSee('isolated@example.com', false)
+            ->assertDontSee($token)
+            ->assertDontSee($acceptUrl, false)
+            ->assertDontSee('id="invitation-url"', false);
+    }
+
     public function test_refreshing_invitation_creation_does_not_duplicate_or_rotate_the_pending_link(): void
     {
         Mail::fake();
@@ -340,5 +390,63 @@ class AdminStaffManagementTest extends TestCase
             AdminAccess::SESSION_VERSION_KEY => (int) $admin->admin_session_version,
             AdminAccess::SESSION_USER_KEY => $admin->getKey(),
         ]);
+    }
+
+    private function assertNoThirdPartyAssetReferences(string $html): void
+    {
+        $allowedHosts = array_values(array_filter([
+            parse_url((string) config('app.url'), PHP_URL_HOST),
+            parse_url(url('/'), PHP_URL_HOST),
+        ]));
+
+        preg_match_all(
+            '/<(?:script|link|img|iframe|embed|object|source|video|audio)\b[^>]*(?:src|href)=["\']([^"\']+)["\']/i',
+            $html,
+            $matches,
+        );
+
+        foreach ($matches[1] as $reference) {
+            if (! str_starts_with($reference, 'http://') && ! str_starts_with($reference, 'https://')) {
+                $this->assertFalse(
+                    str_contains($reference, 'cdn.tailwindcss.com'),
+                    "Unexpected third-party reference: {$reference}",
+                );
+
+                continue;
+            }
+
+            $host = parse_url($reference, PHP_URL_HOST);
+            $this->assertNotFalse($host);
+            $this->assertContains(
+                $host,
+                $allowedHosts,
+                "Third-party asset reference is not allowed: {$reference}",
+            );
+        }
+    }
+
+    private function assertFirstPartyCopyScriptHasNoNetworkBehavior(): void
+    {
+        $path = public_path('js/admin-invitation-reveal.js');
+        $this->assertFileExists($path);
+        $script = file_get_contents($path);
+        $this->assertNotFalse($script);
+        $this->assertStringContainsString('copy-invitation-link', $script);
+        $this->assertStringContainsString('setSelectionRange', $script);
+
+        foreach ([
+            'fetch(',
+            'XMLHttpRequest',
+            'sendBeacon',
+            'navigator.sendBeacon',
+            'window.open',
+            'location.assign',
+            'location.replace',
+            'document.location',
+            'window.location',
+            'console.log',
+        ] as $forbidden) {
+            $this->assertStringNotContainsString($forbidden, $script);
+        }
     }
 }

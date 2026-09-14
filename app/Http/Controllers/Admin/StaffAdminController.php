@@ -99,7 +99,14 @@ class StaffAdminController extends Controller
                 'roles' => AdminRole::labels(),
                 'regenerated' => $regenerated,
             ])
-            ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate')
-            ->header('Pragma', 'no-cache');
+            ->header('Cache-Control', 'private, no-store, no-cache, max-age=0, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Referrer-Policy', 'no-referrer')
+            ->header('X-Robots-Tag', 'noindex, nofollow, noarchive')
+            ->header('X-Content-Type-Options', 'nosniff')
+            ->header(
+                'Content-Security-Policy',
+                "default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; script-src 'self'; style-src 'self'; img-src 'none'; font-src 'none'; connect-src 'none'; object-src 'none'; media-src 'none'; worker-src 'none'; manifest-src 'none'"
+            );
     }
 }

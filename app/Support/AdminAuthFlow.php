@@ -179,7 +179,7 @@ class AdminAuthFlow
         }
 
         $path = rawurldecode($parts['path'] ?? '');
-        if ($path === '' || str_contains($path, '..')) {
+        if ($path === '' || str_contains($path, '..') || str_contains($path, '//')) {
             return false;
         }
 

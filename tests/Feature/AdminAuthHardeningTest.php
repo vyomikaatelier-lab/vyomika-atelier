@@ -61,6 +61,13 @@ class AdminAuthHardeningTest extends TestCase
         ];
     }
 
+    public static function doubleSlashAdminIntendedUrls(): array
+    {
+        return [
+            'double slash login' => ['/admin//login'],
+        ];
+    }
+
     private function graceAdmin(array $overrides = []): User
     {
         return User::factory()->admin()->create(array_merge([
@@ -167,6 +174,19 @@ class AdminAuthHardeningTest extends TestCase
         ])->assertRedirect(route('admin.products.index'));
     }
 
+    #[DataProvider('doubleSlashAdminIntendedUrls')]
+    public function test_password_login_rejects_double_slash_admin_intended_url(string $intended): void
+    {
+        $admin = $this->graceAdmin();
+
+        $this->withSession(['url.intended' => $intended])
+            ->post(route('admin.login.submit'), [
+                'email' => $admin->email,
+                'password' => 'password',
+            ])
+            ->assertRedirect(route('admin.dashboard'));
+    }
+
     public function test_mfa_completion_honours_safe_internal_intended_url(): void
     {
         $admin = $this->mfaAdmin($secret);
@@ -255,6 +275,22 @@ class AdminAuthHardeningTest extends TestCase
         ])->assertRedirect(route('admin.dashboard'));
     }
 
+    #[DataProvider('doubleSlashAdminIntendedUrls')]
+    public function test_mfa_completion_rejects_double_slash_admin_intended_url(string $intended): void
+    {
+        $admin = $this->mfaAdmin($secret);
+
+        $this->withSession(['url.intended' => $intended])
+            ->post(route('admin.login.submit'), [
+                'email' => $admin->email,
+                'password' => 'password',
+            ])->assertRedirect(route('admin.mfa.challenge'));
+
+        $this->post(route('admin.mfa.challenge.submit'), [
+            'code' => (new Google2FA)->getCurrentOtp($secret),
+        ])->assertRedirect(route('admin.dashboard'));
+    }
+
     #[DataProvider('storefrontIntendedUrls')]
     public function test_passkey_completion_ignores_storefront_intended_url(string $intended): void
     {
@@ -268,6 +304,17 @@ class AdminAuthHardeningTest extends TestCase
 
     #[DataProvider('loopingAdminIntendedUrls')]
     public function test_passkey_completion_rejects_auth_loop_intended_url(string $intended): void
+    {
+        $admin = $this->mfaAdmin($secret);
+        $request = $this->passkeyRequest(['url.intended' => $intended]);
+
+        $response = app(AdminAuthFlow::class)->completeAdminLogin($request, $admin, 'passkey');
+
+        $this->assertSame(route('admin.dashboard'), $response->getTargetUrl());
+    }
+
+    #[DataProvider('doubleSlashAdminIntendedUrls')]
+    public function test_passkey_completion_rejects_double_slash_admin_intended_url(string $intended): void
     {
         $admin = $this->mfaAdmin($secret);
         $request = $this->passkeyRequest(['url.intended' => $intended]);
