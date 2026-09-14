@@ -55,7 +55,7 @@ class MfaController extends Controller
         }
 
         $request->session()->forget(AdminMfa::SESSION_PENDING);
-        AdminAccess::grant($request);
+        AdminAccess::grant($request, $user);
 
         Log::info('admin.mfa_challenge_succeeded', [
             'user_id' => $user->id,
@@ -134,7 +134,7 @@ class MfaController extends Controller
             AdminMfa::SESSION_PENDING,
             AdminMfa::SESSION_LAST_TOTP,
         ]);
-        AdminAccess::grant($request);
+        AdminAccess::grant($request, $user);
 
         Log::info('admin.mfa_enrolled', [
             'user_id' => $user->id,

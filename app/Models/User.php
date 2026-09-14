@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\AdminRole;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -50,6 +51,8 @@ class User extends Authenticatable implements PasskeyUser
             'phone_verified_at' => 'datetime',
             'two_factor_confirmed_at' => 'datetime',
             'two_factor_grace_ends_at' => 'datetime',
+            'admin_last_login_at' => 'datetime',
+            'admin_session_version' => 'integer',
             'password' => 'hashed',
             'is_admin' => 'boolean',
             'is_active' => 'boolean',
@@ -69,6 +72,25 @@ class User extends Authenticatable implements PasskeyUser
     public function isCustomer(): bool
     {
         return ! $this->isAdmin();
+    }
+
+    public function isOwner(): bool
+    {
+        return $this->isAdmin() && $this->admin_role === AdminRole::OWNER;
+    }
+
+    public function hasAdminPermission(string $permission): bool
+    {
+        return AdminRole::hasPermission($this, $permission);
+    }
+
+    public function adminRoleLabel(): string
+    {
+        if ($this->admin_role === null && $this->isAdmin()) {
+            return 'Legacy Admin';
+        }
+
+        return AdminRole::labels()[$this->admin_role] ?? 'No admin role';
     }
 
     public function hasVerifiedPhone(): bool

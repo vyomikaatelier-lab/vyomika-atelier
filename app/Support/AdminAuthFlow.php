@@ -50,7 +50,7 @@ class AdminAuthFlow
 
         if ($this->mfa->hasMfaEnabled($user)) {
             if ($via === 'passkey') {
-                AdminAccess::grant($request);
+                AdminAccess::grant($request, $user);
 
                 Log::info('admin.login_succeeded', [
                     'user_id' => $user->id,
@@ -89,7 +89,7 @@ class AdminAuthFlow
                 ->with('info', 'Two-factor authentication is required for admin access.');
         }
 
-        AdminAccess::grant($request);
+        AdminAccess::grant($request, $user);
 
         Log::info('admin.login_succeeded', [
             'user_id' => $user->id,
