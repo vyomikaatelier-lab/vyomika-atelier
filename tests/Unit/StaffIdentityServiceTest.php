@@ -32,4 +32,18 @@ class StaffIdentityServiceTest extends TestCase
 
         app(StaffIdentityService::class)->ensure($customer);
     }
+
+    public function test_it_records_last_admin_login_without_changing_the_stable_id(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $service = app(StaffIdentityService::class);
+        $staffId = $service->ensure($admin);
+
+        $service->recordLogin($admin, '203.0.113.9');
+
+        $admin->refresh();
+        $this->assertSame($staffId, $admin->staff_id);
+        $this->assertSame('203.0.113.9', $admin->admin_last_login_ip);
+        $this->assertNotNull($admin->admin_last_login_at);
+    }
 }

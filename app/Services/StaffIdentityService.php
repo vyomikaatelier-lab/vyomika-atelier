@@ -35,4 +35,14 @@ class StaffIdentityService
             return $staffId;
         });
     }
+
+    public function recordLogin(User $user, ?string $ipAddress): void
+    {
+        $this->ensure($user);
+
+        $user->forceFill([
+            'admin_last_login_at' => now(),
+            'admin_last_login_ip' => $ipAddress,
+        ])->save();
+    }
 }

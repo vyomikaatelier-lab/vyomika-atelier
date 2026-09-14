@@ -25,6 +25,8 @@ use App\Http\Controllers\Admin\RailingQuoteAdminController;
 use App\Http\Controllers\Admin\ServiceAdminController;
 use App\Http\Controllers\Admin\SiteSettingAdminController;
 use App\Http\Controllers\Admin\StaticPageSeoAdminController;
+use App\Http\Controllers\Admin\StaffAdminController;
+use App\Http\Controllers\Admin\StaffInvitationController;
 use App\Http\Controllers\Admin\UrlRedirectAdminController;
 use App\Http\Controllers\Api\RazorpayCheckoutController;
 use App\Http\Controllers\Api\RazorpayWebhookController;
@@ -229,6 +231,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('/login', [AdminAuthController::class, 'login'])->middleware('throttle:auth')->name('login.submit');
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
 
+    Route::get('/staff-invitations/{invitation}/accept', [StaffInvitationController::class, 'show'])
+        ->middleware(['guest:web', 'signed', 'throttle:auth'])
+        ->name('staff-invitations.accept');
+    Route::post('/staff-invitations/{invitation}/accept', [StaffInvitationController::class, 'store'])
+        ->middleware(['guest:web', 'throttle:auth'])
+        ->name('staff-invitations.store');
+
     Route::get('/passkeys/login/options', [PasskeyLoginController::class, 'index'])
         ->middleware(['guest:web', 'throttle:admin-passkey'])
         ->name('passkeys.login.options');
@@ -262,6 +271,25 @@ Route::prefix('admin')->name('admin.')->group(function () {
             ->name('passkeys.destroy');
         Route::post('/mfa/recovery', [MfaController::class, 'regenerateRecoveryCodes'])->middleware('throttle:admin-mfa')->name('mfa.recovery.regenerate');
         Route::post('/mfa/disable', [MfaController::class, 'disable'])->middleware('throttle:admin-mfa')->name('mfa.disable');
+
+        Route::get('/staff', [StaffAdminController::class, 'index'])
+            ->middleware('admin.permission:staff.view')
+            ->name('staff.index');
+        Route::post('/staff/invitations', [StaffAdminController::class, 'invite'])
+            ->middleware('admin.permission:staff.manage')
+            ->name('staff.invite');
+        Route::post('/staff/invitations/{invitation}/resend', [StaffAdminController::class, 'resend'])
+            ->middleware('admin.permission:staff.manage')
+            ->name('staff-invitations.resend');
+        Route::delete('/staff/invitations/{invitation}', [StaffAdminController::class, 'revokeInvitation'])
+            ->middleware('admin.permission:staff.manage')
+            ->name('staff-invitations.revoke');
+        Route::patch('/staff/{staff}', [StaffAdminController::class, 'update'])
+            ->middleware('admin.permission:staff.manage')
+            ->name('staff.update');
+        Route::post('/staff/{staff}/revoke-sessions', [StaffAdminController::class, 'revokeSessions'])
+            ->middleware('admin.permission:staff.manage')
+            ->name('staff.revoke-sessions');
 
         Route::post('products/reorder', [ProductAdminController::class, 'reorder'])->name('products.reorder');
         Route::post('products/bulk', [ProductAdminController::class, 'bulk'])->name('products.bulk');

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\StaffIdentityService;
 use App\Support\AdminAccess;
 use App\Support\AdminAuthFlow;
 use App\Support\AdminMfa;
@@ -12,7 +13,10 @@ use Illuminate\Validation\ValidationException;
 
 class MfaController extends Controller
 {
-    public function __construct(private readonly AdminMfa $mfa) {}
+    public function __construct(
+        private readonly AdminMfa $mfa,
+        private readonly StaffIdentityService $staffIdentities,
+    ) {}
 
     public function showChallenge(Request $request)
     {
@@ -55,6 +59,7 @@ class MfaController extends Controller
         }
 
         $request->session()->forget(AdminMfa::SESSION_PENDING);
+        $this->staffIdentities->recordLogin($user, $request->ip());
         AdminAccess::grant($request, $user);
 
         Log::info('admin.mfa_challenge_succeeded', [
@@ -134,6 +139,7 @@ class MfaController extends Controller
             AdminMfa::SESSION_PENDING,
             AdminMfa::SESSION_LAST_TOTP,
         ]);
+        $this->staffIdentities->recordLogin($user, $request->ip());
         AdminAccess::grant($request, $user);
 
         Log::info('admin.mfa_enrolled', [

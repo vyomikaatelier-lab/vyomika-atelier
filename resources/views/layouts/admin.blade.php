@@ -55,6 +55,9 @@
                     <a href="{{ route('admin.settings.edit') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800">Site Settings</a>
                     <a href="{{ route('admin.mfa.manage') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800">MFA / 2FA</a>
                     <a href="{{ route('admin.passkeys.manage') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800">Passkeys</a>
+                    @if(auth()->user()->hasAdminPermission(\App\Support\AdminRole::STAFF_VIEW))
+                        <a href="{{ route('admin.staff.index') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800">Staff & Roles</a>
+                    @endif
                 </div>
                 <a href="{{ route('home') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800 text-gray-400" target="_blank">View Site</a>
                 <form action="{{ route('admin.logout') }}" method="POST" class="pt-2">
