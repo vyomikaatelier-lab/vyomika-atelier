@@ -2,14 +2,12 @@
 
 namespace App\Services;
 
-use App\Mail\StaffInvitationMail;
 use App\Models\StaffInvitation;
 use App\Models\User;
 use App\Support\AdminRole;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -18,7 +16,15 @@ class StaffManagementService
 {
     public function __construct(private readonly StaffIdentityService $identities) {}
 
-    public function invite(User $actor, string $name, string $email, string $role): StaffInvitation
+    /**
+     * Create a pending invitation and return a one-time acceptance URL.
+     *
+     * The plain token is never persisted. Default delivery is a manual secure
+     * link shown once to the Owner — SMTP is not invoked.
+     *
+     * @return array{invitation: StaffInvitation, accept_url: string}
+     */
+    public function invite(User $actor, string $name, string $email, string $role): array
     {
         $this->authorizeOwner($actor);
         $email = strtolower(trim($email));
@@ -29,15 +35,25 @@ class StaffManagementService
 
         $plainToken = Str::random(64);
         $invitation = DB::transaction(function () use ($actor, $name, $email, $role, $plainToken): StaffInvitation {
+            User::query()->whereKey($actor->getKey())->lockForUpdate()->firstOrFail();
+
             if (User::query()->whereRaw('LOWER(email) = ?', [$email])->exists()) {
                 throw ValidationException::withMessages(['email' => 'An account already exists for this email address.']);
             }
 
-            StaffInvitation::query()
+            $pendingExists = StaffInvitation::query()
                 ->whereRaw('LOWER(email) = ?', [$email])
                 ->whereNull('accepted_at')
                 ->whereNull('revoked_at')
-                ->update(['revoked_at' => now()]);
+                ->where('expires_at', '>', now())
+                ->lockForUpdate()
+                ->exists();
+
+            if ($pendingExists) {
+                throw ValidationException::withMessages([
+                    'email' => 'A pending invitation already exists for this email. Regenerate that link instead of creating another.',
+                ]);
+            }
 
             return StaffInvitation::query()->create([
                 'name' => trim($name),
@@ -49,7 +65,7 @@ class StaffManagementService
             ]);
         });
 
-        $this->sendInvitation($invitation, $plainToken);
+        $acceptUrl = $this->makeAcceptUrl($invitation, $plainToken);
 
         Log::info('admin.staff_invited', [
             'actor_id' => $actor->getKey(),
@@ -57,10 +73,18 @@ class StaffManagementService
             'role' => $role,
         ]);
 
-        return $invitation;
+        return [
+            'invitation' => $invitation,
+            'accept_url' => $acceptUrl,
+        ];
     }
 
-    public function resend(User $actor, StaffInvitation $invitation): void
+    /**
+     * Rotate the token and expiry, invalidating the previous link immediately.
+     *
+     * @return array{invitation: StaffInvitation, accept_url: string}
+     */
+    public function regenerateLink(User $actor, StaffInvitation $invitation): array
     {
         $this->authorizeOwner($actor);
         $plainToken = Str::random(64);
@@ -68,8 +92,8 @@ class StaffManagementService
             /** @var StaffInvitation $locked */
             $locked = StaffInvitation::query()->lockForUpdate()->findOrFail($invitation->getKey());
 
-            if ($locked->accepted_at !== null || $locked->revoked_at !== null) {
-                throw ValidationException::withMessages(['invitation' => 'Only pending invitations can be resent.']);
+            if ($locked->accepted_at !== null || $locked->revoked_at !== null || $locked->expires_at?->isPast()) {
+                throw ValidationException::withMessages(['invitation' => 'Only pending invitations can be regenerated.']);
             }
 
             $locked->forceFill([
@@ -80,12 +104,17 @@ class StaffManagementService
             return $locked;
         });
 
-        $this->sendInvitation($invitation, $plainToken);
+        $acceptUrl = $this->makeAcceptUrl($invitation, $plainToken);
 
-        Log::info('admin.staff_invitation_resent', [
+        Log::info('admin.staff_invitation_regenerated', [
             'actor_id' => $actor->getKey(),
             'invitation_id' => $invitation->getKey(),
         ]);
+
+        return [
+            'invitation' => $invitation,
+            'accept_url' => $acceptUrl,
+        ];
     }
 
     public function revokeInvitation(User $actor, StaffInvitation $invitation): void
@@ -206,15 +235,13 @@ class StaffManagementService
         ]);
     }
 
-    private function sendInvitation(StaffInvitation $invitation, string $plainToken): void
+    private function makeAcceptUrl(StaffInvitation $invitation, string $plainToken): string
     {
-        $acceptUrl = URL::temporarySignedRoute(
+        return URL::temporarySignedRoute(
             'admin.staff-invitations.accept',
             $invitation->expires_at,
             ['invitation' => $invitation->getKey(), 'token' => $plainToken],
         );
-
-        Mail::to($invitation->email)->send(new StaffInvitationMail($invitation, $acceptUrl));
     }
 
     private function authorizeOwner(User $actor): void

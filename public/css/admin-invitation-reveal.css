@@ -1,0 +1,148 @@
+/* First-party styles for the one-time staff invitation reveal page. No remote fonts or imports. */
+
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+body.invitation-reveal {
+    margin: 0;
+    min-height: 100vh;
+    background: #f9fafb;
+    color: #111827;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.5;
+}
+
+.reveal-shell {
+    max-width: 48rem;
+    margin: 0 auto;
+    padding: 2rem 1.25rem 3rem;
+}
+
+.reveal-kicker {
+    margin: 0 0 0.5rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #b45309;
+}
+
+.reveal-title {
+    margin: 0;
+    font-size: 1.875rem;
+    font-weight: 600;
+}
+
+.reveal-lead {
+    margin: 0.75rem 0 0;
+    font-size: 0.95rem;
+    color: #4b5563;
+}
+
+.reveal-warning {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 0.75rem;
+    color: #78350f;
+    font-size: 0.95rem;
+}
+
+.reveal-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04);
+}
+
+.reveal-card h2 {
+    margin: 0 0 1rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.reveal-details {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin: 0 0 1.25rem;
+    font-size: 0.95rem;
+}
+
+@media (min-width: 640px) {
+    .reveal-details {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.reveal-details dt {
+    color: #6b7280;
+    margin: 0;
+}
+
+.reveal-details dd {
+    margin: 0.15rem 0 0;
+    font-weight: 600;
+}
+
+.reveal-label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+}
+
+.reveal-url {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 44px;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    background: #f9fafb;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.8rem;
+    color: #111827;
+}
+
+.reveal-copy-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+    margin-top: 0.75rem;
+}
+
+.reveal-copy {
+    min-height: 44px;
+    padding: 0.75rem 1rem;
+    border: 0;
+    border-radius: 0.5rem;
+    background: #111827;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.reveal-copy:focus {
+    outline: 2px solid #b45309;
+    outline-offset: 2px;
+}
+
+.reveal-copy-status {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #4b5563;
+}
+
+.reveal-return {
+    display: inline-block;
+    margin-top: 1.5rem;
+    color: #111827;
+    font-size: 0.95rem;
+}

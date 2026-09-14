@@ -15,7 +15,11 @@ class SecurityHeaders
 
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
-        $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
+        // Page-specific responses may already set a stricter policy (for example
+        // no-referrer on one-time invitation reveal). Do not overwrite it.
+        if (! $response->headers->has('Referrer-Policy')) {
+            $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
+        }
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 
         if ($request->secure()) {

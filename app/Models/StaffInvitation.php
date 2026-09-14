@@ -40,4 +40,21 @@ class StaffInvitation extends Model
             && $this->revoked_at === null
             && $this->expires_at?->isFuture();
     }
+
+    public function statusLabel(): string
+    {
+        if ($this->accepted_at !== null) {
+            return 'Accepted';
+        }
+
+        if ($this->revoked_at !== null) {
+            return 'Revoked';
+        }
+
+        if ($this->expires_at?->isPast()) {
+            return 'Expired';
+        }
+
+        return 'Pending';
+    }
 }

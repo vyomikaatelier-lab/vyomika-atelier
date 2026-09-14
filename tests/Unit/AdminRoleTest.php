@@ -69,4 +69,25 @@ class AdminRoleTest extends TestCase
         $this->assertFalse($legacy->hasAdminPermission(AdminRole::STAFF_VIEW));
         $this->assertFalse($legacy->hasAdminPermission(AdminRole::STAFF_MANAGE));
     }
+
+    public function test_permission_matrix_matches_permissions_for_every_fixed_role(): void
+    {
+        $matrix = AdminRole::permissionMatrix();
+
+        foreach (AdminRole::labels() as $role => $label) {
+            $this->assertArrayHasKey($role, $matrix);
+            $granted = array_keys(array_filter($matrix[$role]['permissions']));
+            $expected = AdminRole::permissionsFor($role);
+            sort($granted);
+            sort($expected);
+            $this->assertSame($expected, $granted, $role);
+            $this->assertSame($label, $matrix[$role]['label']);
+            $this->assertSame(AdminRole::descriptions()[$role], $matrix[$role]['description']);
+        }
+
+        $this->assertSame('owner', $matrix[AdminRole::OWNER]['group']);
+        $this->assertSame('administrator', $matrix[AdminRole::ADMINISTRATOR]['group']);
+        $this->assertSame('operational', $matrix[AdminRole::VIEWER]['group']);
+        $this->assertSame(AdminRole::permissions(), array_keys($matrix[AdminRole::OWNER]['permissions']));
+    }
 }

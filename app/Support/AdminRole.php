@@ -78,6 +78,106 @@ final class AdminRole
         ];
     }
 
+    /** @return array<string, string> */
+    public static function descriptions(): array
+    {
+        return [
+            self::OWNER => 'Full control of the administration system, including staff access, roles and security.',
+            self::ADMINISTRATOR => 'Day-to-day administration of store, content and settings. Cannot invite staff or change staff access.',
+            self::CATALOG_MANAGER => 'Manages products, categories, media and related catalogue SEO.',
+            self::CONTENT_EDITOR => 'Manages projects, editorial pages, media and content SEO.',
+            self::SALES_MANAGER => 'Handles enquiries, leads and customer records.',
+            self::ORDER_MANAGER => 'Processes orders and can view related customer information.',
+            self::VIEWER => 'Read-only access to operational modules. Cannot change records or manage staff.',
+        ];
+    }
+
+    /** @return array<string, string> */
+    public static function permissionLabels(): array
+    {
+        return [
+            self::DASHBOARD_VIEW => 'View dashboard',
+            self::CATALOG_VIEW => 'View catalogue',
+            self::CATALOG_MANAGE => 'Manage catalogue',
+            self::CATALOG_PUBLISH => 'Publish catalogue',
+            self::ORDERS_VIEW => 'View orders',
+            self::ORDERS_MANAGE => 'Manage orders',
+            self::ENQUIRIES_VIEW => 'View enquiries',
+            self::ENQUIRIES_MANAGE => 'Manage enquiries',
+            self::CUSTOMERS_VIEW => 'View customers',
+            self::CUSTOMERS_MANAGE => 'Manage customers',
+            self::CONTENT_VIEW => 'View content',
+            self::CONTENT_MANAGE => 'Manage content',
+            self::CONTENT_PUBLISH => 'Publish content',
+            self::MEDIA_VIEW => 'View media',
+            self::MEDIA_MANAGE => 'Manage media',
+            self::SEO_VIEW => 'View SEO',
+            self::SEO_MANAGE => 'Manage SEO',
+            self::SETTINGS_VIEW => 'View settings',
+            self::SETTINGS_MANAGE => 'Manage settings',
+            self::STAFF_VIEW => 'View staff & roles',
+            self::STAFF_MANAGE => 'Manage staff & roles',
+            self::SECURITY_MANAGE_SELF => 'Manage own MFA and passkeys',
+        ];
+    }
+
+    public static function group(string $role): string
+    {
+        return match ($role) {
+            self::OWNER => 'owner',
+            self::ADMINISTRATOR => 'administrator',
+            default => 'operational',
+        };
+    }
+
+    public static function groupLabel(string $role): string
+    {
+        return match (self::group($role)) {
+            'owner' => 'Owner',
+            'administrator' => 'Administrator',
+            default => 'Operational',
+        };
+    }
+
+    /**
+     * Effective permission matrix derived from permissionsFor(). Do not copy
+     * this mapping into Blade. Custom per-user overrides are intentionally
+     * unsupported until a dedicated, auditable data model exists.
+     *
+     * @return array<string, array{
+     *     role: string,
+     *     label: string,
+     *     group: string,
+     *     group_label: string,
+     *     description: string,
+     *     permissions: array<string, bool>
+     * }>
+     */
+    public static function permissionMatrix(): array
+    {
+        $matrix = [];
+
+        foreach (self::labels() as $role => $label) {
+            $granted = self::permissionsFor($role);
+            $permissions = [];
+
+            foreach (self::permissions() as $permission) {
+                $permissions[$permission] = in_array($permission, $granted, true);
+            }
+
+            $matrix[$role] = [
+                'role' => $role,
+                'label' => $label,
+                'group' => self::group($role),
+                'group_label' => self::groupLabel($role),
+                'description' => self::descriptions()[$role],
+                'permissions' => $permissions,
+            ];
+        }
+
+        return $matrix;
+    }
+
     /** @return list<string> */
     public static function permissions(): array
     {
