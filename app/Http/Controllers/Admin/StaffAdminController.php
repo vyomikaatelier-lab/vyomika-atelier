@@ -9,6 +9,7 @@ use App\Services\StaffManagementService;
 use App\Support\AdminRole;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -22,10 +23,12 @@ class StaffAdminController extends Controller
             'staff' => User::query()->where('is_admin', true)->orderBy('name')->get(),
             'invitations' => StaffInvitation::query()->latest()->limit(50)->get(),
             'roles' => AdminRole::labels(),
+            'roleMatrix' => AdminRole::permissionMatrix(),
+            'permissionLabels' => AdminRole::permissionLabels(),
         ]);
     }
 
-    public function invite(Request $request): RedirectResponse
+    public function invite(Request $request): Response|RedirectResponse
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:120'],
@@ -33,21 +36,21 @@ class StaffAdminController extends Controller
             'admin_role' => ['required', Rule::in(array_keys(AdminRole::labels()))],
         ]);
 
-        $this->staff->invite(
+        $result = $this->staff->invite(
             $request->user(),
             $validated['name'],
             $validated['email'],
             $validated['admin_role'],
         );
 
-        return back()->with('success', 'Staff invitation sent securely.');
+        return $this->invitationRevealResponse($result['invitation'], $result['accept_url']);
     }
 
-    public function resend(Request $request, StaffInvitation $invitation): RedirectResponse
+    public function resend(Request $request, StaffInvitation $invitation): Response|RedirectResponse
     {
-        $this->staff->resend($request->user(), $invitation);
+        $result = $this->staff->regenerateLink($request->user(), $invitation);
 
-        return back()->with('success', 'A fresh invitation link was sent.');
+        return $this->invitationRevealResponse($result['invitation'], $result['accept_url'], regenerated: true);
     }
 
     public function revokeInvitation(Request $request, StaffInvitation $invitation): RedirectResponse
@@ -82,5 +85,21 @@ class StaffAdminController extends Controller
         $this->staff->revokeSessions($request->user(), $staff);
 
         return back()->with('success', 'All existing admin sessions for this staff member are now invalid.');
+    }
+
+    private function invitationRevealResponse(
+        StaffInvitation $invitation,
+        string $acceptUrl,
+        bool $regenerated = false,
+    ): Response {
+        return response()
+            ->view('admin.staff.invitation-created', [
+                'invitation' => $invitation,
+                'acceptUrl' => $acceptUrl,
+                'roles' => AdminRole::labels(),
+                'regenerated' => $regenerated,
+            ])
+            ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate')
+            ->header('Pragma', 'no-cache');
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Support\AdminAccess;
+use App\Support\AdminAuthFlow;
 use App\Support\AdminMfa;
 use Closure;
 use Illuminate\Http\Request;
@@ -15,6 +16,8 @@ class AdminMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         if (! auth()->check() || ! auth()->user()->isAdmin() || ! auth()->user()->is_active) {
+            AdminAuthFlow::rememberIntended($request);
+
             return redirect()->route('admin.login');
         }
 
@@ -32,6 +35,8 @@ class AdminMiddleware
         }
 
         if (! AdminAccess::verified($request)) {
+            AdminAuthFlow::rememberIntended($request);
+
             return redirect()->route('admin.login')
                 ->with('info', 'Sign in at the admin login page to access the panel.');
         }

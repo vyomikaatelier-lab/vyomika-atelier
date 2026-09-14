@@ -7,12 +7,13 @@
     <div>
         <p class="text-xs uppercase tracking-widest text-amber-700 mb-2">Administration</p>
         <h1 class="text-3xl font-semibold">Staff & Roles</h1>
-        <p class="text-sm text-gray-600 mt-2">Invite staff, assign fixed least-privilege roles and revoke access immediately.</p>
+        <p class="text-sm text-gray-600 mt-2">Invite staff with a one-time secure link, assign fixed least-privilege roles and revoke access immediately.</p>
     </div>
 
     @if(auth()->user()->hasAdminPermission(\App\Support\AdminRole::STAFF_MANAGE))
     <section class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-        <h2 class="text-xl font-semibold mb-4">Invite staff member</h2>
+        <h2 class="text-xl font-semibold mb-2">Invite staff member</h2>
+        <p class="text-sm text-gray-600 mb-4">A secure invitation link is shown once so you can share it through WhatsApp or another trusted channel. Email is not sent automatically.</p>
         <form method="POST" action="{{ route('admin.staff.invite') }}" class="grid md:grid-cols-4 gap-4 items-end">
             @csrf
             <div>
@@ -33,10 +34,65 @@
                     @endforeach
                 </select>
             </div>
-            <button class="bg-gray-900 text-white rounded-lg px-4 py-3 font-medium">Send invitation</button>
+            <button class="bg-gray-900 text-white rounded-lg px-4 py-3 font-medium min-h-[44px]">Generate invitation link</button>
         </form>
     </section>
     @endif
+
+    <section class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden" aria-labelledby="role-matrix-heading">
+        <div class="p-6 border-b space-y-2">
+            <h2 id="role-matrix-heading" class="text-xl font-semibold">Roles and permissions</h2>
+            <p class="text-sm text-gray-600">Fixed roles and their effective capabilities. Permissions come from the central role map and cannot be customised per person.</p>
+        </div>
+        <div class="p-6 grid gap-4 md:grid-cols-2">
+            @foreach($roleMatrix as $role => $definition)
+                <article class="border border-gray-200 rounded-lg p-4" data-role="{{ $role }}">
+                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                        <h3 class="text-lg font-semibold">{{ $definition['label'] }}</h3>
+                        <span class="text-xs uppercase tracking-wide px-2 py-1 rounded bg-gray-100 text-gray-700">{{ $definition['group_label'] }}</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">{{ $definition['description'] }}</p>
+                    <ul class="text-sm space-y-1">
+                        @foreach($definition['permissions'] as $permission => $granted)
+                            @if($granted)
+                                <li>{{ $permissionLabels[$permission] ?? $permission }}</li>
+                            @endif
+                        @endforeach
+                    </ul>
+                </article>
+            @endforeach
+        </div>
+        <div class="overflow-x-auto border-t" role="region" aria-labelledby="role-matrix-table-heading" tabindex="0">
+            <h3 id="role-matrix-table-heading" class="sr-only">Role permission comparison table</h3>
+            <table class="w-full text-xs min-w-[960px]">
+                <caption class="sr-only">Which fixed admin roles have each permission</caption>
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="p-3 text-left sticky left-0 bg-gray-50">Permission</th>
+                        @foreach($roleMatrix as $definition)
+                            <th scope="col" class="p-3 text-left whitespace-nowrap">{{ $definition['label'] }}</th>
+                        @endforeach
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    @foreach($permissionLabels as $permission => $label)
+                        <tr>
+                            <th scope="row" class="p-3 text-left font-medium sticky left-0 bg-white">{{ $label }}</th>
+                            @foreach($roleMatrix as $definition)
+                                <td class="p-3">
+                                    @if($definition['permissions'][$permission] ?? false)
+                                        Yes
+                                    @else
+                                        <span class="text-gray-400">No</span>
+                                    @endif
+                                </td>
+                            @endforeach
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </section>
 
     <section class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
         <div class="p-6 border-b"><h2 class="text-xl font-semibold">Current staff</h2></div>
@@ -83,10 +139,17 @@
         <div class="divide-y">
         @forelse($invitations as $invitation)
             <div class="p-4 flex flex-wrap justify-between gap-4">
-                <div><strong>{{ $invitation->name }}</strong> · {{ $invitation->email }}<br><span class="text-xs text-gray-500">{{ $roles[$invitation->admin_role] ?? $invitation->admin_role }} · {{ $invitation->isPending() ? 'Pending' : ($invitation->accepted_at ? 'Accepted' : 'Expired or revoked') }}</span></div>
+                <div>
+                    <strong>{{ $invitation->name }}</strong> · {{ $invitation->email }}<br>
+                    <span class="text-xs text-gray-500">
+                        {{ $roles[$invitation->admin_role] ?? $invitation->admin_role }}
+                        · {{ $invitation->statusLabel() }}
+                        · Expires {{ $invitation->expires_at?->timezone(config('app.timezone'))->format('d M Y, H:i') ?? 'n/a' }}
+                    </span>
+                </div>
                 @if($invitation->isPending() && auth()->user()->hasAdminPermission(\App\Support\AdminRole::STAFF_MANAGE))
                     <div class="flex gap-3">
-                        <form method="POST" action="{{ route('admin.staff-invitations.resend', $invitation) }}">@csrf<button class="text-sm underline">Resend</button></form>
+                        <form method="POST" action="{{ route('admin.staff-invitations.resend', $invitation) }}">@csrf<button class="text-sm underline">Regenerate invitation link</button></form>
                         <form method="POST" action="{{ route('admin.staff-invitations.revoke', $invitation) }}">@csrf @method('DELETE')<button class="text-sm text-red-700 underline">Revoke</button></form>
                     </div>
                 @endif

@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Log;
 
 class AdminAuthFlow
 {
+    public const SESSION_INTENDED = 'admin.url.intended';
+
     private const FAIL_MESSAGE = 'Invalid email or password.';
 
     public function __construct(
@@ -111,22 +113,116 @@ class AdminAuthFlow
     }
 
     /**
-     * Consume a stored intended URL only when it is a safe internal destination.
+     * Remember a protected admin GET so login can restore it later.
      *
-     * redirect()->intended() replays whatever sits in url.intended without
-     * checking it, so a planted value could send a freshly authenticated admin
-     * off-site. Anything not provably internal falls back to the dashboard.
+     * Storefront/customer intended URLs stay in url.intended and are never
+     * reused as the admin landing page.
+     */
+    public static function rememberIntended(Request $request): void
+    {
+        if (! $request->isMethod('GET')) {
+            return;
+        }
+
+        $candidate = $request->getRequestUri();
+
+        if (self::isSafeAdminDestination($candidate)) {
+            $request->session()->put(self::SESSION_INTENDED, $candidate);
+        }
+    }
+
+    /**
+     * Restore a safe same-origin /admin destination, otherwise the dashboard.
+     *
+     * Admin auth uses admin.url.intended. The shared url.intended key is only
+     * consumed when it itself is a safe admin path, so leftover /cart or
+     * /checkout values cannot hijack the first admin landing.
      */
     public static function intendedAdminRedirect(Request $request): RedirectResponse
     {
-        $intended = $request->session()->pull('url.intended');
+        $adminIntended = $request->session()->pull(self::SESSION_INTENDED);
+        $sharedIntended = $request->session()->get('url.intended');
 
-        // Backslashes are rejected outright: browsers normalize them to "/",
-        // so "/\evil.test" would escape a path-only check.
-        if (is_string($intended) && ! str_contains($intended, '\\') && SafeInternalUrl::isSafe($intended)) {
+        foreach ([$adminIntended, $sharedIntended] as $index => $intended) {
+            if (! self::isSafeAdminDestination($intended)) {
+                continue;
+            }
+
+            if ($index === 1) {
+                $request->session()->forget('url.intended');
+            }
+
             return redirect()->to($intended);
         }
 
         return redirect()->route('admin.dashboard');
+    }
+
+    /**
+     * Only same-origin paths under /admin, excluding auth/MFA/passkey loops.
+     */
+    public static function isSafeAdminDestination(mixed $url): bool
+    {
+        if (! is_string($url) || $url === '' || str_contains($url, "\0") || str_contains($url, '\\')) {
+            return false;
+        }
+
+        $url = trim($url);
+
+        if (! SafeInternalUrl::isSafe($url)) {
+            return false;
+        }
+
+        $parts = parse_url($url);
+        if ($parts === false) {
+            return false;
+        }
+
+        $path = rawurldecode($parts['path'] ?? '');
+        if ($path === '' || str_contains($path, '..')) {
+            return false;
+        }
+
+        $adminPrefix = self::adminPathPrefix();
+        $normalized = rtrim($path, '/') ?: '/';
+
+        if ($normalized !== $adminPrefix && ! str_starts_with($path, $adminPrefix.'/')) {
+            return false;
+        }
+
+        foreach (self::blockedAdminPathPrefixes() as $blocked) {
+            if ($normalized === $blocked || str_starts_with($path, $blocked.'/')) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static function adminPathPrefix(): string
+    {
+        $path = parse_url(route('admin.dashboard', [], false), PHP_URL_PATH);
+
+        return rtrim((string) $path, '/') ?: '/admin';
+    }
+
+    /** @return list<string> */
+    private static function blockedAdminPathPrefixes(): array
+    {
+        $paths = [
+            parse_url(route('admin.login', [], false), PHP_URL_PATH),
+            parse_url(route('admin.logout', [], false), PHP_URL_PATH),
+            parse_url(route('admin.mfa.challenge', [], false), PHP_URL_PATH),
+            parse_url(route('admin.mfa.enroll', [], false), PHP_URL_PATH),
+            parse_url(route('admin.passkeys.login', [], false), PHP_URL_PATH),
+            parse_url(route('admin.passkeys.login.options', [], false), PHP_URL_PATH),
+        ];
+
+        $paths[] = self::adminPathPrefix().'/staff-invitations';
+
+        return array_values(array_unique(array_filter(array_map(
+            static fn ($path) => rtrim((string) $path, '/') ?: null,
+            $paths,
+        ))));
     }
 }

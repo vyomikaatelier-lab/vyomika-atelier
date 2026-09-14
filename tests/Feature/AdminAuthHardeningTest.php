@@ -34,8 +34,30 @@ class AdminAuthHardeningTest extends TestCase
             'javascript scheme' => ['javascript:alert(1)'],
             'data scheme' => ['data:text/html,<script>alert(1)</script>'],
             'traversal' => ['/admin/../../etc/passwd'],
+            'encoded traversal' => ['/admin/%2e%2e/cart'],
             'null byte' => ["/admin/products\0/x"],
             'empty' => [''],
+            'malformed' => ['http://'],
+        ];
+    }
+
+    public static function storefrontIntendedUrls(): array
+    {
+        return [
+            'cart path' => ['/cart'],
+            'checkout path' => ['/checkout'],
+        ];
+    }
+
+    public static function loopingAdminIntendedUrls(): array
+    {
+        return [
+            'login' => ['/admin/login'],
+            'logout' => ['/admin/logout'],
+            'mfa challenge' => ['/admin/mfa/challenge'],
+            'mfa enroll' => ['/admin/mfa/enroll'],
+            'passkey login' => ['/admin/passkeys/login'],
+            'passkey options' => ['/admin/passkeys/login/options'],
         ];
     }
 
@@ -88,6 +110,61 @@ class AdminAuthHardeningTest extends TestCase
                 'password' => 'password',
             ])
             ->assertRedirect(route('admin.dashboard'));
+    }
+
+    #[DataProvider('storefrontIntendedUrls')]
+    public function test_password_login_ignores_storefront_intended_url(string $intended): void
+    {
+        $admin = $this->graceAdmin();
+
+        $this->withSession(['url.intended' => $intended])
+            ->post(route('admin.login.submit'), [
+                'email' => $admin->email,
+                'password' => 'password',
+            ])
+            ->assertRedirect(route('admin.dashboard'));
+    }
+
+    #[DataProvider('loopingAdminIntendedUrls')]
+    public function test_password_login_rejects_auth_loop_intended_url(string $intended): void
+    {
+        $admin = $this->graceAdmin();
+
+        $this->withSession(['url.intended' => $intended])
+            ->post(route('admin.login.submit'), [
+                'email' => $admin->email,
+                'password' => 'password',
+            ])
+            ->assertRedirect(route('admin.dashboard'));
+    }
+
+    public function test_password_login_honours_admin_specific_intended_destination(): void
+    {
+        $admin = $this->graceAdmin();
+
+        $this->withSession([
+            AdminAuthFlow::SESSION_INTENDED => route('admin.products.index'),
+            'url.intended' => '/cart',
+        ])
+            ->post(route('admin.login.submit'), [
+                'email' => $admin->email,
+                'password' => 'password',
+            ])
+            ->assertRedirect(route('admin.products.index'));
+    }
+
+    public function test_visiting_a_protected_admin_page_preserves_that_destination_after_login(): void
+    {
+        $admin = $this->graceAdmin();
+
+        $this->withSession(['url.intended' => '/checkout'])
+            ->get(route('admin.products.index'))
+            ->assertRedirect(route('admin.login'));
+
+        $this->post(route('admin.login.submit'), [
+            'email' => $admin->email,
+            'password' => 'password',
+        ])->assertRedirect(route('admin.products.index'));
     }
 
     public function test_mfa_completion_honours_safe_internal_intended_url(): void
@@ -144,6 +221,73 @@ class AdminAuthHardeningTest extends TestCase
         $response = app(AdminAuthFlow::class)->completeAdminLogin($request, $admin, 'passkey');
 
         $this->assertSame(route('admin.dashboard'), $response->getTargetUrl());
+    }
+
+    #[DataProvider('storefrontIntendedUrls')]
+    public function test_mfa_completion_ignores_storefront_intended_url(string $intended): void
+    {
+        $admin = $this->mfaAdmin($secret);
+
+        $this->withSession(['url.intended' => $intended])
+            ->post(route('admin.login.submit'), [
+                'email' => $admin->email,
+                'password' => 'password',
+            ])->assertRedirect(route('admin.mfa.challenge'));
+
+        $this->post(route('admin.mfa.challenge.submit'), [
+            'code' => (new Google2FA)->getCurrentOtp($secret),
+        ])->assertRedirect(route('admin.dashboard'));
+    }
+
+    #[DataProvider('loopingAdminIntendedUrls')]
+    public function test_mfa_completion_rejects_auth_loop_intended_url(string $intended): void
+    {
+        $admin = $this->mfaAdmin($secret);
+
+        $this->withSession(['url.intended' => $intended])
+            ->post(route('admin.login.submit'), [
+                'email' => $admin->email,
+                'password' => 'password',
+            ])->assertRedirect(route('admin.mfa.challenge'));
+
+        $this->post(route('admin.mfa.challenge.submit'), [
+            'code' => (new Google2FA)->getCurrentOtp($secret),
+        ])->assertRedirect(route('admin.dashboard'));
+    }
+
+    #[DataProvider('storefrontIntendedUrls')]
+    public function test_passkey_completion_ignores_storefront_intended_url(string $intended): void
+    {
+        $admin = $this->mfaAdmin($secret);
+        $request = $this->passkeyRequest(['url.intended' => $intended]);
+
+        $response = app(AdminAuthFlow::class)->completeAdminLogin($request, $admin, 'passkey');
+
+        $this->assertSame(route('admin.dashboard'), $response->getTargetUrl());
+    }
+
+    #[DataProvider('loopingAdminIntendedUrls')]
+    public function test_passkey_completion_rejects_auth_loop_intended_url(string $intended): void
+    {
+        $admin = $this->mfaAdmin($secret);
+        $request = $this->passkeyRequest(['url.intended' => $intended]);
+
+        $response = app(AdminAuthFlow::class)->completeAdminLogin($request, $admin, 'passkey');
+
+        $this->assertSame(route('admin.dashboard'), $response->getTargetUrl());
+    }
+
+    public function test_passkey_completion_honours_admin_specific_intended_destination(): void
+    {
+        $admin = $this->mfaAdmin($secret);
+        $request = $this->passkeyRequest([
+            AdminAuthFlow::SESSION_INTENDED => route('admin.products.index'),
+            'url.intended' => '/cart',
+        ]);
+
+        $response = app(AdminAuthFlow::class)->completeAdminLogin($request, $admin, 'passkey');
+
+        $this->assertSame(route('admin.products.index'), $response->getTargetUrl());
     }
 
     public function test_mfa_enrollment_routing_is_not_broken_by_intended_url_filtering(): void
