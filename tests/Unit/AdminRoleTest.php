@@ -89,5 +89,8 @@ class AdminRoleTest extends TestCase
         $this->assertSame('administrator', $matrix[AdminRole::ADMINISTRATOR]['group']);
         $this->assertSame('operational', $matrix[AdminRole::VIEWER]['group']);
         $this->assertSame(AdminRole::permissions(), array_keys($matrix[AdminRole::OWNER]['permissions']));
+        $this->assertNotNull($matrix[AdminRole::OWNER]['locks'][AdminRole::STAFF_MANAGE]);
+        $this->assertNotNull($matrix[AdminRole::VIEWER]['locks'][AdminRole::STAFF_MANAGE]);
+        $this->assertNull($matrix[AdminRole::VIEWER]['locks'][AdminRole::ORDERS_VIEW]);
     }
 }

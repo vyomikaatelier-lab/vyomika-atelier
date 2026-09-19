@@ -140,9 +140,8 @@ final class AdminRole
     }
 
     /**
-     * Effective permission matrix derived from permissionsFor(). Do not copy
-     * this mapping into Blade. Custom per-user overrides are intentionally
-     * unsupported until a dedicated, auditable data model exists.
+     * Effective permission matrix from AdminPermissionResolver. Do not copy
+     * this mapping into Blade. Per-user overrides remain unsupported.
      *
      * @return array<string, array{
      *     role: string,
@@ -150,32 +149,13 @@ final class AdminRole
      *     group: string,
      *     group_label: string,
      *     description: string,
-     *     permissions: array<string, bool>
+     *     permissions: array<string, bool>,
+     *     locks: array<string, ?string>
      * }>
      */
     public static function permissionMatrix(): array
     {
-        $matrix = [];
-
-        foreach (self::labels() as $role => $label) {
-            $granted = self::permissionsFor($role);
-            $permissions = [];
-
-            foreach (self::permissions() as $permission) {
-                $permissions[$permission] = in_array($permission, $granted, true);
-            }
-
-            $matrix[$role] = [
-                'role' => $role,
-                'label' => $label,
-                'group' => self::group($role),
-                'group_label' => self::groupLabel($role),
-                'description' => self::descriptions()[$role],
-                'permissions' => $permissions,
-            ];
-        }
-
-        return $matrix;
+        return app(AdminPermissionResolver::class)->permissionMatrix();
     }
 
     /** @return list<string> */
@@ -281,7 +261,7 @@ final class AdminRole
             return in_array($permission, self::legacyPermissions(), true);
         }
 
-        return in_array($permission, self::permissionsFor($user->admin_role), true);
+        return app(AdminPermissionResolver::class)->isGranted($user->admin_role, $permission);
     }
 
     /**

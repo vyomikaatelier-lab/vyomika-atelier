@@ -90,6 +90,25 @@ Add keys later when your Razorpay account is ready. Leave `RAZORPAY_KEY` and `RA
 
 **Change admin credentials after deploy:** update `ADMIN_PASSWORD` in `.env` and run `php artisan db:seed --force`, or use `php artisan tinker` to change email/password on the admin user directly. See [HOSTINGER.md](HOSTINGER.md) for full steps.
 
+## Staff invitation uniqueness and role-permission overrides
+
+Nullable `pending_email` is **not** a mixed-deploy safety net. Previous application
+code leaves that column NULL, and MySQL/MariaDB allow multiple NULLs in a unique
+column. Invitation writes during a schema/code split can still create duplicate
+live invitations.
+
+Exact rule for this schema plus application release:
+
+1. Put the application into maintenance mode.
+2. Back up the database.
+3. Run schema migrations.
+4. Deploy the new application code.
+5. Leave maintenance mode only after the new code is live.
+
+Do not permit invitation writes during the schema/code transition. Set
+`MAIL_SMTP_TIMEOUT=8` in production (seconds, below PHP `max_execution_time`).
+Do not store mail credentials in this document.
+
 ## Troubleshooting
 
 | Issue | Fix |

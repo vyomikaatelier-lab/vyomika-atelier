@@ -13,7 +13,7 @@
         var text = input.value;
 
         function copied() {
-            status.textContent = 'Invitation link copied.';
+            status.textContent = 'Link copied.';
         }
 
         function fallback() {

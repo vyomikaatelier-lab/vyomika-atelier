@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\StaffInvitation;
 use App\Models\User;
+use App\Services\AdminRolePermissionService;
 use App\Services\StaffManagementService;
 use App\Support\AdminRole;
+use Closure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -19,13 +21,7 @@ class StaffAdminController extends Controller
 
     public function index(): View
     {
-        return view('admin.staff.index', [
-            'staff' => User::query()->where('is_admin', true)->orderBy('name')->get(),
-            'invitations' => StaffInvitation::query()->latest()->limit(50)->get(),
-            'roles' => AdminRole::labels(),
-            'roleMatrix' => AdminRole::permissionMatrix(),
-            'permissionLabels' => AdminRole::permissionLabels(),
-        ]);
+        return view('admin.staff.index', $this->staffPageData());
     }
 
     public function invite(Request $request): Response|RedirectResponse
@@ -43,14 +39,26 @@ class StaffAdminController extends Controller
             $validated['admin_role'],
         );
 
-        return $this->invitationRevealResponse($result['invitation'], $result['accept_url']);
+        if ($result['email_sent']) {
+            return redirect()
+                ->route('admin.staff.index')
+                ->with('success', 'Invitation sent');
+        }
+
+        return $this->invitationFallbackResponse($result['invitation'], $result['accept_url']);
     }
 
     public function resend(Request $request, StaffInvitation $invitation): Response|RedirectResponse
     {
         $result = $this->staff->regenerateLink($request->user(), $invitation);
 
-        return $this->invitationRevealResponse($result['invitation'], $result['accept_url'], regenerated: true);
+        if ($result['email_sent']) {
+            return redirect()
+                ->route('admin.staff.index')
+                ->with('success', 'Invitation sent');
+        }
+
+        return $this->invitationFallbackResponse($result['invitation'], $result['accept_url'], regenerated: true);
     }
 
     public function revokeInvitation(Request $request, StaffInvitation $invitation): RedirectResponse
@@ -79,6 +87,51 @@ class StaffAdminController extends Controller
         return back()->with('success', 'Staff access updated. Existing sessions were revoked when access changed.');
     }
 
+    public function updateRolePermissions(Request $request, AdminRolePermissionService $permissions): RedirectResponse
+    {
+        abort_unless($request->user()?->isOwner(), 403);
+
+        $request->validate([
+            'permissions' => [
+                'required',
+                'array',
+                function (string $attribute, mixed $value, Closure $fail): void {
+                    if (! is_array($value)) {
+                        return;
+                    }
+
+                    foreach ($value as $roleValues) {
+                        if (! is_array($roleValues)) {
+                            $fail('Each permission switch must be 0 or 1.');
+
+                            return;
+                        }
+
+                        foreach ($roleValues as $enabled) {
+                            if (! in_array($enabled, AdminRolePermissionService::ACCEPTED_ENABLED, true)) {
+                                $fail('Each permission switch must be 0 or 1.');
+
+                                return;
+                            }
+                        }
+                    }
+                },
+            ],
+            'permissions.*' => ['array'],
+        ]);
+
+        $applied = $permissions->update(
+            $request->user(),
+            is_array($request->input('permissions')) ? $request->input('permissions') : [],
+        );
+
+        if ($applied === 0) {
+            return back()->with('success', 'No permission changes were needed.');
+        }
+
+        return back()->with('success', 'Role permissions updated. Existing sessions for affected roles were revoked.');
+    }
+
     public function revokeSessions(Request $request, User $staff): RedirectResponse
     {
         abort_unless($staff->isAdmin(), 404);
@@ -87,18 +140,26 @@ class StaffAdminController extends Controller
         return back()->with('success', 'All existing admin sessions for this staff member are now invalid.');
     }
 
-    private function invitationRevealResponse(
+    /**
+     * First-party Staff & Roles result used when email cannot be delivered.
+     *
+     * The normal admin layout loads third-party Tailwind CDN JavaScript, so the
+     * one-time invitation URL is never rendered inside that layout. This POST
+     * response is a first-party-only representation of Staff & Roles with the
+     * fallback panel at the top-right. The plain URL exists only in this
+     * response body.
+     */
+    private function invitationFallbackResponse(
         StaffInvitation $invitation,
         string $acceptUrl,
         bool $regenerated = false,
     ): Response {
         return response()
-            ->view('admin.staff.invitation-created', [
+            ->view('admin.staff.invitation-created', array_merge($this->staffPageData(), [
                 'invitation' => $invitation,
                 'acceptUrl' => $acceptUrl,
-                'roles' => AdminRole::labels(),
                 'regenerated' => $regenerated,
-            ])
+            ]))
             ->header('Cache-Control', 'private, no-store, no-cache, max-age=0, must-revalidate')
             ->header('Pragma', 'no-cache')
             ->header('Referrer-Policy', 'no-referrer')
@@ -106,7 +167,20 @@ class StaffAdminController extends Controller
             ->header('X-Content-Type-Options', 'nosniff')
             ->header(
                 'Content-Security-Policy',
-                "default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; script-src 'self'; style-src 'self'; img-src 'none'; font-src 'none'; connect-src 'none'; object-src 'none'; media-src 'none'; worker-src 'none'; manifest-src 'none'"
+                "default-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; script-src 'self'; style-src 'self'; img-src 'none'; font-src 'none'; connect-src 'none'; object-src 'none'; media-src 'none'; worker-src 'none'; manifest-src 'none'"
             );
+    }
+
+    /** @return array<string, mixed> */
+    private function staffPageData(): array
+    {
+        return [
+            'staff' => User::query()->where('is_admin', true)->orderBy('name')->get(),
+            'invitations' => StaffInvitation::query()->latest()->limit(50)->get(),
+            'roles' => AdminRole::labels(),
+            'roleMatrix' => AdminRole::permissionMatrix(),
+            'permissionLabels' => AdminRole::permissionLabels(),
+            'canEditRolePermissions' => (bool) auth()->user()?->isOwner(),
+        ];
     }
 }

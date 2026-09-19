@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Mail\StaffInvitationMail;
 use App\Models\StaffInvitation;
 use App\Models\User;
+use App\Services\StaffInvitationMailer;
 use App\Support\AdminAccess;
 use App\Support\AdminRole;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -12,13 +13,15 @@ use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
+use RuntimeException;
+use Symfony\Component\Mailer\Exception\TransportException;
 use Tests\TestCase;
 
 class AdminStaffManagementTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_owner_can_generate_a_one_time_invitation_link_without_sending_mail(): void
+    public function test_successful_invitation_email_sends_once_and_does_not_reveal_the_link(): void
     {
         Mail::fake();
         $logs = [];
@@ -34,45 +37,93 @@ class AdminStaffManagementTest extends TestCase
             'admin_role' => AdminRole::CATALOG_MANAGER,
         ]);
 
-        $response->assertOk()
-            ->assertSee('Invitation link ready', false)
-            ->assertSee('Catalog Staff', false)
-            ->assertSee('catalog@example.com', false)
-            ->assertSee('Catalog Manager', false)
-            ->assertSee('This link is shown only once. Share it only with the intended staff member.', false)
-            ->assertSee('Copy invitation link', false);
+        $response->assertRedirect(route('admin.staff.index'))
+            ->assertSessionHas('success', 'Invitation sent');
 
-        $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
+        Mail::assertSent(StaffInvitationMail::class, 1);
 
-        Mail::assertNothingSent();
-        Mail::assertNotSent(StaffInvitationMail::class);
-
-        [$invitation, $token, $acceptUrl] = $this->extractInvitationReveal($response, 'catalog@example.com');
-
+        $invitation = StaffInvitation::query()->where('email', 'catalog@example.com')->firstOrFail();
         $this->assertTrue($invitation->isPending());
-        $this->assertSame(AdminRole::CATALOG_MANAGER, $invitation->admin_role);
+        $this->assertSame('catalog@example.com', $invitation->pending_email);
+        $this->assertSame(64, strlen($invitation->token_hash));
         $this->assertDatabaseMissing('users', ['email' => 'catalog@example.com']);
-        $this->assertDatabaseMissing('staff_invitations', ['token_hash' => $token]);
-        $this->assertSame(hash('sha256', $token), $invitation->token_hash);
-        $this->assertStringNotContainsString($token, $invitation->getAttributes()['token_hash']);
-        $this->assertSame(0, StaffInvitation::query()->where('email', 'catalog@example.com')->whereNotNull('accepted_at')->count());
 
-        $encodedLogs = json_encode($logs);
-        $this->assertStringNotContainsString($token, $encodedLogs);
-        $this->assertStringNotContainsString($acceptUrl, $encodedLogs);
-        $this->assertTrue(collect($logs)->contains(fn (MessageLogged $event) => $event->message === 'admin.staff_invited'));
+        $acceptUrl = null;
+        Mail::assertSent(StaffInvitationMail::class, function (StaffInvitationMail $mail) use (&$acceptUrl, $invitation): bool {
+            $acceptUrl = $mail->acceptUrl;
+            $this->assertSame($invitation->email, $mail->invitation->email);
+
+            return true;
+        });
+
+        $this->assertNotNull($acceptUrl);
+        preg_match('/token=([A-Za-z0-9]{64})/', $acceptUrl, $matches);
+        $token = $matches[1] ?? '';
+        $this->assertSame(64, strlen($token));
+        $this->assertSame(hash('sha256', $token), $invitation->token_hash);
+        $this->assertDatabaseMissing('staff_invitations', ['token_hash' => $token]);
+
+        $this->assertSecretAbsentFromTransport($token, $acceptUrl, $logs, $response);
 
         $history = $this->asVerifiedAdmin($owner)->get(route('admin.staff.index'));
         $history->assertOk()
+            ->assertSee('Invitation sent', false)
             ->assertSee('catalog@example.com', false)
             ->assertSee('Pending', false)
             ->assertDontSee($token)
-            ->assertDontSee($acceptUrl, false);
+            ->assertDontSee($acceptUrl, false)
+            ->assertDontSee('id="invitation-url"', false)
+            ->assertDontSee('Manual invitation link', false);
     }
 
-    public function test_invitation_reveal_is_isolated_first_party_and_not_recoverable_later(): void
+    public function test_mail_failure_does_not_return_500_and_shows_one_time_fallback_link(): void
     {
-        Mail::fake();
+        $this->failInvitationMail('SMTP 535 authentication failed for user smtp-secret');
+        $logs = [];
+        Event::listen(MessageLogged::class, function (MessageLogged $event) use (&$logs): void {
+            $logs[] = $event;
+        });
+
+        $owner = $this->owner();
+        $response = $this->asVerifiedAdmin($owner)->post(route('admin.staff.invite'), [
+            'name' => 'Catalog Staff',
+            'email' => 'fallback@example.com',
+            'admin_role' => AdminRole::CATALOG_MANAGER,
+        ]);
+
+        $response->assertOk()
+            ->assertSee('Staff &amp; Roles', false)
+            ->assertSee('Email could not be delivered', false)
+            ->assertSee('Catalog Staff', false)
+            ->assertSee('fallback@example.com', false)
+            ->assertSee('Catalog Manager', false)
+            ->assertSee('Copy Link', false)
+            ->assertSee('Regenerate Link', false)
+            ->assertSee('This link is shown only once. Share it only with the intended staff member.', false)
+            ->assertSee('The invitation email could not be delivered. Send this link to the intended staff member manually.', false)
+            ->assertDontSee('SMTP 535', false)
+            ->assertDontSee('smtp-secret', false)
+            ->assertDontSee('authentication failed', false);
+
+        $this->assertSame(200, $response->status());
+        [$invitation, $token, $acceptUrl] = $this->extractInvitationReveal($response, 'fallback@example.com');
+
+        $this->assertTrue($invitation->isPending());
+        $this->assertSame(hash('sha256', $token), $invitation->token_hash);
+        $this->assertSame('fallback@example.com', $invitation->pending_email);
+        $this->assertDatabaseMissing('staff_invitations', ['token_hash' => $token]);
+        $this->assertSecretAbsentFromTransport($token, $acceptUrl, $logs, $response, allowBody: true);
+
+        $this->post(route('admin.logout'));
+        $this->app['auth']->forgetGuards();
+        $this->flushSession();
+
+        $this->get($this->signedUrl($invitation, $token))->assertOk()->assertSee('Set up your account');
+    }
+
+    public function test_invitation_fallback_is_isolated_first_party_and_not_recoverable_later(): void
+    {
+        $this->failInvitationMail();
         $owner = $this->owner();
 
         $response = $this->asVerifiedAdmin($owner)->post(route('admin.staff.invite'), [
@@ -99,6 +150,7 @@ class AdminStaffManagementTest extends TestCase
         $this->assertStringContainsString("script-src 'self'", $csp);
         $this->assertStringContainsString("style-src 'self'", $csp);
         $this->assertStringContainsString("connect-src 'none'", $csp);
+        $this->assertStringContainsString("form-action 'self'", $csp);
 
         $this->assertStringNotContainsString('cdn.tailwindcss.com', $content);
         $this->assertDoesNotMatchRegularExpression('/<script(?![^>]*\bsrc=)/i', $content);
@@ -106,6 +158,10 @@ class AdminStaffManagementTest extends TestCase
         $this->assertStringContainsString('/css/admin-invitation-reveal.css', $content);
         $this->assertDoesNotMatchRegularExpression(
             '/href=(["\'])[^"\']*'.preg_quote($token, '/').'[^"\']*\1/',
+            $content,
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/data-[a-z-]+=(["\'])[^"\']*'.preg_quote($token, '/').'[^"\']*\1/i',
             $content,
         );
 
@@ -120,7 +176,7 @@ class AdminStaffManagementTest extends TestCase
             ->assertDontSee('id="invitation-url"', false);
     }
 
-    public function test_refreshing_invitation_creation_does_not_duplicate_or_rotate_the_pending_link(): void
+    public function test_refreshing_invitation_creation_does_not_duplicate_rotate_or_reveal(): void
     {
         Mail::fake();
         $owner = $this->owner();
@@ -131,81 +187,130 @@ class AdminStaffManagementTest extends TestCase
         ];
 
         $first = $this->asVerifiedAdmin($owner)->post(route('admin.staff.invite'), $payload);
-        [$invitation, $token] = $this->extractInvitationReveal($first, 'catalog@example.com');
+        $first->assertRedirect(route('admin.staff.index'));
+        $invitation = StaffInvitation::query()->where('email', 'catalog@example.com')->firstOrFail();
         $hash = $invitation->token_hash;
 
-        $this->asVerifiedAdmin($owner)
+        $repeat = $this->asVerifiedAdmin($owner)
             ->from(route('admin.staff.index'))
-            ->post(route('admin.staff.invite'), $payload)
-            ->assertRedirect(route('admin.staff.index'))
-            ->assertSessionHasErrors('email');
+            ->post(route('admin.staff.invite'), $payload);
 
+        $repeat->assertRedirect(route('admin.staff.index'))
+            ->assertSessionHasErrors('email');
+        $this->assertStringNotContainsString('token=', (string) $repeat->getContent());
         $this->assertSame(1, StaffInvitation::query()->where('email', 'catalog@example.com')->count());
         $this->assertSame($hash, $invitation->fresh()->token_hash);
         $this->assertTrue($invitation->fresh()->isPending());
-        $this->assertSame(hash('sha256', $token), $invitation->fresh()->token_hash);
+        Mail::assertSent(StaffInvitationMail::class, 1);
     }
 
-    public function test_regenerating_an_invitation_rotates_the_token_and_invalidates_the_old_link(): void
+    public function test_successful_regeneration_attempts_email_again_and_does_not_reveal_the_link(): void
     {
         Mail::fake();
-        $logs = [];
-        Event::listen(MessageLogged::class, function (MessageLogged $event) use (&$logs): void {
-            $logs[] = $event;
-        });
-
         $owner = $this->owner();
-        $created = $this->asVerifiedAdmin($owner)->post(route('admin.staff.invite'), [
+        $this->asVerifiedAdmin($owner)->post(route('admin.staff.invite'), [
+            'name' => 'Order Staff',
+            'email' => 'orders@example.com',
+            'admin_role' => AdminRole::ORDER_MANAGER,
+        ])->assertRedirect();
+
+        $invitation = StaffInvitation::query()->where('email', 'orders@example.com')->firstOrFail();
+        $oldHash = $invitation->token_hash;
+
+        $regenerated = $this->asVerifiedAdmin($owner)
+            ->post(route('admin.staff-invitations.resend', $invitation));
+
+        $regenerated->assertRedirect(route('admin.staff.index'))
+            ->assertSessionHas('success', 'Invitation sent');
+        $this->assertNotSame($oldHash, $invitation->fresh()->token_hash);
+        Mail::assertSent(StaffInvitationMail::class, 2);
+
+        $follow = $this->asVerifiedAdmin($owner)->get(route('admin.staff.index'));
+        $follow->assertOk()->assertDontSee('id="invitation-url"', false);
+    }
+
+    public function test_failed_regeneration_shows_new_fallback_link_and_invalidates_the_old_token(): void
+    {
+        Mail::fake();
+        $owner = $this->owner();
+        $this->asVerifiedAdmin($owner)->post(route('admin.staff.invite'), [
             'name' => 'Order Staff',
             'email' => 'orders@example.com',
             'admin_role' => AdminRole::ORDER_MANAGER,
         ]);
-        [$invitation, $oldToken] = $this->extractInvitationReveal($created, 'orders@example.com');
+
+        $invitation = StaffInvitation::query()->where('email', 'orders@example.com')->firstOrFail();
+        $oldToken = $this->tokenFromSentMail();
+        $this->failInvitationMail();
 
         $regenerated = $this->asVerifiedAdmin($owner)
             ->post(route('admin.staff-invitations.resend', $invitation));
 
         $regenerated->assertOk()
-            ->assertSee('Replacement invitation link', false)
+            ->assertSee('Replacement link ready', false)
             ->assertSee('This link is shown only once. Share it only with the intended staff member.', false);
 
-        Mail::assertNothingSent();
         [, $newToken, $newUrl] = $this->extractInvitationReveal($regenerated, 'orders@example.com');
-
         $invitation->refresh();
         $this->assertNotSame($oldToken, $newToken);
         $this->assertSame(hash('sha256', $newToken), $invitation->token_hash);
-        $this->assertTrue($invitation->isPending());
-        $this->assertDatabaseMissing('staff_invitations', ['token_hash' => $oldToken]);
-
-        $oldAcceptUrl = $this->signedUrl($invitation, $oldToken);
-        $newAcceptUrl = $this->signedUrl($invitation, $newToken);
 
         $this->post(route('admin.logout'));
         $this->app['auth']->forgetGuards();
         $this->flushSession();
 
-        $this->get($oldAcceptUrl)->assertForbidden();
-        $this->get($newAcceptUrl)->assertOk()->assertSee('Set up your account');
-
-        $encodedLogs = json_encode($logs);
-        $this->assertStringNotContainsString($oldToken, $encodedLogs);
-        $this->assertStringNotContainsString($newToken, $encodedLogs);
-        $this->assertStringNotContainsString($newUrl, $encodedLogs);
-
-        $this->asVerifiedAdmin($owner)->get(route('admin.staff.index'))
-            ->assertOk()
-            ->assertDontSee($newToken)
-            ->assertDontSee($oldToken);
+        $this->get($this->signedUrl($invitation, $oldToken))->assertForbidden();
+        $this->get($this->signedUrl($invitation, $newToken))->assertOk()->assertSee('Set up your account');
+        $this->assertStringNotContainsString($newUrl, json_encode(session()->all() ?? []));
     }
 
-    public function test_non_owner_cannot_invite_or_update_staff(): void
+    public function test_accepted_expired_and_revoked_invitations_cannot_be_regenerated(): void
+    {
+        $owner = $this->owner();
+        $accepted = StaffInvitation::query()->create([
+            'name' => 'Accepted',
+            'email' => 'accepted@example.com',
+            'admin_role' => AdminRole::VIEWER,
+            'token_hash' => hash('sha256', str_repeat('a', 64)),
+            'invited_by' => $owner->getKey(),
+            'expires_at' => now()->addDay(),
+            'accepted_at' => now(),
+        ]);
+        $expired = StaffInvitation::query()->create([
+            'name' => 'Expired',
+            'email' => 'expired@example.com',
+            'admin_role' => AdminRole::VIEWER,
+            'token_hash' => hash('sha256', str_repeat('b', 64)),
+            'invited_by' => $owner->getKey(),
+            'expires_at' => now()->subMinute(),
+        ]);
+        $revoked = StaffInvitation::query()->create([
+            'name' => 'Revoked',
+            'email' => 'revoked@example.com',
+            'admin_role' => AdminRole::VIEWER,
+            'token_hash' => hash('sha256', str_repeat('c', 64)),
+            'invited_by' => $owner->getKey(),
+            'expires_at' => now()->addDay(),
+            'revoked_at' => now(),
+        ]);
+
+        foreach ([$accepted, $expired, $revoked] as $invitation) {
+            $this->asVerifiedAdmin($owner)
+                ->from(route('admin.staff.index'))
+                ->post(route('admin.staff-invitations.resend', $invitation))
+                ->assertRedirect(route('admin.staff.index'))
+                ->assertSessionHasErrors('invitation');
+        }
+    }
+
+    public function test_non_owner_cannot_invite_regenerate_or_revoke(): void
     {
         $administrator = User::factory()->admin()->create(['admin_role' => AdminRole::ADMINISTRATOR]);
         $staff = User::factory()->admin()->create(['admin_role' => AdminRole::VIEWER]);
         $invitation = StaffInvitation::query()->create([
             'name' => 'Pending Staff',
             'email' => 'pending@example.com',
+            'pending_email' => 'pending@example.com',
             'admin_role' => AdminRole::VIEWER,
             'token_hash' => hash('sha256', str_repeat('a', 64)),
             'invited_by' => $staff->getKey(),
@@ -222,6 +327,10 @@ class AdminStaffManagementTest extends TestCase
             ->post(route('admin.staff-invitations.resend', $invitation))
             ->assertForbidden();
 
+        $this->asVerifiedAdmin($administrator)
+            ->delete(route('admin.staff-invitations.revoke', $invitation))
+            ->assertForbidden();
+
         $this->asVerifiedAdmin($administrator)->patch(route('admin.staff.update', $staff), [
             'admin_role' => AdminRole::ORDER_MANAGER,
             'is_active' => '1',
@@ -229,6 +338,7 @@ class AdminStaffManagementTest extends TestCase
 
         $this->assertDatabaseMissing('staff_invitations', ['email' => 'blocked@example.com']);
         $this->assertSame(hash('sha256', str_repeat('a', 64)), $invitation->fresh()->token_hash);
+        $this->assertNull($invitation->fresh()->revoked_at);
     }
 
     public function test_owner_role_cannot_be_assigned_directly_by_invitation(): void
@@ -244,6 +354,23 @@ class AdminStaffManagementTest extends TestCase
 
         Mail::assertNothingSent();
         $this->assertDatabaseMissing('staff_invitations', ['email' => 'second-owner@example.com']);
+    }
+
+    public function test_existing_customer_is_not_promoted_through_invitation(): void
+    {
+        Mail::fake();
+        $owner = $this->owner();
+        User::factory()->create(['email' => 'customer@example.com']);
+
+        $this->asVerifiedAdmin($owner)->from(route('admin.staff.index'))->post(route('admin.staff.invite'), [
+            'name' => 'Customer',
+            'email' => 'customer@example.com',
+            'admin_role' => AdminRole::VIEWER,
+        ])->assertRedirect(route('admin.staff.index'))->assertSessionHasErrors('email');
+
+        Mail::assertNothingSent();
+        $this->assertDatabaseMissing('staff_invitations', ['email' => 'customer@example.com']);
+        $this->assertFalse((bool) User::query()->where('email', 'customer@example.com')->value('is_admin'));
     }
 
     public function test_last_active_owner_cannot_be_demoted_or_disabled(): void
@@ -296,7 +423,7 @@ class AdminStaffManagementTest extends TestCase
         $response = $this->asVerifiedAdmin($owner)->get(route('admin.staff.index'));
         $response->assertOk()
             ->assertSee('Roles and permissions')
-            ->assertSee('Generate invitation link');
+            ->assertSee('Send invitation');
 
         foreach ($matrix as $definition) {
             $response->assertSee($definition['label']);
@@ -318,6 +445,112 @@ class AdminStaffManagementTest extends TestCase
         $this->assertFalse($matrix[AdminRole::CATALOG_MANAGER]['permissions'][AdminRole::STAFF_MANAGE]);
     }
 
+    public function test_smtp_timeout_exceptions_show_the_secure_fallback_instead_of_a_public_500(): void
+    {
+        $this->mock(StaffInvitationMailer::class, function ($mock): void {
+            $mock->shouldReceive('send')->andThrow(new TransportException(
+                'Connection to smtp.example.com timed out after 8 seconds for user smtp-secret'
+            ));
+        });
+        $logs = [];
+        Event::listen(MessageLogged::class, function (MessageLogged $event) use (&$logs): void {
+            $logs[] = $event;
+        });
+
+        $owner = $this->owner();
+        $response = $this->asVerifiedAdmin($owner)->post(route('admin.staff.invite'), [
+            'name' => 'Catalog Staff',
+            'email' => 'timeout@example.com',
+            'admin_role' => AdminRole::CATALOG_MANAGER,
+        ]);
+
+        $response->assertOk()
+            ->assertSee('Email could not be delivered', false)
+            ->assertDontSee('smtp.example.com', false)
+            ->assertDontSee('smtp-secret', false)
+            ->assertDontSee('timed out after 8 seconds', false);
+        $this->assertSame(200, $response->status());
+        [$invitation, $token, $acceptUrl] = $this->extractInvitationReveal($response, 'timeout@example.com');
+        $this->assertSecretAbsentFromTransport($token, $acceptUrl, $logs, $response, allowBody: true);
+        $this->assertTrue($invitation->isPending());
+    }
+
+    public function test_repeat_invitation_after_mail_failure_does_not_rotate_or_reveal_the_token(): void
+    {
+        $this->failInvitationMail();
+        $owner = $this->owner();
+        $payload = [
+            'name' => 'Catalog Staff',
+            'email' => 'fallback-repeat@example.com',
+            'admin_role' => AdminRole::CATALOG_MANAGER,
+        ];
+
+        $first = $this->asVerifiedAdmin($owner)->post(route('admin.staff.invite'), $payload);
+        $first->assertOk();
+        [$invitation, $token, $acceptUrl] = $this->extractInvitationReveal($first, 'fallback-repeat@example.com');
+        $hash = $invitation->token_hash;
+
+        $repeat = $this->asVerifiedAdmin($owner)
+            ->from(route('admin.staff.index'))
+            ->post(route('admin.staff.invite'), $payload);
+
+        $repeat->assertRedirect(route('admin.staff.index'))
+            ->assertSessionHasErrors('email');
+        $this->assertStringNotContainsString($token, (string) $repeat->getContent());
+        $this->assertStringNotContainsString($acceptUrl, (string) $repeat->getContent());
+        $this->assertSame(1, StaffInvitation::query()->where('email', 'fallback-repeat@example.com')->count());
+        $this->assertSame($hash, $invitation->fresh()->token_hash);
+        $this->assertTrue($invitation->fresh()->isPending());
+    }
+
+    public function test_expired_invitation_releases_pending_email_and_permits_a_replacement(): void
+    {
+        Mail::fake();
+        $owner = $this->owner();
+        $expiredToken = str_repeat('e', 64);
+        $expired = StaffInvitation::query()->create([
+            'name' => 'Expired Staff',
+            'email' => 'replace@example.com',
+            'pending_email' => 'replace@example.com',
+            'admin_role' => AdminRole::VIEWER,
+            'token_hash' => hash('sha256', $expiredToken),
+            'invited_by' => $owner->getKey(),
+            'expires_at' => now()->subMinute(),
+        ]);
+
+        $this->asVerifiedAdmin($owner)->post(route('admin.staff.invite'), [
+            'name' => 'Replacement Staff',
+            'email' => 'Replace@Example.com',
+            'admin_role' => AdminRole::VIEWER,
+        ])->assertRedirect(route('admin.staff.index'))->assertSessionHas('success', 'Invitation sent');
+
+        $expired->refresh();
+        $this->assertNull($expired->pending_email);
+        $this->assertNull($expired->revoked_at);
+        $this->assertNull($expired->accepted_at);
+
+        $replacement = StaffInvitation::query()
+            ->where('email', 'replace@example.com')
+            ->whereNull('accepted_at')
+            ->whereNull('revoked_at')
+            ->where('expires_at', '>', now())
+            ->firstOrFail();
+
+        $this->assertSame('replace@example.com', $replacement->pending_email);
+        $this->assertNotSame($expired->getKey(), $replacement->getKey());
+
+        $this->post(route('admin.logout'));
+        $this->app['auth']->forgetGuards();
+        $this->flushSession();
+
+        $expiredAcceptUrl = URL::temporarySignedRoute(
+            'admin.staff-invitations.accept',
+            now()->addHour(),
+            ['invitation' => $expired, 'token' => $expiredToken],
+        );
+        $this->get($expiredAcceptUrl)->assertGone();
+    }
+
     public function test_administrator_can_view_staff_but_navigation_is_hidden_from_operational_roles(): void
     {
         $owner = $this->owner();
@@ -333,7 +566,7 @@ class AdminStaffManagementTest extends TestCase
             ->assertSee('Staff & Roles', false)
             ->assertSee('Roles and permissions', false)
             ->assertSee('View only')
-            ->assertDontSee('Generate invitation link');
+            ->assertDontSee('Send invitation');
 
         $this->asVerifiedAdmin($administrator)->get(route('admin.dashboard'))
             ->assertOk()
@@ -390,6 +623,60 @@ class AdminStaffManagementTest extends TestCase
             AdminAccess::SESSION_VERSION_KEY => (int) $admin->admin_session_version,
             AdminAccess::SESSION_USER_KEY => $admin->getKey(),
         ]);
+    }
+
+    private function failInvitationMail(string $message = 'SMTP delivery failed'): void
+    {
+        $this->mock(StaffInvitationMailer::class, function ($mock) use ($message): void {
+            $mock->shouldReceive('send')->andThrow(new RuntimeException($message));
+        });
+    }
+
+    private function tokenFromSentMail(): string
+    {
+        $token = '';
+        Mail::assertSent(StaffInvitationMail::class, function (StaffInvitationMail $mail) use (&$token): bool {
+            preg_match('/token=([A-Za-z0-9]{64})/', $mail->acceptUrl, $matches);
+            $token = $matches[1] ?? '';
+
+            return true;
+        });
+
+        $this->assertSame(64, strlen($token));
+
+        return $token;
+    }
+
+    /**
+     * @param  list<MessageLogged>  $logs
+     */
+    private function assertSecretAbsentFromTransport(
+        string $token,
+        string $acceptUrl,
+        array $logs,
+        $response,
+        bool $allowBody = false,
+    ): void {
+        $encodedLogs = json_encode($logs);
+        $this->assertStringNotContainsString($token, $encodedLogs);
+        $this->assertStringNotContainsString($acceptUrl, $encodedLogs);
+
+        $session = json_encode(session()->all());
+        $this->assertStringNotContainsString($token, $session);
+        $this->assertStringNotContainsString($acceptUrl, $session);
+
+        foreach ($response->headers->getCookies() as $cookie) {
+            $this->assertStringNotContainsString($token, (string) $cookie->getValue());
+            $this->assertStringNotContainsString($acceptUrl, (string) $cookie->getValue());
+        }
+
+        if (! $allowBody) {
+            $this->assertStringNotContainsString($token, (string) $response->getContent());
+            $this->assertStringNotContainsString($acceptUrl, (string) $response->getContent());
+        }
+
+        $this->assertDatabaseMissing('staff_invitations', ['token_hash' => $token]);
+        $this->assertDatabaseMissing('staff_invitations', ['email' => $acceptUrl]);
     }
 
     private function assertNoThirdPartyAssetReferences(string $html): void
