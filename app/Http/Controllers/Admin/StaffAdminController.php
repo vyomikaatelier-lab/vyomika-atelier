@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\StaffInvitation;
 use App\Models\User;
+use App\Services\AdminRolePermissionService;
 use App\Services\StaffManagementService;
 use App\Support\AdminRole;
 use Illuminate\Http\RedirectResponse;
@@ -85,6 +86,26 @@ class StaffAdminController extends Controller
         return back()->with('success', 'Staff access updated. Existing sessions were revoked when access changed.');
     }
 
+    public function updateRolePermissions(Request $request, AdminRolePermissionService $permissions): RedirectResponse
+    {
+        abort_unless($request->user()?->isOwner(), 403);
+
+        $request->validate([
+            'permissions' => ['required', 'array'],
+        ]);
+
+        $applied = $permissions->update(
+            $request->user(),
+            is_array($request->input('permissions')) ? $request->input('permissions') : [],
+        );
+
+        if ($applied === 0) {
+            return back()->with('success', 'No permission changes were needed.');
+        }
+
+        return back()->with('success', 'Role permissions updated. Existing sessions for affected roles were revoked.');
+    }
+
     public function revokeSessions(Request $request, User $staff): RedirectResponse
     {
         abort_unless($staff->isAdmin(), 404);
@@ -133,6 +154,7 @@ class StaffAdminController extends Controller
             'roles' => AdminRole::labels(),
             'roleMatrix' => AdminRole::permissionMatrix(),
             'permissionLabels' => AdminRole::permissionLabels(),
+            'canEditRolePermissions' => (bool) auth()->user()?->isOwner(),
         ];
     }
 }

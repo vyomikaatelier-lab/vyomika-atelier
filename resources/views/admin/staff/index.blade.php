@@ -42,7 +42,10 @@
     <section class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden" aria-labelledby="role-matrix-heading">
         <div class="p-6 border-b space-y-2">
             <h2 id="role-matrix-heading" class="text-xl font-semibold">Roles and permissions</h2>
-            <p class="text-sm text-gray-600">Fixed roles and their effective capabilities. Permissions come from the central role map and cannot be customised per person.</p>
+            <p class="text-sm text-gray-600">Fixed roles with on/off permissions. Switches show the effective authorization used by navigation and middleware. Owner-only and Owner-essential permissions stay locked.</p>
+            @if($canEditRolePermissions)
+                <p class="text-sm text-gray-600">Saving a change immediately updates access and signs out other active staff in that role.</p>
+            @endif
         </div>
         <div class="p-6 grid gap-4 md:grid-cols-2">
             @foreach($roleMatrix as $role => $definition)
@@ -64,6 +67,11 @@
         </div>
         <div class="overflow-x-auto border-t" role="region" aria-labelledby="role-matrix-table-heading" tabindex="0">
             <h3 id="role-matrix-table-heading" class="sr-only">Role permission comparison table</h3>
+            @if($canEditRolePermissions)
+            <form method="POST" action="{{ route('admin.staff.role-permissions.update') }}">
+                @csrf
+                @method('PUT')
+            @endif
             <table class="w-full text-xs min-w-[960px]">
                 <caption class="sr-only">Which fixed admin roles have each permission</caption>
                 <thead class="bg-gray-50">
@@ -78,12 +86,41 @@
                     @foreach($permissionLabels as $permission => $label)
                         <tr>
                             <th scope="row" class="p-3 text-left font-medium sticky left-0 bg-white">{{ $label }}</th>
-                            @foreach($roleMatrix as $definition)
+                            @foreach($roleMatrix as $role => $definition)
+                                @php
+                                    $granted = $definition['permissions'][$permission] ?? false;
+                                    $lockReason = $definition['locks'][$permission] ?? null;
+                                    $editable = $canEditRolePermissions && $lockReason === null;
+                                @endphp
                                 <td class="p-3">
-                                    @if($definition['permissions'][$permission] ?? false)
-                                        Yes
-                                    @else
-                                        <span class="text-gray-400">No</span>
+                                    <label class="inline-flex items-center gap-2 min-h-[44px]">
+                                        @if($editable)
+                                            <input type="hidden" name="permissions[{{ $role }}][{{ $permission }}]" value="0">
+                                            <input
+                                                type="checkbox"
+                                                role="switch"
+                                                class="w-10 h-5 rounded-full"
+                                                name="permissions[{{ $role }}][{{ $permission }}]"
+                                                value="1"
+                                                @checked($granted)
+                                                aria-label="{{ $label }} for {{ $definition['label'] }}"
+                                            >
+                                        @else
+                                            <input
+                                                type="checkbox"
+                                                role="switch"
+                                                class="w-10 h-5 rounded-full"
+                                                @checked($granted)
+                                                disabled
+                                                aria-disabled="true"
+                                                aria-label="{{ $label }} for {{ $definition['label'] }}"
+                                                @if($lockReason) title="{{ $lockReason }}" @endif
+                                            >
+                                        @endif
+                                        <span class="{{ $granted ? 'text-gray-900' : 'text-gray-400' }}">{{ $granted ? 'On' : 'Off' }}</span>
+                                    </label>
+                                    @if($lockReason)
+                                        <p class="text-[11px] text-gray-500 mt-1 max-w-[12rem]">{{ $lockReason }}</p>
                                     @endif
                                 </td>
                             @endforeach
@@ -91,6 +128,12 @@
                     @endforeach
                 </tbody>
             </table>
+            @if($canEditRolePermissions)
+                <div class="p-4 border-t bg-gray-50">
+                    <button class="bg-gray-900 text-white rounded-lg px-4 py-3 font-medium min-h-[44px]">Save permission changes</button>
+                </div>
+            </form>
+            @endif
         </div>
     </section>
 

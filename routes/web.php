@@ -284,6 +284,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/staff/invitations/{invitation}', [StaffAdminController::class, 'revokeInvitation'])
             ->middleware('admin.permission:staff.manage')
             ->name('staff-invitations.revoke');
+        Route::put('/staff/role-permissions', [StaffAdminController::class, 'updateRolePermissions'])
+            ->middleware('admin.permission:staff.manage')
+            ->name('staff.role-permissions.update');
         Route::patch('/staff/{staff}', [StaffAdminController::class, 'update'])
             ->middleware('admin.permission:staff.manage')
             ->name('staff.update');
