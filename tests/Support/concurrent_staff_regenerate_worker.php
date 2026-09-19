@@ -3,15 +3,15 @@
 declare(strict_types=1);
 
 /**
- * CLI worker for concurrent staff invitation uniqueness tests.
+ * CLI worker for concurrent invitation regeneration.
  *
  * Usage:
- *   php tests/Support/concurrent_staff_invite_worker.php <dbPath> <actorId> <email>
+ *   php tests/Support/concurrent_staff_regenerate_worker.php <dbPath> <actorId> <invitationId>
  */
 
+use App\Models\StaffInvitation;
 use App\Models\User;
 use App\Services\StaffManagementService;
-use App\Support\AdminRole;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -19,9 +19,9 @@ use Illuminate\Validation\ValidationException;
 
 $dbPath = $argv[1] ?? '';
 $actorId = (int) ($argv[2] ?? 0);
-$email = (string) ($argv[3] ?? '');
+$invitationId = (int) ($argv[3] ?? 0);
 
-if ($dbPath === '' || $actorId < 1 || $email === '') {
+if ($dbPath === '' || $actorId < 1 || $invitationId < 1) {
     fwrite(STDERR, "Missing worker arguments.\n");
     exit(2);
 }
@@ -60,22 +60,18 @@ Mail::fake();
 
 try {
     $actor = User::query()->findOrFail($actorId);
-    $result = app(StaffManagementService::class)->invite(
-        $actor,
-        'Concurrent Staff',
-        $email,
-        AdminRole::VIEWER,
-    );
+    $invitation = StaffInvitation::query()->findOrFail($invitationId);
+    $result = app(StaffManagementService::class)->regenerateLink($actor, $invitation);
 
     fwrite(STDOUT, json_encode([
         'ok' => true,
-        'created' => true,
-        'invitation_id' => $result['invitation']->getKey(),
+        'regenerated' => true,
+        'hash' => $result['invitation']->token_hash,
     ], JSON_THROW_ON_ERROR));
 } catch (ValidationException $exception) {
     fwrite(STDOUT, json_encode([
         'ok' => true,
-        'created' => false,
+        'regenerated' => false,
         'errors' => $exception->errors(),
     ], JSON_THROW_ON_ERROR));
 } catch (Throwable $throwable) {

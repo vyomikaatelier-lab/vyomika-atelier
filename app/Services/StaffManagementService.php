@@ -5,9 +5,10 @@ namespace App\Services;
 use App\Models\StaffInvitation;
 use App\Models\User;
 use App\Support\AdminRole;
+use App\Support\SqliteBusy;
+use App\Support\UniqueIndex;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\QueryException;
-use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
@@ -42,7 +43,7 @@ class StaffManagementService
         $plainToken = Str::random(64);
 
         try {
-            $invitation = DB::transaction(function () use ($actor, $name, $email, $role, $plainToken): StaffInvitation {
+            $invitation = SqliteBusy::retry(fn () => DB::transaction(function () use ($actor, $name, $email, $role, $plainToken): StaffInvitation {
                 $existingUser = User::query()
                     ->whereRaw('LOWER(email) = ?', [$email])
                     ->lockForUpdate()
@@ -79,13 +80,9 @@ class StaffManagementService
                     'invited_by' => $actor->getKey(),
                     'expires_at' => now()->addHours(48),
                 ]);
-            });
-        } catch (UniqueConstraintViolationException $e) {
-            throw ValidationException::withMessages([
-                'email' => 'A pending invitation already exists for this email. Regenerate that link instead of creating another.',
-            ]);
+            }));
         } catch (QueryException $e) {
-            if ($this->isPendingEmailConflict($e)) {
+            if (UniqueIndex::isDuplicate($e, 'staff_inv_pending_email_uq', 'pending_email')) {
                 throw ValidationException::withMessages([
                     'email' => 'A pending invitation already exists for this email. Regenerate that link instead of creating another.',
                 ]);
@@ -107,7 +104,7 @@ class StaffManagementService
         $this->authorizeOwner($actor);
         $plainToken = Str::random(64);
 
-        $invitation = DB::transaction(function () use ($invitation, $plainToken): StaffInvitation {
+        $invitation = SqliteBusy::retry(fn () => DB::transaction(function () use ($invitation, $plainToken): StaffInvitation {
             /** @var StaffInvitation $locked */
             $locked = StaffInvitation::query()->lockForUpdate()->findOrFail($invitation->getKey());
 
@@ -122,7 +119,7 @@ class StaffManagementService
             ])->save();
 
             return $locked;
-        });
+        }));
 
         return $this->deliverInvitation($actor, $invitation, $plainToken, regenerated: true);
     }
@@ -295,16 +292,6 @@ class StaffManagementService
 
             return false;
         }
-    }
-
-    private function isPendingEmailConflict(QueryException $exception): bool
-    {
-        $sqlState = (string) ($exception->errorInfo[0] ?? '');
-        $message = strtolower($exception->getMessage());
-
-        return $sqlState === '23000'
-            || str_contains($message, 'staff_inv_pending_email_uq')
-            || str_contains($message, 'pending_email');
     }
 
     private function makeAcceptUrl(StaffInvitation $invitation, string $plainToken): string

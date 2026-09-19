@@ -91,6 +91,8 @@
                                     $granted = $definition['permissions'][$permission] ?? false;
                                     $lockReason = $definition['locks'][$permission] ?? null;
                                     $editable = $canEditRolePermissions && $lockReason === null;
+                                    $state = $granted ? 'on' : 'off';
+                                    $accessibleName = $definition['label'].': '.$label.', '.$state.($lockReason ? ', locked. '.$lockReason : '');
                                 @endphp
                                 <td class="p-3">
                                     <label class="inline-flex items-center gap-2 min-h-[44px]">
@@ -103,7 +105,8 @@
                                                 name="permissions[{{ $role }}][{{ $permission }}]"
                                                 value="1"
                                                 @checked($granted)
-                                                aria-label="{{ $label }} for {{ $definition['label'] }}"
+                                                aria-checked="{{ $granted ? 'true' : 'false' }}"
+                                                aria-label="{{ $accessibleName }}"
                                             >
                                         @else
                                             <input
@@ -113,7 +116,8 @@
                                                 @checked($granted)
                                                 disabled
                                                 aria-disabled="true"
-                                                aria-label="{{ $label }} for {{ $definition['label'] }}"
+                                                aria-checked="{{ $granted ? 'true' : 'false' }}"
+                                                aria-label="{{ $accessibleName }}"
                                                 @if($lockReason) title="{{ $lockReason }}" @endif
                                             >
                                         @endif

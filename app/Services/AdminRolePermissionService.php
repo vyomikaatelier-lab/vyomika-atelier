@@ -7,20 +7,30 @@ use App\Models\AdminRolePermissionOverride;
 use App\Models\User;
 use App\Support\AdminPermissionResolver;
 use App\Support\AdminRole;
+use App\Support\SqliteBusy;
+use App\Support\UniqueIndex;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class AdminRolePermissionService
 {
+    public const ACCEPTED_ENABLED = ['0', '1'];
+
     public function __construct(private readonly AdminPermissionResolver $resolver) {}
 
     /**
      * Apply Owner-submitted permission values atomically.
      *
-     * Unknown role/permission keys are ignored after catalog validation.
-     * No-op values do not write audit rows or revoke sessions.
+     * Accepted switch representation is the string (or integer/boolean equivalent)
+     * 0 or 1. Missing keys are ignored and do not disable unsubmitted permissions.
+     * Malformed values fail validation without writes, audits or session revocation.
+     *
+     * Concurrent first-time writes serialize on active Owner rows, which exist
+     * before the sparse override. A unique-index collision retries as an update
+     * of the existing row. The later committed transaction wins.
      *
      * @param  array<string, array<string, mixed>>  $submitted
      */
@@ -34,7 +44,9 @@ class AdminRolePermissionService
             return 0;
         }
 
-        return DB::transaction(function () use ($actor, $changes): int {
+        return SqliteBusy::retry(fn () => DB::transaction(function () use ($actor, $changes): int {
+            $this->lockPermissionWriters();
+
             $applied = 0;
             $affectedRoles = [];
 
@@ -55,7 +67,7 @@ class AdminRolePermissionService
             }
 
             return $applied;
-        }, 3);
+        }, 3));
     }
 
     /**
@@ -101,7 +113,6 @@ class AdminRolePermissionService
             return false;
         }
 
-        $previous = $this->resolver->isGranted($role, $permission);
         $default = in_array($permission, AdminRole::permissionsFor($role), true);
 
         /** @var AdminRolePermissionOverride|null $override */
@@ -111,28 +122,19 @@ class AdminRolePermissionService
             ->lockForUpdate()
             ->first();
 
-        $currentStored = $override !== null ? (bool) $override->enabled : $default;
-        $nextEffective = $enabled;
+        $sync = $this->syncOverrideRow($override, $actor, $role, $permission, $enabled, $default);
 
-        if ($previous === $nextEffective && $currentStored === $nextEffective && (($override === null && $default === $nextEffective) || ($override !== null && (bool) $override->enabled === $nextEffective))) {
+        if (! $sync['changed'] || $sync['previous'] === $enabled) {
             return false;
         }
-
-        if ($previous === $nextEffective) {
-            $this->syncOverrideRow($override, $actor, $role, $permission, $enabled, $default);
-
-            return false;
-        }
-
-        $this->syncOverrideRow($override, $actor, $role, $permission, $enabled, $default);
 
         AdminRolePermissionAudit::query()->create([
             'actor_user_id' => $actor->getKey(),
             'actor_staff_id' => $actor->staff_id,
             'admin_role' => $role,
             'permission' => $permission,
-            'previous_enabled' => $previous,
-            'new_enabled' => $nextEffective,
+            'previous_enabled' => $sync['previous'],
+            'new_enabled' => $enabled,
             'created_at' => now(),
         ]);
 
@@ -140,13 +142,16 @@ class AdminRolePermissionService
             'actor_id' => $actor->getKey(),
             'role' => $role,
             'permission' => $permission,
-            'previous' => $previous,
-            'enabled' => $nextEffective,
+            'previous' => $sync['previous'],
+            'enabled' => $enabled,
         ]);
 
         return true;
     }
 
+    /**
+     * @return array{changed: bool, previous: bool}
+     */
     private function syncOverrideRow(
         ?AdminRolePermissionOverride $override,
         User $actor,
@@ -154,28 +159,66 @@ class AdminRolePermissionService
         string $permission,
         bool $enabled,
         bool $default,
-    ): void {
-        if ($enabled === $default) {
-            $override?->delete();
+    ): array {
+        $previous = $override !== null ? (bool) $override->enabled : $default;
 
-            return;
+        if ($enabled === $default) {
+            if ($override === null) {
+                return ['changed' => false, 'previous' => $previous];
+            }
+
+            $override->delete();
+
+            return ['changed' => true, 'previous' => $previous];
         }
 
         if ($override) {
+            if ((bool) $override->enabled === $enabled) {
+                return ['changed' => false, 'previous' => $previous];
+            }
+
             $override->forceFill([
                 'enabled' => $enabled,
                 'updated_by' => $actor->getKey(),
             ])->save();
 
-            return;
+            return ['changed' => true, 'previous' => $previous];
         }
 
-        AdminRolePermissionOverride::query()->create([
-            'admin_role' => $role,
-            'permission' => $permission,
-            'enabled' => $enabled,
-            'updated_by' => $actor->getKey(),
-        ]);
+        try {
+            AdminRolePermissionOverride::query()->create([
+                'admin_role' => $role,
+                'permission' => $permission,
+                'enabled' => $enabled,
+                'updated_by' => $actor->getKey(),
+            ]);
+
+            return ['changed' => true, 'previous' => $previous];
+        } catch (QueryException $exception) {
+            if (! UniqueIndex::isDuplicate($exception, 'admin_rpo_role_perm_uq', 'permission')) {
+                throw $exception;
+            }
+
+            /** @var AdminRolePermissionOverride $existing */
+            $existing = AdminRolePermissionOverride::query()
+                ->where('admin_role', $role)
+                ->where('permission', $permission)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            return $this->syncOverrideRow($existing, $actor, $role, $permission, $enabled, $default);
+        }
+    }
+
+    private function lockPermissionWriters(): void
+    {
+        User::query()
+            ->where('is_admin', true)
+            ->where('is_active', true)
+            ->where('admin_role', AdminRole::OWNER)
+            ->orderBy('id')
+            ->lockForUpdate()
+            ->get(['id']);
     }
 
     private function revokeAffectedSessions(User $actor, string $role): void
@@ -191,7 +234,17 @@ class AdminRolePermissionService
 
     private function toBoolean(mixed $value): bool
     {
-        return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        if ($value === true || $value === 1 || $value === '1') {
+            return true;
+        }
+
+        if ($value === false || $value === 0 || $value === '0') {
+            return false;
+        }
+
+        throw ValidationException::withMessages([
+            'permissions' => 'Each permission switch must be 0 or 1.',
+        ]);
     }
 
     private function authorizeOwner(User $actor): void

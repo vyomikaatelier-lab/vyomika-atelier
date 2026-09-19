@@ -3,25 +3,25 @@
 declare(strict_types=1);
 
 /**
- * CLI worker for concurrent staff invitation uniqueness tests.
+ * CLI worker for concurrent first-time role-permission writes.
  *
  * Usage:
- *   php tests/Support/concurrent_staff_invite_worker.php <dbPath> <actorId> <email>
+ *   php tests/Support/concurrent_permission_write_worker.php <dbPath> <actorId> <role> <permission> <enabled>
  */
 
 use App\Models\User;
-use App\Services\StaffManagementService;
-use App\Support\AdminRole;
+use App\Services\AdminRolePermissionService;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 
 $dbPath = $argv[1] ?? '';
 $actorId = (int) ($argv[2] ?? 0);
-$email = (string) ($argv[3] ?? '');
+$role = (string) ($argv[3] ?? '');
+$permission = (string) ($argv[4] ?? '');
+$enabled = (string) ($argv[5] ?? '1');
 
-if ($dbPath === '' || $actorId < 1 || $email === '') {
+if ($dbPath === '' || $actorId < 1 || $role === '' || $permission === '') {
     fwrite(STDERR, "Missing worker arguments.\n");
     exit(2);
 }
@@ -48,41 +48,39 @@ config([
     'database.connections.sqlite.database' => $dbPath,
     'database.connections.sqlite.busy_timeout' => 15000,
     'database.connections.sqlite.journal_mode' => 'wal',
-    'mail.default' => 'array',
-    'queue.default' => 'sync',
 ]);
 
 DB::purge('sqlite');
 DB::reconnect('sqlite');
 DB::statement('PRAGMA journal_mode=WAL');
 DB::statement('PRAGMA busy_timeout=15000');
-Mail::fake();
 
 try {
     $actor = User::query()->findOrFail($actorId);
-    $result = app(StaffManagementService::class)->invite(
-        $actor,
-        'Concurrent Staff',
-        $email,
-        AdminRole::VIEWER,
-    );
+    $applied = app(AdminRolePermissionService::class)->update($actor, [
+        $role => [
+            $permission => $enabled,
+        ],
+    ]);
 
     fwrite(STDOUT, json_encode([
         'ok' => true,
-        'created' => true,
-        'invitation_id' => $result['invitation']->getKey(),
+        'applied' => $applied,
+        'status' => 200,
     ], JSON_THROW_ON_ERROR));
 } catch (ValidationException $exception) {
     fwrite(STDOUT, json_encode([
         'ok' => true,
-        'created' => false,
+        'applied' => 0,
+        'status' => 422,
         'errors' => $exception->errors(),
     ], JSON_THROW_ON_ERROR));
 } catch (Throwable $throwable) {
     fwrite(STDOUT, json_encode([
         'ok' => false,
+        'status' => (int) $throwable->getCode(),
+        'class' => $throwable::class,
         'message' => $throwable->getMessage(),
-        'code' => (int) $throwable->getCode(),
     ], JSON_THROW_ON_ERROR));
     exit(1);
 }

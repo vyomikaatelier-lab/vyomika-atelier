@@ -8,10 +8,22 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Database-backed uniqueness for one actionable pending invitation per email.
  *
- * Maintenance: this additive column is ignored by the previous application
- * release. Deploy the schema first, then the new invitation code. Rolling
- * the application back leaves the unique guard in place and does not change
- * stored token hashes, roles, or user access. Down() drops only this column.
+ * Nullable pending_email does NOT protect uniqueness while previous application
+ * code is still live. Old writers leave pending_email NULL, and MySQL/MariaDB
+ * allow multiple NULLs in a unique column. Do not go live across a mixed
+ * schema/code window that still accepts invitation writes.
+ *
+ * Exact deployment rule:
+ * 1. Put the application into maintenance mode.
+ * 2. Back up the database.
+ * 3. Run schema migrations.
+ * 4. Deploy the new application code.
+ * 5. Leave maintenance mode only after the new code is live.
+ *
+ * Do not permit invitation writes during the schema/code transition.
+ * Rolling the application back while this unique column remains is only safe
+ * if invitation writes stay blocked or the new writers stay deployed.
+ * Down() drops only this column and unique index.
  */
 return new class extends Migration
 {
@@ -22,28 +34,43 @@ return new class extends Migration
             $table->unique('pending_email', 'staff_inv_pending_email_uq');
         });
 
-        $pending = DB::table('staff_invitations')
-            ->whereNull('accepted_at')
-            ->whereNull('revoked_at')
-            ->where('expires_at', '>', now())
-            ->orderByDesc('id')
-            ->get(['id', 'email']);
+        DB::transaction(function (): void {
+            $pending = DB::table('staff_invitations')
+                ->whereNull('accepted_at')
+                ->whereNull('revoked_at')
+                ->where('expires_at', '>', now())
+                ->orderByDesc('id')
+                ->lockForUpdate()
+                ->get(['id', 'email']);
 
-        $claimed = [];
+            $claimed = [];
 
-        foreach ($pending as $row) {
-            $email = strtolower((string) $row->email);
+            foreach ($pending as $row) {
+                $email = strtolower(trim((string) $row->email));
 
-            if ($email === '' || isset($claimed[$email])) {
-                continue;
+                if ($email === '') {
+                    continue;
+                }
+
+                if (isset($claimed[$email])) {
+                    DB::table('staff_invitations')
+                        ->where('id', $row->id)
+                        ->update([
+                            'revoked_at' => now(),
+                            'pending_email' => null,
+                            'updated_at' => now(),
+                        ]);
+
+                    continue;
+                }
+
+                $claimed[$email] = true;
+
+                DB::table('staff_invitations')
+                    ->where('id', $row->id)
+                    ->update(['pending_email' => $email]);
             }
-
-            $claimed[$email] = true;
-
-            DB::table('staff_invitations')
-                ->where('id', $row->id)
-                ->update(['pending_email' => $email]);
-        }
+        });
     }
 
     public function down(): void

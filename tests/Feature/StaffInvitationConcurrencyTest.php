@@ -31,12 +31,14 @@ class StaffInvitationConcurrencyTest extends TestCase
         config([
             'database.default' => 'sqlite',
             'database.connections.sqlite.database' => $this->sharedDbPath,
+            'database.connections.sqlite.busy_timeout' => 15000,
+            'database.connections.sqlite.journal_mode' => 'wal',
         ]);
 
         DB::purge('sqlite');
         DB::reconnect('sqlite');
         DB::statement('PRAGMA journal_mode=WAL');
-        DB::statement('PRAGMA busy_timeout=5000');
+        DB::statement('PRAGMA busy_timeout=15000');
 
         Artisan::call('migrate:fresh', ['--force' => true]);
     }
@@ -91,6 +93,49 @@ class StaffInvitationConcurrencyTest extends TestCase
         $this->assertSame(1, StaffInvitation::query()->whereNotNull('pending_email')->where('pending_email', $email)->count());
     }
 
+    public function test_concurrent_regeneration_leaves_only_one_valid_token(): void
+    {
+        $firstOwner = User::factory()->admin()->create(['admin_role' => AdminRole::OWNER]);
+        $secondOwner = User::factory()->admin()->create(['admin_role' => AdminRole::OWNER]);
+        $invitation = StaffInvitation::query()->create([
+            'name' => 'Pending Staff',
+            'email' => 'regen@example.com',
+            'pending_email' => 'regen@example.com',
+            'admin_role' => AdminRole::VIEWER,
+            'token_hash' => hash('sha256', str_repeat('z', 64)),
+            'invited_by' => $firstOwner->getKey(),
+            'expires_at' => now()->addDay(),
+        ]);
+        $originalHash = $invitation->token_hash;
+
+        DB::disconnect('sqlite');
+
+        $first = $this->startRegenerateWorker((string) $firstOwner->id, (string) $invitation->id);
+        $second = $this->startRegenerateWorker((string) $secondOwner->id, (string) $invitation->id);
+
+        $firstResult = $this->decodeWorkerOutput($first->wait());
+        $secondResult = $this->decodeWorkerOutput($second->wait());
+
+        config(['database.connections.sqlite.database' => $this->sharedDbPath]);
+        DB::purge('sqlite');
+        DB::reconnect('sqlite');
+
+        $this->assertTrue($firstResult['ok']);
+        $this->assertTrue($secondResult['ok']);
+        $this->assertTrue(($firstResult['regenerated'] ?? false) || ($secondResult['regenerated'] ?? false));
+
+        $fresh = $invitation->fresh();
+        $this->assertNotSame($originalHash, $fresh->token_hash);
+        $this->assertTrue($fresh->isPending());
+        $hashes = array_values(array_filter([
+            $firstResult['hash'] ?? null,
+            $secondResult['hash'] ?? null,
+        ]));
+        $this->assertContains($fresh->token_hash, $hashes);
+        $this->assertSame(1, StaffInvitation::query()->whereKey($invitation->getKey())->count());
+        $this->assertSame(1, StaffInvitation::query()->where('pending_email', 'regen@example.com')->count());
+    }
+
     private function startWorker(string $actorId, string $email): \Illuminate\Process\InvokedProcess
     {
         return Process::path(base_path())
@@ -103,6 +148,26 @@ class StaffInvitationConcurrencyTest extends TestCase
                 'MAIL_MAILER' => 'array',
             ])
             ->start([PHP_BINARY, 'tests/Support/concurrent_staff_invite_worker.php', $this->sharedDbPath, $actorId, $email]);
+    }
+
+    private function startRegenerateWorker(string $actorId, string $invitationId): \Illuminate\Process\InvokedProcess
+    {
+        return Process::path(base_path())
+            ->timeout(120)
+            ->env([
+                'APP_ENV' => 'testing',
+                'APP_KEY' => (string) config('app.key'),
+                'DB_CONNECTION' => 'sqlite',
+                'DB_DATABASE' => $this->sharedDbPath,
+                'MAIL_MAILER' => 'array',
+            ])
+            ->start([
+                PHP_BINARY,
+                'tests/Support/concurrent_staff_regenerate_worker.php',
+                $this->sharedDbPath,
+                $actorId,
+                $invitationId,
+            ]);
     }
 
     /** @return array<string, mixed> */

@@ -7,10 +7,13 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Sparse role-permission overrides plus an immutable audit log.
  *
- * Maintenance: previous application code ignores these tables and keeps using
- * AdminRole code defaults, so access is not corrupted if the app is rolled
- * back before this schema. Deploy schema first, then the new resolver code.
- * Down() drops only these tables.
+ * Previous application code ignores these tables and keeps using AdminRole
+ * code defaults. That mixed window is only safe while invitation and
+ * permission writes are blocked.
+ *
+ * Exact deployment rule: maintenance mode, database backup, schema
+ * migrations, new application code, then leave maintenance mode. Do not
+ * serve live writes between schema and code. Down() drops only these tables.
  */
 return new class extends Migration
 {

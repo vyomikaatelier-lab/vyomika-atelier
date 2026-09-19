@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use RuntimeException;
+use Symfony\Component\Mailer\Exception\TransportException;
 use Tests\TestCase;
 
 class AdminStaffManagementTest extends TestCase
@@ -442,6 +443,112 @@ class AdminStaffManagementTest extends TestCase
         $this->assertTrue($matrix[AdminRole::ADMINISTRATOR]['permissions'][AdminRole::STAFF_VIEW]);
         $this->assertFalse($matrix[AdminRole::VIEWER]['permissions'][AdminRole::STAFF_VIEW]);
         $this->assertFalse($matrix[AdminRole::CATALOG_MANAGER]['permissions'][AdminRole::STAFF_MANAGE]);
+    }
+
+    public function test_smtp_timeout_exceptions_show_the_secure_fallback_instead_of_a_public_500(): void
+    {
+        $this->mock(StaffInvitationMailer::class, function ($mock): void {
+            $mock->shouldReceive('send')->andThrow(new TransportException(
+                'Connection to smtp.example.com timed out after 8 seconds for user smtp-secret'
+            ));
+        });
+        $logs = [];
+        Event::listen(MessageLogged::class, function (MessageLogged $event) use (&$logs): void {
+            $logs[] = $event;
+        });
+
+        $owner = $this->owner();
+        $response = $this->asVerifiedAdmin($owner)->post(route('admin.staff.invite'), [
+            'name' => 'Catalog Staff',
+            'email' => 'timeout@example.com',
+            'admin_role' => AdminRole::CATALOG_MANAGER,
+        ]);
+
+        $response->assertOk()
+            ->assertSee('Email could not be delivered', false)
+            ->assertDontSee('smtp.example.com', false)
+            ->assertDontSee('smtp-secret', false)
+            ->assertDontSee('timed out after 8 seconds', false);
+        $this->assertSame(200, $response->status());
+        [$invitation, $token, $acceptUrl] = $this->extractInvitationReveal($response, 'timeout@example.com');
+        $this->assertSecretAbsentFromTransport($token, $acceptUrl, $logs, $response, allowBody: true);
+        $this->assertTrue($invitation->isPending());
+    }
+
+    public function test_repeat_invitation_after_mail_failure_does_not_rotate_or_reveal_the_token(): void
+    {
+        $this->failInvitationMail();
+        $owner = $this->owner();
+        $payload = [
+            'name' => 'Catalog Staff',
+            'email' => 'fallback-repeat@example.com',
+            'admin_role' => AdminRole::CATALOG_MANAGER,
+        ];
+
+        $first = $this->asVerifiedAdmin($owner)->post(route('admin.staff.invite'), $payload);
+        $first->assertOk();
+        [$invitation, $token, $acceptUrl] = $this->extractInvitationReveal($first, 'fallback-repeat@example.com');
+        $hash = $invitation->token_hash;
+
+        $repeat = $this->asVerifiedAdmin($owner)
+            ->from(route('admin.staff.index'))
+            ->post(route('admin.staff.invite'), $payload);
+
+        $repeat->assertRedirect(route('admin.staff.index'))
+            ->assertSessionHasErrors('email');
+        $this->assertStringNotContainsString($token, (string) $repeat->getContent());
+        $this->assertStringNotContainsString($acceptUrl, (string) $repeat->getContent());
+        $this->assertSame(1, StaffInvitation::query()->where('email', 'fallback-repeat@example.com')->count());
+        $this->assertSame($hash, $invitation->fresh()->token_hash);
+        $this->assertTrue($invitation->fresh()->isPending());
+    }
+
+    public function test_expired_invitation_releases_pending_email_and_permits_a_replacement(): void
+    {
+        Mail::fake();
+        $owner = $this->owner();
+        $expiredToken = str_repeat('e', 64);
+        $expired = StaffInvitation::query()->create([
+            'name' => 'Expired Staff',
+            'email' => 'replace@example.com',
+            'pending_email' => 'replace@example.com',
+            'admin_role' => AdminRole::VIEWER,
+            'token_hash' => hash('sha256', $expiredToken),
+            'invited_by' => $owner->getKey(),
+            'expires_at' => now()->subMinute(),
+        ]);
+
+        $this->asVerifiedAdmin($owner)->post(route('admin.staff.invite'), [
+            'name' => 'Replacement Staff',
+            'email' => 'Replace@Example.com',
+            'admin_role' => AdminRole::VIEWER,
+        ])->assertRedirect(route('admin.staff.index'))->assertSessionHas('success', 'Invitation sent');
+
+        $expired->refresh();
+        $this->assertNull($expired->pending_email);
+        $this->assertNull($expired->revoked_at);
+        $this->assertNull($expired->accepted_at);
+
+        $replacement = StaffInvitation::query()
+            ->where('email', 'replace@example.com')
+            ->whereNull('accepted_at')
+            ->whereNull('revoked_at')
+            ->where('expires_at', '>', now())
+            ->firstOrFail();
+
+        $this->assertSame('replace@example.com', $replacement->pending_email);
+        $this->assertNotSame($expired->getKey(), $replacement->getKey());
+
+        $this->post(route('admin.logout'));
+        $this->app['auth']->forgetGuards();
+        $this->flushSession();
+
+        $expiredAcceptUrl = URL::temporarySignedRoute(
+            'admin.staff-invitations.accept',
+            now()->addHour(),
+            ['invitation' => $expired, 'token' => $expiredToken],
+        );
+        $this->get($expiredAcceptUrl)->assertGone();
     }
 
     public function test_administrator_can_view_staff_but_navigation_is_hidden_from_operational_roles(): void

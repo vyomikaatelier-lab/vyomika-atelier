@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\AdminRolePermissionService;
 use App\Services\StaffManagementService;
 use App\Support\AdminRole;
+use Closure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -91,7 +92,32 @@ class StaffAdminController extends Controller
         abort_unless($request->user()?->isOwner(), 403);
 
         $request->validate([
-            'permissions' => ['required', 'array'],
+            'permissions' => [
+                'required',
+                'array',
+                function (string $attribute, mixed $value, Closure $fail): void {
+                    if (! is_array($value)) {
+                        return;
+                    }
+
+                    foreach ($value as $roleValues) {
+                        if (! is_array($roleValues)) {
+                            $fail('Each permission switch must be 0 or 1.');
+
+                            return;
+                        }
+
+                        foreach ($roleValues as $enabled) {
+                            if (! in_array($enabled, AdminRolePermissionService::ACCEPTED_ENABLED, true)) {
+                                $fail('Each permission switch must be 0 or 1.');
+
+                                return;
+                            }
+                        }
+                    }
+                },
+            ],
+            'permissions.*' => ['array'],
         ]);
 
         $applied = $permissions->update(

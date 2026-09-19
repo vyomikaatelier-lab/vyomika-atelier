@@ -3,20 +3,24 @@
 namespace App\Support;
 
 use App\Models\AdminRolePermissionOverride;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 
 /**
  * Single source of effective admin permissions.
  *
- * Code defaults in AdminRole::permissionsFor() remain the fallback when no
- * override row exists. Locked security invariants always win over the database.
+ * Code defaults in AdminRole::permissionsFor() remain the fallback when the
+ * overrides table is genuinely absent (controlled mixed-deploy window).
+ * Connection, query and schema-inspection failures propagate so a disabled
+ * permission cannot be restored from defaults.
+ *
+ * No shared cache: revocation is visible on the next request. Per-request
+ * memoization only avoids repeat queries inside one process.
  */
 class AdminPermissionResolver
 {
-    public const CACHE_KEY = 'admin.role_permission_overrides';
-
-    public const CACHE_TTL_SECONDS = 300;
+    /** @var array<string, bool>|null */
+    private ?array $requestOverrides = null;
 
     /**
      * Owner permissions that cannot be turned off.
@@ -162,38 +166,42 @@ class AdminPermissionResolver
 
     public function flush(): void
     {
-        Cache::forget(self::CACHE_KEY);
+        $this->requestOverrides = null;
     }
 
     /** @return array<string, bool> */
     private function overrides(): array
     {
-        if (! $this->overridesTableReady()) {
-            return [];
+        if ($this->requestOverrides !== null) {
+            return $this->requestOverrides;
         }
 
-        return Cache::remember(self::CACHE_KEY, self::CACHE_TTL_SECONDS, function (): array {
-            $map = [];
+        if (! $this->overridesTableExists()) {
+            return $this->requestOverrides = [];
+        }
 
-            foreach (AdminRolePermissionOverride::query()->get() as $override) {
-                if (! AdminRole::isValid($override->admin_role)
-                    || ! in_array($override->permission, AdminRole::permissions(), true)) {
-                    continue;
-                }
+        $map = [];
 
-                $map[$override->admin_role.'.'.$override->permission] = (bool) $override->enabled;
+        foreach ($this->fetchOverrideRows() as $override) {
+            if (! AdminRole::isValid($override->admin_role)
+                || ! in_array($override->permission, AdminRole::permissions(), true)) {
+                continue;
             }
 
-            return $map;
-        });
+            $map[$override->admin_role.'.'.$override->permission] = (bool) $override->enabled;
+        }
+
+        return $this->requestOverrides = $map;
     }
 
-    private function overridesTableReady(): bool
+    protected function overridesTableExists(): bool
     {
-        try {
-            return Schema::hasTable('admin_role_permission_overrides');
-        } catch (\Throwable) {
-            return false;
-        }
+        return Schema::hasTable('admin_role_permission_overrides');
+    }
+
+    /** @return Collection<int, AdminRolePermissionOverride> */
+    protected function fetchOverrideRows(): Collection
+    {
+        return AdminRolePermissionOverride::query()->get();
     }
 }

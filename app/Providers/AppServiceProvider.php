@@ -6,6 +6,7 @@ use App\Contracts\WhatsAppProvider;
 use App\Services\WhatsApp\MetaWhatsAppProvider;
 use App\Services\WhatsApp\Msg91WhatsAppProvider;
 use App\Support\AdminMfa;
+use App\Support\AdminPermissionResolver;
 use App\Support\CmsSettings;
 use App\Support\PackageDiscovery;
 use App\View\Composers\StorefrontSeoComposer;
@@ -33,6 +34,8 @@ class AppServiceProvider extends ServiceProvider
                 default => new MetaWhatsAppProvider,
             };
         });
+
+        $this->app->singleton(AdminPermissionResolver::class);
     }
 
     public function boot(): void
