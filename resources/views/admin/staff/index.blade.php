@@ -13,7 +13,7 @@
     @if(auth()->user()->hasAdminPermission(\App\Support\AdminRole::STAFF_MANAGE))
     <section class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
         <h2 class="text-xl font-semibold mb-2">Invite staff member</h2>
-        <p class="text-sm text-gray-600 mb-4">A secure invitation link is shown once so you can share it through WhatsApp or another trusted channel. Email is not sent automatically.</p>
+        <p class="text-sm text-gray-600 mb-4">Send a secure invitation email. If delivery fails, a one-time link is shown once so you can share it manually.</p>
         <form method="POST" action="{{ route('admin.staff.invite') }}" class="grid md:grid-cols-4 gap-4 items-end">
             @csrf
             <div>
@@ -34,7 +34,7 @@
                     @endforeach
                 </select>
             </div>
-            <button class="bg-gray-900 text-white rounded-lg px-4 py-3 font-medium min-h-[44px]">Generate invitation link</button>
+            <button class="bg-gray-900 text-white rounded-lg px-4 py-3 font-medium min-h-[44px]">Send invitation</button>
         </form>
     </section>
     @endif
@@ -149,7 +149,7 @@
                 </div>
                 @if($invitation->isPending() && auth()->user()->hasAdminPermission(\App\Support\AdminRole::STAFF_MANAGE))
                     <div class="flex gap-3">
-                        <form method="POST" action="{{ route('admin.staff-invitations.resend', $invitation) }}">@csrf<button class="text-sm underline">Regenerate invitation link</button></form>
+                        <form method="POST" action="{{ route('admin.staff-invitations.resend', $invitation) }}">@csrf<button class="text-sm underline">Regenerate Link</button></form>
                         <form method="POST" action="{{ route('admin.staff-invitations.revoke', $invitation) }}">@csrf @method('DELETE')<button class="text-sm text-red-700 underline">Revoke</button></form>
                     </div>
                 @endif

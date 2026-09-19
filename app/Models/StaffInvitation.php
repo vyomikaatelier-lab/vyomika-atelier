@@ -10,6 +10,7 @@ class StaffInvitation extends Model
     protected $fillable = [
         'name',
         'email',
+        'pending_email',
         'admin_role',
         'token_hash',
         'invited_by',

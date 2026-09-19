@@ -6,23 +6,29 @@ use App\Models\StaffInvitation;
 use App\Models\User;
 use App\Support\AdminRole;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\QueryException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class StaffManagementService
 {
-    public function __construct(private readonly StaffIdentityService $identities) {}
+    public function __construct(
+        private readonly StaffIdentityService $identities,
+        private readonly StaffInvitationMailer $mailer,
+    ) {}
 
     /**
-     * Create a pending invitation and return a one-time acceptance URL.
+     * Create a pending invitation, store only a token hash, and attempt email.
      *
-     * The plain token is never persisted. Default delivery is a manual secure
-     * link shown once to the Owner — SMTP is not invoked.
+     * On mail failure the one-time accept URL is returned in memory for this
+     * response only. It is never persisted.
      *
-     * @return array{invitation: StaffInvitation, accept_url: string}
+     * @return array{invitation: StaffInvitation, email_sent: bool, accept_url: ?string}
      */
     public function invite(User $actor, string $name, string $email, string $role): array
     {
@@ -34,60 +40,73 @@ class StaffManagementService
         }
 
         $plainToken = Str::random(64);
-        $invitation = DB::transaction(function () use ($actor, $name, $email, $role, $plainToken): StaffInvitation {
-            User::query()->whereKey($actor->getKey())->lockForUpdate()->firstOrFail();
 
-            if (User::query()->whereRaw('LOWER(email) = ?', [$email])->exists()) {
-                throw ValidationException::withMessages(['email' => 'An account already exists for this email address.']);
-            }
+        try {
+            $invitation = DB::transaction(function () use ($actor, $name, $email, $role, $plainToken): StaffInvitation {
+                $existingUser = User::query()
+                    ->whereRaw('LOWER(email) = ?', [$email])
+                    ->lockForUpdate()
+                    ->first();
 
-            $pendingExists = StaffInvitation::query()
-                ->whereRaw('LOWER(email) = ?', [$email])
-                ->whereNull('accepted_at')
-                ->whereNull('revoked_at')
-                ->where('expires_at', '>', now())
-                ->lockForUpdate()
-                ->exists();
+                if ($existingUser) {
+                    throw ValidationException::withMessages(['email' => 'An account already exists for this email address.']);
+                }
 
-            if ($pendingExists) {
+                $existingInvitations = StaffInvitation::query()
+                    ->whereRaw('LOWER(email) = ?', [$email])
+                    ->orderBy('id')
+                    ->lockForUpdate()
+                    ->get();
+
+                foreach ($existingInvitations as $existing) {
+                    if ($existing->isPending()) {
+                        throw ValidationException::withMessages([
+                            'email' => 'A pending invitation already exists for this email. Regenerate that link instead of creating another.',
+                        ]);
+                    }
+
+                    if ($existing->pending_email !== null) {
+                        $existing->forceFill(['pending_email' => null])->save();
+                    }
+                }
+
+                return StaffInvitation::query()->create([
+                    'name' => trim($name),
+                    'email' => $email,
+                    'pending_email' => $email,
+                    'admin_role' => $role,
+                    'token_hash' => hash('sha256', $plainToken),
+                    'invited_by' => $actor->getKey(),
+                    'expires_at' => now()->addHours(48),
+                ]);
+            });
+        } catch (UniqueConstraintViolationException $e) {
+            throw ValidationException::withMessages([
+                'email' => 'A pending invitation already exists for this email. Regenerate that link instead of creating another.',
+            ]);
+        } catch (QueryException $e) {
+            if ($this->isPendingEmailConflict($e)) {
                 throw ValidationException::withMessages([
                     'email' => 'A pending invitation already exists for this email. Regenerate that link instead of creating another.',
                 ]);
             }
 
-            return StaffInvitation::query()->create([
-                'name' => trim($name),
-                'email' => $email,
-                'admin_role' => $role,
-                'token_hash' => hash('sha256', $plainToken),
-                'invited_by' => $actor->getKey(),
-                'expires_at' => now()->addHours(48),
-            ]);
-        });
+            throw $e;
+        }
 
-        $acceptUrl = $this->makeAcceptUrl($invitation, $plainToken);
-
-        Log::info('admin.staff_invited', [
-            'actor_id' => $actor->getKey(),
-            'invitation_id' => $invitation->getKey(),
-            'role' => $role,
-        ]);
-
-        return [
-            'invitation' => $invitation,
-            'accept_url' => $acceptUrl,
-        ];
+        return $this->deliverInvitation($actor, $invitation, $plainToken, regenerated: false);
     }
 
     /**
      * Rotate the token and expiry, invalidating the previous link immediately.
      *
-     * @return array{invitation: StaffInvitation, accept_url: string}
+     * @return array{invitation: StaffInvitation, email_sent: bool, accept_url: ?string}
      */
     public function regenerateLink(User $actor, StaffInvitation $invitation): array
     {
         $this->authorizeOwner($actor);
         $plainToken = Str::random(64);
+
         $invitation = DB::transaction(function () use ($invitation, $plainToken): StaffInvitation {
             /** @var StaffInvitation $locked */
             $locked = StaffInvitation::query()->lockForUpdate()->findOrFail($invitation->getKey());
@@ -99,31 +118,30 @@ class StaffManagementService
             $locked->forceFill([
                 'token_hash' => hash('sha256', $plainToken),
                 'expires_at' => now()->addHours(48),
+                'pending_email' => strtolower((string) $locked->email),
             ])->save();
 
             return $locked;
         });
 
-        $acceptUrl = $this->makeAcceptUrl($invitation, $plainToken);
-
-        Log::info('admin.staff_invitation_regenerated', [
-            'actor_id' => $actor->getKey(),
-            'invitation_id' => $invitation->getKey(),
-        ]);
-
-        return [
-            'invitation' => $invitation,
-            'accept_url' => $acceptUrl,
-        ];
+        return $this->deliverInvitation($actor, $invitation, $plainToken, regenerated: true);
     }
 
     public function revokeInvitation(User $actor, StaffInvitation $invitation): void
     {
         $this->authorizeOwner($actor);
 
-        if ($invitation->accepted_at === null && $invitation->revoked_at === null) {
-            $invitation->forceFill(['revoked_at' => now()])->save();
-        }
+        DB::transaction(function () use ($invitation): void {
+            /** @var StaffInvitation $locked */
+            $locked = StaffInvitation::query()->lockForUpdate()->findOrFail($invitation->getKey());
+
+            if ($locked->accepted_at === null && $locked->revoked_at === null) {
+                $locked->forceFill([
+                    'revoked_at' => now(),
+                    'pending_email' => null,
+                ])->save();
+            }
+        });
 
         Log::info('admin.staff_invitation_revoked', [
             'actor_id' => $actor->getKey(),
@@ -160,7 +178,10 @@ class StaffManagementService
             ])->save();
 
             $this->identities->ensure($user);
-            $locked->forceFill(['accepted_at' => now()])->save();
+            $locked->forceFill([
+                'accepted_at' => now(),
+                'pending_email' => null,
+            ])->save();
 
             Log::info('admin.staff_invitation_accepted', [
                 'invitation_id' => $locked->getKey(),
@@ -233,6 +254,57 @@ class StaffManagementService
             'actor_id' => $actor->getKey(),
             'staff_user_id' => $staff->getKey(),
         ]);
+    }
+
+    /**
+     * @return array{invitation: StaffInvitation, email_sent: bool, accept_url: ?string}
+     */
+    private function deliverInvitation(
+        User $actor,
+        StaffInvitation $invitation,
+        string $plainToken,
+        bool $regenerated,
+    ): array {
+        $acceptUrl = $this->makeAcceptUrl($invitation, $plainToken);
+        $emailSent = $this->attemptInvitationEmail($invitation, $acceptUrl);
+
+        Log::info($regenerated ? 'admin.staff_invitation_regenerated' : 'admin.staff_invited', [
+            'actor_id' => $actor->getKey(),
+            'invitation_id' => $invitation->getKey(),
+            'email_sent' => $emailSent,
+            'role' => $invitation->admin_role,
+        ]);
+
+        return [
+            'invitation' => $invitation,
+            'email_sent' => $emailSent,
+            'accept_url' => $emailSent ? null : $acceptUrl,
+        ];
+    }
+
+    private function attemptInvitationEmail(StaffInvitation $invitation, string $acceptUrl): bool
+    {
+        try {
+            $this->mailer->send($invitation, $acceptUrl);
+
+            return true;
+        } catch (Throwable) {
+            Log::warning('admin.staff_invitation_mail_failed', [
+                'invitation_id' => $invitation->getKey(),
+            ]);
+
+            return false;
+        }
+    }
+
+    private function isPendingEmailConflict(QueryException $exception): bool
+    {
+        $sqlState = (string) ($exception->errorInfo[0] ?? '');
+        $message = strtolower($exception->getMessage());
+
+        return $sqlState === '23000'
+            || str_contains($message, 'staff_inv_pending_email_uq')
+            || str_contains($message, 'pending_email');
     }
 
     private function makeAcceptUrl(StaffInvitation $invitation, string $plainToken): string

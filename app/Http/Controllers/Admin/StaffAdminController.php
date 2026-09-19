@@ -19,13 +19,7 @@ class StaffAdminController extends Controller
 
     public function index(): View
     {
-        return view('admin.staff.index', [
-            'staff' => User::query()->where('is_admin', true)->orderBy('name')->get(),
-            'invitations' => StaffInvitation::query()->latest()->limit(50)->get(),
-            'roles' => AdminRole::labels(),
-            'roleMatrix' => AdminRole::permissionMatrix(),
-            'permissionLabels' => AdminRole::permissionLabels(),
-        ]);
+        return view('admin.staff.index', $this->staffPageData());
     }
 
     public function invite(Request $request): Response|RedirectResponse
@@ -43,14 +37,26 @@ class StaffAdminController extends Controller
             $validated['admin_role'],
         );
 
-        return $this->invitationRevealResponse($result['invitation'], $result['accept_url']);
+        if ($result['email_sent']) {
+            return redirect()
+                ->route('admin.staff.index')
+                ->with('success', 'Invitation sent');
+        }
+
+        return $this->invitationFallbackResponse($result['invitation'], $result['accept_url']);
     }
 
     public function resend(Request $request, StaffInvitation $invitation): Response|RedirectResponse
     {
         $result = $this->staff->regenerateLink($request->user(), $invitation);
 
-        return $this->invitationRevealResponse($result['invitation'], $result['accept_url'], regenerated: true);
+        if ($result['email_sent']) {
+            return redirect()
+                ->route('admin.staff.index')
+                ->with('success', 'Invitation sent');
+        }
+
+        return $this->invitationFallbackResponse($result['invitation'], $result['accept_url'], regenerated: true);
     }
 
     public function revokeInvitation(Request $request, StaffInvitation $invitation): RedirectResponse
@@ -87,18 +93,26 @@ class StaffAdminController extends Controller
         return back()->with('success', 'All existing admin sessions for this staff member are now invalid.');
     }
 
-    private function invitationRevealResponse(
+    /**
+     * First-party Staff & Roles result used when email cannot be delivered.
+     *
+     * The normal admin layout loads third-party Tailwind CDN JavaScript, so the
+     * one-time invitation URL is never rendered inside that layout. This POST
+     * response is a first-party-only representation of Staff & Roles with the
+     * fallback panel at the top-right. The plain URL exists only in this
+     * response body.
+     */
+    private function invitationFallbackResponse(
         StaffInvitation $invitation,
         string $acceptUrl,
         bool $regenerated = false,
     ): Response {
         return response()
-            ->view('admin.staff.invitation-created', [
+            ->view('admin.staff.invitation-created', array_merge($this->staffPageData(), [
                 'invitation' => $invitation,
                 'acceptUrl' => $acceptUrl,
-                'roles' => AdminRole::labels(),
                 'regenerated' => $regenerated,
-            ])
+            ]))
             ->header('Cache-Control', 'private, no-store, no-cache, max-age=0, must-revalidate')
             ->header('Pragma', 'no-cache')
             ->header('Referrer-Policy', 'no-referrer')
@@ -106,7 +120,19 @@ class StaffAdminController extends Controller
             ->header('X-Content-Type-Options', 'nosniff')
             ->header(
                 'Content-Security-Policy',
-                "default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; script-src 'self'; style-src 'self'; img-src 'none'; font-src 'none'; connect-src 'none'; object-src 'none'; media-src 'none'; worker-src 'none'; manifest-src 'none'"
+                "default-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; script-src 'self'; style-src 'self'; img-src 'none'; font-src 'none'; connect-src 'none'; object-src 'none'; media-src 'none'; worker-src 'none'; manifest-src 'none'"
             );
+    }
+
+    /** @return array<string, mixed> */
+    private function staffPageData(): array
+    {
+        return [
+            'staff' => User::query()->where('is_admin', true)->orderBy('name')->get(),
+            'invitations' => StaffInvitation::query()->latest()->limit(50)->get(),
+            'roles' => AdminRole::labels(),
+            'roleMatrix' => AdminRole::permissionMatrix(),
+            'permissionLabels' => AdminRole::permissionLabels(),
+        ];
     }
 }

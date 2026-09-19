@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow, noarchive">
     <meta name="referrer" content="no-referrer">
-    <title>@yield('title', 'Staff invitation') — VYOMIKA ATELIER</title>
+    <title>@yield('title', 'Staff & Roles') — VYOMIKA ATELIER</title>
     <link rel="stylesheet" href="{{ asset('css/admin-invitation-reveal.css') }}">
 </head>
-<body class="invitation-reveal">
-    <main class="reveal-shell">
+<body class="secure-staff">
+    <div class="secure-shell">
         @yield('content')
-    </main>
+    </div>
     <script src="{{ asset('js/admin-invitation-reveal.js') }}" defer></script>
 </body>
 </html>
