@@ -35,7 +35,10 @@ class AppServiceProvider extends ServiceProvider
             };
         });
 
-        $this->app->singleton(AdminPermissionResolver::class);
+        // Request-scoped: one instance per PHP-FPM request (same as singleton
+        // there). Octane/long-lived workers flush scoped instances between
+        // requests and jobs so stale permission overrides cannot leak.
+        $this->app->scoped(AdminPermissionResolver::class);
     }
 
     public function boot(): void

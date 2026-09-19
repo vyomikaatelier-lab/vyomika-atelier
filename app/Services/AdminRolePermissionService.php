@@ -195,7 +195,7 @@ class AdminRolePermissionService
 
             return ['changed' => true, 'previous' => $previous];
         } catch (QueryException $exception) {
-            if (! UniqueIndex::isDuplicate($exception, 'admin_rpo_role_perm_uq', 'permission')) {
+            if (! UniqueIndex::isDuplicate($exception, 'admin_rpo_role_perm_uq', 'admin_role_permission_overrides', 'permission')) {
                 throw $exception;
             }
 

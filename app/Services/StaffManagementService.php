@@ -82,7 +82,7 @@ class StaffManagementService
                 ]);
             }));
         } catch (QueryException $e) {
-            if (UniqueIndex::isDuplicate($e, 'staff_inv_pending_email_uq', 'pending_email')) {
+            if (UniqueIndex::isDuplicate($e, 'staff_inv_pending_email_uq', 'staff_invitations', 'pending_email')) {
                 throw ValidationException::withMessages([
                     'email' => 'A pending invitation already exists for this email. Regenerate that link instead of creating another.',
                 ]);
