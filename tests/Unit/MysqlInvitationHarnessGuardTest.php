@@ -82,4 +82,19 @@ class MysqlInvitationHarnessGuardTest extends TestCase
         $this->assertNotEmpty($reasons);
         $this->assertTrue(collect($reasons)->contains(fn (string $reason) => str_contains($reason, 'localhost')));
     }
+
+    public function test_opted_in_connection_failure_is_fatal_and_does_not_skip(): void
+    {
+        $this->assertFalse(MysqlInvitationHarnessGuard::shouldFailOnConnectionError(null));
+        $this->assertFalse(MysqlInvitationHarnessGuard::shouldFailOnConnectionError(''));
+        $this->assertFalse(MysqlInvitationHarnessGuard::shouldFailOnConnectionError('true'));
+        $this->assertTrue(MysqlInvitationHarnessGuard::shouldFailOnConnectionError('1'));
+
+        $message = MysqlInvitationHarnessGuard::optedInConnectionFailureMessage();
+        $this->assertStringContainsString('could not connect', $message);
+        $this->assertStringNotContainsString('password', strtolower($message));
+        $this->assertStringNotContainsString('username', strtolower($message));
+        $this->assertStringNotContainsString('root', strtolower($message));
+        $this->assertDoesNotMatchRegularExpression('/skipped/i', $message);
+    }
 }

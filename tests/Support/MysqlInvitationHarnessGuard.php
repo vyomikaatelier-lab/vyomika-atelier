@@ -72,4 +72,14 @@ final class MysqlInvitationHarnessGuard
 
         return (bool) preg_match('/^u\d+_/', $database);
     }
+
+    public static function shouldFailOnConnectionError(mixed $flag): bool
+    {
+        return self::isEnabled($flag);
+    }
+
+    public static function optedInConnectionFailureMessage(): string
+    {
+        return 'Opted-in MySQL invitation uniqueness proof could not connect to the local disposable database.';
+    }
 }
