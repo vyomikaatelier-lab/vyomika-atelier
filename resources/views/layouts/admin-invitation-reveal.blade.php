@@ -8,7 +8,7 @@
     <title>@yield('title', 'Staff & Roles') — VYOMIKA ATELIER</title>
     <link rel="stylesheet" href="{{ asset('css/admin-invitation-reveal.css') }}">
 </head>
-<body class="secure-staff">
+<body class="secure-staff" data-staff-index-url="{{ route('admin.staff.index') }}">
     <div class="secure-shell">
         @yield('content')
     </div>

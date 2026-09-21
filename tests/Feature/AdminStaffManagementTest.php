@@ -165,6 +165,9 @@ class AdminStaffManagementTest extends TestCase
         $this->assertStringContainsString('/js/admin-invitation-reveal.js', $content);
         $this->assertStringContainsString('/css/admin-invitation-reveal.css', $content);
         $this->assertStringContainsString('data-invitation-fallback-panel', $content);
+        $this->assertMatchesRegularExpression('/data-staff-index-url="[^"]*\/admin\/staff"/', $content);
+        $this->assertDoesNotMatchRegularExpression('/data-staff-index-url="[^"]*[?#]/', $content);
+        $this->assertMatchesRegularExpression('/name="staff_invitation_action"[^>]*value="regenerate"|value="regenerate"[^>]*name="staff_invitation_action"/', $content);
         $this->assertMatchesRegularExpression('/class="reveal-close" href="[^"]*\/admin\/staff"/', $content);
         $this->assertDoesNotMatchRegularExpression('/class="reveal-close"[^>]*href="[^"]+\?/', $content);
         $this->assertDoesNotMatchRegularExpression(
@@ -303,6 +306,66 @@ class AdminStaffManagementTest extends TestCase
         $this->assertStringNotContainsString($newUrl, json_encode(session()->all() ?? []));
     }
 
+    public function test_failed_regeneration_stays_on_staff_url_and_refresh_does_not_rotate_again(): void
+    {
+        $owner = $this->owner();
+        $oldToken = str_repeat('b', 64);
+        $invitation = StaffInvitation::query()->create([
+            'name' => 'Order Staff',
+            'email' => 'orders-refresh@example.com',
+            'pending_email' => 'orders-refresh@example.com',
+            'admin_role' => AdminRole::ORDER_MANAGER,
+            'token_hash' => hash('sha256', $oldToken),
+            'invited_by' => $owner->getKey(),
+            'expires_at' => now()->addDay(),
+        ]);
+
+        $this->failInvitationMail();
+        $regenerated = $this->asVerifiedAdmin($owner)->post(route('admin.staff.invite'), [
+            'staff_invitation_action' => 'regenerate',
+            'invitation_id' => $invitation->getKey(),
+        ]);
+
+        $regenerated->assertOk()
+            ->assertSee('Replacement link ready', false)
+            ->assertSee('data-invitation-fallback-panel', false)
+            ->assertSee('name="staff_invitation_action"', false)
+            ->assertSee('value="regenerate"', false);
+        $this->assertSame('/admin/staff', parse_url(route('admin.staff.invite'), PHP_URL_PATH));
+        $this->assertMatchesRegularExpression(
+            '/<form[^>]*action="[^"]*\/admin\/staff"[^>]*>[\s\S]*name="staff_invitation_action"/',
+            $regenerated->getContent(),
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/<form[^>]*action="[^"]*\/admin\/staff\/invitations\/\d+\/resend"/',
+            $regenerated->getContent(),
+        );
+        $this->assertMatchesRegularExpression('/data-staff-index-url="[^"]*\/admin\/staff"/', $regenerated->getContent());
+        $this->assertDoesNotMatchRegularExpression('/data-staff-index-url="[^"]*[?#]/', $regenerated->getContent());
+        $this->assertDoesNotMatchRegularExpression('/history\.replaceState\([^)]*token=/', $regenerated->getContent());
+
+        [, $newToken] = $this->extractInvitationReveal($regenerated, 'orders-refresh@example.com');
+        $hashAfterRegen = $invitation->fresh()->token_hash;
+        $this->assertNotSame($oldToken, $newToken);
+        $this->assertSame(hash('sha256', $newToken), $hashAfterRegen);
+        $this->assertDatabaseMissing('staff_invitations', ['token_hash' => hash('sha256', $oldToken)]);
+
+        $refresh = $this->asVerifiedAdmin($owner)->get(route('admin.staff.index'));
+        $refresh->assertOk()
+            ->assertDontSee('id="invitation-url"', false)
+            ->assertDontSee($newToken)
+            ->assertDontSee('Replacement link ready', false);
+        $this->assertSame($hashAfterRegen, $invitation->fresh()->token_hash);
+
+        $legacy = $this->asVerifiedAdmin($owner)
+            ->post(route('admin.staff-invitations.resend', $invitation));
+        $legacy->assertOk()->assertSee('Replacement link ready', false);
+        [, $legacyToken] = $this->extractInvitationReveal($legacy, 'orders-refresh@example.com');
+        $this->assertNotSame($newToken, $legacyToken);
+        $this->assertSame(hash('sha256', $legacyToken), $invitation->fresh()->token_hash);
+        $this->assertDatabaseMissing('staff_invitations', ['token_hash' => $hashAfterRegen]);
+    }
+
     public function test_accepted_expired_and_revoked_invitations_cannot_be_regenerated(): void
     {
         $owner = $this->owner();
@@ -365,6 +428,11 @@ class AdminStaffManagementTest extends TestCase
         $this->asVerifiedAdmin($administrator)
             ->post(route('admin.staff-invitations.resend', $invitation))
             ->assertForbidden();
+
+        $this->asVerifiedAdmin($administrator)->post(route('admin.staff.invite'), [
+            'staff_invitation_action' => 'regenerate',
+            'invitation_id' => $invitation->getKey(),
+        ])->assertForbidden();
 
         $this->asVerifiedAdmin($administrator)
             ->delete(route('admin.staff-invitations.revoke', $invitation))
@@ -762,6 +830,12 @@ class AdminStaffManagementTest extends TestCase
         $this->assertNotFalse($script);
         $this->assertStringContainsString('copy-invitation-link', $script);
         $this->assertStringContainsString('setSelectionRange', $script);
+        $this->assertStringContainsString('data-staff-index-url', $script);
+        $this->assertStringContainsString('replaceState({}, \'\', staffIndexUrl)', $script);
+        $this->assertStringContainsString('isCleanStaffIndexUrl', $script);
+        $this->assertStringContainsString("indexOf('token=')", $script);
+        $this->assertDoesNotMatchRegularExpression('/replaceState\([^;]*\.value/', $script);
+        $this->assertDoesNotMatchRegularExpression('/replaceState\([^;]*invitation-url/', $script);
 
         foreach ([
             'fetch(',

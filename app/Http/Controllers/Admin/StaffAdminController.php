@@ -26,6 +26,16 @@ class StaffAdminController extends Controller
 
     public function invite(Request $request): Response|RedirectResponse
     {
+        if ($request->input('staff_invitation_action') === 'regenerate') {
+            $validated = $request->validate([
+                'invitation_id' => ['required', 'integer'],
+            ]);
+
+            $invitation = StaffInvitation::query()->findOrFail($validated['invitation_id']);
+
+            return $this->resend($request, $invitation);
+        }
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email:rfc', 'max:255'],

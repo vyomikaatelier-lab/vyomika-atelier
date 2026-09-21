@@ -25,11 +25,24 @@
         return Boolean(form) && serializeForm(form) !== initialSerialized;
     }
 
-    function updateSwitchUi(input) {
-        input.setAttribute('aria-checked', input.checked ? 'true' : 'false');
-        var state = input.parentElement && input.parentElement.querySelector('.staff-switch-state');
-        if (state) {
-            state.textContent = input.checked ? 'On' : 'Off';
+    function syncSwitchState(input) {
+        var checked = Boolean(input.checked);
+        var stateWord = checked ? 'on' : 'off';
+        var role = input.getAttribute('data-switch-role') || '';
+        var permission = input.getAttribute('data-switch-permission') || '';
+        var lockReason = input.getAttribute('data-switch-lock') || '';
+        var label = role + ': ' + permission + ', ' + stateWord;
+
+        if (lockReason) {
+            label += ', locked. ' + lockReason;
+        }
+
+        input.setAttribute('aria-checked', checked ? 'true' : 'false');
+        input.setAttribute('aria-label', label);
+
+        var stateNode = input.parentElement && input.parentElement.querySelector('.staff-switch-state');
+        if (stateNode) {
+            stateNode.textContent = checked ? 'On' : 'Off';
         }
     }
 
@@ -50,9 +63,9 @@
     }
 
     editor.querySelectorAll('.staff-switch-input').forEach(function (input) {
-        updateSwitchUi(input);
+        syncSwitchState(input);
         input.addEventListener('change', function () {
-            updateSwitchUi(input);
+            syncSwitchState(input);
             refreshUnsaved();
         });
     });
@@ -60,7 +73,7 @@
     if (form) {
         form.addEventListener('reset', function () {
             window.setTimeout(function () {
-                form.querySelectorAll('.staff-switch-input').forEach(updateSwitchUi);
+                form.querySelectorAll('.staff-switch-input').forEach(syncSwitchState);
                 refreshUnsaved();
             }, 0);
         });

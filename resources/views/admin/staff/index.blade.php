@@ -152,6 +152,9 @@
                                                 @checked($granted)
                                                 aria-checked="{{ $granted ? 'true' : 'false' }}"
                                                 aria-label="{{ $accessibleName }}"
+                                                data-switch-role="{{ $selectedDefinition['label'] }}"
+                                                data-switch-permission="{{ $label }}"
+                                                data-switch-lock="{{ $lockReason }}"
                                             >
                                         @else
                                             <input
@@ -163,6 +166,9 @@
                                                 aria-disabled="true"
                                                 aria-checked="{{ $granted ? 'true' : 'false' }}"
                                                 aria-label="{{ $accessibleName }}"
+                                                data-switch-role="{{ $selectedDefinition['label'] }}"
+                                                data-switch-permission="{{ $label }}"
+                                                data-switch-lock="{{ $lockReason }}"
                                                 @if($lockReason) title="{{ $lockReason }}" @endif
                                             >
                                         @endif
@@ -242,7 +248,12 @@
                 </div>
                 @if($invitation->isPending() && auth()->user()->hasAdminPermission(\App\Support\AdminRole::STAFF_MANAGE))
                     <div class="flex gap-3">
-                        <form method="POST" action="{{ route('admin.staff-invitations.resend', $invitation) }}">@csrf<button class="text-sm underline">Regenerate Link</button></form>
+                        <form method="POST" action="{{ route('admin.staff.invite') }}">
+                            @csrf
+                            <input type="hidden" name="staff_invitation_action" value="regenerate">
+                            <input type="hidden" name="invitation_id" value="{{ $invitation->getKey() }}">
+                            <button class="text-sm underline">Regenerate Link</button>
+                        </form>
                         <form method="POST" action="{{ route('admin.staff-invitations.revoke', $invitation) }}">@csrf @method('DELETE')<button class="text-sm text-red-700 underline">Revoke</button></form>
                     </div>
                 @endif

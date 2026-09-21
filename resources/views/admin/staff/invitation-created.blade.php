@@ -51,8 +51,10 @@
 
         <div class="fallback-actions">
             @if($invitation->isPending())
-                <form method="POST" action="{{ route('admin.staff-invitations.resend', $invitation) }}">
+                <form method="POST" action="{{ route('admin.staff.invite') }}">
                     @csrf
+                    <input type="hidden" name="staff_invitation_action" value="regenerate">
+                    <input type="hidden" name="invitation_id" value="{{ $invitation->getKey() }}">
                     <button type="submit" class="reveal-secondary">Regenerate Link</button>
                 </form>
             @endif
