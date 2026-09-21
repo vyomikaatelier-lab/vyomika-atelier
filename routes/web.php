@@ -275,9 +275,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/staff', [StaffAdminController::class, 'index'])
             ->middleware('admin.permission:staff.view')
             ->name('staff.index');
-        Route::post('/staff/invitations', [StaffAdminController::class, 'invite'])
+        Route::post('/staff', [StaffAdminController::class, 'invite'])
             ->middleware('admin.permission:staff.manage')
             ->name('staff.invite');
+        Route::post('/staff/invitations', [StaffAdminController::class, 'invite'])
+            ->middleware('admin.permission:staff.manage')
+            ->name('staff.invite.legacy');
         Route::post('/staff/invitations/{invitation}/resend', [StaffAdminController::class, 'resend'])
             ->middleware('admin.permission:staff.manage')
             ->name('staff-invitations.resend');

@@ -6,11 +6,11 @@
 <header class="secure-header">
     <p class="reveal-kicker">Administration</p>
     <h1 class="reveal-title">Staff &amp; Roles</h1>
-    <p class="reveal-lead">Invite staff, assign fixed roles and revoke access. Email delivery was attempted for this invitation.</p>
+    <p class="reveal-lead">Invite staff with a one-time secure link, assign fixed least-privilege roles and revoke access immediately.</p>
 </header>
 
 <div class="secure-layout">
-    <aside class="fallback-panel" aria-labelledby="fallback-heading">
+    <aside class="fallback-panel" data-invitation-fallback-panel aria-labelledby="fallback-heading">
         <p class="fallback-status">{{ $regenerated ? 'Replacement link ready' : 'Email could not be delivered' }}</p>
         <h2 id="fallback-heading">Manual invitation link</h2>
         <p class="fallback-explain">
@@ -51,12 +51,14 @@
 
         <div class="fallback-actions">
             @if($invitation->isPending())
-                <form method="POST" action="{{ route('admin.staff-invitations.resend', $invitation) }}">
+                <form method="POST" action="{{ route('admin.staff.invite') }}">
                     @csrf
+                    <input type="hidden" name="staff_invitation_action" value="regenerate">
+                    <input type="hidden" name="invitation_id" value="{{ $invitation->getKey() }}">
                     <button type="submit" class="reveal-secondary">Regenerate Link</button>
                 </form>
             @endif
-            <a class="reveal-return" href="{{ route('admin.staff.index') }}">Close and return to Staff &amp; Roles</a>
+            <a class="reveal-close" href="{{ route('admin.staff.index') }}">Close</a>
         </div>
     </aside>
 
@@ -86,6 +88,24 @@
                 </div>
                 <button type="submit" class="reveal-copy">Send invitation</button>
             </form>
+        </section>
+
+        <section class="reveal-card" aria-labelledby="secure-roles-heading">
+            <h2 id="secure-roles-heading">Roles and permissions</h2>
+            <p class="secure-muted">Choose a role on Staff &amp; Roles to review its permissions. This page shows the same roles without the live editor.</p>
+            <ul class="secure-role-list">
+                @foreach($roleMatrix as $role => $definition)
+                    <li class="secure-role-item{{ $role === $selectedRole ? ' is-selected' : '' }}">
+                        <span>
+                            <strong>{{ $definition['label'] }}</strong>
+                            <span class="secure-role-badge">{{ $definition['group_label'] }}</span>
+                        </span>
+                        @if($role === $selectedRole)
+                            <span class="secure-muted">{{ $definition['description'] }}</span>
+                        @endif
+                    </li>
+                @endforeach
+            </ul>
         </section>
 
         <section class="reveal-card">

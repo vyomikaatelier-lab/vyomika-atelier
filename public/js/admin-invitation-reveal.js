@@ -1,6 +1,30 @@
 (function () {
     'use strict';
 
+    function isCleanStaffIndexUrl(url) {
+        if (typeof url !== 'string' || url.length === 0) {
+            return false;
+        }
+
+        if (url.indexOf('token=') !== -1 || url.indexOf('#') !== -1 || url.indexOf('?') !== -1) {
+            return false;
+        }
+
+        var path = url;
+        var schemeIndex = url.indexOf('://');
+        if (schemeIndex !== -1) {
+            var pathStart = url.indexOf('/', schemeIndex + 3);
+            path = pathStart === -1 ? '/' : url.slice(pathStart);
+        }
+
+        return /\/admin\/staff\/?$/.test(path);
+    }
+
+    var staffIndexUrl = document.body.getAttribute('data-staff-index-url');
+    if (isCleanStaffIndexUrl(staffIndexUrl) && window.history && typeof window.history.replaceState === 'function') {
+        window.history.replaceState({}, '', staffIndexUrl);
+    }
+
     var input = document.getElementById('invitation-url');
     var button = document.getElementById('copy-invitation-link');
     var status = document.getElementById('invitation-copy-status');
