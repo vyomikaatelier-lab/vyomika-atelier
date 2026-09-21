@@ -53,23 +53,30 @@ class AdminRolePermissionTest extends TestCase
         $owner = $this->owner();
         $administrator = User::factory()->admin()->create(['admin_role' => AdminRole::ADMINISTRATOR]);
 
-        $this->asVerifiedAdmin($owner)->get(route('admin.staff.index'))
-            ->assertOk()
+        $ownerPage = $this->asVerifiedAdmin($owner)->get(route('admin.staff.index'));
+        $ownerPage->assertOk()
             ->assertSee('role="switch"', false)
             ->assertSee('type="checkbox"', false)
             ->assertSee('aria-checked="true"', false)
-            ->assertSee('aria-checked="false"', false)
-            ->assertSee('Save permission changes')
+            ->assertSee('Save changes')
+            ->assertSee('Reset')
+            ->assertSee('Cancel')
             ->assertSee('Required for the Owner role and cannot be turned off.')
-            ->assertSee('Only the Owner can manage staff, invitations and role access.')
             ->assertSee('Owner: Manage staff &amp; roles, on, locked.', false)
-            ->assertSee('Viewer: View orders, on', false)
-            ->assertSee('Administrator: Manage staff &amp; roles, off, locked.', false);
+            ->assertSee('class="staff-switch-track"', false)
+            ->assertDontSee('aria-checked="false"', false)
+            ->assertDontSee('Viewer: View orders', false)
+            ->assertDontSee('Administrator: Manage staff &amp; roles', false)
+            ->assertDontSee('min-w-[960px]', false)
+            ->assertDontSee('Role permission comparison table')
+            ->assertDontSee('role-matrix', false);
+        $this->assertSame([AdminRole::OWNER], $this->permissionRolesInMarkup($ownerPage->getContent()));
+        $this->assertSame(1, substr_count($ownerPage->getContent(), 'data-permission-panel="'));
 
         $this->asVerifiedAdmin($administrator)->get(route('admin.staff.index'))
             ->assertOk()
             ->assertSee('role="switch"', false)
-            ->assertDontSee('Save permission changes')
+            ->assertDontSee('Save changes')
             ->assertSee('aria-disabled="true"', false);
 
         $this->asVerifiedAdmin($administrator)
@@ -84,6 +91,57 @@ class AdminRolePermissionTest extends TestCase
             ->assertForbidden();
 
         $this->assertDatabaseCount('admin_role_permission_overrides', 0);
+    }
+
+    public function test_staff_page_shows_one_selected_role_permission_set_at_a_time(): void
+    {
+        $owner = $this->owner();
+        $matrix = AdminRole::permissionMatrix();
+
+        $ownerPage = $this->asVerifiedAdmin($owner)->get(route('admin.staff.index'));
+        $ownerPage->assertOk()
+            ->assertSee('data-selected-role="owner"', false)
+            ->assertSee('aria-current="page"', false)
+            ->assertSee('id="staff-role-picker"', false)
+            ->assertSee('Dashboard')
+            ->assertSee('Catalog')
+            ->assertSee('Orders')
+            ->assertSee('Customers')
+            ->assertSee('Content and media')
+            ->assertSee('Leads and enquiries')
+            ->assertSee('Settings and security')
+            ->assertSee($matrix[AdminRole::OWNER]['description'])
+            ->assertDontSee($matrix[AdminRole::VIEWER]['description']);
+
+        $this->assertSame([AdminRole::OWNER], $this->permissionRolesInMarkup($ownerPage->getContent()));
+        $this->assertSame(1, substr_count($ownerPage->getContent(), 'data-permission-panel="'));
+        $this->assertSame(
+            count(AdminRole::permissions()),
+            substr_count($ownerPage->getContent(), 'role="switch"'),
+        );
+
+        $viewerPage = $this->asVerifiedAdmin($owner)->get(route('admin.staff.index', [
+            'role' => AdminRole::VIEWER,
+        ]));
+        $viewerPage->assertOk()
+            ->assertSee('data-selected-role="viewer"', false)
+            ->assertSee('data-permission-panel="viewer"', false)
+            ->assertSee('aria-checked="true"', false)
+            ->assertSee('aria-checked="false"', false)
+            ->assertSee('Viewer: View orders, on', false)
+            ->assertSee('Viewer: Manage staff &amp; roles, off, locked.', false)
+            ->assertSee('Only the Owner can manage staff, invitations and role access.')
+            ->assertSee($matrix[AdminRole::VIEWER]['description'])
+            ->assertDontSee('Owner: Manage staff &amp; roles', false)
+            ->assertDontSee('min-w-[960px]', false)
+            ->assertDontSee('Role permission comparison table');
+
+        $this->assertSame([AdminRole::VIEWER], $this->permissionRolesInMarkup($viewerPage->getContent()));
+        $this->assertSame(1, substr_count($viewerPage->getContent(), 'data-permission-panel="'));
+        $this->assertSame(
+            count(AdminRole::permissions()),
+            substr_count($viewerPage->getContent(), 'role="switch"'),
+        );
     }
 
     public function test_owner_essential_and_owner_only_permissions_are_locked(): void
@@ -149,7 +207,7 @@ class AdminRolePermissionTest extends TestCase
 
         $this->asVerifiedAdmin($viewer)->get(route('admin.staff.index'))
             ->assertOk()
-            ->assertDontSee('Save permission changes');
+            ->assertDontSee('Save changes');
     }
 
     public function test_disabling_a_permission_rejects_existing_sessions_for_that_role(): void
@@ -625,5 +683,13 @@ class AdminRolePermissionTest extends TestCase
         } catch (HttpException $exception) {
             $this->assertSame(403, $exception->getStatusCode());
         }
+    }
+
+    /** @return list<string> */
+    private function permissionRolesInMarkup(string $html): array
+    {
+        preg_match_all('/name="permissions\[([^\]]+)\]/', $html, $matches);
+
+        return array_values(array_unique($matches[1]));
     }
 }

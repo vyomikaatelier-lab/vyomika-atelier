@@ -2,7 +2,14 @@
 
 @section('title', 'Staff & Roles')
 
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/admin-staff-roles.css') }}">
+@endpush
+
 @section('content')
+@php
+    $selectedDefinition = $roleMatrix[$selectedRole];
+@endphp
 <div class="max-w-6xl mx-auto space-y-8">
     <div>
         <p class="text-xs uppercase tracking-widest text-amber-700 mb-2">Administration</p>
@@ -39,70 +46,108 @@
     </section>
     @endif
 
-    <section class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden" aria-labelledby="role-matrix-heading">
+    <section class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden" aria-labelledby="role-editor-heading">
         <div class="p-6 border-b space-y-2">
-            <h2 id="role-matrix-heading" class="text-xl font-semibold">Roles and permissions</h2>
-            <p class="text-sm text-gray-600">Fixed roles with on/off permissions. Switches show the effective authorization used by navigation and middleware. Owner-only and Owner-essential permissions stay locked.</p>
+            <h2 id="role-editor-heading" class="text-xl font-semibold">Roles and permissions</h2>
+            <p class="text-sm text-gray-600">Choose a role to review or change its permissions. Owner-only and Owner-essential permissions stay locked.</p>
             @if($canEditRolePermissions)
                 <p class="text-sm text-gray-600">Saving a change immediately updates access and signs out other active staff in that role.</p>
             @endif
         </div>
-        <div class="p-6 grid gap-4 md:grid-cols-2">
-            @foreach($roleMatrix as $role => $definition)
-                <article class="border border-gray-200 rounded-lg p-4" data-role="{{ $role }}">
-                    <div class="flex flex-wrap items-center gap-2 mb-2">
-                        <h3 class="text-lg font-semibold">{{ $definition['label'] }}</h3>
-                        <span class="text-xs uppercase tracking-wide px-2 py-1 rounded bg-gray-100 text-gray-700">{{ $definition['group_label'] }}</span>
+        <div class="staff-role-editor p-6 grid gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]" data-staff-role-editor data-selected-role="{{ $selectedRole }}">
+            <form method="GET" action="{{ route('admin.staff.index') }}" class="lg:hidden">
+                <label class="block text-sm font-medium mb-1" for="staff-role-picker">Role</label>
+                <select id="staff-role-picker" name="role" class="w-full border border-gray-300 rounded-lg px-3 py-2 min-h-[44px]" data-role-picker>
+                    @foreach($roleMatrix as $role => $definition)
+                        <option value="{{ $role }}" @selected($role === $selectedRole)>{{ $definition['label'] }}</option>
+                    @endforeach
+                </select>
+                <noscript>
+                    <button type="submit" class="mt-2 border border-gray-900 rounded-lg px-4 py-2 min-h-[44px]">Show role</button>
+                </noscript>
+            </form>
+
+            <nav class="hidden lg:block" aria-label="Roles">
+                <ul class="staff-role-list">
+                    @foreach($roleMatrix as $role => $definition)
+                        <li>
+                            <a
+                                href="{{ route('admin.staff.index', ['role' => $role]) }}"
+                                class="staff-role-item{{ $role === $selectedRole ? ' is-selected' : '' }}"
+                                data-role-link="{{ $role }}"
+                                @if($role === $selectedRole) aria-current="page" @endif
+                            >
+                                <span class="staff-role-item-label">{{ $definition['label'] }}</span>
+                                <span class="staff-role-badge">{{ $definition['group_label'] }}</span>
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
+            </nav>
+
+            <div
+                class="staff-role-panel min-w-0"
+                data-permission-panel="{{ $selectedRole }}"
+                data-selected="true"
+                aria-labelledby="selected-role-heading"
+            >
+                <div class="flex flex-wrap items-start justify-between gap-3 mb-2">
+                    <div>
+                        <h3 id="selected-role-heading" class="text-lg font-semibold">{{ $selectedDefinition['label'] }}</h3>
+                        <p class="text-sm text-gray-600 mt-1">{{ $selectedDefinition['description'] }}</p>
                     </div>
-                    <p class="text-sm text-gray-600 mb-3">{{ $definition['description'] }}</p>
-                    <ul class="text-sm space-y-1">
-                        @foreach($definition['permissions'] as $permission => $granted)
-                            @if($granted)
-                                <li>{{ $permissionLabels[$permission] ?? $permission }}</li>
-                            @endif
-                        @endforeach
-                    </ul>
-                </article>
-            @endforeach
-        </div>
-        <div class="overflow-x-auto border-t" role="region" aria-labelledby="role-matrix-table-heading" tabindex="0">
-            <h3 id="role-matrix-table-heading" class="sr-only">Role permission comparison table</h3>
-            @if($canEditRolePermissions)
-            <form method="POST" action="{{ route('admin.staff.role-permissions.update') }}">
-                @csrf
-                @method('PUT')
-            @endif
-            <table class="w-full text-xs min-w-[960px]">
-                <caption class="sr-only">Which fixed admin roles have each permission</caption>
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th scope="col" class="p-3 text-left sticky left-0 bg-gray-50">Permission</th>
-                        @foreach($roleMatrix as $definition)
-                            <th scope="col" class="p-3 text-left whitespace-nowrap">{{ $definition['label'] }}</th>
-                        @endforeach
-                    </tr>
-                </thead>
-                <tbody class="divide-y">
-                    @foreach($permissionLabels as $permission => $label)
-                        <tr>
-                            <th scope="row" class="p-3 text-left font-medium sticky left-0 bg-white">{{ $label }}</th>
-                            @foreach($roleMatrix as $role => $definition)
+                    <span class="staff-role-badge">{{ $selectedDefinition['group_label'] }}</span>
+                </div>
+                <p class="text-sm text-gray-500 mb-4" data-unsaved-status hidden>You have unsaved permission changes for this role.</p>
+
+                @if($canEditRolePermissions)
+                <form method="POST" action="{{ route('admin.staff.role-permissions.update') }}" data-role-permission-form>
+                    @csrf
+                    @method('PUT')
+                @endif
+
+                @foreach($permissionGroups as $groupLabel => $groupPermissions)
+                    <section class="staff-permission-group" aria-labelledby="permission-group-{{ \Illuminate\Support\Str::slug($groupLabel) }}">
+                        <h4 id="permission-group-{{ \Illuminate\Support\Str::slug($groupLabel) }}" class="staff-permission-group-title">{{ $groupLabel }}</h4>
+                        <ul class="staff-permission-list">
+                            @foreach($groupPermissions as $permission)
                                 @php
-                                    $granted = $definition['permissions'][$permission] ?? false;
-                                    $lockReason = $definition['locks'][$permission] ?? null;
+                                    $granted = $selectedDefinition['permissions'][$permission] ?? false;
+                                    $lockReason = $selectedDefinition['locks'][$permission] ?? null;
                                     $editable = $canEditRolePermissions && $lockReason === null;
                                     $state = $granted ? 'on' : 'off';
-                                    $accessibleName = $definition['label'].': '.$label.', '.$state.($lockReason ? ', locked. '.$lockReason : '');
+                                    $label = $permissionLabels[$permission] ?? $permission;
+                                    $explanation = $permissionExplanations[$permission] ?? null;
+                                    $accessibleName = $selectedDefinition['label'].': '.$label.', '.$state.($lockReason ? ', locked. '.$lockReason : '');
                                 @endphp
-                                <td class="p-3">
-                                    <label class="inline-flex items-center gap-2 min-h-[44px]">
+                                <li class="staff-permission-row">
+                                    <div class="staff-permission-copy">
+                                        <div class="staff-permission-heading">
+                                            <span class="staff-permission-label">{{ $label }}</span>
+                                            @if($lockReason)
+                                                <span class="staff-permission-lock" title="{{ $lockReason }}">
+                                                    <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                                                        <path fill="currentColor" fill-rule="evenodd" d="M10 1a4 4 0 00-4 4v2H5a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2V9a2 2 0 00-2-2h-1V5a4 4 0 00-4-4zm-2 6V5a2 2 0 114 0v2H8zm2 3a1 1 0 00-.894.553l-1 2A1 1 0 009 14h2a1 1 0 00.894-1.447l-1-2A1 1 0 0010 10z" clip-rule="evenodd"/>
+                                                    </svg>
+                                                    <span class="sr-only">Locked</span>
+                                                </span>
+                                            @endif
+                                        </div>
+                                        @if($explanation)
+                                            <p class="staff-permission-help">{{ $explanation }}</p>
+                                        @endif
+                                        @if($lockReason)
+                                            <p class="staff-permission-help">{{ $lockReason }}</p>
+                                        @endif
+                                    </div>
+                                    <label class="staff-switch">
                                         @if($editable)
-                                            <input type="hidden" name="permissions[{{ $role }}][{{ $permission }}]" value="0">
+                                            <input type="hidden" name="permissions[{{ $selectedRole }}][{{ $permission }}]" value="0">
                                             <input
                                                 type="checkbox"
                                                 role="switch"
-                                                class="w-10 h-5 rounded-full"
-                                                name="permissions[{{ $role }}][{{ $permission }}]"
+                                                class="staff-switch-input"
+                                                name="permissions[{{ $selectedRole }}][{{ $permission }}]"
                                                 value="1"
                                                 @checked($granted)
                                                 aria-checked="{{ $granted ? 'true' : 'false' }}"
@@ -112,7 +157,7 @@
                                             <input
                                                 type="checkbox"
                                                 role="switch"
-                                                class="w-10 h-5 rounded-full"
+                                                class="staff-switch-input"
                                                 @checked($granted)
                                                 disabled
                                                 aria-disabled="true"
@@ -121,23 +166,24 @@
                                                 @if($lockReason) title="{{ $lockReason }}" @endif
                                             >
                                         @endif
-                                        <span class="{{ $granted ? 'text-gray-900' : 'text-gray-400' }}">{{ $granted ? 'On' : 'Off' }}</span>
+                                        <span class="staff-switch-track" aria-hidden="true"><span class="staff-switch-thumb"></span></span>
+                                        <span class="staff-switch-state">{{ $granted ? 'On' : 'Off' }}</span>
                                     </label>
-                                    @if($lockReason)
-                                        <p class="text-[11px] text-gray-500 mt-1 max-w-[12rem]">{{ $lockReason }}</p>
-                                    @endif
-                                </td>
+                                </li>
                             @endforeach
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-            @if($canEditRolePermissions)
-                <div class="p-4 border-t bg-gray-50">
-                    <button class="bg-gray-900 text-white rounded-lg px-4 py-3 font-medium min-h-[44px]">Save permission changes</button>
-                </div>
-            </form>
-            @endif
+                        </ul>
+                    </section>
+                @endforeach
+
+                @if($canEditRolePermissions)
+                    <div class="staff-permission-actions">
+                        <button type="submit" class="bg-gray-900 text-white rounded-lg px-4 py-3 font-medium min-h-[44px]">Save changes</button>
+                        <button type="reset" class="border border-gray-900 rounded-lg px-4 py-3 font-medium min-h-[44px]" data-reset-permissions>Reset</button>
+                        <a href="{{ route('admin.staff.index', ['role' => $selectedRole]) }}" class="border border-gray-300 rounded-lg px-4 py-3 font-medium min-h-[44px] inline-flex items-center" data-cancel-permissions>Cancel</a>
+                    </div>
+                </form>
+                @endif
+            </div>
         </div>
     </section>
 
@@ -208,3 +254,7 @@
     </section>
 </div>
 @endsection
+
+@push('scripts')
+<script src="{{ asset('js/admin-staff-roles.js') }}" defer></script>
+@endpush

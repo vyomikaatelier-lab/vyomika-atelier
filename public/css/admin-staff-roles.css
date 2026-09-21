@@ -1,0 +1,224 @@
+/* Compact Staff & Roles permission editor. First-party styles only. */
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.staff-role-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.staff-role-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-height: 44px;
+    padding: 0.7rem 0.9rem;
+    color: #111827;
+    text-decoration: none;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.staff-role-list li:last-child .staff-role-item {
+    border-bottom: 0;
+}
+
+.staff-role-item:hover {
+    background: #f9fafb;
+}
+
+.staff-role-item.is-selected {
+    background: #111827;
+    color: #ffffff;
+}
+
+.staff-role-item-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.staff-role-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    background: #f3f4f6;
+    color: #374151;
+    white-space: nowrap;
+}
+
+.staff-role-item.is-selected .staff-role-badge {
+    background: #374151;
+    color: #f9fafb;
+}
+
+.staff-permission-group + .staff-permission-group {
+    margin-top: 1.25rem;
+}
+
+.staff-permission-group-title {
+    margin: 0 0 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6b7280;
+}
+
+.staff-permission-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.staff-permission-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 44px;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid #f3f4f6;
+}
+
+.staff-permission-row:first-child {
+    border-top: 0;
+}
+
+.staff-permission-copy {
+    min-width: 0;
+    flex: 1;
+}
+
+.staff-permission-heading {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.staff-permission-label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+.staff-permission-help {
+    margin: 0.2rem 0 0;
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.staff-permission-lock {
+    display: inline-flex;
+    color: #6b7280;
+}
+
+.staff-permission-lock svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+.staff-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    flex-shrink: 0;
+    min-height: 44px;
+    cursor: pointer;
+}
+
+.staff-switch-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.staff-switch-track {
+    position: relative;
+    display: inline-block;
+    width: 2.75rem;
+    height: 1.55rem;
+    border-radius: 999px;
+    background: #d1d5db;
+    transition: background 0.15s ease;
+}
+
+.staff-switch-thumb {
+    position: absolute;
+    top: 0.15rem;
+    left: 0.15rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 999px;
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgba(17, 24, 39, 0.2);
+    transition: transform 0.15s ease;
+}
+
+.staff-switch-input:checked + .staff-switch-track {
+    background: #111827;
+}
+
+.staff-switch-input:checked + .staff-switch-track .staff-switch-thumb {
+    transform: translateX(1.2rem);
+}
+
+.staff-switch-input:disabled + .staff-switch-track {
+    opacity: 0.55;
+}
+
+.staff-switch-input:focus-visible + .staff-switch-track {
+    outline: 2px solid #b45309;
+    outline-offset: 2px;
+}
+
+.staff-switch-state {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #4b5563;
+    min-width: 1.75rem;
+}
+
+.staff-permission-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+}
+
+@media (max-width: 639px) {
+    .staff-permission-row {
+        align-items: flex-start;
+    }
+
+    .staff-switch {
+        padding-top: 0.1rem;
+    }
+}

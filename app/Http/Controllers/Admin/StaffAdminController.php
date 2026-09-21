@@ -19,9 +19,9 @@ class StaffAdminController extends Controller
 {
     public function __construct(private readonly StaffManagementService $staff) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        return view('admin.staff.index', $this->staffPageData());
+        return view('admin.staff.index', $this->staffPageData($request));
     }
 
     public function invite(Request $request): Response|RedirectResponse
@@ -155,7 +155,7 @@ class StaffAdminController extends Controller
         bool $regenerated = false,
     ): Response {
         return response()
-            ->view('admin.staff.invitation-created', array_merge($this->staffPageData(), [
+            ->view('admin.staff.invitation-created', array_merge($this->staffPageData(request()), [
                 'invitation' => $invitation,
                 'acceptUrl' => $acceptUrl,
                 'regenerated' => $regenerated,
@@ -172,15 +172,24 @@ class StaffAdminController extends Controller
     }
 
     /** @return array<string, mixed> */
-    private function staffPageData(): array
+    private function staffPageData(?Request $request = null): array
     {
+        $request ??= request();
+        $selectedRole = (string) $request->query('role', AdminRole::OWNER);
+        if (! AdminRole::isValid($selectedRole)) {
+            $selectedRole = AdminRole::OWNER;
+        }
+
         return [
             'staff' => User::query()->where('is_admin', true)->orderBy('name')->get(),
             'invitations' => StaffInvitation::query()->latest()->limit(50)->get(),
             'roles' => AdminRole::labels(),
             'roleMatrix' => AdminRole::permissionMatrix(),
             'permissionLabels' => AdminRole::permissionLabels(),
+            'permissionGroups' => AdminRole::permissionGroups(),
+            'permissionExplanations' => AdminRole::permissionExplanations(),
             'canEditRolePermissions' => (bool) auth()->user()?->isOwner(),
+            'selectedRole' => $selectedRole,
         ];
     }
 }

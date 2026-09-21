@@ -121,6 +121,79 @@ final class AdminRole
         ];
     }
 
+    /**
+     * Display groups for the Staff & Roles editor. This does not change
+     * authorization; effective grants still come from the resolver.
+     *
+     * @return array<string, list<string>>
+     */
+    public static function permissionGroups(): array
+    {
+        return [
+            'Dashboard' => [
+                self::DASHBOARD_VIEW,
+            ],
+            'Catalog' => [
+                self::CATALOG_VIEW,
+                self::CATALOG_MANAGE,
+                self::CATALOG_PUBLISH,
+            ],
+            'Orders' => [
+                self::ORDERS_VIEW,
+                self::ORDERS_MANAGE,
+            ],
+            'Customers' => [
+                self::CUSTOMERS_VIEW,
+                self::CUSTOMERS_MANAGE,
+            ],
+            'Content and media' => [
+                self::CONTENT_VIEW,
+                self::CONTENT_MANAGE,
+                self::CONTENT_PUBLISH,
+                self::MEDIA_VIEW,
+                self::MEDIA_MANAGE,
+                self::SEO_VIEW,
+                self::SEO_MANAGE,
+            ],
+            'Leads and enquiries' => [
+                self::ENQUIRIES_VIEW,
+                self::ENQUIRIES_MANAGE,
+            ],
+            'Settings and security' => [
+                self::SETTINGS_VIEW,
+                self::SETTINGS_MANAGE,
+                self::STAFF_VIEW,
+                self::STAFF_MANAGE,
+                self::SECURITY_MANAGE_SELF,
+            ],
+        ];
+    }
+
+    /**
+     * Optional short explanations for the compact permission editor.
+     *
+     * @return array<string, string>
+     */
+    public static function permissionExplanations(): array
+    {
+        return [
+            self::DASHBOARD_VIEW => 'Open the administration dashboard.',
+            self::CATALOG_MANAGE => 'Create and edit products and categories.',
+            self::CATALOG_PUBLISH => 'Make catalogue changes visible on the storefront.',
+            self::ORDERS_MANAGE => 'Update order status and fulfilment.',
+            self::CUSTOMERS_MANAGE => 'Edit customer records.',
+            self::CONTENT_MANAGE => 'Create and edit projects, pages and posts.',
+            self::CONTENT_PUBLISH => 'Publish editorial content.',
+            self::MEDIA_MANAGE => 'Upload and organise media.',
+            self::SEO_MANAGE => 'Edit search metadata.',
+            self::ENQUIRIES_MANAGE => 'Respond to and close leads and enquiries.',
+            self::SETTINGS_MANAGE => 'Change site settings.',
+            self::STAFF_VIEW => 'Open the Staff & Roles page.',
+            self::STAFF_MANAGE => 'Invite staff and change role access.',
+            self::SECURITY_MANAGE_SELF => 'Update this account\'s MFA and passkeys.',
+        ];
+    }
+
     public static function group(string $role): string
     {
         return match ($role) {

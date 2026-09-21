@@ -94,16 +94,24 @@ class AdminStaffManagementTest extends TestCase
         $response->assertOk()
             ->assertSee('Staff &amp; Roles', false)
             ->assertSee('Email could not be delivered', false)
+            ->assertSee('data-invitation-fallback-panel', false)
             ->assertSee('Catalog Staff', false)
             ->assertSee('fallback@example.com', false)
             ->assertSee('Catalog Manager', false)
             ->assertSee('Copy Link', false)
             ->assertSee('Regenerate Link', false)
+            ->assertSee('>Close</a>', false)
             ->assertSee('This link is shown only once. Share it only with the intended staff member.', false)
             ->assertSee('The invitation email could not be delivered. Send this link to the intended staff member manually.', false)
             ->assertDontSee('SMTP 535', false)
             ->assertDontSee('smtp-secret', false)
-            ->assertDontSee('authentication failed', false);
+            ->assertDontSee('authentication failed', false)
+            ->assertDontSee('min-w-[960px]', false)
+            ->assertDontSee('Role permission comparison table');
+
+        $this->assertSame(200, $response->status());
+        $this->assertSame('/admin/staff', parse_url(route('admin.staff.invite'), PHP_URL_PATH));
+        $this->assertStringNotContainsString('token=', (string) $response->headers->get('Location'));
 
         $this->assertSame(200, $response->status());
         [$invitation, $token, $acceptUrl] = $this->extractInvitationReveal($response, 'fallback@example.com');
@@ -156,6 +164,9 @@ class AdminStaffManagementTest extends TestCase
         $this->assertDoesNotMatchRegularExpression('/<script(?![^>]*\bsrc=)/i', $content);
         $this->assertStringContainsString('/js/admin-invitation-reveal.js', $content);
         $this->assertStringContainsString('/css/admin-invitation-reveal.css', $content);
+        $this->assertStringContainsString('data-invitation-fallback-panel', $content);
+        $this->assertMatchesRegularExpression('/class="reveal-close" href="[^"]*\/admin\/staff"/', $content);
+        $this->assertDoesNotMatchRegularExpression('/class="reveal-close"[^>]*href="[^"]+\?/', $content);
         $this->assertDoesNotMatchRegularExpression(
             '/href=(["\'])[^"\']*'.preg_quote($token, '/').'[^"\']*\1/',
             $content,
@@ -174,6 +185,34 @@ class AdminStaffManagementTest extends TestCase
             ->assertDontSee($token)
             ->assertDontSee($acceptUrl, false)
             ->assertDontSee('id="invitation-url"', false);
+    }
+
+    public function test_invitation_is_posted_to_staff_page_and_legacy_url_remains_compatible(): void
+    {
+        Mail::fake();
+        $owner = $this->owner();
+
+        $this->assertSame('/admin/staff', parse_url(route('admin.staff.invite'), PHP_URL_PATH));
+        $this->assertSame('/admin/staff/invitations', parse_url(route('admin.staff.invite.legacy'), PHP_URL_PATH));
+
+        $this->asVerifiedAdmin($owner)->post('/admin/staff', [
+            'name' => 'Catalog Staff',
+            'email' => 'posted-staff@example.com',
+            'admin_role' => AdminRole::CATALOG_MANAGER,
+        ])->assertRedirect(route('admin.staff.index'))
+            ->assertSessionHas('success', 'Invitation sent');
+
+        $this->failInvitationMail();
+        $legacy = $this->asVerifiedAdmin($owner)->post(route('admin.staff.invite.legacy'), [
+            'name' => 'Legacy Staff',
+            'email' => 'legacy-invite@example.com',
+            'admin_role' => AdminRole::ORDER_MANAGER,
+        ]);
+        $legacy->assertOk()
+            ->assertSee('Email could not be delivered', false)
+            ->assertSee('data-invitation-fallback-panel', false)
+            ->assertDontSee('min-w-[960px]', false);
+        $this->extractInvitationReveal($legacy, 'legacy-invite@example.com');
     }
 
     public function test_refreshing_invitation_creation_does_not_duplicate_rotate_or_reveal(): void
@@ -427,9 +466,12 @@ class AdminStaffManagementTest extends TestCase
 
         foreach ($matrix as $definition) {
             $response->assertSee($definition['label']);
-            $response->assertSee($definition['description']);
             $response->assertSee($definition['group_label']);
         }
+        $response->assertSee($matrix[AdminRole::OWNER]['description']);
+        $response->assertDontSee($matrix[AdminRole::VIEWER]['description']);
+        $response->assertDontSee('min-w-[960px]', false);
+        $response->assertDontSee('Role permission comparison table');
 
         foreach (AdminRole::permissionLabels() as $permission => $label) {
             $response->assertSee($label);

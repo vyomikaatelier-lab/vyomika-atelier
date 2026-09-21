@@ -93,4 +93,23 @@ class AdminRoleTest extends TestCase
         $this->assertNotNull($matrix[AdminRole::VIEWER]['locks'][AdminRole::STAFF_MANAGE]);
         $this->assertNull($matrix[AdminRole::VIEWER]['locks'][AdminRole::ORDERS_VIEW]);
     }
+
+    public function test_permission_groups_cover_every_known_permission_once(): void
+    {
+        $grouped = [];
+        foreach (AdminRole::permissionGroups() as $permissions) {
+            foreach ($permissions as $permission) {
+                $grouped[] = $permission;
+            }
+        }
+
+        $expected = AdminRole::permissions();
+        sort($grouped);
+        sort($expected);
+
+        $this->assertSame($expected, $grouped);
+        $this->assertArrayHasKey('Dashboard', AdminRole::permissionGroups());
+        $this->assertArrayHasKey('Settings and security', AdminRole::permissionGroups());
+        $this->assertArrayHasKey(AdminRole::STAFF_MANAGE, AdminRole::permissionExplanations());
+    }
 }
