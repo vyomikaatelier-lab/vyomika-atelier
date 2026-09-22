@@ -162,8 +162,10 @@ class AdminStaffManagementTest extends TestCase
 
         $this->assertStringNotContainsString('cdn.tailwindcss.com', $content);
         $this->assertDoesNotMatchRegularExpression('/<script(?![^>]*\bsrc=)/i', $content);
-        $this->assertStringContainsString('/js/admin-invitation-reveal.js', $content);
-        $this->assertStringContainsString('/css/admin-invitation-reveal.css', $content);
+        $this->assertMatchesRegularExpression('#/js/admin-invitation-reveal\.js\?v=\d+#', $content);
+        $this->assertMatchesRegularExpression('#/css/admin-invitation-reveal\.css\?v=\d+#', $content);
+        $this->assertLocalInvitationAssetVersions($content, $token);
+        $this->assertDoesNotMatchRegularExpression('/\bfetch\s*\(|XMLHttpRequest|sendBeacon/i', $content);
         $this->assertStringContainsString('data-invitation-fallback-panel', $content);
         $this->assertMatchesRegularExpression('/data-staff-index-url="[^"]*\/admin\/staff"/', $content);
         $this->assertDoesNotMatchRegularExpression('/data-staff-index-url="[^"]*[?#]/', $content);
@@ -188,6 +190,45 @@ class AdminStaffManagementTest extends TestCase
             ->assertDontSee($token)
             ->assertDontSee($acceptUrl, false)
             ->assertDontSee('id="invitation-url"', false);
+    }
+
+    public function test_invitation_fallback_asset_versions_come_only_from_local_files(): void
+    {
+        $this->failInvitationMail();
+        $owner = $this->owner();
+
+        $first = $this->asVerifiedAdmin($owner)->post(route('admin.staff.invite'), [
+            'name' => 'Version One',
+            'email' => 'version-one@example.com',
+            'admin_role' => AdminRole::CATALOG_MANAGER,
+        ]);
+        $second = $this->asVerifiedAdmin($owner)->post(route('admin.staff.invite'), [
+            'name' => 'Version Two',
+            'email' => 'version-two@example.com',
+            'admin_role' => AdminRole::ORDER_MANAGER,
+        ]);
+
+        $first->assertOk();
+        $second->assertOk();
+
+        [, $firstToken] = $this->extractInvitationReveal($first, 'version-one@example.com');
+        [, $secondToken] = $this->extractInvitationReveal($second, 'version-two@example.com');
+        $this->assertNotSame($firstToken, $secondToken);
+
+        $firstVersions = $this->assertLocalInvitationAssetVersions($first->getContent(), $firstToken);
+        $secondVersions = $this->assertLocalInvitationAssetVersions($second->getContent(), $secondToken);
+        $this->assertSame($firstVersions, $secondVersions);
+        $this->assertNotSame($firstToken, $firstVersions['css']);
+        $this->assertNotSame($firstToken, $firstVersions['js']);
+        $this->assertNotSame($secondToken, $secondVersions['css']);
+        $this->assertNotSame($secondToken, $secondVersions['js']);
+        $this->assertNotSame((string) session()->getId(), $firstVersions['css']);
+        $this->assertNotSame((string) session()->getId(), $firstVersions['js']);
+
+        $session = json_encode(session()->all());
+        $this->assertIsString($session);
+        $this->assertStringNotContainsString($firstToken, $session);
+        $this->assertStringNotContainsString($secondToken, $session);
     }
 
     public function test_invitation_is_posted_to_staff_page_and_legacy_url_remains_compatible(): void
@@ -787,6 +828,60 @@ class AdminStaffManagementTest extends TestCase
 
         $this->assertDatabaseMissing('staff_invitations', ['token_hash' => $token]);
         $this->assertDatabaseMissing('staff_invitations', ['email' => $acceptUrl]);
+    }
+
+    /**
+     * @return array{css: string, js: string}
+     */
+    private function assertLocalInvitationAssetVersions(string $content, string $token): array
+    {
+        $this->assertSame(1, substr_count($content, $token));
+        $this->assertMatchesRegularExpression(
+            '/<input\b(?=[^>]*\bid="invitation-url")(?=[^>]*\breadonly\b)(?=[^>]*\bvalue="[^"]*'
+            .preg_quote($token, '/')
+            .'[^"]*")[^>]*>/',
+            $content
+        );
+
+        $versions = [];
+        foreach ([
+            'css' => ['css/admin-invitation-reveal.css', 'href'],
+            'js' => ['js/admin-invitation-reveal.js', 'src'],
+        ] as $kind => [$relative, $attribute]) {
+            $this->assertSame(
+                1,
+                preg_match('#/'.preg_quote($relative, '#').'\?v=(\d+)#', $content, $versionMatch)
+            );
+            $expected = filemtime(public_path($relative));
+            $this->assertNotFalse($expected);
+            $this->assertSame((string) $expected, $versionMatch[1]);
+            $this->assertStringNotContainsString($token, $versionMatch[0]);
+            $versions[$kind] = $versionMatch[1];
+
+            $this->assertSame(
+                1,
+                preg_match('#'.$attribute.'="([^"]*'.preg_quote($relative, '#').'\?[^"]*)"#', $content, $urlMatch)
+            );
+            $url = html_entity_decode($urlMatch[1], ENT_QUOTES);
+            $query = parse_url($url, PHP_URL_QUERY);
+            parse_str((string) $query, $params);
+            $this->assertSame(['v'], array_keys($params));
+            $this->assertSame($versionMatch[1], (string) $params['v']);
+            $this->assertStringNotContainsString($token, $url);
+            $this->assertStringNotContainsString(public_path($relative), $content);
+            $this->assertStringNotContainsString(str_replace('\\', '/', public_path($relative)), $content);
+
+            $host = parse_url($url, PHP_URL_HOST);
+            if (is_string($host) && $host !== '') {
+                $allowedHosts = array_values(array_filter([
+                    parse_url((string) config('app.url'), PHP_URL_HOST),
+                    parse_url(url('/'), PHP_URL_HOST),
+                ]));
+                $this->assertContains($host, $allowedHosts);
+            }
+        }
+
+        return $versions;
     }
 
     private function assertNoThirdPartyAssetReferences(string $html): void

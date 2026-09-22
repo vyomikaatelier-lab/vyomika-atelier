@@ -6,12 +6,16 @@
     <meta name="robots" content="noindex, nofollow, noarchive">
     <meta name="referrer" content="no-referrer">
     <title>@yield('title', 'Staff & Roles') — VYOMIKA ATELIER</title>
-    <link rel="stylesheet" href="{{ asset('css/admin-invitation-reveal.css') }}">
+    @php
+        $invitationRevealCssVer = @filemtime(public_path('css/admin-invitation-reveal.css')) ?: time();
+        $invitationRevealJsVer = @filemtime(public_path('js/admin-invitation-reveal.js')) ?: time();
+    @endphp
+    <link rel="stylesheet" href="{{ asset('css/admin-invitation-reveal.css') }}?v={{ $invitationRevealCssVer }}">
 </head>
 <body class="secure-staff" data-staff-index-url="{{ route('admin.staff.index') }}">
     <div class="secure-shell">
         @yield('content')
     </div>
-    <script src="{{ asset('js/admin-invitation-reveal.js') }}" defer></script>
+    <script src="{{ asset('js/admin-invitation-reveal.js') }}?v={{ $invitationRevealJsVer }}" defer></script>
 </body>
 </html>
