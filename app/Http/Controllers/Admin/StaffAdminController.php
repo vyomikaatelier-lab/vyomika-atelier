@@ -13,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class StaffAdminController extends Controller
@@ -24,34 +25,43 @@ class StaffAdminController extends Controller
         return view('admin.staff.index', $this->staffPageData($request));
     }
 
+    public function invitations(): View
+    {
+        return view('admin.staff.invitations', $this->invitationsPageData());
+    }
+
     public function invite(Request $request): Response|RedirectResponse
     {
-        if ($request->input('staff_invitation_action') === 'regenerate') {
+        try {
+            if ($request->input('staff_invitation_action') === 'regenerate') {
+                $validated = $request->validate([
+                    'invitation_id' => ['required', 'integer'],
+                ]);
+
+                $invitation = StaffInvitation::query()->findOrFail($validated['invitation_id']);
+
+                return $this->resend($request, $invitation);
+            }
+
             $validated = $request->validate([
-                'invitation_id' => ['required', 'integer'],
+                'name' => ['required', 'string', 'max:120'],
+                'email' => ['required', 'email:rfc', 'max:255'],
+                'admin_role' => ['required', Rule::in(array_keys(AdminRole::labels()))],
             ]);
 
-            $invitation = StaffInvitation::query()->findOrFail($validated['invitation_id']);
-
-            return $this->resend($request, $invitation);
+            $result = $this->staff->invite(
+                $request->user(),
+                $validated['name'],
+                $validated['email'],
+                $validated['admin_role'],
+            );
+        } catch (ValidationException $exception) {
+            return $this->redirectInvitationValidation($exception);
         }
-
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:120'],
-            'email' => ['required', 'email:rfc', 'max:255'],
-            'admin_role' => ['required', Rule::in(array_keys(AdminRole::labels()))],
-        ]);
-
-        $result = $this->staff->invite(
-            $request->user(),
-            $validated['name'],
-            $validated['email'],
-            $validated['admin_role'],
-        );
 
         if ($result['email_sent']) {
             return redirect()
-                ->route('admin.staff.index')
+                ->route('admin.staff.invitations.index')
                 ->with('success', 'Invitation sent');
         }
 
@@ -60,11 +70,15 @@ class StaffAdminController extends Controller
 
     public function resend(Request $request, StaffInvitation $invitation): Response|RedirectResponse
     {
-        $result = $this->staff->regenerateLink($request->user(), $invitation);
+        try {
+            $result = $this->staff->regenerateLink($request->user(), $invitation);
+        } catch (ValidationException $exception) {
+            return $this->redirectInvitationValidation($exception);
+        }
 
         if ($result['email_sent']) {
             return redirect()
-                ->route('admin.staff.index')
+                ->route('admin.staff.invitations.index')
                 ->with('success', 'Invitation sent');
         }
 
@@ -75,7 +89,9 @@ class StaffAdminController extends Controller
     {
         $this->staff->revokeInvitation($request->user(), $invitation);
 
-        return back()->with('success', 'Invitation revoked.');
+        return redirect()
+            ->route('admin.staff.invitations.index')
+            ->with('success', 'Invitation revoked.');
     }
 
     public function update(Request $request, User $staff): RedirectResponse
@@ -151,12 +167,12 @@ class StaffAdminController extends Controller
     }
 
     /**
-     * First-party Staff & Roles result used when email cannot be delivered.
+     * First-party Staff Invitations result used when email cannot be delivered.
      *
      * The normal admin layout loads third-party Tailwind CDN JavaScript, so the
      * one-time invitation URL is never rendered inside that layout. This POST
-     * response is a first-party-only representation of Staff & Roles with the
-     * fallback panel at the top-right. The plain URL exists only in this
+     * response is a first-party-only representation of Staff Invitations with
+     * the fallback panel beside that page. The plain URL exists only in this
      * response body.
      */
     private function invitationFallbackResponse(
@@ -165,7 +181,7 @@ class StaffAdminController extends Controller
         bool $regenerated = false,
     ): Response {
         return response()
-            ->view('admin.staff.invitation-created', array_merge($this->staffPageData(request()), [
+            ->view('admin.staff.invitation-created', array_merge($this->invitationsPageData(), [
                 'invitation' => $invitation,
                 'acceptUrl' => $acceptUrl,
                 'regenerated' => $regenerated,
@@ -192,7 +208,6 @@ class StaffAdminController extends Controller
 
         return [
             'staff' => User::query()->where('is_admin', true)->orderBy('name')->get(),
-            'invitations' => StaffInvitation::query()->latest()->limit(50)->get(),
             'roles' => AdminRole::labels(),
             'roleMatrix' => AdminRole::permissionMatrix(),
             'permissionLabels' => AdminRole::permissionLabels(),
@@ -201,5 +216,22 @@ class StaffAdminController extends Controller
             'canEditRolePermissions' => (bool) auth()->user()?->isOwner(),
             'selectedRole' => $selectedRole,
         ];
+    }
+
+    /** @return array<string, mixed> */
+    private function invitationsPageData(): array
+    {
+        return [
+            'invitations' => StaffInvitation::query()->latest()->limit(50)->get(),
+            'roles' => AdminRole::labels(),
+        ];
+    }
+
+    private function redirectInvitationValidation(ValidationException $exception): RedirectResponse
+    {
+        return redirect()
+            ->route('admin.staff.invitations.index')
+            ->withErrors($exception->validator)
+            ->withInput();
     }
 }

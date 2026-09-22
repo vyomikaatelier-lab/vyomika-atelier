@@ -275,6 +275,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/staff', [StaffAdminController::class, 'index'])
             ->middleware('admin.permission:staff.view')
             ->name('staff.index');
+        Route::get('/staff/invitations', [StaffAdminController::class, 'invitations'])
+            ->middleware('admin.permission:staff.manage')
+            ->name('staff.invitations.index');
+        // Legacy compatibility POST. The invitation form posts to /staff/invitations.
         Route::post('/staff', [StaffAdminController::class, 'invite'])
             ->middleware('admin.permission:staff.manage')
             ->name('staff.invite');

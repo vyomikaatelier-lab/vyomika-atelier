@@ -209,11 +209,14 @@ class AdminRolePermissionTest extends TestCase
 
         $this->asVerifiedAdmin($viewer)->get(route('admin.dashboard'))
             ->assertOk()
-            ->assertSee('Staff & Roles', false);
+            ->assertSee('Staff & Roles', false)
+            ->assertDontSee('Staff Invitations', false);
 
         $this->asVerifiedAdmin($viewer)->get(route('admin.staff.index'))
             ->assertOk()
             ->assertDontSee('Save changes');
+        $this->asVerifiedAdmin($viewer)->get(route('admin.staff.invitations.index'))
+            ->assertForbidden();
     }
 
     public function test_disabling_a_permission_rejects_existing_sessions_for_that_role(): void

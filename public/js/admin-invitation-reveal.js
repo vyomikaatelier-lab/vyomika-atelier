@@ -17,7 +17,7 @@
             path = pathStart === -1 ? '/' : url.slice(pathStart);
         }
 
-        return /\/admin\/staff\/?$/.test(path);
+        return /\/admin\/staff\/invitations\/?$/.test(path);
     }
 
     var staffIndexUrl = document.body.getAttribute('data-staff-index-url');
