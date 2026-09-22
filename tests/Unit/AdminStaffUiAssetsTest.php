@@ -34,6 +34,8 @@ class AdminStaffUiAssetsTest extends TestCase
         $this->assertStringContainsString('data-staff-index-url', $script);
         $this->assertStringContainsString('replaceState({}, \'\', staffIndexUrl)', $script);
         $this->assertStringContainsString('isCleanStaffIndexUrl', $script);
+        $this->assertStringContainsString('/\\/admin\\/staff\\/invitations\\/?$/', $script);
+        $this->assertStringNotContainsString('/\\/admin\\/staff\\/?$/', $script);
         $this->assertStringContainsString("indexOf('token=')", $script);
         $this->assertDoesNotMatchRegularExpression('/replaceState\([^;]*invitation-url/', $script);
         $this->assertDoesNotMatchRegularExpression('/replaceState\([^;]*\.value/', $script);

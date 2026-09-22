@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow, noarchive">
     <meta name="referrer" content="no-referrer">
-    <title>@yield('title', 'Staff & Roles') — VYOMIKA ATELIER</title>
+    <title>@yield('title', 'Staff Invitations') — VYOMIKA ATELIER</title>
     @php
         $invitationRevealCssVer = @filemtime(public_path('css/admin-invitation-reveal.css')) ?: time();
         $invitationRevealJsVer = @filemtime(public_path('js/admin-invitation-reveal.js')) ?: time();
     @endphp
     <link rel="stylesheet" href="{{ asset('css/admin-invitation-reveal.css') }}?v={{ $invitationRevealCssVer }}">
 </head>
-<body class="secure-staff" data-staff-index-url="{{ route('admin.staff.index') }}">
+<body class="secure-staff" data-staff-index-url="{{ route('admin.staff.invitations.index') }}">
     <div class="secure-shell">
         @yield('content')
     </div>

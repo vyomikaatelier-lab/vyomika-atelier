@@ -11,40 +11,16 @@
     $selectedDefinition = $roleMatrix[$selectedRole];
 @endphp
 <div class="max-w-6xl mx-auto space-y-8">
-    <div>
-        <p class="text-xs uppercase tracking-widest text-amber-700 mb-2">Administration</p>
-        <h1 class="text-3xl font-semibold">Staff & Roles</h1>
-        <p class="text-sm text-gray-600 mt-2">Invite staff with a one-time secure link, assign fixed least-privilege roles and revoke access immediately.</p>
+    <div class="flex flex-wrap items-end justify-between gap-4">
+        <div class="max-w-2xl">
+            <p class="text-xs uppercase tracking-widest text-amber-700 mb-2">Administration</p>
+            <h1 class="text-3xl font-semibold">Staff & Roles</h1>
+            <p class="text-sm text-gray-600 mt-2">Assign fixed least-privilege roles, review permissions and manage current staff.</p>
+        </div>
+        @if(auth()->user()->hasAdminPermission(\App\Support\AdminRole::STAFF_MANAGE))
+            <a href="{{ route('admin.staff.invitations.index') }}" class="bg-gray-900 text-white rounded-lg px-4 py-3 font-medium min-h-[44px] inline-flex items-center">Invite staff</a>
+        @endif
     </div>
-
-    @if(auth()->user()->hasAdminPermission(\App\Support\AdminRole::STAFF_MANAGE))
-    <section class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-        <h2 class="text-xl font-semibold mb-2">Invite staff member</h2>
-        <p class="text-sm text-gray-600 mb-4">Send a secure invitation email. If delivery fails, a one-time link is shown once so you can share it manually.</p>
-        <form method="POST" action="{{ route('admin.staff.invite') }}" class="grid md:grid-cols-4 gap-4 items-end">
-            @csrf
-            <div>
-                <label class="block text-sm font-medium mb-1" for="staff-name">Name</label>
-                <input id="staff-name" name="name" value="{{ old('name') }}" required class="w-full border border-gray-300 rounded-lg px-3 py-2 min-h-[44px]">
-            </div>
-            <div>
-                <label class="block text-sm font-medium mb-1" for="staff-email">Email</label>
-                <input id="staff-email" name="email" type="email" value="{{ old('email') }}" required class="w-full border border-gray-300 rounded-lg px-3 py-2 min-h-[44px]">
-            </div>
-            <div>
-                <label class="block text-sm font-medium mb-1" for="staff-role">Role</label>
-                <select id="staff-role" name="admin_role" required class="w-full border border-gray-300 rounded-lg px-3 py-2 min-h-[44px]">
-                    @foreach($roles as $value => $label)
-                        @if($value !== \App\Support\AdminRole::OWNER)
-                            <option value="{{ $value }}" @selected(old('admin_role') === $value)>{{ $label }}</option>
-                        @endif
-                    @endforeach
-                </select>
-            </div>
-            <button class="bg-gray-900 text-white rounded-lg px-4 py-3 font-medium min-h-[44px]">Send invitation</button>
-        </form>
-    </section>
-    @endif
 
     <section class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden" aria-labelledby="role-editor-heading">
         <div class="p-6 border-b space-y-2">
@@ -230,37 +206,6 @@
                 @endforeach
                 </tbody>
             </table>
-        </div>
-    </section>
-
-    <section class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        <div class="p-6 border-b"><h2 class="text-xl font-semibold">Invitation history</h2></div>
-        <div class="divide-y">
-        @forelse($invitations as $invitation)
-            <div class="p-4 flex flex-wrap justify-between gap-4">
-                <div>
-                    <strong>{{ $invitation->name }}</strong> · {{ $invitation->email }}<br>
-                    <span class="text-xs text-gray-500">
-                        {{ $roles[$invitation->admin_role] ?? $invitation->admin_role }}
-                        · {{ $invitation->statusLabel() }}
-                        · Expires {{ $invitation->expires_at?->timezone(config('app.timezone'))->format('d M Y, H:i') ?? 'n/a' }}
-                    </span>
-                </div>
-                @if($invitation->isPending() && auth()->user()->hasAdminPermission(\App\Support\AdminRole::STAFF_MANAGE))
-                    <div class="flex gap-3">
-                        <form method="POST" action="{{ route('admin.staff.invite') }}">
-                            @csrf
-                            <input type="hidden" name="staff_invitation_action" value="regenerate">
-                            <input type="hidden" name="invitation_id" value="{{ $invitation->getKey() }}">
-                            <button class="text-sm underline">Regenerate Link</button>
-                        </form>
-                        <form method="POST" action="{{ route('admin.staff-invitations.revoke', $invitation) }}">@csrf @method('DELETE')<button class="text-sm text-red-700 underline">Revoke</button></form>
-                    </div>
-                @endif
-            </div>
-        @empty
-            <p class="p-6 text-sm text-gray-500">No staff invitations yet.</p>
-        @endforelse
         </div>
     </section>
 </div>

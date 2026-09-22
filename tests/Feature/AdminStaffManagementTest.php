@@ -37,7 +37,7 @@ class AdminStaffManagementTest extends TestCase
             'admin_role' => AdminRole::CATALOG_MANAGER,
         ]);
 
-        $response->assertRedirect(route('admin.staff.index'))
+        $response->assertRedirect(route('admin.staff.invitations.index'))
             ->assertSessionHas('success', 'Invitation sent');
 
         Mail::assertSent(StaffInvitationMail::class, 1);
@@ -65,7 +65,7 @@ class AdminStaffManagementTest extends TestCase
 
         $this->assertSecretAbsentFromTransport($token, $acceptUrl, $logs, $response);
 
-        $history = $this->asVerifiedAdmin($owner)->get(route('admin.staff.index'));
+        $history = $this->asVerifiedAdmin($owner)->get(route('admin.staff.invitations.index'));
         $history->assertOk()
             ->assertSee('Invitation sent', false)
             ->assertSee('catalog@example.com', false)
@@ -92,7 +92,14 @@ class AdminStaffManagementTest extends TestCase
         ]);
 
         $response->assertOk()
-            ->assertSee('Staff &amp; Roles', false)
+            ->assertSee('class="reveal-title">Staff Invitations</h1>', false)
+            ->assertSee('Back to Staff &amp; Roles', false)
+            ->assertSee('Invite staff member', false)
+            ->assertSee('Invitation history', false)
+            ->assertDontSee('Roles and permissions', false)
+            ->assertDontSee('Current staff', false)
+            ->assertDontSee('role="switch"', false)
+            ->assertDontSee('data-staff-role-editor', false)
             ->assertSee('Email could not be delivered', false)
             ->assertSee('data-invitation-fallback-panel', false)
             ->assertSee('Catalog Staff', false)
@@ -112,6 +119,11 @@ class AdminStaffManagementTest extends TestCase
         $this->assertSame(200, $response->status());
         $this->assertSame('/admin/staff', parse_url(route('admin.staff.invite'), PHP_URL_PATH));
         $this->assertStringNotContainsString('token=', (string) $response->headers->get('Location'));
+        $failureHtml = $response->getContent();
+        $this->assertMatchesRegularExpression('/data-staff-index-url="[^"]*\/admin\/staff\/invitations"/', $failureHtml);
+        $this->assertMatchesRegularExpression('/class="reveal-close" href="[^"]*\/admin\/staff\/invitations"/', $failureHtml);
+        $this->assertDoesNotMatchRegularExpression('/class="reveal-close"[^>]*href="[^"]+\?/', $failureHtml);
+        $this->assertLessThan(strpos($failureHtml, 'class="secure-main"'), strpos($failureHtml, 'data-invitation-fallback-panel'));
 
         $this->assertSame(200, $response->status());
         [$invitation, $token, $acceptUrl] = $this->extractInvitationReveal($response, 'fallback@example.com');
@@ -167,10 +179,12 @@ class AdminStaffManagementTest extends TestCase
         $this->assertLocalInvitationAssetVersions($content, $token);
         $this->assertDoesNotMatchRegularExpression('/\bfetch\s*\(|XMLHttpRequest|sendBeacon/i', $content);
         $this->assertStringContainsString('data-invitation-fallback-panel', $content);
-        $this->assertMatchesRegularExpression('/data-staff-index-url="[^"]*\/admin\/staff"/', $content);
+        $this->assertMatchesRegularExpression('/data-staff-index-url="[^"]*\/admin\/staff\/invitations"/', $content);
+        $this->assertDoesNotMatchRegularExpression('/data-staff-index-url="[^"]*\/admin\/staff"/', $content);
         $this->assertDoesNotMatchRegularExpression('/data-staff-index-url="[^"]*[?#]/', $content);
         $this->assertMatchesRegularExpression('/name="staff_invitation_action"[^>]*value="regenerate"|value="regenerate"[^>]*name="staff_invitation_action"/', $content);
-        $this->assertMatchesRegularExpression('/class="reveal-close" href="[^"]*\/admin\/staff"/', $content);
+        $this->assertMatchesRegularExpression('/class="reveal-close" href="[^"]*\/admin\/staff\/invitations"/', $content);
+        $this->assertDoesNotMatchRegularExpression('/class="reveal-close" href="[^"]*\/admin\/staff"/', $content);
         $this->assertDoesNotMatchRegularExpression('/class="reveal-close"[^>]*href="[^"]+\?/', $content);
         $this->assertDoesNotMatchRegularExpression(
             '/href=(["\'])[^"\']*'.preg_quote($token, '/').'[^"\']*\1/',
@@ -184,7 +198,7 @@ class AdminStaffManagementTest extends TestCase
         $this->assertNoThirdPartyAssetReferences($content);
         $this->assertFirstPartyCopyScriptHasNoNetworkBehavior();
 
-        $history = $this->asVerifiedAdmin($owner)->get(route('admin.staff.index'));
+        $history = $this->asVerifiedAdmin($owner)->get(route('admin.staff.invitations.index'));
         $history->assertOk()
             ->assertSee('isolated@example.com', false)
             ->assertDontSee($token)
@@ -243,7 +257,7 @@ class AdminStaffManagementTest extends TestCase
             'name' => 'Catalog Staff',
             'email' => 'posted-staff@example.com',
             'admin_role' => AdminRole::CATALOG_MANAGER,
-        ])->assertRedirect(route('admin.staff.index'))
+        ])->assertRedirect(route('admin.staff.invitations.index'))
             ->assertSessionHas('success', 'Invitation sent');
 
         $this->failInvitationMail();
@@ -255,7 +269,10 @@ class AdminStaffManagementTest extends TestCase
         $legacy->assertOk()
             ->assertSee('Email could not be delivered', false)
             ->assertSee('data-invitation-fallback-panel', false)
+            ->assertSee('class="reveal-title">Staff Invitations</h1>', false)
+            ->assertDontSee('Roles and permissions', false)
             ->assertDontSee('min-w-[960px]', false);
+        $this->assertMatchesRegularExpression('/data-staff-index-url="[^"]*\/admin\/staff\/invitations"/', $legacy->getContent());
         $this->extractInvitationReveal($legacy, 'legacy-invite@example.com');
     }
 
@@ -270,21 +287,30 @@ class AdminStaffManagementTest extends TestCase
         ];
 
         $first = $this->asVerifiedAdmin($owner)->post(route('admin.staff.invite'), $payload);
-        $first->assertRedirect(route('admin.staff.index'));
+        $first->assertRedirect(route('admin.staff.invitations.index'));
         $invitation = StaffInvitation::query()->where('email', 'catalog@example.com')->firstOrFail();
         $hash = $invitation->token_hash;
+        $token = $this->tokenFromSentMail();
 
         $repeat = $this->asVerifiedAdmin($owner)
             ->from(route('admin.staff.index'))
             ->post(route('admin.staff.invite'), $payload);
 
-        $repeat->assertRedirect(route('admin.staff.index'))
+        $repeat->assertRedirect(route('admin.staff.invitations.index'))
             ->assertSessionHasErrors('email');
         $this->assertStringNotContainsString('token=', (string) $repeat->getContent());
+        $this->assertStringNotContainsString($token, (string) json_encode(session()->all()));
         $this->assertSame(1, StaffInvitation::query()->where('email', 'catalog@example.com')->count());
         $this->assertSame($hash, $invitation->fresh()->token_hash);
         $this->assertTrue($invitation->fresh()->isPending());
         Mail::assertSent(StaffInvitationMail::class, 1);
+
+        $this->asVerifiedAdmin($owner)->get(route('admin.staff.invitations.index'))
+            ->assertOk()
+            ->assertSee('A pending invitation already exists for this email. Regenerate that link instead of creating another.', false)
+            ->assertSee('value="Catalog Staff"', false)
+            ->assertSee('value="catalog@example.com"', false)
+            ->assertDontSee($token);
     }
 
     public function test_successful_regeneration_attempts_email_again_and_does_not_reveal_the_link(): void
@@ -303,12 +329,12 @@ class AdminStaffManagementTest extends TestCase
         $regenerated = $this->asVerifiedAdmin($owner)
             ->post(route('admin.staff-invitations.resend', $invitation));
 
-        $regenerated->assertRedirect(route('admin.staff.index'))
+        $regenerated->assertRedirect(route('admin.staff.invitations.index'))
             ->assertSessionHas('success', 'Invitation sent');
         $this->assertNotSame($oldHash, $invitation->fresh()->token_hash);
         Mail::assertSent(StaffInvitationMail::class, 2);
 
-        $follow = $this->asVerifiedAdmin($owner)->get(route('admin.staff.index'));
+        $follow = $this->asVerifiedAdmin($owner)->get(route('admin.staff.invitations.index'));
         $follow->assertOk()->assertDontSee('id="invitation-url"', false);
     }
 
@@ -373,15 +399,21 @@ class AdminStaffManagementTest extends TestCase
             ->assertSee('name="staff_invitation_action"', false)
             ->assertSee('value="regenerate"', false);
         $this->assertSame('/admin/staff', parse_url(route('admin.staff.invite'), PHP_URL_PATH));
+        $this->assertSame('/admin/staff/invitations', parse_url(route('admin.staff.invitations.index'), PHP_URL_PATH));
         $this->assertMatchesRegularExpression(
-            '/<form[^>]*action="[^"]*\/admin\/staff"[^>]*>[\s\S]*name="staff_invitation_action"/',
+            '/<form[^>]*action="[^"]*\/admin\/staff\/invitations"[^>]*>[\s\S]*name="staff_invitation_action"/',
             $regenerated->getContent(),
         );
         $this->assertDoesNotMatchRegularExpression(
             '/<form[^>]*action="[^"]*\/admin\/staff\/invitations\/\d+\/resend"/',
             $regenerated->getContent(),
         );
-        $this->assertMatchesRegularExpression('/data-staff-index-url="[^"]*\/admin\/staff"/', $regenerated->getContent());
+        $this->assertDoesNotMatchRegularExpression(
+            '/<form[^>]*action="[^"]*\/admin\/staff"[^>]*>/',
+            $regenerated->getContent(),
+        );
+        $this->assertMatchesRegularExpression('/data-staff-index-url="[^"]*\/admin\/staff\/invitations"/', $regenerated->getContent());
+        $this->assertDoesNotMatchRegularExpression('/data-staff-index-url="[^"]*\/admin\/staff"/', $regenerated->getContent());
         $this->assertDoesNotMatchRegularExpression('/data-staff-index-url="[^"]*[?#]/', $regenerated->getContent());
         $this->assertDoesNotMatchRegularExpression('/history\.replaceState\([^)]*token=/', $regenerated->getContent());
 
@@ -391,7 +423,7 @@ class AdminStaffManagementTest extends TestCase
         $this->assertSame(hash('sha256', $newToken), $hashAfterRegen);
         $this->assertDatabaseMissing('staff_invitations', ['token_hash' => hash('sha256', $oldToken)]);
 
-        $refresh = $this->asVerifiedAdmin($owner)->get(route('admin.staff.index'));
+        $refresh = $this->asVerifiedAdmin($owner)->get(route('admin.staff.invitations.index'));
         $refresh->assertOk()
             ->assertDontSee('id="invitation-url"', false)
             ->assertDontSee($newToken)
@@ -401,6 +433,11 @@ class AdminStaffManagementTest extends TestCase
         $legacy = $this->asVerifiedAdmin($owner)
             ->post(route('admin.staff-invitations.resend', $invitation));
         $legacy->assertOk()->assertSee('Replacement link ready', false);
+        $this->assertMatchesRegularExpression('/data-staff-index-url="[^"]*\/admin\/staff\/invitations"/', $legacy->getContent());
+        $this->assertDoesNotMatchRegularExpression(
+            '/<form[^>]*action="[^"]*\/admin\/staff\/invitations\/\d+\/resend"/',
+            $legacy->getContent(),
+        );
         [, $legacyToken] = $this->extractInvitationReveal($legacy, 'orders-refresh@example.com');
         $this->assertNotSame($newToken, $legacyToken);
         $this->assertSame(hash('sha256', $legacyToken), $invitation->fresh()->token_hash);
@@ -441,7 +478,7 @@ class AdminStaffManagementTest extends TestCase
             $this->asVerifiedAdmin($owner)
                 ->from(route('admin.staff.index'))
                 ->post(route('admin.staff-invitations.resend', $invitation))
-                ->assertRedirect(route('admin.staff.index'))
+                ->assertRedirect(route('admin.staff.invitations.index'))
                 ->assertSessionHasErrors('invitation');
         }
     }
@@ -498,7 +535,13 @@ class AdminStaffManagementTest extends TestCase
             'name' => 'Second Owner',
             'email' => 'second-owner@example.com',
             'admin_role' => AdminRole::OWNER,
-        ])->assertRedirect(route('admin.staff.index'))->assertSessionHasErrors('admin_role');
+        ])->assertRedirect(route('admin.staff.invitations.index'))->assertSessionHasErrors('admin_role');
+
+        $this->asVerifiedAdmin($owner)->get(route('admin.staff.invitations.index'))
+            ->assertOk()
+            ->assertSee('Select an approved non-owner staff role.', false)
+            ->assertSee('value="Second Owner"', false)
+            ->assertSee('id="staff-email"', false);
 
         Mail::assertNothingSent();
         $this->assertDatabaseMissing('staff_invitations', ['email' => 'second-owner@example.com']);
@@ -514,7 +557,13 @@ class AdminStaffManagementTest extends TestCase
             'name' => 'Customer',
             'email' => 'customer@example.com',
             'admin_role' => AdminRole::VIEWER,
-        ])->assertRedirect(route('admin.staff.index'))->assertSessionHasErrors('email');
+        ])->assertRedirect(route('admin.staff.invitations.index'))->assertSessionHasErrors('email');
+
+        $this->asVerifiedAdmin($owner)->get(route('admin.staff.invitations.index'))
+            ->assertOk()
+            ->assertSee('An account already exists for this email address.', false)
+            ->assertSee('value="Customer"', false)
+            ->assertSee('value="customer@example.com"', false);
 
         Mail::assertNothingSent();
         $this->assertDatabaseMissing('staff_invitations', ['email' => 'customer@example.com']);
@@ -571,7 +620,10 @@ class AdminStaffManagementTest extends TestCase
         $response = $this->asVerifiedAdmin($owner)->get(route('admin.staff.index'));
         $response->assertOk()
             ->assertSee('Roles and permissions')
-            ->assertSee('Send invitation');
+            ->assertSee('Current staff')
+            ->assertSee('Invite staff')
+            ->assertDontSee('Send invitation')
+            ->assertDontSee('Invitation history');
 
         foreach ($matrix as $definition) {
             $response->assertSee($definition['label']);
@@ -645,7 +697,7 @@ class AdminStaffManagementTest extends TestCase
             ->from(route('admin.staff.index'))
             ->post(route('admin.staff.invite'), $payload);
 
-        $repeat->assertRedirect(route('admin.staff.index'))
+        $repeat->assertRedirect(route('admin.staff.invitations.index'))
             ->assertSessionHasErrors('email');
         $this->assertStringNotContainsString($token, (string) $repeat->getContent());
         $this->assertStringNotContainsString($acceptUrl, (string) $repeat->getContent());
@@ -673,7 +725,7 @@ class AdminStaffManagementTest extends TestCase
             'name' => 'Replacement Staff',
             'email' => 'Replace@Example.com',
             'admin_role' => AdminRole::VIEWER,
-        ])->assertRedirect(route('admin.staff.index'))->assertSessionHas('success', 'Invitation sent');
+        ])->assertRedirect(route('admin.staff.invitations.index'))->assertSessionHas('success', 'Invitation sent');
 
         $expired->refresh();
         $this->assertNull($expired->pending_email);
@@ -702,6 +754,117 @@ class AdminStaffManagementTest extends TestCase
         $this->get($expiredAcceptUrl)->assertGone();
     }
 
+    public function test_owner_revoke_returns_to_the_invitations_page(): void
+    {
+        $owner = $this->owner();
+        $invitation = StaffInvitation::query()->create([
+            'name' => 'Pending Staff',
+            'email' => 'revoke-me@example.com',
+            'pending_email' => 'revoke-me@example.com',
+            'admin_role' => AdminRole::VIEWER,
+            'token_hash' => hash('sha256', str_repeat('d', 64)),
+            'invited_by' => $owner->getKey(),
+            'expires_at' => now()->addDay(),
+        ]);
+
+        $this->asVerifiedAdmin($owner)
+            ->from(route('admin.staff.index'))
+            ->delete(route('admin.staff-invitations.revoke', $invitation))
+            ->assertRedirect(route('admin.staff.invitations.index'))
+            ->assertSessionHas('success', 'Invitation revoked.');
+
+        $this->assertNotNull($invitation->fresh()->revoked_at);
+        $this->assertNull($invitation->fresh()->pending_email);
+
+        $this->asVerifiedAdmin($owner)->get(route('admin.staff.invitations.index'))
+            ->assertOk()
+            ->assertSee('Invitation revoked.', false)
+            ->assertSee('revoke-me@example.com', false)
+            ->assertSee('Revoked', false)
+            ->assertDontSee('value="'.str_repeat('d', 64).'"', false);
+    }
+
+    public function test_staff_roles_and_invitations_pages_are_separated(): void
+    {
+        $owner = $this->owner();
+        $administrator = User::factory()->admin()->create(['admin_role' => AdminRole::ADMINISTRATOR]);
+        $viewer = User::factory()->admin()->create(['admin_role' => AdminRole::VIEWER]);
+
+        $this->get(route('admin.staff.index'))->assertRedirect(route('admin.login'));
+        $this->get(route('admin.staff.invitations.index'))->assertRedirect(route('admin.login'));
+
+        $this->asVerifiedAdmin($viewer)->get(route('admin.staff.index'))->assertForbidden();
+        $this->asVerifiedAdmin($viewer)->get(route('admin.staff.invitations.index'))->assertForbidden();
+        $this->asVerifiedAdmin($administrator)->get(route('admin.staff.invitations.index'))->assertForbidden();
+
+        $staff = $this->asVerifiedAdmin($owner)->get(route('admin.staff.index'));
+        $staff->assertOk()
+            ->assertSee('Staff & Roles', false)
+            ->assertSee('Roles and permissions', false)
+            ->assertSee('Current staff', false)
+            ->assertSee('Assign fixed least-privilege roles, review permissions and manage current staff.', false)
+            ->assertDontSee('Send invitation', false)
+            ->assertDontSee('Invitation history', false)
+            ->assertDontSee('id="staff-email"', false)
+            ->assertDontSee('name="email"', false);
+        $staffHtml = $staff->getContent();
+        $this->assertMatchesRegularExpression(
+            '/<a\b[^>]*href="[^"]*\/admin\/staff\/invitations"[^>]*>\s*Invite staff\s*<\/a>/',
+            $staffHtml,
+        );
+        $this->assertMatchesRegularExpression(
+            '/id="admin-sidebar"[\s\S]*<a\b[^>]*href="[^"]*\/admin\/staff"[^>]*aria-current="page"[^>]*>\s*Staff & Roles\s*<\/a>[\s\S]*<a\b[^>]*href="[^"]*\/admin\/staff\/invitations"[^>]*>\s*Staff Invitations\s*<\/a>/',
+            $staffHtml,
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/<a\b[^>]*href="[^"]*\/admin\/staff\/invitations"[^>]*aria-current="page"/',
+            $staffHtml,
+        );
+
+        $invitations = $this->asVerifiedAdmin($owner)->get(route('admin.staff.invitations.index'));
+        $invitations->assertOk()
+            ->assertSee('Staff Invitations', false)
+            ->assertSee('Invite staff member', false)
+            ->assertSee('Send invitation', false)
+            ->assertSee('Invitation history', false)
+            ->assertSee('Pending and previous invitations.', false)
+            ->assertSee('Back to Staff &amp; Roles', false)
+            ->assertSee('id="staff-name"', false)
+            ->assertSee('id="staff-email"', false)
+            ->assertSee('id="staff-role"', false)
+            ->assertDontSee('Roles and permissions', false)
+            ->assertDontSee('Current staff', false)
+            ->assertDontSee('role="switch"', false);
+        $invitationsHtml = $invitations->getContent();
+        $this->assertMatchesRegularExpression(
+            '/<form[^>]*method="POST"[^>]*action="[^"]*\/admin\/staff\/invitations"[^>]*>/',
+            $invitationsHtml,
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/<form[^>]*action="[^"]*\/admin\/staff"[^>]*>/',
+            $invitationsHtml,
+        );
+        $this->assertMatchesRegularExpression(
+            '/id="admin-sidebar"[\s\S]*<a\b[^>]*href="[^"]*\/admin\/staff"[^>]*>\s*Staff & Roles\s*<\/a>[\s\S]*<a\b[^>]*href="[^"]*\/admin\/staff\/invitations"[^>]*aria-current="page"[^>]*>\s*Staff Invitations\s*<\/a>/',
+            $invitationsHtml,
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/<a\b[^>]*href="[^"]*\/admin\/staff"[^>]*aria-current="page"[^>]*>\s*Staff & Roles\s*<\/a>/',
+            $invitationsHtml,
+        );
+
+        $administratorStaff = $this->asVerifiedAdmin($administrator)->get(route('admin.staff.index'));
+        $administratorStaff->assertOk()->assertDontSee('Send invitation', false);
+        $this->assertDoesNotMatchRegularExpression(
+            '/<a\b[^>]*href="[^"]*\/admin\/staff\/invitations"[^>]*>\s*Invite staff\s*<\/a>/',
+            $administratorStaff->getContent(),
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/<a\b[^>]*>\s*Staff Invitations\s*<\/a>/',
+            $administratorStaff->getContent(),
+        );
+    }
+
     public function test_administrator_can_view_staff_but_navigation_is_hidden_from_operational_roles(): void
     {
         $owner = $this->owner();
@@ -710,23 +873,29 @@ class AdminStaffManagementTest extends TestCase
 
         $this->asVerifiedAdmin($owner)->get(route('admin.dashboard'))
             ->assertOk()
-            ->assertSee('Staff & Roles', false);
+            ->assertSee('Staff & Roles', false)
+            ->assertSee('Staff Invitations', false);
 
         $this->asVerifiedAdmin($administrator)->get(route('admin.staff.index'))
             ->assertOk()
             ->assertSee('Staff & Roles', false)
             ->assertSee('Roles and permissions', false)
             ->assertSee('View only')
-            ->assertDontSee('Send invitation');
+            ->assertDontSee('Send invitation')
+            ->assertDontSee('Staff Invitations');
 
         $this->asVerifiedAdmin($administrator)->get(route('admin.dashboard'))
             ->assertOk()
-            ->assertSee('Staff & Roles', false);
+            ->assertSee('Staff & Roles', false)
+            ->assertDontSee('Staff Invitations');
+        $this->asVerifiedAdmin($administrator)->get(route('admin.staff.invitations.index'))->assertForbidden();
 
         $this->asVerifiedAdmin($viewer)->get(route('admin.staff.index'))->assertForbidden();
+        $this->asVerifiedAdmin($viewer)->get(route('admin.staff.invitations.index'))->assertForbidden();
         $this->asVerifiedAdmin($viewer)->get(route('admin.dashboard'))
             ->assertOk()
-            ->assertDontSee('Staff & Roles');
+            ->assertDontSee('Staff & Roles')
+            ->assertDontSee('Staff Invitations');
     }
 
     /** @return array{StaffInvitation, string, string} */
@@ -928,6 +1097,8 @@ class AdminStaffManagementTest extends TestCase
         $this->assertStringContainsString('data-staff-index-url', $script);
         $this->assertStringContainsString('replaceState({}, \'\', staffIndexUrl)', $script);
         $this->assertStringContainsString('isCleanStaffIndexUrl', $script);
+        $this->assertStringContainsString('/\\/admin\\/staff\\/invitations\\/?$/', $script);
+        $this->assertStringNotContainsString('/\\/admin\\/staff\\/?$/', $script);
         $this->assertStringContainsString("indexOf('token=')", $script);
         $this->assertDoesNotMatchRegularExpression('/replaceState\([^;]*\.value/', $script);
         $this->assertDoesNotMatchRegularExpression('/replaceState\([^;]*invitation-url/', $script);

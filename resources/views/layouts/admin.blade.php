@@ -57,7 +57,10 @@
                     <a href="{{ route('admin.mfa.manage') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800">MFA / 2FA</a>
                     <a href="{{ route('admin.passkeys.manage') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800">Passkeys</a>
                     @if(auth()->user()->hasAdminPermission(\App\Support\AdminRole::STAFF_VIEW))
-                        <a href="{{ route('admin.staff.index') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800">Staff & Roles</a>
+                        <a href="{{ route('admin.staff.index') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800{{ request()->routeIs('admin.staff.index') ? ' bg-gray-800' : '' }}" @if(request()->routeIs('admin.staff.index')) aria-current="page" @endif>Staff & Roles</a>
+                    @endif
+                    @if(auth()->user()->hasAdminPermission(\App\Support\AdminRole::STAFF_MANAGE))
+                        <a href="{{ route('admin.staff.invitations.index') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800{{ request()->routeIs('admin.staff.invitations.index') ? ' bg-gray-800' : '' }}" @if(request()->routeIs('admin.staff.invitations.index')) aria-current="page" @endif>Staff Invitations</a>
                     @endif
                 </div>
                 <a href="{{ route('home') }}" class="block py-1.5 px-3 rounded hover:bg-gray-800 text-gray-400" target="_blank">View Site</a>
