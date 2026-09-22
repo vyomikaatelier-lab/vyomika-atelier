@@ -54,6 +54,25 @@ class AdminStaffUiAssetsTest extends TestCase
         }
     }
 
+    public function test_invitation_reveal_layout_versions_local_files_and_hides_missing_paths(): void
+    {
+        $layout = file_get_contents(resource_path('views/layouts/admin-invitation-reveal.blade.php'));
+        $this->assertIsString($layout);
+        $this->assertMatchesRegularExpression(
+            '/\$invitationRevealCssVer = @filemtime\(public_path\(\'css\/admin-invitation-reveal\.css\'\)\) \?: time\(\);/',
+            $layout
+        );
+        $this->assertMatchesRegularExpression(
+            '/\$invitationRevealJsVer = @filemtime\(public_path\(\'js\/admin-invitation-reveal\.js\'\)\) \?: time\(\);/',
+            $layout
+        );
+        $this->assertStringContainsString("asset('css/admin-invitation-reveal.css') }}?v={{ \$invitationRevealCssVer }}", $layout);
+        $this->assertStringContainsString("asset('js/admin-invitation-reveal.js') }}?v={{ \$invitationRevealJsVer }}", $layout);
+        $this->assertDoesNotMatchRegularExpression('/\{\{[^}]*public_path\(/', $layout);
+        $this->assertStringNotContainsString('request(', $layout);
+        $this->assertStringNotContainsString('session(', $layout);
+    }
+
     public function test_role_permission_script_syncs_accessible_switch_state(): void
     {
         $script = $this->asset('js/admin-staff-roles.js');
