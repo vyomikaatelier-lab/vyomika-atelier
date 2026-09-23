@@ -18,9 +18,17 @@ class AdminStaffUiAssetsTest extends TestCase
         $this->assertStringContainsString('grid-area: panel;', $css);
         $this->assertStringContainsString('position: sticky;', $css);
         $this->assertStringContainsString('box-sizing: border-box;', $css);
-        $this->assertStringContainsString('@media (max-width: 899px)', $css);
-        $this->assertStringContainsString('@media (min-width: 900px)', $css);
+        $this->assertStringContainsString('@media (max-width: 1279px)', $css);
+        $this->assertStringContainsString('@media (min-width: 1280px)', $css);
+        $this->assertStringNotContainsString('@media (min-width: 900px)', $css);
+        $this->assertStringNotContainsString('@media (max-width: 899px)', $css);
         $this->assertStringContainsString('order: -1;', $css);
+        $this->assertStringContainsString('.admin-nav-link,', $css);
+        $this->assertStringContainsString('display: block;', $css);
+        $this->assertStringContainsString('.invitation-history-head', $css);
+        $this->assertStringContainsString('.invitation-field-label', $css);
+        $this->assertStringContainsString('@container invitation-history (min-width: 36rem)', $css);
+        $this->assertStringContainsString('width: 15rem;', $css);
         $this->assertStringNotContainsString('position: fixed;', $css);
         $this->assertStringNotContainsString('position:fixed;', $css);
         $this->assertDoesNotMatchRegularExpression('/padding-right:\s*min\(/', $css);
@@ -37,6 +45,8 @@ class AdminStaffUiAssetsTest extends TestCase
         $this->assertStringContainsString('/\\/admin\\/staff\\/invitations\\/?$/', $script);
         $this->assertStringNotContainsString('/\\/admin\\/staff\\/?$/', $script);
         $this->assertStringContainsString("indexOf('token=')", $script);
+        $this->assertStringContainsString('form[data-confirm]', $script);
+        $this->assertStringContainsString('window.confirm(message)', $script);
         $this->assertDoesNotMatchRegularExpression('/replaceState\([^;]*invitation-url/', $script);
         $this->assertDoesNotMatchRegularExpression('/replaceState\([^;]*\.value/', $script);
 
@@ -58,7 +68,7 @@ class AdminStaffUiAssetsTest extends TestCase
 
     public function test_invitation_reveal_layout_versions_local_files_and_hides_missing_paths(): void
     {
-        $layout = file_get_contents(resource_path('views/layouts/admin-invitation-reveal.blade.php'));
+        $layout = file_get_contents(resource_path('views/admin/staff/invitations.blade.php'));
         $this->assertIsString($layout);
         $this->assertMatchesRegularExpression(
             '/\$invitationRevealCssVer = @filemtime\(public_path\(\'css\/admin-invitation-reveal\.css\'\)\) \?: time\(\);/',

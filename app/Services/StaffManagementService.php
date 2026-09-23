@@ -146,6 +146,30 @@ class StaffManagementService
         ]);
     }
 
+    public function deleteRevokedInvitation(User $actor, StaffInvitation $invitation): void
+    {
+        $this->authorizeOwner($actor);
+        $invitationId = $invitation->getKey();
+
+        DB::transaction(function () use ($invitationId): void {
+            /** @var StaffInvitation $locked */
+            $locked = StaffInvitation::query()->lockForUpdate()->findOrFail($invitationId);
+
+            if ($locked->revoked_at === null || $locked->accepted_at !== null) {
+                throw ValidationException::withMessages([
+                    'invitation' => 'Only a revoked invitation can be deleted.',
+                ]);
+            }
+
+            $locked->delete();
+        });
+
+        Log::info('admin.staff_invitation_deleted', [
+            'actor_id' => $actor->getKey(),
+            'invitation_id' => $invitationId,
+        ]);
+    }
+
     public function accept(StaffInvitation $invitation, string $plainToken, string $password): User
     {
         return DB::transaction(function () use ($invitation, $plainToken, $password): User {

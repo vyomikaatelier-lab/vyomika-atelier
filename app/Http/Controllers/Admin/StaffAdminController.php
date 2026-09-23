@@ -94,6 +94,19 @@ class StaffAdminController extends Controller
             ->with('success', 'Invitation revoked.');
     }
 
+    public function destroyRevokedInvitation(Request $request, StaffInvitation $invitation): RedirectResponse
+    {
+        try {
+            $this->staff->deleteRevokedInvitation($request->user(), $invitation);
+        } catch (ValidationException $exception) {
+            return $this->redirectInvitationValidation($exception);
+        }
+
+        return redirect()
+            ->route('admin.staff.invitations.index')
+            ->with('success', 'Revoked invitation deleted.');
+    }
+
     public function update(Request $request, User $staff): RedirectResponse
     {
         abort_unless($staff->isAdmin(), 404);
@@ -167,13 +180,11 @@ class StaffAdminController extends Controller
     }
 
     /**
-     * First-party Staff Invitations result used when email cannot be delivered.
+     * Staff Invitations page used when email cannot be delivered.
      *
-     * The normal admin layout loads third-party Tailwind CDN JavaScript, so the
-     * one-time invitation URL is never rendered inside that layout. This POST
-     * response is a first-party-only representation of Staff Invitations with
-     * the fallback panel beside that page. The plain URL exists only in this
-     * response body.
+     * The plaintext URL exists only in this response body. The admin layout
+     * omits third-party assets for this response so the restrictive CSP can
+     * stay in place. A later GET never receives the token.
      */
     private function invitationFallbackResponse(
         StaffInvitation $invitation,
@@ -181,8 +192,8 @@ class StaffAdminController extends Controller
         bool $regenerated = false,
     ): Response {
         return response()
-            ->view('admin.staff.invitation-created', array_merge($this->invitationsPageData(), [
-                'invitation' => $invitation,
+            ->view('admin.staff.invitations', array_merge($this->invitationsPageData(), [
+                'manualInvitation' => $invitation,
                 'acceptUrl' => $acceptUrl,
                 'regenerated' => $regenerated,
             ]))
