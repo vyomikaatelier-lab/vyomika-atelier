@@ -9,6 +9,18 @@
     return '₹' + Number(n).toLocaleString('en-IN');
   }
 
+  function usablePreviewImage(value) {
+    return typeof value === 'string' && value.trim() !== '';
+  }
+
+  function previewImgHtml(src, alt, extraAttrs) {
+    if (!usablePreviewImage(src)) {
+      return '';
+    }
+    const extra = extraAttrs ? ' ' + String(extraAttrs).trim() : '';
+    return `<img src="${src.trim()}" alt="${alt || ''}"${extra}>`;
+  }
+
   function productCard(p) {
     const url = `/shop/${p.slug || ''}`;
     const badge = p.badge
@@ -19,7 +31,7 @@
       <div class="am-product-card__thumb">
         <a href="${url}" class="am-product-card__thumb-link">
           ${badge}
-          <img src="${p.image}" alt="${p.name}" loading="lazy">
+          ${previewImgHtml(p.image, p.name, 'loading="lazy"')}
         </a>
         <div class="am-product-card__actions">
           <form action="/cart/add/${p.slug || ''}" method="POST" class="am-product-card__buy-form"><input type="hidden" name="_token" value="preview"><input type="hidden" name="quantity" value="1"><input type="hidden" name="buy_now" value="1"><button type="submit" class="am-btn am-btn--primary am-btn--sm am-btn--full">Buy Now</button></form>
@@ -107,10 +119,10 @@
         <p class="am-hero__desc">${s.description || ''}</p>
         <a href="${s.cta_href || '/shop'}" class="am-btn am-btn--primary am-btn--lg">${s.cta_label || 'Shop Now'}</a>
       </div>
-      <div class="am-hero__image"><img src="${s.image}" alt="${s.title}" ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'}></div>
+      <div class="am-hero__image">${previewImgHtml(s.image, s.title, i === 0 ? 'fetchpriority="high"' : 'loading="lazy"')}</div>
     </div>`).join('')}
   </div>
-  <div class="am-hero__dots">${hero.map((_, i) => `<button type="button" class="am-hero__dot ${i === 0 ? 'is-active' : ''}" aria-label="Slide ${i + 1}"></button>`).join('')}</div>
+  ${hero.length > 1 ? `<div class="am-hero__dots">${hero.map((_, i) => `<button type="button" class="am-hero__dot ${i === 0 ? 'is-active' : ''}" aria-label="Slide ${i + 1}"></button>`).join('')}</div>` : ''}
 </section>
 
 <section class="am-section am-section--white am-section--edge">
@@ -126,7 +138,7 @@
   <div class="am-section__body">
     <div class="am-product-grid am-product-grid--with-banner">
       <a href="${banner.href || '/shop'}" class="am-product-banner">
-        <img src="${banner.image}" alt="${banner.title}" loading="lazy">
+        ${previewImgHtml(banner.image, banner.title, 'loading="lazy"')}
         <h3>${banner.title}</h3><p>${banner.subtitle}</p>
         <span class="am-btn am-btn--white am-btn--sm">${banner.cta || 'Shop now'}</span>
       </a>
@@ -140,7 +152,7 @@
     <div class="am-cat-grid">
       ${(data.category_banners || []).map(c => `
       <a href="${c.href}" class="am-cat-tile">
-        <img src="${c.image}" alt="${c.title}" loading="lazy">
+        ${previewImgHtml(c.image, c.title, 'loading="lazy"')}
         <h3>${c.title}</h3><p>${c.subtitle}</p>
         <span class="am-btn am-btn--white am-btn--sm">${c.cta}</span>
       </a>`).join('')}
@@ -171,7 +183,7 @@
     <div class="am-spotlight-grid">
       ${(spotlights.items || []).map(item => `
       <div class="am-spotlight">
-        <div class="am-spotlight__image"><img src="${item.image}" alt="${item.title}" loading="lazy"></div>
+        <div class="am-spotlight__image">${previewImgHtml(item.image, item.title, 'loading="lazy"')}</div>
         <div class="am-spotlight__body">
           <h3>${item.title}</h3><p>${item.description}</p>
           <p class="am-spotlight__price">${fmt(item.price)} <span style="font-weight:400;font-size:0.85rem;color:var(--am-muted)">${item.price_unit || ''}</span></p>
@@ -213,7 +225,7 @@
       ${(blog.posts || []).map(p => `
       <article class="am-blog-card">
         <a href="/blog/${p.slug}">
-          <div class="am-blog-card__thumb"><img src="${p.image}" alt="${p.title}" loading="lazy"></div>
+          <div class="am-blog-card__thumb">${previewImgHtml(p.image, p.title, 'loading="lazy"')}</div>
           <div class="am-blog-card__body">
             <div class="am-blog-card__meta"><span class="am-blog-cat">${p.category}</span><span>${p.date}</span></div>
             <h3 class="am-blog-card__title">${p.title}</h3>
@@ -247,7 +259,7 @@
     xhr.send();
   }
 
-  window.AmPreview = { render, load, fmt, productCard, calculatorHtml, trustIcon };
+  window.AmPreview = { render, load, fmt, productCard, calculatorHtml, trustIcon, usablePreviewImage, previewImgHtml };
 
   if (!window.AmPreviewRouter) {
     if (document.readyState === 'loading') {

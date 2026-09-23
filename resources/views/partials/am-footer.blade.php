@@ -8,6 +8,15 @@
     $whatsappSource = $social['whatsapp'] ?? $brand['phone'] ?? '';
     $whatsappDigits = preg_replace('/\D/', '', (string) $whatsappSource);
     $whatsappUrl = $whatsappDigits !== '' ? 'https://wa.me/' . ltrim($whatsappDigits, '+') : null;
+    $navHref = function (array $link, string $fallback = '#') use ($storefrontLink): string {
+        if (! empty($link['href'])) {
+            return $link['href'];
+        }
+
+        return $storefrontLink($link['route'] ?? 'home', $link['params'] ?? [], $fallback);
+    };
+    $shopLinks = $footer['shop_links'] ?? [];
+    $studioLinks = $footer['service_links'] ?? [];
 @endphp
 
 <footer class="am-footer">
@@ -29,14 +38,16 @@
                     @endif
                 </p>
             </div>
+            @if($shopLinks !== [])
             <div>
                 <h5>Shop</h5>
                 <ul>
-                    @foreach($footer['shop_links'] ?? [] as $link)
-                    <li><a href="{{ $storefrontLink($link['route'], $link['params'] ?? [], '/shop') }}">{{ $link['label'] }}</a></li>
+                    @foreach($shopLinks as $link)
+                    <li><a href="{{ $navHref($link) }}">{{ $link['label'] }}</a></li>
                     @endforeach
                 </ul>
             </div>
+            @endif
             <div>
                 <h5>Information</h5>
                 <ul>
@@ -45,14 +56,16 @@
                     @endforeach
                 </ul>
             </div>
+            @if($studioLinks !== [])
             <div>
                 <h5>Studio</h5>
                 <ul>
-                    @foreach($footer['service_links'] ?? [] as $link)
-                    <li><a href="{{ $storefrontLink($link['route'], $link['params'] ?? [], '/services') }}">{{ $link['label'] }}</a></li>
+                    @foreach($studioLinks as $link)
+                    <li><a href="{{ $navHref($link) }}">{{ $link['label'] }}</a></li>
                     @endforeach
                 </ul>
             </div>
+            @endif
             <div>
                 <h5>Legal</h5>
                 <ul>
@@ -85,6 +98,7 @@
             </div>
 
             <div class="am-footer__accordions">
+                @if($shopLinks !== [])
                 <div class="am-footer__accordion">
                     <button type="button" class="am-footer__accordion-toggle" data-am-footer-toggle aria-expanded="false" aria-controls="am-footer-panel-shop">
                         Shop
@@ -92,12 +106,13 @@
                     </button>
                     <div class="am-footer__accordion-panel" id="am-footer-panel-shop" hidden>
                         <ul>
-                            @foreach($footer['shop_links'] ?? [] as $link)
-                            <li><a href="{{ $storefrontLink($link['route'], $link['params'] ?? [], '/shop') }}">{{ $link['label'] }}</a></li>
+                            @foreach($shopLinks as $link)
+                            <li><a href="{{ $navHref($link) }}">{{ $link['label'] }}</a></li>
                             @endforeach
                         </ul>
                     </div>
                 </div>
+                @endif
                 <div class="am-footer__accordion">
                     <button type="button" class="am-footer__accordion-toggle" data-am-footer-toggle aria-expanded="false" aria-controls="am-footer-panel-info">
                         Information
@@ -111,6 +126,7 @@
                         </ul>
                     </div>
                 </div>
+                @if($studioLinks !== [])
                 <div class="am-footer__accordion">
                     <button type="button" class="am-footer__accordion-toggle" data-am-footer-toggle aria-expanded="false" aria-controls="am-footer-panel-studio">
                         Studio
@@ -118,12 +134,13 @@
                     </button>
                     <div class="am-footer__accordion-panel" id="am-footer-panel-studio" hidden>
                         <ul>
-                            @foreach($footer['service_links'] ?? [] as $link)
-                            <li><a href="{{ $storefrontLink($link['route'], $link['params'] ?? [], '/services') }}">{{ $link['label'] }}</a></li>
+                            @foreach($studioLinks as $link)
+                            <li><a href="{{ $navHref($link) }}">{{ $link['label'] }}</a></li>
                             @endforeach
                         </ul>
                     </div>
                 </div>
+                @endif
             </div>
 
             <nav class="am-footer__compact-legal" aria-label="Legal">

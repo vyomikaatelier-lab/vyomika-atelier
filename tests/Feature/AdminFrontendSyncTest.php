@@ -16,6 +16,7 @@ use App\Support\CmsSettings;
 use App\Support\ProductCatalog;
 use App\Support\ServiceGallery;
 use App\Support\Seo\PageSeo;
+use App\Support\StorefrontNavigation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -203,7 +204,7 @@ class AdminFrontendSyncTest extends TestCase
             ->assertSee('Patina, care and pairing notes.', false);
     }
 
-    public function test_service_edit_appears_on_the_public_service_page(): void
+    public function test_service_edit_redirects_public_legacy_urls_to_studio_or_shop(): void
     {
         $service = Service::query()->create([
             'name' => 'Fluted Screens',
@@ -226,10 +227,10 @@ class AdminFrontendSyncTest extends TestCase
             ->assertSessionHasNoErrors();
 
         $this->get(route('services.show', 'fluted-screens'))
-            ->assertOk()
-            ->assertSee('Hand-finished fluted metal screens.', false);
+            ->assertRedirect(StorefrontNavigation::publicServicesRedirectUrl('fluted-screens'));
 
-        $this->get(route('services.index'))->assertOk()->assertSee('Fluted Screens');
+        $this->get(route('services.index'))
+            ->assertRedirect(StorefrontNavigation::publicServicesRedirectUrl());
     }
 
     public function test_exhibition_edit_appears_on_the_about_page(): void
@@ -423,7 +424,7 @@ class AdminFrontendSyncTest extends TestCase
 
         $this->createProductAsAdmin($category, 'Terra Steel Planter', 'terra-steel-planter');
 
-        $this->get(route('shop.index'))
+        $this->get(route('shop.show', 'steel-planters'))
             ->assertOk()
             ->assertSee('Terra Steel Planter');
     }
@@ -577,7 +578,7 @@ class AdminFrontendSyncTest extends TestCase
             ->assertRedirect(route('admin.categories.index'))
             ->assertSessionHasNoErrors();
 
-        $this->get(route('shop.index'))
+        $this->get(route('shop.show', 'coffee-tables'))
             ->assertOk()
             ->assertSee('Coffee Tables');
     }
@@ -590,9 +591,8 @@ class AdminFrontendSyncTest extends TestCase
 
         $category->update(['is_active' => false]);
 
-        $this->get(route('shop.index'))
-            ->assertOk()
-            ->assertDontSee('Meridian Brass Coffee Table');
+        $this->get(route('shop.show', 'coffee-tables'))
+            ->assertNotFound();
     }
 
     public function test_hiding_every_exhibition_empties_the_about_section(): void

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\RazorpayReconciliationRequiredException;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\OrderPaymentService;
@@ -45,24 +46,34 @@ class RazorpayWebhookController extends Controller
         $order = Order::query()->where('razorpay_order_id', $razorpayOrderId)->first();
 
         if (! $order) {
-            Log::warning('Razorpay webhook: order not found.', ['razorpay_order_id' => $razorpayOrderId]);
+            Log::warning('Razorpay webhook: order not found.', [
+                'razorpay_order_id' => $razorpayOrderId,
+            ]);
 
             return response()->json(['status' => 'order_not_found']);
         }
 
-        if ($order->status !== 'pending') {
+        if (in_array($order->status, ['paid', 'processing', 'shipped', 'delivered'], true)) {
             return response()->json(['status' => 'already_processed']);
         }
 
         try {
             $payments->completeFromGateway($order, $paymentId, $razorpayOrderId);
+        } catch (RazorpayReconciliationRequiredException $e) {
+            return response()->json(['status' => 'reconciliation_required']);
         } catch (RuntimeException $e) {
             Log::error('Razorpay webhook payment completion failed.', [
                 'order_id' => $order->id,
+                'order_number' => $order->order_number,
                 'error' => $e->getMessage(),
             ]);
 
-            return response()->json(['message' => $e->getMessage()], $e->getCode() ?: 500);
+            $statusCode = (int) $e->getCode();
+            if ($statusCode < 400 || $statusCode > 599) {
+                $statusCode = 500;
+            }
+
+            return response()->json(['message' => $e->getMessage()], $statusCode);
         }
 
         return response()->json(['status' => 'ok']);

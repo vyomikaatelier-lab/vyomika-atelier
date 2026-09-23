@@ -75,4 +75,13 @@ class AddressValidationTest extends TestCase
         $this->assertSame('400001', $snapshot['pincode']);
         $this->assertArrayHasKey('formatted_line', $snapshot);
     }
+
+    public function test_india_checkout_rejects_invalid_delivery_mobile(): void
+    {
+        $payload = $this->validIndiaPayload();
+        $payload['phone'] = '123';
+
+        $this->expectException(ValidationException::class);
+        $this->addresses->validate($payload, true);
+    }
 }

@@ -79,7 +79,7 @@ DB_DATABASE=u550969814_vyomika
 DB_USERNAME=u550969814_vyomika
 DB_PASSWORD=YOUR_DB_PASSWORD_HERE
 
-# Shared hosting: prefer file drivers (database session/cache can 500 if misconfigured)
+# Shared hosting: session may use file; payment locks still require database cache tables (see below)
 SESSION_DRIVER=file
 CACHE_STORE=file
 QUEUE_CONNECTION=sync
@@ -223,13 +223,57 @@ If the site shows 403 or old CSS after a Git redeploy, `post-deploy.sh` re-creat
 
 ---
 
+## Payment lock preflight (required before Razorpay checkout deploy)
+
+Checkout payment safety uses `PaymentAtomicLock`, which **always** calls `Cache::store('database')->lock()` — not the default `CACHE_STORE`. Session cache and payment locks are separate: `CACHE_STORE=file` is acceptable only when the **database cache store** and its tables are available on the same MySQL connection used for `cache_locks`.
+
+**Do not treat production as ready until this read-only preflight passes on the live server.** Do not acquire a real lock during preflight (that would write to `cache_locks`).
+
+```bash
+cd ~/vyomika-atelier
+
+# Effective config (mask secrets in notes; do not paste DB passwords)
+php artisan tinker --execute="echo json_encode([
+  'cache_default' => config('cache.default'),
+  'database_store_driver' => config('cache.stores.database.driver'),
+  'database_store_connection' => config('cache.stores.database.connection') ?: config('database.default'),
+  'cache_table' => config('cache.stores.database.table'),
+  'lock_table' => config('cache.stores.database.lock_table'),
+  'config_cached' => app()->configurationIsCached(),
+]);"
+
+# Read-only schema checks (SELECT / SHOW / DESCRIBE only)
+mysql -h 127.0.0.1 -u YOUR_DB_USER -p YOUR_DB_NAME -e "SHOW TABLES LIKE 'cache';"
+mysql -h 127.0.0.1 -u YOUR_DB_USER -p YOUR_DB_NAME -e "SHOW TABLES LIKE 'cache_locks';"
+mysql -h 127.0.0.1 -u YOUR_DB_USER -p YOUR_DB_NAME -e "SHOW CREATE TABLE cache_locks\\G"
+mysql -h 127.0.0.1 -u YOUR_DB_USER -p YOUR_DB_NAME -e "SELECT migration FROM migrations WHERE migration LIKE '%create_cache%';"
+```
+
+**Required:**
+
+| Check | Expected |
+|-------|----------|
+| `cache.stores.database.driver` | `database` |
+| Database store connection | Resolves to production MySQL (masked) |
+| `cache` table | Exists |
+| `cache_locks` table | Exists |
+| `cache_locks` primary key | On lock name column (`key`) |
+| Cache migration row | Present in `migrations` |
+| `PaymentAtomicLock::assertStoreSupportsSharedLocks()` | Would pass at runtime |
+
+**Not changed by this deploy:** `database/migrations/2026_08_24_233000_add_unique_indexes_to_order_payment_identifiers.php` — run only after separate duplicate-ID preflight approval.
+
+**Residual risk (documented):** If Razorpay accepts a create remotely but the app crashes before persisting `razorpay_order_id`, a retry may create a second gateway order unless provider-level idempotency exists. Receipt stays deterministic (`order_number`). Failures log `razorpay.create_persist_failed` for manual reconciliation. This does not replace live preflight above.
+
+---
+
 ## Production `.env` checklist
 
 | Variable | Recommended on Hostinger |
 |----------|------------------------|
 | `APP_DEBUG` | `false` |
 | `SESSION_DRIVER` | `file` |
-| `CACHE_STORE` | `file` |
+| `CACHE_STORE` | `file` is OK **if** MySQL `cache` + `cache_locks` tables exist (payment locks use `Cache::store('database')` explicitly) |
 | `QUEUE_CONNECTION` | `sync` (unless you run `queue:work` via cron) |
 | `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | From Razorpay dashboard |
 | `MAIL_*` | Hostinger or Cloudflare SMTP credentials |

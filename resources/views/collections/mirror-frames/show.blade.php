@@ -19,7 +19,7 @@
     <div class="am-container">
         @include('partials.am-breadcrumbs', ['items' => [
             ['label' => 'Home', 'url' => route('home')],
-            ['label' => 'Shop', 'url' => route('shop.index')],
+            ['label' => 'Shop', 'url' => \App\Support\StorefrontRoutes::primaryShopUrl()],
             ['label' => 'Mirror Frames', 'url' => route('shop.mirror-frames.index')],
             ['label' => $design['name'] ?? $product->name],
         ]])

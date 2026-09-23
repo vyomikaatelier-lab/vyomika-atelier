@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Service;
 use App\Models\ServiceDesign;
+use App\Support\ProductPublicationPolicy;
 use App\Support\ServiceGallery;
 
 class ServiceController extends Controller
@@ -76,8 +77,7 @@ class ServiceController extends Controller
             return collect();
         }
 
-        return Product::query()
-            ->where('is_active', true)
+        return ProductPublicationPolicy::applyGalleryScope(Product::query())
             ->whereHas('category', fn ($q) => $q->whereIn('slug', $slugs))
             ->inRandomOrder()
             ->limit(4)

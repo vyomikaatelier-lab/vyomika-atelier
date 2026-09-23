@@ -31,8 +31,6 @@ HTML,
         'author' => 'Vyomika Atelier LLP',
         'gallery' => [
             'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg',
-            'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg',
-            'https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg',
         ],
         'related_product_slugs' => ['champagne-wave-partition', 'veil-fluted-panel', 'laser-cut-partition'],
         'related_project_slugs' => ['champagne-wave-office-lobby', 'matte-black-coworking'],
@@ -271,7 +269,7 @@ HTML,
 
 <p>Explore <a href="/shop?category=partitions">partition products</a> or discuss a custom screen at <a href="/contact">contact</a>.</p>
 HTML,
-        'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg',
+        'image' => '',
         'hero_image_alt' => 'Laser-cut decorative metal screen with geometric pattern in PVD finish',
         'meta_title' => 'Decorative Laser-Cut Metal Screens | Vyomika Atelier LLP',
         'meta_description' => 'Custom laser-cut decorative metal screens for façades, balconies and interiors — CNC fabrication and PVD finishing by Vyomika Atelier LLP.',

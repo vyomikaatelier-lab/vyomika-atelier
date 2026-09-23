@@ -27,11 +27,6 @@ return [
     'copy' => [
         'login_title' => 'Welcome Back',
         'register_title' => 'Create Your Account',
-        'send_otp' => 'Send WhatsApp OTP',
-        'verify_otp' => 'Verify & Continue',
-        'resend_otp' => 'Resend OTP',
-        'success' => 'Your WhatsApp number has been verified successfully.',
-        'failure' => 'The code is incorrect or has expired. Please request a new OTP.',
-        'otp_sent_generic' => 'If this number is eligible, a verification code has been sent to your WhatsApp.',
+        'success' => 'Welcome to Vyomika Atelier.',
     ],
 ];

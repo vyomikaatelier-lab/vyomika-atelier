@@ -1,26 +1,26 @@
 @php
     use App\Support\ResponsiveHero;
 
-    $urls = ResponsiveHero::urls($slide);
-    $desktop = $urls['desktop'];
-    $tablet = $urls['tablet'];
-    $mobile = $urls['mobile'];
+    $picture = ResponsiveHero::picture($slide ?? [], $fallbackDesktop ?? null, $sizes ?? '100vw');
+    $priority = $priority ?? false;
     $alt = $slide['title'] ?? '';
 @endphp
-@if(filled($desktop) || filled($tablet) || filled($mobile))
+@if($picture)
 <picture>
-    @if(filled($mobile))
-        <source media="(max-width: 767px)" srcset="{{ $mobile }}">
-    @endif
-    @if(filled($tablet))
-        <source media="(max-width: 1023px)" srcset="{{ $tablet }}">
-    @endif
+    @foreach($picture['sources'] as $source)
+        <source media="{{ $source['media'] }}" srcset="{{ $source['srcset'] }}"
+            @if(!empty($source['type'])) type="{{ $source['type'] }}" @endif
+            @if(!empty($source['width'])) width="{{ $source['width'] }}" @endif
+            @if(!empty($source['height'])) height="{{ $source['height'] }}" @endif>
+    @endforeach
     <img
-        src="{{ filled($desktop) ? $desktop : ($tablet ?: $mobile) }}"
+        src="{{ $picture['src'] }}"
+        srcset="{{ $picture['srcset'] }}"
+        sizes="{{ $picture['sizes'] }}"
         alt="{{ $alt }}"
-        width="1200"
-        height="900"
-        decoding="async"
+        @if($picture['width']) width="{{ $picture['width'] }}" @endif
+        @if($picture['height']) height="{{ $picture['height'] }}" @endif
+        @if(!$priority) decoding="async" @endif
         @if($priority) fetchpriority="high" @else loading="lazy" @endif
     >
 </picture>

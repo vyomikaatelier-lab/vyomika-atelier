@@ -61,7 +61,7 @@ class SiteSettingAdminTest extends TestCase
             ];
         }
 
-        $payload['hero_slides'][1]['image_file'] = UploadedFile::fake()->image('hero-1.jpg');
+        $payload['hero_slides'][0]['image_file'] = UploadedFile::fake()->image('hero-0.jpg');
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.settings.update'), $payload)
@@ -70,8 +70,8 @@ class SiteSettingAdminTest extends TestCase
 
         $slides = SiteSetting::getValue('hero')['slides'] ?? [];
         $this->assertSame('Hero title 0', $slides[0]['title'] ?? null);
-        $this->assertSame('Hero title 2', $slides[2]['title'] ?? null);
-        $this->assertStringContainsString('hero/', $slides[1]['image'] ?? '');
+        $this->assertCount(1, $slides);
+        $this->assertStringContainsString('hero/', $slides[0]['image'] ?? '');
     }
 
     public function test_admin_can_upload_mobile_and_tablet_hero_images(): void
@@ -140,27 +140,27 @@ class SiteSettingAdminTest extends TestCase
     public function test_homepage_section_hidden_when_toggled_off(): void
     {
         $admin = User::factory()->admin()->create();
-        $trendingTitle = config('site.trending.title', 'Trending Metal Finds');
+        $blogTitle = config('site.blog.title', 'Guides, Tips & Inspiration');
 
         $this->actingAsAdmin($admin)
             ->post(route('admin.settings.update'), [
                 'current_password' => 'password',
                 'brand_name' => 'Vyomika Atelier',
                 'email' => 'hello@vyomikaatelier.com',
-                'homepage_section_trending' => '0',
+                'homepage_section_blog' => '0',
             ])
             ->assertRedirect()
             ->assertSessionHas('success');
 
         $sections = SiteSetting::getValue('homepage')['sections'] ?? [];
-        $this->assertFalse($sections['trending'] ?? true);
+        $this->assertFalse($sections['blog'] ?? true);
 
         CmsSettings::hydrate();
-        $this->assertFalse(SiteContent::homepageSectionEnabled('trending'));
+        $this->assertFalse(SiteContent::homepageSectionEnabled('blog'));
 
         $this->get(route('home'))
             ->assertOk()
-            ->assertDontSee($trendingTitle, false);
+            ->assertDontSee($blogTitle, false);
     }
 
     public function test_homepage_sections_default_to_visible_before_admin_save(): void

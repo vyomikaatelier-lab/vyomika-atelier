@@ -11,7 +11,11 @@ return [
             'encryption' => env('MAIL_ENCRYPTION', 'ssl'),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
-            'timeout' => null,
+            // Finite SMTP timeout for Symfony Mailer SocketStream. Must stay
+            // below PHP max_execution_time so invitation mail failures reach
+            // the one-time fallback handler instead of a public 500.
+            // Production: MAIL_SMTP_TIMEOUT=8
+            'timeout' => \App\Support\MailTransport::smtpTimeoutSeconds(env('MAIL_SMTP_TIMEOUT', 8)),
         ],
         'log' => [
             'transport' => 'log',

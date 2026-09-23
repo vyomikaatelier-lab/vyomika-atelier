@@ -8,10 +8,11 @@ class SiteContent
     public static function homepageSectionLabels(): array
     {
         return [
-            'category_banners' => 'Category banners',
+            'category_banners' => 'Collection row',
+            'studio_spotlights' => 'Studio capabilities',
             'best_sellers' => 'Best sellers product grid',
             'trending' => 'Trending products',
-            'spotlights' => 'Spotlights',
+            'usps' => 'USP highlights',
             'cta_band' => 'CTA band',
             'testimonials' => 'Testimonials',
             'blog' => 'Blog strip',
@@ -96,13 +97,21 @@ class SiteContent
         return self::get('trust_badges', []);
     }
 
+    public static function homepageStudioSpotlights(): array
+    {
+        return self::arrayValue('homepage.studio_spotlights');
+    }
+
+    public static function homepageUsps(): array
+    {
+        return self::arrayValue('homepage.usps');
+    }
+
     public static function footer(): array
     {
         $footer = self::arrayValue('footer');
-
-        if (isset($footer['shop_links']) && is_array($footer['shop_links'])) {
-            $footer['shop_links'] = ShopCatalog::filterShopLinks($footer['shop_links']);
-        }
+        $footer['shop_links'] = StorefrontNavigation::shopLinks();
+        $footer['service_links'] = StorefrontNavigation::studioLinks();
 
         return $footer;
     }

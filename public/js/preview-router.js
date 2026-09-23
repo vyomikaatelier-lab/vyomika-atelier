@@ -6,6 +6,41 @@
 
   window.AmPreviewRouter = true;
 
+  function usablePreviewImage(value) {
+    return typeof value === 'string' && value.trim() !== '';
+  }
+
+  function previewImgHtml(src, alt, extraAttrs) {
+    if (!usablePreviewImage(src)) {
+      return '';
+    }
+    const extra = extraAttrs ? ' ' + String(extraAttrs).trim() : '';
+    return `<img src="${src.trim()}" alt="${alt || ''}"${extra}>`;
+  }
+
+  function previewBackgroundStyle(cssVar, src) {
+    if (!usablePreviewImage(src)) {
+      return '';
+    }
+    return ` style="${cssVar}: url('${src.trim()}')"`;
+  }
+
+  function previewGalleryUrls(urls) {
+    return (urls || []).filter(usablePreviewImage);
+  }
+
+  function pdpMainHtml(src, alt) {
+    return `<div class="am-pdp__main">${previewImgHtml(src, alt, 'class="am-pdp__main-img"')}</div>`;
+  }
+
+  window.AmPreviewRouterApi = {
+    usablePreviewImage,
+    previewImgHtml,
+    previewBackgroundStyle,
+    previewGalleryUrls,
+    pdpMainHtml,
+  };
+
   const SHOP_CATEGORIES = [
     { slug: '', name: 'All Products' },
     { slug: 'mirror-frames', name: 'Mirror Frames' },
@@ -209,9 +244,7 @@
       data-finish-black="${s.is_black ? '1' : '0'}" style="--swatch-color: ${s.hex}"
       title="${s.name}${s.is_black ? ' (+30%)' : ''}">
       <span class="am-pdp-finish__swatch-media">
-        <img src="${img}" alt="" class="am-pdp-finish__swatch-img"
-          data-finish-fallback="${fallback}"
-          onerror="if(this.dataset.fallback){this.onerror=null;this.src=this.dataset.fallback}">
+        ${previewImgHtml(img, '', `class="am-pdp-finish__swatch-img" data-finish-fallback="${fallback}" onerror="if(this.dataset.fallback){this.onerror=null;this.src=this.dataset.fallback}"`)}
         <span class="am-pdp-finish__swatch-fallback" aria-hidden="true"></span>
       </span>
       <span class="am-pdp-finish__swatch-name">${s.name}</span>
@@ -290,7 +323,7 @@
       <div class="am-product-card__thumb">
         <a href="${url}" class="am-product-card__thumb-link">
           ${badge}
-          ${p.image ? `<img src="${p.image}" alt="${p.name}" loading="lazy">` : ''}
+          ${previewImgHtml(p.image, p.name, 'loading="lazy"')}
         </a>
         <div class="am-product-card__actions">${action}</div>
       </div>
@@ -472,8 +505,8 @@ ${pageHero('Legal', page.title, lastUpdated ? 'Last updated: ' + lastUpdated : '
     const types = ['Partition', 'Panel', 'Screen', 'Divider'];
     const categories = ['PVD Partitions', 'Fluted Panels', 'Room Dividers'];
     const images = [
-      'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg',
-      'https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg',
+      '',
+      '',
       'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg',
       'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80',
       'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80',
@@ -682,7 +715,7 @@ ${pageHero('Legal', page.title, lastUpdated ? 'Last updated: ' + lastUpdated : '
     const catHtml = categoryLabel ? `<p class="am-design-gallery__cat">${categoryLabel}</p>` : '';
     return `<article class="am-design-gallery__card">
       <a href="/shop/${product.slug}" class="am-design-gallery__media">
-        ${product.image ? `<img src="${product.image}" alt="${product.name}" loading="lazy">` : ''}
+        ${previewImgHtml(product.image, product.name, 'loading="lazy"')}
       </a>
       <div class="am-design-gallery__body">
         <h3 class="am-design-gallery__name"><a href="/shop/${product.slug}">${product.name}</a></h3>
@@ -699,11 +732,12 @@ ${pageHero('Legal', page.title, lastUpdated ? 'Last updated: ' + lastUpdated : '
     partitions: { label: 'Studio', title: 'PVD Partitions', subtitle: 'Wave, fluted, and laser-cut stainless partitions in champagne gold, rose gold, and matte black.', image: 'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg', intro: 'Each partition is fabricated from grade 304/316 stainless with PVD coating in our Mumbai studio.' },
     'slim-profile-door-system': { label: 'Studio', title: 'Slim Profile Door System', subtitle: 'Minimal PVD door frames and pivot systems with concealed hardware.', image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1400&q=80', intro: 'PVD-coated stainless door systems with tempered glass panels.' },
     'main-entrance-pvd-doors': { label: 'Studio', title: 'Main Entrance PVD Doors', subtitle: 'Statement entrance doors and PVD pull systems for lobbies and villas.', image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400&q=80', intro: 'Main entrance systems combining PVD frames, glass panels, and architectural pulls.' },
-    'rack-systems-metal-pvd': { label: 'Studio', title: 'Rack Systems, Metal PVD', subtitle: 'Wall-mounted and freestanding PVD rack systems for retail and wardrobes.', image: 'https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg', intro: 'PVD-coated metal rack systems engineered for retail inventory and wardrobe storage.' },
+    'rack-systems-metal-pvd': { label: 'Studio', title: 'Rack Systems, Metal PVD', subtitle: 'Wall-mounted and freestanding PVD rack systems for retail and wardrobes.', image: '', intro: 'PVD-coated metal rack systems engineered for retail inventory and wardrobe storage.' },
   };
 
   function serviceHeroHtml(hero) {
-    return `<section class="am-mirror-frames-hero am-service-hero" style="--mirror-frames-hero-img: url('${hero.image}')"><div class="am-container am-mirror-frames-hero__inner"><h1 class="am-mirror-frames-hero__title">${hero.title}</h1><p class="am-mirror-frames-hero__subtitle">${hero.subtitle}</p><div class="am-pro-hero__actions"><a href="#service-gallery" class="am-btn am-btn--primary">Browse Designs</a><a href="/custom-order" class="am-btn am-btn--outline am-btn--light">Request Quote</a></div></div></section>${hero.intro ? `<section class="am-section am-section--white"><div class="am-container am-mirror-frames-intro"><h2 class="am-corten-section__title am-corten-section__title--center">${hero.title}</h2><p class="am-corten-section__lead am-corten-section__lead--center">${hero.intro}</p></div></section>` : ''}`;
+    const heroStyle = previewBackgroundStyle('--mirror-frames-hero-img', hero.image);
+    return `<section class="am-mirror-frames-hero am-service-hero"${heroStyle}><div class="am-container am-mirror-frames-hero__inner"><h1 class="am-mirror-frames-hero__title">${hero.title}</h1><p class="am-mirror-frames-hero__subtitle">${hero.subtitle}</p><div class="am-pro-hero__actions"><a href="#service-gallery" class="am-btn am-btn--primary">Browse Designs</a><a href="/custom-order" class="am-btn am-btn--outline am-btn--light">Request Quote</a></div></div></section>${hero.intro ? `<section class="am-section am-section--white"><div class="am-container am-mirror-frames-intro"><h2 class="am-corten-section__title am-corten-section__title--center">${hero.title}</h2><p class="am-corten-section__lead am-corten-section__lead--center">${hero.intro}</p></div></section>` : ''}`;
   }
 
   function renderServiceGallery(slug) {
@@ -741,7 +775,7 @@ ${hero ? serviceHeroHtml(hero) : pageHero('Studio', service.name, meta.action, f
 
     const appsHtml = (page.applications?.items || []).map((app) => `
       <article class="am-corten-apps__card">
-        <div class="am-corten-apps__media"><img src="${app.image}" alt="${app.name}" loading="lazy"></div>
+        <div class="am-corten-apps__media">${previewImgHtml(app.image, app.name, 'loading="lazy"')}</div>
         <h3 class="am-corten-apps__name">${app.name}</h3>
       </article>`).join('');
 
@@ -750,7 +784,7 @@ ${hero ? serviceHeroHtml(hero) : pageHero('Studio', service.name, meta.action, f
     const stages = page.finish_evolution?.stages || [];
     const timelineHtml = stages.map((stage, i) => `
       <div class="am-corten-timeline__step">
-        <div class="am-corten-timeline__media"><img src="${stage.image}" alt="${stage.label}" loading="lazy"></div>
+        <div class="am-corten-timeline__media">${previewImgHtml(stage.image, stage.label, 'loading="lazy"')}</div>
         <p class="am-corten-timeline__label">${stage.label}</p>
         ${i < stages.length - 1 ? '<span class="am-corten-timeline__arrow" aria-hidden="true">→</span>' : ''}
       </div>`).join('');
@@ -768,7 +802,7 @@ ${hero ? serviceHeroHtml(hero) : pageHero('Studio', service.name, meta.action, f
       const open = href ? `<a href="${href}" class="${cls}">` : `<article class="${cls}">`;
       const close = href ? '</a>' : '</article>';
       return `${open}
-        <div class="am-card__thumb"><img src="${p.image}" alt="${p.title}" loading="lazy"></div>
+        <div class="am-card__thumb">${previewImgHtml(p.image, p.title, 'loading="lazy"')}</div>
         <div class="am-card__body">
           <p class="am-card__label">${p.category || ''}${p.location ? ' · ' + p.location : ''}</p>
           <h3 class="am-card__title">${p.title}</h3>
@@ -786,7 +820,7 @@ ${hero ? serviceHeroHtml(hero) : pageHero('Studio', service.name, meta.action, f
     const heroImg = hero.image || service.image;
 
     document.getElementById('am-main').innerHTML = `
-<section class="am-corten-hero" style="--corten-hero-img: url('${heroImg}')">
+<section class="am-corten-hero"${previewBackgroundStyle('--corten-hero-img', heroImg)}>
   <div class="am-container am-corten-hero__inner">
     <p class="am-page-hero__label">Corten Steel</p>
     <h1 class="am-corten-hero__title">${hero.title || service.name}</h1>
@@ -815,7 +849,7 @@ ${hero ? serviceHeroHtml(hero) : pageHero('Studio', service.name, meta.action, f
       <h2 class="am-corten-section__title">${page.why?.title || ''}</h2>
       <ul class="am-corten-checklist">${whyHtml}</ul>
     </div>
-    <div class="am-corten-split__media"><img src="${service.image}" alt="Corten steel" loading="lazy"></div>
+    <div class="am-corten-split__media">${previewImgHtml(service.image, 'Corten steel', 'loading="lazy"')}</div>
   </div>
 </section>
 <section class="am-section am-section--dark">
@@ -1346,7 +1380,7 @@ ${pageHero('Products', catLabel, 'Mirror frames, tables, and door hardware — o
     <div class="am-pdp">
       <div class="am-pdp__gallery">
         <div class="am-pdp__gallery-inner">
-          <div class="am-pdp__main"><img src="${product.image}" alt="${product.name}" class="am-pdp__main-img"></div>
+          ${pdpMainHtml(product.image, product.name)}
         </div>
       </div>
       <div class="am-pdp__info">
@@ -1398,7 +1432,7 @@ ${pageHero('Cart', 'Your Cart', items.length ? `${items.length} line item${items
         <div class="am-cart-list am-card"><div class="am-card__body am-cart-list__body">
           ${items.map((i) => `
           <article class="am-cart-row" data-cart-slug="${i.slug}">
-            <a href="/shop/${i.slug}" class="am-cart-thumb"><img src="${i.image}" alt=""></a>
+            <a href="/shop/${i.slug}" class="am-cart-thumb">${previewImgHtml(i.image, '')}</a>
             <div class="am-cart-row__body">
               <h3 class="am-cart-row__name"><a href="/shop/${i.slug}">${i.name}</a></h3>
               <p class="am-cart-row__unit">${cart.fmt(i.price)} each</p>
@@ -1661,7 +1695,7 @@ ${pageHero('Secure Checkout', 'Checkout', 'Preview mode — form submission is s
       <div class="am-section__body">
         <div class="am-featured am-featured--edge am-featured--with-calc">
           <div class="am-featured__image am-featured__image--portrait">
-            ${image ? `<img src="${image}" alt="${name}" loading="lazy">` : ''}
+            ${previewImgHtml(image, name, 'loading="lazy"')}
           </div>
           <div class="am-featured__body">
             <p class="am-featured__cat">${service.name}</p>
@@ -1687,7 +1721,7 @@ ${pageHero('Secure Checkout', 'Checkout', 'Preview mode — form submission is s
       <div class="am-section__body">
         <div class="am-featured am-featured--edge am-featured--with-calc">
           <div class="am-featured__image am-featured__image--portrait">
-            ${image ? `<img src="${image}" alt="${name}" loading="lazy">` : ''}
+            ${previewImgHtml(image, name, 'loading="lazy"')}
           </div>
           <div class="am-featured__body">
             <p class="am-featured__cat">${service.name}</p>
@@ -1725,7 +1759,7 @@ ${pageHero('Secure Checkout', 'Checkout', 'Preview mode — form submission is s
 
   function designCardHtml(service, design) {
     const inner = `
-      ${design.image ? `<div class="am-design-gallery__media"><img src="${design.image}" alt="${design.name}" loading="lazy"></div>` : ''}
+      ${usablePreviewImage(design.image) ? `<div class="am-design-gallery__media">${previewImgHtml(design.image, design.name, 'loading="lazy"')}</div>` : ''}
       <div class="am-design-gallery__body">
         <h3 class="am-design-gallery__name">${design.name}</h3>
         <p class="am-design-gallery__desc">${design.description}</p>
@@ -1750,7 +1784,7 @@ ${pageHero('Studio', 'Custom Architectural Solutions', 'PVD partitions, door sys
     <div class="am-grid-3">
       ${studioServices.map((s) => `
       <a href="/studio/${STUDIO_SERVICE_TO_URL[s.slug]}" class="am-card">
-        <div class="am-card__thumb">${s.image ? `<img src="${s.image}" alt="${s.name}" loading="lazy">` : ''}</div>
+        <div class="am-card__thumb">${previewImgHtml(s.image, s.name, 'loading="lazy"')}</div>
         <div class="am-card__body">
           <h2 class="am-card__title">${s.name}</h2>
           <p class="am-card__text">${s.summary || ''}</p>
@@ -1863,7 +1897,7 @@ ${pageHero('Studio', 'Fabrication & Design', 'PVD partitions, metal furniture, a
 
     const gridHtml = projects.length ? projects.map((p) => `
       <a href="/projects/${p.slug}" class="am-project-card">
-        <div class="am-project-card__media"><img src="${p.image}" alt="${p.title}" loading="lazy"></div>
+        <div class="am-project-card__media">${previewImgHtml(p.image, p.title, 'loading="lazy"')}</div>
         <div class="am-project-card__body">
           <p class="am-project-card__meta">
             ${p.category ? `<span>${p.category.charAt(0).toUpperCase() + p.category.slice(1)}</span>` : ''}
@@ -1900,8 +1934,8 @@ ${cta.title ? `<section class="am-section am-section--dark am-projects-cta"><div
 
     const catLabel = project.category ? project.category.charAt(0).toUpperCase() + project.category.slice(1) : '';
     const materialsHtml = (project.materials || []).map((m) => `<li>${m}</li>`).join('');
-    const galleryHtml = (project.gallery || []).map((img) => `
-      <figure class="am-project-gallery__item"><img src="${img}" alt="" loading="lazy"></figure>`).join('');
+    const galleryHtml = previewGalleryUrls(project.gallery).map((img) => `
+      <figure class="am-project-gallery__item">${previewImgHtml(img, '', 'loading="lazy"')}</figure>`).join('');
     const designHtml = project.design_details
       ? project.design_details.split('\n').filter(Boolean).map((l) => `<p>${l}</p>`).join('')
       : '';
@@ -1914,7 +1948,7 @@ ${cta.title ? `<section class="am-section am-section--dark am-projects-cta"><div
     <span aria-current="page">${project.title}</span>
   </div>
 </nav>
-${project.image ? `<section class="am-project-hero"><img src="${project.image}" alt="${project.title}" class="am-project-hero__img"></section>` : ''}
+${usablePreviewImage(project.image) ? `<section class="am-project-hero">${previewImgHtml(project.image, project.title, 'class="am-project-hero__img"')}</section>` : ''}
 <section class="am-page-body am-project-detail">
   <div class="am-container">
     <div class="am-project-detail__layout">
@@ -1970,7 +2004,7 @@ ${pageHero(index.label || 'Journal', index.title || 'Ideas, Materials & Projects
     ${featured ? `
     <article class="am-blog-featured">
       <a href="/blog/${featured.slug}" class="am-blog-featured__link">
-        <div class="am-blog-featured__media"><img src="${featured.image}" alt="${featured.hero_image_alt || featured.title}" loading="eager"></div>
+        <div class="am-blog-featured__media">${previewImgHtml(featured.image, featured.hero_image_alt || featured.title, 'loading="eager"')}</div>
         <div class="am-blog-featured__body">
           <span class="am-blog-featured__label">Featured</span>
           <span class="am-blog-cat">${featured.category}</span>
@@ -1989,7 +2023,7 @@ ${pageHero(index.label || 'Journal', index.title || 'Ideas, Materials & Projects
       ${gridPosts.map((p) => `
       <article class="am-blog-card">
         <a href="/blog/${p.slug}">
-          <div class="am-blog-card__thumb"><img src="${p.image}" alt="${p.hero_image_alt || p.title}" loading="lazy"></div>
+          <div class="am-blog-card__thumb">${previewImgHtml(p.image, p.hero_image_alt || p.title, 'loading="lazy"')}</div>
           <div class="am-blog-card__body">
             <div class="am-blog-card__meta"><span class="am-blog-cat">${p.category}</span><span>${p.date || ''}</span></div>
             <h3 class="am-blog-card__title">${p.title}</h3>
@@ -2012,8 +2046,9 @@ ${pageHero(index.label || 'Journal', index.title || 'Ideas, Materials & Projects
     }
     setTitle(post.meta_title || post.title);
     const related = (blogData.posts || []).filter((p) => p.slug !== slug).slice(0, 3);
-    const galleryHtml = (post.gallery || []).length
-      ? `<section class="am-blog-block"><h2 class="am-blog-block__title">Project Gallery</h2><div class="am-blog-gallery">${post.gallery.map((img) => `<figure class="am-blog-gallery__item"><img src="${img}" alt="${post.title} detail" loading="lazy"></figure>`).join('')}</div></section>`
+    const galleryItems = previewGalleryUrls(post.gallery);
+    const galleryHtml = galleryItems.length
+      ? `<section class="am-blog-block"><h2 class="am-blog-block__title">Project Gallery</h2><div class="am-blog-gallery">${galleryItems.map((img) => `<figure class="am-blog-gallery__item">${previewImgHtml(img, post.title + ' detail', 'loading="lazy"')}</figure>`).join('')}</div></section>`
       : '';
     const faqHtml = (post.faq || []).length
       ? `<section class="am-blog-block am-blog-faq"><h2 class="am-blog-block__title">Frequently Asked Questions</h2><div class="am-corten-faq-wrap"><div class="am-corten-faq am-corten-faq--light">${post.faq.map((f) => `<details class="am-corten-faq__item"><summary>${f.question}</summary><p>${f.answer}</p></details>`).join('')}</div></div></section>`
@@ -2027,7 +2062,7 @@ ${pageHero(index.label || 'Journal', index.title || 'Ideas, Materials & Projects
     <p class="am-blog-article__excerpt">${post.excerpt}</p>
     <div class="am-blog-meta am-blog-article__meta"><span>${post.author || 'Vyomika Atelier LLP'}</span><span>${post.date || ''}</span><span>${post.reading_time_minutes || 5} min read</span></div>
   </header>
-  <figure class="am-blog-article__hero"><img src="${post.image}" alt="${post.hero_image_alt || post.title}" loading="eager"></figure>
+  ${usablePreviewImage(post.image) ? `<figure class="am-blog-article__hero">${previewImgHtml(post.image, post.hero_image_alt || post.title, 'loading="eager"')}</figure>` : ''}
   <div class="am-container am-blog-article__body">
     <div class="am-prose am-blog-article__content">${post.content || ''}</div>
     ${galleryHtml}
@@ -2040,7 +2075,7 @@ ${pageHero(index.label || 'Journal', index.title || 'Ideas, Materials & Projects
     </div></section>
     ${related.length ? `<section class="am-blog-block"><h2 class="am-blog-block__title">Related Articles</h2><div class="am-blog-grid am-blog-grid--related">${related.map((p) => `
       <article class="am-blog-card"><a href="/blog/${p.slug}">
-        <div class="am-blog-card__thumb"><img src="${p.image}" alt="${p.hero_image_alt || p.title}" loading="lazy"></div>
+        <div class="am-blog-card__thumb">${previewImgHtml(p.image, p.hero_image_alt || p.title, 'loading="lazy"')}</div>
         <div class="am-blog-card__body"><div class="am-blog-card__meta"><span class="am-blog-cat">${p.category}</span></div><h3 class="am-blog-card__title">${p.title}</h3></div>
       </a></article>`).join('')}</div><p class="am-blog-block__more"><a href="/blog">← All articles</a></p></section>` : ''}
   </div>
@@ -2084,13 +2119,13 @@ ${pageHero('Contact', 'Get in Touch', 'Mumbai studio — Mon–Sat, 10am–7pm I
     const meta = document.querySelector('meta[name="description"]');
     if (meta && page.meta_description) meta.setAttribute('content', page.meta_description);
 
-    const heroStyle = hero.image ? ` style="--about-hero-img: url('${hero.image}')"` : '';
+    const heroStyle = previewBackgroundStyle('--about-hero-img', hero.image);
     const storyParagraphs = (story.paragraphs || []).map((p) => `<p class="am-corten-section__lead">${p}</p>`).join('');
     const capsHtml = (capabilities.items || []).map((item) => `
       <article class="am-about-caps__card am-reveal">
         <a href="${item.href || '#'}" class="am-about-caps__link">
           <div class="am-about-caps__media">
-            <img src="${item.image || ''}" alt="${item.name}" loading="lazy">
+            ${previewImgHtml(item.image, item.name, 'loading="lazy"')}
           </div>
           <div class="am-about-caps__body">
             <h3>${item.name}</h3>
@@ -2100,11 +2135,11 @@ ${pageHero('Contact', 'Get in Touch', 'Mumbai studio — Mon–Sat, 10am–7pm I
       </article>`).join('');
 
     const eventsHtml = (exhibitions.events || []).map((event) => {
-      const galleryHtml = (event.images || []).map((img, i) => `
+      const galleryHtml = previewGalleryUrls(event.images).map((img, i) => `
         <button type="button" class="am-about-gallery__item" data-about-lightbox
-          data-src="${img}" data-caption="${event.name} — ${event.location}, ${event.year}"
+          data-src="${img.trim()}" data-caption="${event.name} — ${event.location}, ${event.year}"
           aria-label="View ${event.name} photo ${i + 1}">
-          <img src="${img}" alt="${event.name} — photo ${i + 1}" loading="lazy">
+          ${previewImgHtml(img, event.name + ' — photo ' + (i + 1), 'loading="lazy"')}
         </button>`).join('');
       return `
       <article class="am-about-timeline__event am-reveal" id="exhibition-${event.slug}">
@@ -2141,7 +2176,7 @@ ${storyParagraphs ? `
       <h2 class="am-corten-section__title">${story.title || 'Crafted Beyond Convention'}</h2>
       ${storyParagraphs}
     </div>
-    ${story.image ? `<div class="am-about-story__media am-reveal am-reveal--delay"><img src="${story.image}" alt="Vyomika Atelier studio" loading="lazy"></div>` : ''}
+    ${usablePreviewImage(story.image) ? `<div class="am-about-story__media am-reveal am-reveal--delay">${previewImgHtml(story.image, 'Vyomika Atelier studio', 'loading="lazy"')}</div>` : ''}
   </div>
 </section>` : ''}
 ${capsHtml ? `
@@ -2215,7 +2250,7 @@ ${cta.title ? `
     const highlightsHtml = (hero.highlights || []).map((h) => `<li>${h}</li>`).join('');
     const categoriesHtml = (page.categories?.items || []).map((item) => `
       <article class="am-railings-card">
-        ${item.image ? `<div class="am-railings-card__media"><img src="${item.image}" alt="${item.title}" loading="lazy"></div>` : ''}
+        ${usablePreviewImage(item.image) ? `<div class="am-railings-card__media">${previewImgHtml(item.image, item.title, 'loading="lazy"')}</div>` : ''}
         <div class="am-railings-card__body"><h3>${item.title}</h3><p>${item.text}</p></div>
       </article>`).join('');
     const layoutsHtml = (page.layouts?.items || []).map((item) => `
@@ -2223,7 +2258,7 @@ ${cta.title ? `
     const whyHtml = (page.why?.items || []).map((item) => `<li>${item}</li>`).join('');
 
     document.getElementById('am-main').innerHTML = `
-<section class="am-railings-hero" style="--railings-hero-img: url('${hero.image || ''}')">
+<section class="am-railings-hero"${previewBackgroundStyle('--railings-hero-img', hero.image)}>
   <div class="am-container am-railings-hero__inner">
     <h1 class="am-railings-hero__title">${hero.title || 'Railings'}</h1>
     <p class="am-railings-hero__subtitle">${hero.subtitle || ''}</p>
@@ -2285,7 +2320,7 @@ ${whyHtml ? `<section class="am-section am-section--dark"><div class="am-contain
       'corner-tables': { title: 'Corner Tables', subtitle: 'Compact PVD corner and accent tables for bedrooms and entryways.', image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1400&q=80', gallery: 'Corner Table Designs', intro: 'Designed for tight footprints without compromising presence.' },
       'glass-tables': { title: 'Glass Tables', subtitle: 'Tempered glass tables with slim PVD frames.', image: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?w=1400&q=80', gallery: 'Glass Table Designs', intro: 'Floating glass surfaces on precision-welded PVD frames.' },
       'door-handles': { title: 'Door Handles', subtitle: 'Architectural door pulls in PVD stainless.', image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1400&q=80', gallery: 'Door Handle Designs', intro: 'Pull handles fabricated to match your door systems.' },
-      'bespoke-metal-furniture': { title: 'Bespoke Metal Furniture', subtitle: 'PVD coffee tables, corner tables, glass accent pieces and console tables.', image: 'https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg', gallery: 'Furniture Designs', intro: 'Each piece is fabricated in our Mumbai studio from grade 304/316 stainless with PVD coating.', catalogSlugs: bespokeMetalFurnitureSlugs() },
+      'bespoke-metal-furniture': { title: 'Bespoke Metal Furniture', subtitle: 'PVD coffee tables, corner tables, glass accent pieces and console tables.', image: '', gallery: 'Furniture Designs', intro: 'Each piece is fabricated in our Mumbai studio from grade 304/316 stainless with PVD coating.', catalogSlugs: bespokeMetalFurnitureSlugs() },
     };
     const page = pages[slug];
     if (!page) {
@@ -2298,10 +2333,10 @@ ${whyHtml ? `<section class="am-section am-section--dark"><div class="am-contain
     setTitle(page.title + ' Collection | Vyomika Atelier LLP');
     const buyNowBtn = (product) => `<form action="/cart/add/${product.slug}" method="POST" class="am-design-gallery__buy-form"><input type="hidden" name="_token" value="preview"><input type="hidden" name="quantity" value="1"><input type="hidden" name="buy_now" value="1"><button type="submit" class="am-btn am-btn--card-primary">Buy Now</button></form>`;
     const cards = products.map((product) => {
-      return `<article class="am-design-gallery__card am-collection-card"><a href="/shop/${product.slug}${fromQuery}" class="am-design-gallery__media">${product.image ? `<img src="${product.image}" alt="${product.name}" loading="lazy">` : ''}</a><div class="am-design-gallery__body"><h3 class="am-design-gallery__name"><a href="/shop/${product.slug}${fromQuery}">${product.name}</a></h3><p class="am-design-gallery__cat">${page.title}</p>${product.description ? `<p class="am-design-gallery__desc">${product.description}</p>` : ''}<div class="am-design-gallery__actions"><a href="/shop/${product.slug}${fromQuery}" class="am-btn am-btn--card-view">View</a>${buyNowBtn(product)}</div></div></article>`;
+      return `<article class="am-design-gallery__card am-collection-card"><a href="/shop/${product.slug}${fromQuery}" class="am-design-gallery__media">${previewImgHtml(product.image, product.name, 'loading="lazy"')}</a><div class="am-design-gallery__body"><h3 class="am-design-gallery__name"><a href="/shop/${product.slug}${fromQuery}">${product.name}</a></h3><p class="am-design-gallery__cat">${page.title}</p>${product.description ? `<p class="am-design-gallery__desc">${product.description}</p>` : ''}<div class="am-design-gallery__actions"><a href="/shop/${product.slug}${fromQuery}" class="am-btn am-btn--card-view">View</a>${buyNowBtn(product)}</div></div></article>`;
     }).join('');
     document.getElementById('am-main').innerHTML = `
-<section class="am-mirror-frames-hero" style="--mirror-frames-hero-img: url('${page.image}')"><div class="am-container am-mirror-frames-hero__inner"><h1 class="am-mirror-frames-hero__title">${page.title}</h1><p class="am-mirror-frames-hero__subtitle">${page.subtitle}</p><div class="am-pro-hero__actions"><a href="#collection-gallery" class="am-btn am-btn--primary">Browse Designs</a><a href="/shop" class="am-btn am-btn--outline am-btn--light">Browse All Shop</a></div></div></section>
+<section class="am-mirror-frames-hero"${previewBackgroundStyle('--mirror-frames-hero-img', page.image)}><div class="am-container am-mirror-frames-hero__inner"><h1 class="am-mirror-frames-hero__title">${page.title}</h1><p class="am-mirror-frames-hero__subtitle">${page.subtitle}</p><div class="am-pro-hero__actions"><a href="#collection-gallery" class="am-btn am-btn--primary">Browse Designs</a><a href="/shop" class="am-btn am-btn--outline am-btn--light">Browse All Shop</a></div></div></section>
 <section class="am-section am-section--white"><div class="am-container am-mirror-frames-intro"><h2 class="am-corten-section__title am-corten-section__title--center">${page.title}</h2><p class="am-corten-section__lead am-corten-section__lead--center">${page.intro}</p></div></section>
 <section class="am-section am-section--cream am-collection-designs" id="collection-gallery"><div class="am-container"><div class="am-mirror-frames-section-head"><p class="am-card__label">Design Gallery</p><h2 class="am-corten-section__title">${page.gallery}</h2></div><div class="am-design-gallery__grid am-design-gallery__grid--dense am-collection-gallery-grid">${cards}</div></div></section>`;
     document.dispatchEvent(new CustomEvent('am-content-ready'));
@@ -2319,7 +2354,7 @@ ${whyHtml ? `<section class="am-section am-section--dark"><div class="am-contain
     const designsHtml = designs.map((design) => `
       <article class="am-design-gallery__card am-mirror-frames-card">
         <a href="/shop/mirror-frames/${design.slug}" class="am-design-gallery__media">
-          ${design.image ? `<img src="${design.image}" alt="${design.name}" loading="lazy">${design.badge ? `<span class="am-mirror-frames-card__badge">${design.badge}</span>` : ''}` : ''}
+          ${previewImgHtml(design.image, design.name, 'loading="lazy"')}${design.badge ? `<span class="am-mirror-frames-card__badge">${design.badge}</span>` : ''}
         </a>
         <div class="am-design-gallery__body">
           <h3 class="am-design-gallery__name"><a href="/shop/mirror-frames/${design.slug}">${design.name}</a></h3>
@@ -2332,12 +2367,12 @@ ${whyHtml ? `<section class="am-section am-section--dark"><div class="am-contain
       </article>`).join('');
     const finishesHtml = (page.finishes?.items || []).map((finish) => `
       <article class="am-mirror-frames-finish">
-        ${finish.image ? `<img src="${finish.image}" alt="${finish.name}" loading="lazy">` : ''}
+        ${previewImgHtml(finish.image, finish.name, 'loading="lazy"')}
         <p>${finish.name}</p>
       </article>`).join('');
 
     document.getElementById('am-main').innerHTML = `
-<section class="am-mirror-frames-hero" style="--mirror-frames-hero-img: url('${hero.image || ''}')">
+<section class="am-mirror-frames-hero"${previewBackgroundStyle('--mirror-frames-hero-img', hero.image)}>
   <div class="am-container am-mirror-frames-hero__inner">
     <h1 class="am-mirror-frames-hero__title">${hero.title || 'Mirror Frames'}</h1>
     <p class="am-mirror-frames-hero__subtitle">${hero.subtitle || ''}</p>
@@ -2384,7 +2419,7 @@ ${finishesHtml ? `<section class="am-section am-section--white"><div class="am-c
     <div class="am-pdp">
       <div class="am-pdp__gallery">
         <div class="am-pdp__gallery-inner">
-          <div class="am-pdp__main"><img src="${product.image}" alt="${design.name}" class="am-pdp__main-img"></div>
+          ${pdpMainHtml(product.image, design.name)}
         </div>
       </div>
       <div class="am-pdp__info">
@@ -2458,7 +2493,7 @@ ${finishesHtml ? `<section class="am-section am-section--white"><div class="am-c
     const featured = slugs.map((s) => portfolio.find((p) => p.slug === s)).filter(Boolean);
     const projectsHtml = featured.map((p) => `
       <a href="/projects/${p.slug}" class="am-project-card">
-        <div class="am-project-card__media">${p.image ? `<img src="${p.image}" alt="${p.title}" loading="lazy">` : ''}</div>
+        <div class="am-project-card__media">${previewImgHtml(p.image, p.title, 'loading="lazy"')}</div>
         <div class="am-project-card__body">
           <p class="am-project-card__meta">
             ${p.category ? `<span>${p.category.charAt(0).toUpperCase() + p.category.slice(1)}</span>` : ''}
@@ -2484,7 +2519,7 @@ ${finishesHtml ? `<section class="am-section am-section--white"><div class="am-c
     const ctaHighlights = (cta.highlights || []).map((h) => `<li>${h}</li>`).join('');
 
     document.getElementById('am-main').innerHTML = `
-<section class="am-pro-hero" style="--pro-hero-img: url('${hero.image || ''}')">
+<section class="am-pro-hero"${previewBackgroundStyle('--pro-hero-img', hero.image)}>
   <div class="am-container am-pro-hero__inner">
     <p class="am-page-hero__label">${hero.label || 'Professionals'}</p>
     <h1 class="am-pro-hero__title">${hero.title || 'Partner with Us'}</h1>
@@ -2758,7 +2793,7 @@ ${pageHero('The Studio', 'Our Team', 'Fabricators, designers, and project leads 
     <div class="am-team-grid">
       ${team.map((m) => `
       <article class="am-team-card">
-        <img src="${m.image}" alt="${m.name}" loading="lazy">
+        ${previewImgHtml(m.image, m.name, 'loading="lazy"')}
         <h3>${m.name}</h3>
         <p>${m.role}</p>
       </article>`).join('')}

@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Project;
 use App\Models\Service;
 use App\Support\BlogContent;
+use App\Support\ProductPublicationPolicy;
 use App\Support\Seo\BlogSeo;
 use App\Support\Seo\StaticPageSeo;
 use Illuminate\Http\Request;
@@ -46,10 +47,9 @@ class BlogController extends Controller
 
         abort_unless($post, 404);
 
-        $relatedProducts = Product::query()
-            ->whereIn('slug', $post->relatedProductSlugs())
-            ->where('is_active', true)
-            ->get();
+        $relatedProducts = ProductPublicationPolicy::applyGalleryScope(
+            Product::query()->whereIn('slug', $post->relatedProductSlugs())
+        )->get();
 
         $relatedProjects = Project::query()
             ->whereIn('id', $post->relatedProjectIds())

@@ -1,4 +1,4 @@
-@props(['countryCodes' => [], 'oldCountry' => '+91', 'fieldPrefix' => '', 'stacked' => false])
+@props(['countryCodes' => [], 'oldCountry' => '+91', 'fieldPrefix' => '', 'stacked' => false, 'required' => true])
 
 @php
     $ccId = $fieldPrefix !== '' ? $fieldPrefix . '-country_code' : 'country_code';
@@ -18,7 +18,7 @@
 <div class="am-account-phone {{ $stacked ? 'am-account-phone--stacked' : '' }}">
     <div class="am-account-phone__code">
         <label for="{{ $ccId }}" class="am-sr-only">Country code</label>
-        <select name="country_code" id="{{ $ccId }}" class="am-input am-input--select am-account-phone__select" required>
+        <select name="country_code" id="{{ $ccId }}" class="am-input am-input--select am-account-phone__select" @required($required)>
             @foreach($countryCodes as $code => $meta)
             @php
                 $name = is_array($meta) ? ($meta['name'] ?? $code) : preg_replace('/\s*\([^)]+\)\s*$/', '', (string) $meta);
@@ -32,6 +32,6 @@
     </div>
     <div class="am-account-phone__number">
         <label for="{{ $mobileId }}" class="am-sr-only">Mobile number</label>
-        <input type="tel" name="mobile" id="{{ $mobileId }}" value="{{ old('mobile') }}" placeholder="Mobile number" required class="am-input" inputmode="numeric" autocomplete="tel-national">
+        <input type="tel" name="mobile" id="{{ $mobileId }}" value="{{ old('mobile') }}" placeholder="Mobile number" @required($required) class="am-input" inputmode="numeric" autocomplete="tel-national">
     </div>
 </div>

@@ -43,6 +43,7 @@ class ProductAdminPriceTest extends TestCase
             'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
             'pricing_type' => Product::PRICING_FIXED,
             'is_active' => '1',
+            'is_gallery_visible' => '1',
         ])->assertRedirect(route('admin.products.edit', ['product' => $product, 'saved' => 1]));
 
         $this->assertSame('7500.00', (string) $product->fresh()->price);
@@ -82,6 +83,7 @@ class ProductAdminPriceTest extends TestCase
             'purchase_mode' => Product::PURCHASE_MODE_ENQUIRY,
             'pricing_type' => Product::PRICING_SQUARE_FOOT,
             'is_active' => '1',
+            'is_gallery_visible' => '1',
         ]);
 
         $product->refresh();

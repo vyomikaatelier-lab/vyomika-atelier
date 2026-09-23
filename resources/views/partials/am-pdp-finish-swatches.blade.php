@@ -1,6 +1,6 @@
 @props([
     'swatches' => null,
-    'defaultSlug' => 'champagne-mirror',
+    'defaultSlug' => \App\Support\FinishSwatches::defaultSlug(),
     'baseRate' => null,
     'note' => null,
 ])
@@ -10,7 +10,10 @@
     use App\Support\FinishSwatches;
     $options = $swatches ?? Product::finishSwatches();
     $baseRate = $baseRate ?? Product::baseSqFtRate();
-    $default = collect($options)->firstWhere('slug', $defaultSlug) ?? $options[0];
+    $selectedSlug = old('finish_slug', $defaultSlug);
+    $default = collect($options)->firstWhere('slug', $selectedSlug)
+        ?? collect($options)->firstWhere('slug', FinishSwatches::defaultSlug())
+        ?? $options[0];
     $pairs = array_chunk($options, 2);
     $mirrorRow = array_map(fn (array $pair) => $pair[0], $pairs);
     $brushRow = array_values(array_filter(array_map(fn (array $pair) => $pair[1] ?? null, $pairs)));

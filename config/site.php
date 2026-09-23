@@ -19,15 +19,84 @@ return [
     'announcement' => [
         'text' => 'Festive Offer: 15% Off PVD Partitions — Auto Applied at Checkout',
         'link_label' => 'Shop Now',
-        'link_href' => '/shop',
+        'link_href' => '/shop/mirror-frames',
     ],
 
     'homepage' => [
+        'collections' => [
+            'title' => 'Explore Our Collections',
+            'subtitle' => 'Experience thoughtfully crafted PVD partitions and furniture that elevate your interiors across India.',
+        ],
+        'studio_spotlights' => [
+            'title' => 'Bespoke Studio Capabilities',
+            'subtitle' => 'Architectural metalwork beyond the catalogue — partitions, railings, and Corten steel fabricated to your project.',
+            'items' => [
+                [
+                    'title' => 'PVD Partitions',
+                    'subtitle' => 'Wave, fluted, and laser-cut stainless screens. Estimate your project instantly with our sq ft calculator.',
+                    'image' => '/images/blog/heroes/glass-partitions-open-plan-hero-card.jpg',
+                    'href' => '/studio/pvd-partitions',
+                    'cta' => 'Browse partition designs',
+                    'badge' => 'Sq ft calculator',
+                    'has_calculator' => true,
+                    'rate' => 1800,
+                ],
+                [
+                    'title' => 'Designer Railings',
+                    'subtitle' => 'Glass, stainless, and fabricated staircase railings with premium PVD finishes — quotation-led for every layout.',
+                    'image' => '/images/shop-heroes/railings-hero.png',
+                    'href' => '/railings',
+                    'cta' => 'Explore designer railings',
+                    'badge' => 'Custom fabrication',
+                    'has_form' => true,
+                    'form' => [
+                        'title' => 'Railing quick quote',
+                        'type' => 'service_inquiry',
+                        'service_slug' => 'railings',
+                        'subject' => 'Railing enquiry — homepage spotlight',
+                        'submit_label' => 'Get railing quote',
+                        'message_placeholder' => 'Staircase layout, running feet, material & finish…',
+                    ],
+                ],
+                [
+                    'title' => 'Corten Steel',
+                    'subtitle' => 'Weathering steel facades, screens, gates, and planters that develop a rich natural patina outdoors.',
+                    'image' => '/images/blog/heroes/corten-steel-modern-facades-hero.jpg',
+                    'href' => '/corten-steel',
+                    'cta' => 'Explore Corten applications',
+                    'badge' => 'Outdoor architectural',
+                    'has_form' => true,
+                    'form' => [
+                        'title' => 'Corten quick quote',
+                        'type' => 'service_inquiry',
+                        'service_slug' => 'corten-steel-facade',
+                        'subject' => 'Corten steel enquiry — homepage spotlight',
+                        'submit_label' => 'Send Corten enquiry',
+                        'message_placeholder' => 'Application type, approximate size, project city…',
+                    ],
+                ],
+            ],
+        ],
+        'usps' => [
+            'title' => 'The Vyomika Difference',
+            'subtitle' => 'Why architects, designers, and homeowners specify Vyomika Atelier for precision metalwork across India.',
+            'items' => [
+                ['icon' => 'calculator', 'title' => 'Instant Sq Ft Pricing', 'text' => 'Live partition calculator for quick project budgeting before you enquire.'],
+                ['icon' => 'stainless', 'title' => 'Grade 304/316 Stainless', 'text' => 'Interior and coastal-grade steel specified for durability and finish longevity.'],
+                ['icon' => 'pvd', 'title' => 'Signature PVD Finishes', 'text' => 'Champagne gold, rose gold, and matte black coatings aligned across every product line.'],
+                ['icon' => 'shipping', 'title' => 'Pan-India Delivery', 'text' => 'Studio fabrication in Delhi with secure packaging to Mumbai, Bangalore, Pune, and beyond.'],
+                ['icon' => 'custom', 'title' => 'Made-to-Order Dimensions', 'text' => 'Partitions, doors, furniture, and railings built to your exact opening sizes.'],
+                ['icon' => 'architect', 'title' => 'Architect & Trade Support', 'text' => 'Dedicated guidance, drawings review, and trade pricing for design professionals.'],
+                ['icon' => 'fabrication', 'title' => 'In-House Delhi Studio', 'text' => 'CNC cutting, welding, PVD coating, and quality control under one roof.'],
+                ['icon' => 'quality', 'title' => 'Hand-Finished Quality', 'text' => 'Ground, polished, and inspected metalwork ready for premium interiors.'],
+            ],
+        ],
         'sections' => [
             'category_banners' => true,
+            'studio_spotlights' => true,
             'best_sellers' => true,
             'trending' => true,
-            'spotlights' => true,
+            'usps' => true,
             'cta_band' => true,
             'testimonials' => true,
             'blog' => true,
@@ -71,25 +140,9 @@ return [
                 'kicker' => 'LIMITED TIME OFFER',
                 'title' => 'Define Spaces With PVD Partitions',
                 'description' => 'Champagne gold, rose gold, and matte black finishes — precision stainless partitions crafted for modern Indian interiors.',
-                'image' => 'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg',
-                'cta_label' => 'View All Products',
-                'cta_href' => '/shop',
-            ],
-            [
-                'kicker' => 'BESPOKE FABRICATION',
-                'title' => 'Wave & Fluted Metal Dividers',
-                'description' => 'Statement room dividers in wave, fluted, and laser-cut patterns — engineered for offices, showrooms, and luxury homes.',
-                'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg',
-                'cta_label' => 'Explore Collection',
+                'image' => '/images/blog/heroes/glass-partitions-open-plan-hero-card.jpg',
+                'cta_label' => 'Explore PVD Partitions',
                 'cta_href' => '/studio/pvd-partitions',
-            ],
-            [
-                'kicker' => 'METAL FURNITURE',
-                'title' => 'Bespoke Tables & Rack Systems',
-                'description' => 'Coffee tables, console tables, and PVD rack systems — custom sizes with Pan-India delivery from our Delhi studio.',
-                'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg',
-                'cta_label' => 'Shop Furniture',
-                'cta_href' => '/shop/coffee-tables',
             ],
         ],
     ],
@@ -97,13 +150,13 @@ return [
     'best_sellers' => [
         'title' => 'Best-Selling Products',
         'subtitle' => 'Our most-loved shop pieces — mirrors, tables, handles, and bespoke metal furniture.',
-        'cta_label' => 'View All Products',
+        'cta_label' => 'Shop Mirror Frames',
         'banner' => [
             'title' => 'Discover Your Signature Finish',
             'subtitle' => 'Handpicked PVD metal furniture for modern interiors',
             'cta' => 'Shop now',
             'image' => 'https://images.unsplash.com/photo-1532372320572-127d86b32558?w=1400&q=80',
-            'href' => '/shop',
+            'href' => '/shop/mirror-frames',
         ],
         'products' => [
             [
@@ -164,14 +217,14 @@ return [
             'subtitle' => 'Wave, fluted & laser-cut dividers',
             'cta' => 'Shop Now',
             'href' => '/studio/pvd-partitions',
-            'image' => 'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg',
+            'image' => '/images/blog/heroes/glass-partitions-open-plan-hero-card.jpg',
         ],
         [
             'title' => 'Fluted Panels',
             'subtitle' => 'Up to 20% off bestsellers',
             'cta' => 'Shop Now',
             'href' => '/studio/pvd-partitions',
-            'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg',
+            'image' => '',
         ],
         [
             'title' => 'Metal Furniture',
@@ -198,7 +251,7 @@ return [
                 'price' => 31999,
                 'compare_price' => 41999,
                 'badge' => '-25%',
-                'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg',
+                'image' => '',
                 'slug' => 'laser-cut-partition',
             ],
             [
@@ -237,7 +290,7 @@ return [
                 'description' => 'Calculate PVD partition costs by area, finish, and pattern. Get an instant estimate for your project dimensions.',
                 'price' => 1800,
                 'price_unit' => 'per sq ft',
-                'image' => 'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg',
+                'image' => '/images/blog/heroes/glass-partitions-open-plan-hero-card.jpg',
                 'cta' => 'Calculate Now',
                 'href' => '/services',
             ],
@@ -256,8 +309,8 @@ return [
     'cta_band' => [
         'title' => 'Shape A Space Filled With Precision Metal Beauty',
         'description' => 'Experience thoughtfully crafted PVD partitions and furniture that elevate your interiors across India.',
-        'cta_label' => 'View All Products',
-        'cta_href' => '/shop',
+        'cta_label' => 'Shop Mirror Frames',
+        'cta_href' => '/shop/mirror-frames',
     ],
 
     'testimonials' => [
@@ -291,7 +344,7 @@ return [
         'viewers' => 32,
         'sizes' => ['Standard (6×8 ft)', 'Large (8×10 ft)', 'Custom Size'],
         'default_size' => 'Standard (6×8 ft)',
-        'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg',
+        'image' => '',
         'slug' => 'champagne-wave-partition',
         'rate_per_sqft' => 1800,
     ],
@@ -305,7 +358,7 @@ return [
                 'date' => '28 June 2026',
                 'title' => 'PVD Partition Design Ideas for Modern Offices and Showrooms',
                 'excerpt' => 'Wave, fluted, and laser-cut PVD partitions that define zones without blocking light.',
-                'image' => 'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg',
+                'image' => '/images/blog/heroes/glass-partitions-open-plan-hero-card.jpg',
                 'slug' => 'pvd-partition-design-ideas',
             ],
             [
@@ -337,7 +390,6 @@ return [
     'footer' => [
         'newsletter' => 'Get 10% off your first order and exclusive trade offers.',
         'shop_links' => [
-            ['label' => 'All Products', 'route' => 'shop.index'],
             ['label' => 'Mirror Frames', 'route' => 'shop.mirror-frames.index'],
             ['label' => 'Corner Tables', 'route' => 'shop.show', 'params' => ['slug' => 'corner-tables']],
             ['label' => 'Coffee Tables', 'route' => 'shop.show', 'params' => ['slug' => 'coffee-tables']],
@@ -362,9 +414,9 @@ return [
 
     // Legacy keys kept for inner pages / fallbacks
     'shop' => [
-        ['name' => 'Champagne Wave Partition', 'category' => 'PVD Partitions', 'price' => 28999, 'compare_price' => 38999, 'badge' => '-25%', 'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg', 'slug' => 'champagne-wave-partition'],
-        ['name' => 'Veil Fluted Panel', 'category' => 'Fluted Panels', 'price' => 24999, 'compare_price' => null, 'badge' => 'NEW', 'image' => 'https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg', 'slug' => 'veil-fluted-panel'],
-        ['name' => 'Rose Gold Room Divider', 'category' => 'Room Dividers', 'price' => 32999, 'compare_price' => 42999, 'badge' => '-25%', 'image' => 'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg', 'slug' => 'rose-gold-room-divider'],
+        ['name' => 'Champagne Wave Partition', 'category' => 'PVD Partitions', 'price' => 28999, 'compare_price' => 38999, 'badge' => '-25%', 'image' => '', 'slug' => 'champagne-wave-partition'],
+        ['name' => 'Veil Fluted Panel', 'category' => 'Fluted Panels', 'price' => 24999, 'compare_price' => null, 'badge' => 'NEW', 'image' => '', 'slug' => 'veil-fluted-panel'],
+        ['name' => 'Rose Gold Room Divider', 'category' => 'Room Dividers', 'price' => 32999, 'compare_price' => 42999, 'badge' => '-25%', 'image' => '/images/blog/heroes/glass-partitions-open-plan-hero-card.jpg', 'slug' => 'rose-gold-room-divider'],
         ['name' => 'Matte Black PVD Partition', 'category' => 'PVD Partitions', 'price' => 26999, 'compare_price' => 35999, 'badge' => '-25%', 'image' => 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80', 'slug' => 'matte-black-pvd-partition'],
         ['name' => 'Brushed Brass Coffee Table', 'category' => 'Coffee Tables', 'price' => 18900, 'compare_price' => null, 'image' => 'https://images.unsplash.com/photo-1532372320572-127d86b32558?w=800&q=80', 'slug' => 'brushed-brass-coffee-table'],
         ['name' => 'PVD Door Pull Handle', 'category' => 'Door Handles', 'price' => 2400, 'compare_price' => 3200, 'badge' => '-25%', 'image' => 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80', 'slug' => 'pvd-door-pull-handle'],

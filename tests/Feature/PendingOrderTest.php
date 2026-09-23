@@ -51,8 +51,8 @@ class PendingOrderTest extends TestCase
         $this->assertSame('cancelled', $order->fresh()->status);
         $this->assertSame(2, $product->fresh()->stock);
 
-        $response = $this->post(route('cart.add', $product), ['quantity' => 2]);
+        $response = $this->post(route('cart.add', $product), $this->purchaseInput(['quantity' => 2]));
         $response->assertRedirect();
-        $this->assertSame(2, session('cart')[$product->id]['quantity'] ?? null);
+        $this->assertSame(2, $this->sessionCartLine($product)['quantity'] ?? null);
     }
 }

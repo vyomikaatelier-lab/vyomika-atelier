@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Service;
+use App\Models\SiteSetting;
 use App\Support\ProductImageSizes;
 use App\Support\StorefrontRoutes;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -31,6 +33,10 @@ class ProductGalleryImageLayoutTest extends TestCase
             $css
         );
         $this->assertMatchesRegularExpression(
+            '/\.am-section__body \.am-product-card__thumb\s*\{[^}]*aspect-ratio:\s*3\s*\/\s*4/',
+            $css
+        );
+        $this->assertMatchesRegularExpression(
             '/\.am-section__body \.am-product-card__thumb img\s*\{[^}]*object-fit:\s*cover/',
             $css
         );
@@ -52,6 +58,18 @@ class ProductGalleryImageLayoutTest extends TestCase
         );
         $this->assertMatchesRegularExpression(
             '/\.am-work-gallery__media img\s*\{[^}]*object-fit:\s*cover/',
+            $css
+        );
+        $this->assertMatchesRegularExpression(
+            '/\.am-studio-spotlight__media\s*\{[^}]*aspect-ratio:\s*3\s*\/\s*4/',
+            $css
+        );
+        $this->assertMatchesRegularExpression(
+            '/\.am-studio-spotlight__media img\s*\{[^}]*object-fit:\s*cover/',
+            $css
+        );
+        $this->assertStringNotContainsString(
+            '.am-studio-spotlight:first-child .am-studio-spotlight__media { aspect-ratio: 16 / 9; }',
             $css
         );
     }
@@ -106,7 +124,7 @@ class ProductGalleryImageLayoutTest extends TestCase
             ->assertSee('am-design-gallery--portrait', false);
     }
 
-    public function test_shop_index_uses_square_cover_product_cards(): void
+    public function test_shop_category_page_uses_square_cover_product_cards(): void
     {
         $category = Category::query()->firstOrCreate(
             ['slug' => 'coffee-tables'],
@@ -115,9 +133,9 @@ class ProductGalleryImageLayoutTest extends TestCase
 
         Product::query()->create([
             'category_id' => $category->id,
-            'name' => 'Shop Index Coffee Table',
-            'slug' => 'shop-index-coffee-table',
-            'description' => 'Shop index card layout test.',
+            'name' => 'Category Gallery Coffee Table',
+            'slug' => 'category-gallery-coffee-table',
+            'description' => 'Category gallery card layout test.',
             'price' => 15000,
             'stock' => 5,
             'section' => Product::SECTION_SHOP,
@@ -127,14 +145,92 @@ class ProductGalleryImageLayoutTest extends TestCase
             'is_gallery_visible' => true,
         ]);
 
-        $this->get(route('shop.index'))
+        $this->get(route('shop.show', 'coffee-tables'))
             ->assertOk()
-            ->assertSee('am-product-grid--shop', false)
-            ->assertSee('am-product-card__thumb', false)
-            ->assertSee('Shop Index Coffee Table', false);
+            ->assertSee('am-collection-gallery-grid', false)
+            ->assertSee('am-design-gallery__card', false)
+            ->assertSee('Category Gallery Coffee Table', false);
     }
 
-    public function test_homepage_featured_products_use_square_cover_product_cards(): void
+    public function test_homepage_collection_row_renders_published_category_tiles(): void
+    {
+        foreach (['mirror-frames', 'corner-tables', 'coffee-tables'] as $slug) {
+            $category = Category::query()->firstOrCreate(
+                ['slug' => $slug],
+                ['name' => StorefrontRoutes::shopCategoryLabel($slug), 'section' => 'shop', 'is_active' => true]
+            );
+
+            Product::query()->create([
+                'category_id' => $category->id,
+                'name' => StorefrontRoutes::shopCategoryLabel($slug).' Tile Product',
+                'slug' => $slug.'-tile-product',
+                'price' => 12000,
+                'stock' => 2,
+                'section' => Product::SECTION_SHOP,
+                'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+                'pricing_type' => Product::PRICING_FIXED,
+                'is_active' => true,
+                'is_gallery_visible' => true,
+            ]);
+        }
+
+        $html = $this->get(route('home'))->assertOk()->getContent();
+
+        $this->assertStringContainsString('am-cat-scroll', $html);
+        $this->assertStringContainsString('Mirror Frames', $html);
+        $this->assertStringContainsString('Corner Tables', $html);
+        $this->assertStringContainsString('Coffee Tables', $html);
+        $this->assertStringContainsString('/images/shop-heroes/mirror-frames-hero.png', $html);
+        $this->assertStringNotContainsString('am-product-grid--with-banner', $html);
+        $this->assertStringNotContainsString('PVD Craft, Elevated for Interiors', $html);
+        $this->assertStringContainsString('Bespoke Studio Capabilities', $html);
+        $this->assertStringContainsString('am-studio-spotlights--portrait', $html);
+        $this->assertStringContainsString('am-studio-spotlight--portrait', $html);
+        $this->assertStringContainsString('PVD Partitions', $html);
+        $this->assertStringContainsString('Designer Railings', $html);
+        $this->assertStringContainsString('Corten Steel', $html);
+        $this->assertStringContainsString('/studio/pvd-partitions', $html);
+        $this->assertStringContainsString('/railings', $html);
+        $this->assertStringContainsString('/corten-steel', $html);
+        $this->assertStringContainsString('Sq Ft Calculator', $html);
+        $this->assertStringContainsString('am-studio-spotlight__form', $html);
+        $this->assertStringContainsString('am-studio-spotlight-form', $html);
+        $this->assertStringContainsString('Railing quick quote', $html);
+        $this->assertStringContainsString('Corten quick quote', $html);
+        $this->assertStringContainsString('name="service_slug" value="railings"', $html);
+        $this->assertStringContainsString('name="service_slug" value="corten-steel-facade"', $html);
+        $this->assertStringContainsString('name="type" value="service_inquiry"', $html);
+        $this->assertStringContainsString('The Vyomika Difference', $html);
+    }
+
+    public function test_homepage_studio_spotlights_prefer_service_and_landing_page_hero_images(): void
+    {
+        Service::query()->create([
+            'name' => 'PVD Partitions',
+            'slug' => 'partitions',
+            'summary' => 'Studio partitions.',
+            'image' => 'storage/services/partitions-spotlight.jpg',
+            'lead_form' => 'popup',
+            'is_active' => true,
+        ]);
+
+        SiteSetting::setValue('landing_pages', [
+            'railings' => [
+                'hero' => ['image' => 'storage/landing-pages/railings-spotlight.jpg'],
+            ],
+            'corten-steel' => [
+                'hero' => ['image' => 'storage/landing-pages/corten-spotlight.jpg'],
+            ],
+        ]);
+
+        $html = $this->get(route('home'))->assertOk()->getContent();
+
+        $this->assertStringContainsString('/storage/services/partitions-spotlight.jpg', $html);
+        $this->assertStringContainsString('/storage/landing-pages/railings-spotlight.jpg', $html);
+        $this->assertStringContainsString('/storage/landing-pages/corten-spotlight.jpg', $html);
+    }
+
+    public function test_homepage_featured_products_use_grid_without_side_banner(): void
     {
         $category = Category::query()->firstOrCreate(
             ['slug' => 'door-handles'],
@@ -156,52 +252,15 @@ class ProductGalleryImageLayoutTest extends TestCase
             'is_gallery_visible' => true,
         ]);
 
-        $this->get(route('home'))
-            ->assertOk()
-            ->assertSee('am-product-card__thumb', false)
-            ->assertSee('Homepage Featured Handle', false);
-    }
-
-    public function test_homepage_new_products_section_lists_newest_product_first(): void
-    {
-        $category = Category::query()->firstOrCreate(
-            ['slug' => 'coffee-tables'],
-            ['name' => 'Coffee Tables', 'section' => 'shop', 'is_active' => true]
-        );
-
-        Product::query()->create([
-            'category_id' => $category->id,
-            'name' => 'Older Coffee Table',
-            'slug' => 'older-coffee-table',
-            'price' => 12000,
-            'stock' => 2,
-            'sort_order' => 1,
-            'section' => Product::SECTION_SHOP,
-            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
-            'pricing_type' => Product::PRICING_FIXED,
-            'is_active' => true,
-        ]);
-
-        Product::query()->create([
-            'category_id' => $category->id,
-            'name' => 'Newest Coffee Table',
-            'slug' => 'newest-coffee-table',
-            'price' => 14000,
-            'stock' => 2,
-            'sort_order' => 2,
-            'section' => Product::SECTION_SHOP,
-            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
-            'pricing_type' => Product::PRICING_FIXED,
-            'is_active' => true,
-        ]);
-
         $html = $this->get(route('home'))->assertOk()->getContent();
 
-        $this->assertLessThan(
-            strpos($html, 'Older Coffee Table'),
-            strpos($html, 'Newest Coffee Table'),
-            'Homepage product grid should render newest products before older ones (left to right).'
-        );
+        $this->assertStringContainsString('am-product-grid--portrait', $html);
+        $this->assertStringContainsString('am-product-card__thumb', $html);
+        $this->assertStringContainsString('Homepage Featured Handle', $html);
+        $this->assertStringContainsString('am-product-grid--6', $html);
+        $this->assertStringNotContainsString('am-product-grid--with-banner', $html);
+        $this->assertStringNotContainsString('am-product-banner', $html);
+        $this->assertStringNotContainsString('Discover Your Signature Finish', $html);
     }
 
     public function test_mirror_frames_gallery_uses_portrait_cover_layout(): void

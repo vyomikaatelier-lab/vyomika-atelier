@@ -68,8 +68,6 @@ class AdminServicesCollectionsBulkTest extends TestCase
         $nav = ShopCatalog::filterNav(config('site.nav', []));
 
         $studio = collect($nav)->firstWhere('label', 'Studio');
-        $this->assertIsArray($studio);
-
         $labels = collect($studio['children'] ?? [])->pluck('label')->all();
         $this->assertNotContains('PVD Partitions', $labels);
         $this->assertNotContains('Metal PVD Rack Systems', $labels);

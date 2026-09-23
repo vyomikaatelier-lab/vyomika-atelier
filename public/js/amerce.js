@@ -29,6 +29,9 @@
 
     function resetTimer() {
       clearInterval(timer);
+      if (slides.length < 2) {
+        return;
+      }
       timer = setInterval(next, 6000);
     }
 
@@ -142,8 +145,19 @@
     };
 
     openBtn?.addEventListener('click', (e) => { e.preventDefault(); open(); });
-    closeBtn?.addEventListener('click', shut);
+    closeBtn?.addEventListener('click', (e) => {
+      e.preventDefault();
+      shut();
+      if (window.location.hash === '#am-cart-drawer') {
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+    });
     overlay?.addEventListener('click', shut);
+
+    const params = new URLSearchParams(window.location.search);
+    if (window.location.hash === '#am-cart-drawer' || params.get('cart') === 'open') {
+      open();
+    }
   }
 
   /* Order Now on product cards — go to product page */
@@ -472,6 +486,111 @@
       el.dataset.revealBound = '1';
       observer.observe(el);
     });
+  }
+
+  /* Homepage collection carousel — gentle auto-advance with pause on interaction */
+  function initCollectionCarousel() {
+    const wrap = document.querySelector('[data-cat-carousel]');
+    if (!wrap || wrap.dataset.carouselBound === '1') return;
+    wrap.dataset.carouselBound = '1';
+
+    const track = wrap.querySelector('.am-cat-scroll');
+    const dots = wrap.querySelectorAll('.am-cat-scroll__dot');
+    const originals = track ? Array.from(track.querySelectorAll('.am-cat-tile:not(.am-cat-tile--clone)')) : [];
+    if (!track || originals.length < 2) return;
+
+    let index = 0;
+    let timer;
+    let paused = false;
+
+    const isGrid = () => window.matchMedia('(min-width: 1280px)').matches;
+
+    function tileStep() {
+      const tile = originals[0];
+      if (!tile) return 0;
+      const styles = getComputedStyle(track);
+      const gap = parseFloat(styles.columnGap || styles.gap || '0') || 0;
+      return tile.offsetWidth + gap;
+    }
+
+    function setActive(i) {
+      index = ((i % originals.length) + originals.length) % originals.length;
+      dots.forEach((dot, dotIndex) => {
+        const active = dotIndex === index;
+        dot.classList.toggle('is-active', active);
+        dot.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+    }
+
+    function scrollToIndex(i, behavior) {
+      if (isGrid()) return;
+      setActive(i);
+      track.scrollTo({ left: tileStep() * index, behavior: behavior || 'smooth' });
+    }
+
+    function next() {
+      if (paused || isGrid()) return;
+      const step = tileStep();
+      const maxScroll = step * originals.length;
+      const nextIndex = (index + 1) % originals.length;
+
+      if (index === originals.length - 1) {
+        track.scrollTo({ left: maxScroll, behavior: 'smooth' });
+        window.setTimeout(() => {
+          track.scrollTo({ left: 0, behavior: 'auto' });
+          setActive(0);
+        }, 520);
+        return;
+      }
+
+      scrollToIndex(nextIndex);
+    }
+
+    function pause() {
+      paused = true;
+      wrap.classList.add('is-paused');
+      clearInterval(timer);
+    }
+
+    function resume() {
+      paused = false;
+      wrap.classList.remove('is-paused');
+      clearInterval(timer);
+      if (!isGrid()) timer = setInterval(next, 4500);
+    }
+
+    dots.forEach((dot, i) => {
+      dot.addEventListener('click', () => {
+        pause();
+        scrollToIndex(i);
+        window.setTimeout(resume, 6000);
+      });
+    });
+
+    track.addEventListener('scroll', () => {
+      wrap.classList.add('is-scrolled');
+      if (isGrid()) return;
+      const step = tileStep();
+      if (step <= 0) return;
+      const raw = Math.round(track.scrollLeft / step);
+      setActive(Math.min(raw, originals.length - 1));
+    }, { passive: true });
+
+    ['mouseenter', 'focusin', 'touchstart'].forEach((evt) => {
+      wrap.addEventListener(evt, pause, { passive: true });
+    });
+    ['mouseleave', 'focusout', 'touchend'].forEach((evt) => {
+      wrap.addEventListener(evt, () => window.setTimeout(resume, 1200), { passive: true });
+    });
+
+    window.matchMedia('(min-width: 1280px)').addEventListener('change', () => {
+      clearInterval(timer);
+      if (!isGrid()) resume();
+    });
+
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && !isGrid()) {
+      resume();
+    }
   }
 
   function initAboutLightbox() {
@@ -842,6 +961,17 @@
     });
   }
 
+  function initFlashNotices() {
+    document.querySelectorAll('[data-am-flash] .am-alert__close').forEach((button) => {
+      if (button.dataset.bound === '1') return;
+      button.dataset.bound = '1';
+      button.addEventListener('click', () => {
+        const item = button.closest('.am-alert');
+        if (item) item.remove();
+      });
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     initPopupFormModal();
     initHero();
@@ -858,10 +988,12 @@
     initProductTabs();
     initFinishSwatches();
     initAboutReveal();
+    initCollectionCarousel();
     initAboutLightbox();
     initWorkLightbox();
     initCheckoutPayMethods();
     initAddressForms();
+    initFlashNotices();
   });
 
   document.addEventListener('am-content-ready', () => {
@@ -876,9 +1008,11 @@
     initProductTabs();
     initFinishSwatches();
     initAboutReveal();
+    initCollectionCarousel();
     initAboutLightbox();
     initWorkLightbox();
     initCheckoutPayMethods();
     initAddressForms();
+    initFlashNotices();
   });
 })();

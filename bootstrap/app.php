@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'admin.permission' => \App\Http\Middleware\AdminPermissionMiddleware::class,
             'customer' => \App\Http\Middleware\CustomerAccountMiddleware::class,
             'customer.guest' => \App\Http\Middleware\RedirectVerifiedCustomerMiddleware::class,
             'checkout.customer' => \App\Http\Middleware\EnsureCheckoutCustomer::class,

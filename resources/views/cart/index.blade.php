@@ -9,21 +9,28 @@
     <div class="am-container am-checkout-flow">
         @include('partials.am-breadcrumbs', ['items' => [
             ['label' => 'Home', 'url' => route('home')],
-            ['label' => 'Shop', 'url' => route('shop.index')],
+            ['label' => 'Shop', 'url' => \App\Support\StorefrontRoutes::primaryShopUrl()],
             ['label' => 'Cart'],
         ]])
 
         @include('partials.am-checkout-steps', ['current' => 1])
 
         @if(session('info'))
-        <div class="am-alert am-alert--info" style="margin-bottom:1.25rem" role="status">{{ session('info') }}</div>
+        <div class="am-alert am-alert--info am-alert--inline" role="status">{{ session('info') }}</div>
+        @endif
+        @if(session(\App\Services\CartService::NOTICE_KEY))
+        <div class="am-alert am-alert--info am-alert--inline" role="status">
+            @foreach((array) session(\App\Services\CartService::NOTICE_KEY) as $notice)
+                <p>{{ $notice }}</p>
+            @endforeach
+        </div>
         @endif
         @if(session('error'))
-        <div class="am-alert am-alert--error" style="margin-bottom:1.25rem" role="alert">{{ session('error') }}</div>
+        <div class="am-alert am-alert--error am-alert--inline" role="alert">{{ session('error') }}</div>
         @endif
 
         @if(!empty($pendingOrder))
-        <div class="am-alert am-alert--info" style="margin-bottom:1.25rem">
+        <div class="am-alert am-alert--info am-alert--inline">
             Order <strong>{{ $pendingOrder->order_number }}</strong> is awaiting payment.
             <a href="{{ route('checkout.pay', $pendingOrder) }}" class="am-btn am-btn--primary am-btn--sm" style="margin-left:0.75rem">Complete Payment</a>
         </div>
@@ -37,7 +44,7 @@
                     </div>
                     <h2 class="am-checkout-empty__title">Your cart is empty</h2>
                     <p class="am-checkout-empty__text">Browse PVD partitions, metal furniture, and hardware to get started.</p>
-                    <a href="{{ route('shop.index') }}" class="am-btn am-btn--primary">Shop Products</a>
+                    <a href="{{ \App\Support\StorefrontRoutes::primaryShopUrl() }}" class="am-btn am-btn--primary">Shop Products</a>
                 </div>
             </div>
         @else
@@ -71,8 +78,10 @@
                                     @endif
                                     <form action="{{ route('cart.update', $item['product']) }}" method="POST" class="am-cart-row__qty-form">
                                         @csrf @method('PATCH')
-                                        <label for="qty-{{ $item['product']->id }}">Quantity</label>
-                                        <input type="number" id="qty-{{ $item['product']->id }}" name="quantity" value="{{ $item['quantity'] }}" min="1" max="{{ $item['product']->stock }}" class="am-qty-input">
+                                        <input type="hidden" name="size_label" value="{{ $item['size_label'] }}">
+                                        <input type="hidden" name="finish_slug" value="{{ $item['finish_slug'] }}">
+                                        <label for="qty-{{ \Illuminate\Support\Str::slug($item['line_key'] ?? $item['product']->id) }}">Quantity</label>
+                                        <input type="number" id="qty-{{ \Illuminate\Support\Str::slug($item['line_key'] ?? $item['product']->id) }}" name="quantity" value="{{ $item['quantity'] }}" min="1" max="{{ $item['max_quantity'] ?? min($item['product']->stock, 99) }}" class="am-qty-input">
                                         <button type="submit" class="am-btn am-btn--outline am-btn--sm">Update</button>
                                     </form>
                                 </div>
@@ -80,6 +89,8 @@
                                     <p class="am-cart-row__line-total">₹{{ number_format($item['line_total'], 0) }}</p>
                                     <form action="{{ route('cart.remove', $item['product']) }}" method="POST">
                                         @csrf @method('DELETE')
+                                        <input type="hidden" name="size_label" value="{{ $item['size_label'] }}">
+                                        <input type="hidden" name="finish_slug" value="{{ $item['finish_slug'] }}">
                                         <button type="submit" class="am-cart-row__remove">Remove</button>
                                     </form>
                                 </div>
@@ -100,7 +111,7 @@
                     ])
                     <div class="am-checkout-sidebar__actions">
                         <a href="{{ route('checkout.index') }}" class="am-btn am-btn--primary am-btn--full am-btn--lg">Proceed to Checkout</a>
-                        <a href="{{ route('shop.index') }}" class="am-btn am-btn--outline am-btn--full">Continue Shopping</a>
+                        <a href="{{ \App\Support\StorefrontRoutes::primaryShopUrl() }}" class="am-btn am-btn--outline am-btn--full">Continue Shopping</a>
                     </div>
                 </div>
             </div>

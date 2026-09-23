@@ -77,7 +77,7 @@ class Category extends Model
                 return StorefrontRoutes::shopCategoryUrl('bespoke-metal-furniture');
             }
 
-            return route('shop.index');
+            return \App\Support\StorefrontRoutes::primaryShopUrl();
         }
 
         if ($section === Product::SECTION_STUDIO) {

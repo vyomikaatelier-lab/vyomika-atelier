@@ -33,9 +33,7 @@ class PageHeroContent
                 'label' => 'Studio service: '.ucwords(str_replace('-', ' ', $slug)),
                 'group' => 'Studio services',
                 'defaults' => fn () => data_get(config("service-pages.{$slug}"), 'hero', []),
-                'preview' => fn () => ($studioUrl = StorefrontRoutes::studioUrlForService($slug))
-                    ? route('studio.show', $studioUrl)
-                    : route('services.show', $slug),
+                'preview' => fn () => StorefrontNavigation::publicServicesRedirectUrl($slug),
             ];
         }
 

@@ -103,22 +103,6 @@
                 "image": "https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg",
                 "cta_label": "View All Products",
                 "cta_href": "/shop"
-            },
-            {
-                "kicker": "BESPOKE FABRICATION",
-                "title": "Wave & Fluted Metal Dividers",
-                "description": "Statement room dividers in wave, fluted, and laser-cut patterns — engineered for offices, showrooms, and luxury homes.",
-                "image": "https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg",
-                "cta_label": "Explore Collection",
-                "cta_href": "/studio/pvd-partitions"
-            },
-            {
-                "kicker": "METAL FURNITURE",
-                "title": "Bespoke Tables & Rack Systems",
-                "description": "Coffee tables, console tables, and PVD rack systems — custom sizes with Pan-India delivery from our Delhi studio.",
-                "image": "https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg",
-                "cta_label": "Shop Furniture",
-                "cta_href": "/shop/coffee-tables"
             }
         ]
     },
@@ -140,7 +124,7 @@
                 "price": 28999,
                 "compare_price": 38999,
                 "badge": "-25%",
-                "image": "https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg",
+                "image": "",
                 "slug": "champagne-wave-partition"
             },
             {
@@ -149,7 +133,7 @@
                 "price": 24999,
                 "compare_price": null,
                 "badge": "NEW",
-                "image": "https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg",
+                "image": "",
                 "slug": "veil-fluted-panel"
             },
             {
@@ -219,7 +203,7 @@
             "subtitle": "Up to 20% off bestsellers",
             "cta": "Shop Now",
             "href": "/studio/pvd-partitions",
-            "image": "https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg"
+            "image": ""
         },
         {
             "title": "Metal Furniture",
@@ -245,7 +229,7 @@
                 "price": 31999,
                 "compare_price": 41999,
                 "badge": "-25%",
-                "image": "https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg",
+                "image": "",
                 "slug": "laser-cut-partition"
             },
             {
@@ -338,7 +322,7 @@
             "Custom Size"
         ],
         "default_size": "Standard (6×8 ft)",
-        "image": "https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg",
+        "image": "",
         "slug": "champagne-wave-partition",
         "rate_per_sqft": 1800
     },
@@ -518,21 +502,21 @@
                     "name": "Wave Partition",
                     "product_slug": "champagne-wave-partition",
                     "description": "Sculptural wave profile with champagne or rose gold PVD finish.",
-                    "image": "https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg"
+                    "image": ""
                 },
                 {
                     "slug": "fluted-panel",
                     "name": "Fluted Panel",
                     "product_slug": "veil-fluted-panel",
                     "description": "Vertical fluting for light diffusion and acoustic softening.",
-                    "image": "https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg"
+                    "image": ""
                 },
                 {
                     "slug": "laser-cut-screen",
                     "name": "Laser-Cut Screen",
                     "product_slug": "laser-cut-partition",
                     "description": "Custom patterns cut in stainless with precision CNC finishing.",
-                    "image": "https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg"
+                    "image": ""
                 },
                 {
                     "slug": "frameless-glass-metal",
@@ -694,8 +678,6 @@
             "image": "https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg",
             "gallery": [
                 "https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg",
-                "https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg",
-                "https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg",
                 "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80"
             ],
             "meta_title": "Champagne Wave Office Lobby — PVD Partitions in Mumbai | Vyomika Atelier",
@@ -720,9 +702,8 @@
             "testimonial_quote": "The rose gold finish photographs beautifully and has held up perfectly under daily foot traffic.",
             "testimonial_author": "Store Design Lead",
             "testimonial_role": "Luxury Retail — Bangalore",
-            "image": "https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg",
+            "image": "",
             "gallery": [
-                "https://www.delhiduniya.com/vyomika/images/shop/product/big/722414.jpeg",
                 "https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg",
                 "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1200&q=80"
             ],
@@ -748,8 +729,7 @@
             "image": "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80",
             "gallery": [
                 "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80",
-                "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&q=80",
-                "https://www.delhiduniya.com/vyomika/images/shop/product/big/372645.jpeg"
+                "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&q=80"
             ],
             "meta_title": "Matte Black Co-working Partitions — Pune | Vyomika Atelier",
             "meta_description": "Matte black PVD office partitions for a Pune co-working suite — custom modular metalwork by Vyomika Atelier.",

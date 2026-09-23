@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\CartService;
 use App\Support\AdminAccess;
 use Closure;
 use Illuminate\Http\Request;
@@ -10,23 +11,33 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RedirectVerifiedCustomerMiddleware
 {
+    public function __construct(private CartService $cart) {}
+
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->check()) {
-            $user = auth()->user();
-
-            if ($user->isAdmin()) {
-                AdminAccess::revoke($request);
-                Auth::logout();
-
-                return $next($request);
-            }
-
-            if ($user->hasVerifiedPhone()) {
-                return redirect()->route('account');
-            }
+        if (! auth()->check()) {
+            return $next($request);
         }
 
-        return $next($request);
+        $user = auth()->user();
+
+        if ($user->isAdmin()) {
+            AdminAccess::revoke($request);
+            Auth::logout();
+
+            return $next($request);
+        }
+
+        if (! $user->is_active) {
+            Auth::logout();
+
+            return $next($request);
+        }
+
+        if ($this->cart->hasBuyNow()) {
+            return redirect()->route('checkout.index');
+        }
+
+        return redirect()->route('account');
     }
 }

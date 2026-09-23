@@ -29,7 +29,7 @@ class BlogSeo
             'robots' => $robots,
             'og_title' => filled($post->og_title ?? null) ? (string) $post->og_title : null,
             'og_description' => filled($post->og_description ?? null) ? (string) $post->og_description : null,
-            'og_image' => $post->og_image ?: $post->imageUrl(),
+            'og_image' => $post->ogImageUrl(),
             'og_type' => 'article',
             'primary_keyword' => $post->primary_keyword,
         ]);
@@ -84,8 +84,9 @@ class BlogSeo
             'dateModified' => ($post->lastUpdatedAt() ?? $post->updated_at ?? $post->published_at)?->toAtomString(),
         ];
 
-        if ($post->imageUrl()) {
-            $schema['image'] = [$post->imageUrl()];
+        $schemaImage = $post->ogImageUrl() ?: $post->imageUrl();
+        if ($schemaImage) {
+            $schema['image'] = [$schemaImage];
         }
 
         return $schema;

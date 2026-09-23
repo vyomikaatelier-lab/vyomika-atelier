@@ -1,0 +1,61 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class StaffInvitation extends Model
+{
+    protected $fillable = [
+        'name',
+        'email',
+        'pending_email',
+        'admin_role',
+        'token_hash',
+        'invited_by',
+        'expires_at',
+        'accepted_at',
+        'revoked_at',
+    ];
+
+    protected $hidden = ['token_hash'];
+
+    protected function casts(): array
+    {
+        return [
+            'expires_at' => 'datetime',
+            'accepted_at' => 'datetime',
+            'revoked_at' => 'datetime',
+        ];
+    }
+
+    public function inviter(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'invited_by');
+    }
+
+    public function isPending(): bool
+    {
+        return $this->accepted_at === null
+            && $this->revoked_at === null
+            && $this->expires_at?->isFuture();
+    }
+
+    public function statusLabel(): string
+    {
+        if ($this->accepted_at !== null) {
+            return 'Accepted';
+        }
+
+        if ($this->revoked_at !== null) {
+            return 'Revoked';
+        }
+
+        if ($this->expires_at?->isPast()) {
+            return 'Expired';
+        }
+
+        return 'Pending';
+    }
+}

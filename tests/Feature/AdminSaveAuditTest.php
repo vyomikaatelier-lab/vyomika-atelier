@@ -134,7 +134,7 @@ class AdminSaveAuditTest extends TestCase
             'section' => Product::SECTION_STUDIO,
             'purchase_mode' => Product::PURCHASE_MODE_ENQUIRY,
             'pricing_type' => Product::PRICING_SQUARE_FOOT,
-        ])->assertRedirect(route('admin.products.edit', ['product' => $product, 'saved' => 1]));
+        ])->assertRedirect(route('admin.products.index', ['category_id' => $category->id]));
 
         $this->assertFalse($product->fresh()->is_active);
     }

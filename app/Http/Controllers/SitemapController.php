@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Models\Service;
 use App\Support\BlogContent;
 use App\Support\MirrorFramesContent;
+use App\Support\ProductPublicationPolicy;
 use App\Support\StorefrontRoutes;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Schema;
@@ -20,7 +21,6 @@ class SitemapController extends Controller
 
         $static = [
             ['loc' => route('home'), 'changefreq' => 'weekly', 'priority' => '1.0'],
-            ['loc' => route('shop.index'), 'changefreq' => 'weekly', 'priority' => '0.9'],
             ['loc' => route('studio.index'), 'changefreq' => 'monthly', 'priority' => '0.85'],
             ['loc' => route('projects.index'), 'changefreq' => 'weekly', 'priority' => '0.8'],
             ['loc' => route('blog.index'), 'changefreq' => 'weekly', 'priority' => '0.8'],
@@ -28,7 +28,6 @@ class SitemapController extends Controller
             ['loc' => route('professionals.index'), 'changefreq' => 'monthly', 'priority' => '0.7'],
             ['loc' => route('railings.index'), 'changefreq' => 'monthly', 'priority' => '0.8'],
             ['loc' => route('corten-steel.show'), 'changefreq' => 'monthly', 'priority' => '0.8'],
-            ['loc' => route('shop.mirror-frames.index'), 'changefreq' => 'weekly', 'priority' => '0.85'],
             ['loc' => route('contact.index'), 'changefreq' => 'monthly', 'priority' => '0.7'],
         ];
 
@@ -36,21 +35,17 @@ class SitemapController extends Controller
             $urls[] = $item;
         }
 
-        foreach (StorefrontRoutes::shopCategorySlugs() as $shopSlug) {
-            if ($shopSlug === 'mirror-frames') {
-                continue;
-            }
-
+        foreach (\App\Support\StorefrontNavigation::shopLinks() as $shopLink) {
             $urls[] = [
-                'loc' => route('shop.show', $shopSlug),
+                'loc' => $shopLink['href'],
                 'changefreq' => 'weekly',
                 'priority' => '0.85',
             ];
         }
 
-        foreach (StorefrontRoutes::studioUrlSlugs() as $studioSlug) {
+        foreach (\App\Support\StorefrontNavigation::studioLinks() as $studioLink) {
             $urls[] = [
-                'loc' => route('studio.show', $studioSlug),
+                'loc' => $studioLink['href'],
                 'changefreq' => 'monthly',
                 'priority' => '0.8',
             ];
@@ -110,11 +105,11 @@ class SitemapController extends Controller
         }
 
         if (Schema::hasTable('products')) {
-            Product::query()
-                ->where('is_active', true)
-                ->where('robots_index', true)
-                ->where('section', Product::SECTION_SHOP)
-                ->unlessHiddenForStock()
+            ProductPublicationPolicy::applySitemapScope(
+                Product::query()
+                    ->where('section', Product::SECTION_SHOP)
+                    ->unlessHiddenForStock()
+            )
                 ->get(['slug', 'updated_at'])
                 ->each(function (Product $product) use (&$urls) {
                     $urls[] = [
@@ -131,14 +126,13 @@ class SitemapController extends Controller
                 ->where('is_active', true)
                 ->get(['slug', 'updated_at'])
                 ->each(function (Service $service) use (&$urls) {
-                    if (StorefrontRoutes::studioUrlForService($service->slug)) {
+                    $studioUrl = StorefrontRoutes::studioUrlForService($service->slug);
+                    if (! $studioUrl) {
                         return;
                     }
-                    if (in_array($service->slug, Service::adminHiddenSlugs(), true)) {
-                        return;
-                    }
+
                     $urls[] = [
-                        'loc' => route('services.show', $service->slug),
+                        'loc' => route('studio.show', $studioUrl),
                         'lastmod' => $service->updated_at?->toAtomString(),
                         'changefreq' => 'monthly',
                         'priority' => '0.7',

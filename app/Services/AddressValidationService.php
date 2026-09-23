@@ -5,9 +5,11 @@ namespace App\Services;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use InvalidArgumentException;
 
 class AddressValidationService
 {
+    public function __construct(private PhoneNumberService $phones) {}
     /**
      * @return array<string, mixed>
      */
@@ -62,9 +64,24 @@ class AddressValidationService
         $validated = $validator->validated();
         $validated['country_resolved'] = $country;
         $validated['full_name'] = trim(($validated['first_name'] ?? '') . ' ' . ($validated['last_name'] ?? ''));
-        $validated['phone_normalized'] = $this->normalizePhone($validated['phone']);
+
+        try {
+            if ($isIndia) {
+                $phone = $this->phones->normalize('+91', $validated['phone']);
+                $validated['phone_normalized'] = $phone['national'];
+            } else {
+                $digits = $this->normalizePhone($validated['phone']);
+                if (strlen($digits) < 6 || strlen($digits) > 14) {
+                    throw new InvalidArgumentException('Enter a valid mobile number.');
+                }
+                $validated['phone_normalized'] = $digits;
+            }
+        } catch (InvalidArgumentException $e) {
+            throw ValidationException::withMessages(['phone' => $e->getMessage()]);
+        }
+
         $validated['alt_mobile_normalized'] = filled($validated['alt_mobile'] ?? null)
-            ? $this->normalizePhone($validated['alt_mobile'])
+            ? $this->normalizeOptionalAltMobile($validated['alt_mobile'])
             : null;
         $validated['pincode_normalized'] = $isIndia
             ? preg_replace('/\D/', '', $validated['pincode'])
@@ -90,6 +107,15 @@ class AddressValidationService
     public function normalizePhone(string $phone): string
     {
         return preg_replace('/\D/', '', $phone) ?? '';
+    }
+
+    private function normalizeOptionalAltMobile(string $altMobile): ?string
+    {
+        try {
+            return $this->phones->normalize('+91', $altMobile)['national'];
+        } catch (InvalidArgumentException $e) {
+            throw ValidationException::withMessages(['alt_mobile' => $e->getMessage()]);
+        }
     }
 
     public function pinLookupStatus(string $country, string $pincode): string

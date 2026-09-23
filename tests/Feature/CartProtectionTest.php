@@ -17,26 +17,26 @@ class CartProtectionTest extends TestCase
         $category = Category::factory()->create(['slug' => 'coffee-tables']);
         $product = Product::factory()->shop()->create(['category_id' => $category->id, 'stock' => 5]);
 
-        $response = $this->post(route('cart.add', $product), ['quantity' => 1]);
+        $response = $this->post(route('cart.add', $product), $this->purchaseInput());
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
         $response->assertSessionMissing('error');
-        $this->assertSame(1, session('cart')[$product->id]['quantity'] ?? null);
+        $this->assertSame(1, $this->sessionCartLine($product)['quantity'] ?? null);
     }
 
-    public function test_shop_buy_now_redirects_to_checkout(): void
+    public function test_shop_buy_now_redirects_guest_to_continue(): void
     {
         $category = Category::factory()->create(['slug' => 'coffee-tables']);
         $product = Product::factory()->shop()->create(['category_id' => $category->id, 'stock' => 5]);
 
-        $response = $this->post(route('cart.add', $product), [
-            'quantity' => 1,
+        $response = $this->post(route('cart.add', $product), $this->purchaseInput([
             'buy_now' => 1,
-        ]);
+        ]));
 
-        $response->assertRedirect(route('checkout.index'));
-        $this->assertSame(1, session('cart')[$product->id]['quantity'] ?? null);
+        $response->assertRedirect(route('account.continue'));
+        $this->assertTrue($this->sessionCartHasProduct($product));
+        $this->assertNull(session('buy_now'));
     }
 
     public function test_studio_product_direct_post_is_rejected_with_enquiry_message(): void

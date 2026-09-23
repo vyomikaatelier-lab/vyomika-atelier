@@ -4,6 +4,7 @@
     'designSlug' => '',
     'serviceName' => 'PVD Partitions',
     'calcTitle' => 'Estimate your partition',
+    'hideOrderButton' => false,
 ])
 
 <div class="am-calculator va-calculator" data-rate="{{ $rate }}">
@@ -61,6 +62,7 @@
         </div>
     </div>
 
+    @unless($hideOrderButton)
     <button type="button"
         class="am-btn am-btn--primary am-btn--full va-order-btn"
         data-service-slug="{{ $serviceSlug }}"
@@ -68,4 +70,5 @@
         data-service-name="{{ $serviceName }}">
         Order Now
     </button>
+    @endunless
 </div>

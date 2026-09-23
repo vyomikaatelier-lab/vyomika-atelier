@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\RazorpayReconciliationRequiredException;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\OrderPaymentService;
 use App\Services\RazorpayService;
 use App\Support\OrderAccess;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use RuntimeException;
@@ -16,7 +18,7 @@ class RazorpayCheckoutController extends Controller
     public function createOrder(Request $request, RazorpayService $razorpay, OrderPaymentService $payments): JsonResponse
     {
         $validated = $request->validate([
-            'store_order_id' => 'required|integer|exists:orders,id',
+            'store_order_id' => 'required|integer',
         ]);
 
         return $this->createOrderForStoreOrder($validated['store_order_id'], $payments, $razorpay);
@@ -25,15 +27,17 @@ class RazorpayCheckoutController extends Controller
     public function verifyPayment(Request $request, OrderPaymentService $payments): JsonResponse
     {
         $validated = $request->validate([
-            'store_order_id' => 'required|integer|exists:orders,id',
+            'store_order_id' => 'required|integer',
             'razorpay_payment_id' => 'required|string',
             'razorpay_order_id' => 'required|string',
             'razorpay_signature' => 'required|string',
         ]);
 
-        $order = Order::query()->findOrFail($validated['store_order_id']);
+        $order = Order::query()->find($validated['store_order_id']);
 
-        if (! OrderAccess::canAccess($order)) {
+        // Unknown and foreign order IDs answer identically so neither can be
+        // used to enumerate order IDs.
+        if (! $order || ! OrderAccess::canAccess($order)) {
             return response()->json(['message' => 'Order not found.'], 404);
         }
 
@@ -44,10 +48,6 @@ class RazorpayCheckoutController extends Controller
             ]);
         }
 
-        if ($order->isExpired()) {
-            return response()->json(['message' => 'This order has expired. Please place a new order.'], 410);
-        }
-
         try {
             $payments->verifyAndComplete(
                 $order,
@@ -55,6 +55,8 @@ class RazorpayCheckoutController extends Controller
                 $validated['razorpay_order_id'],
                 $validated['razorpay_signature'],
             );
+        } catch (RazorpayReconciliationRequiredException $e) {
+            return response()->json(['message' => $e->getMessage()], 409);
         } catch (RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], $e->getCode() ?: 400);
         }
@@ -70,9 +72,9 @@ class RazorpayCheckoutController extends Controller
         OrderPaymentService $payments,
         RazorpayService $razorpay,
     ): JsonResponse {
-        $order = Order::query()->findOrFail($storeOrderId);
+        $order = Order::query()->find($storeOrderId);
 
-        if (! OrderAccess::canAccess($order)) {
+        if (! $order || ! OrderAccess::canAccess($order)) {
             return response()->json(['message' => 'Order not found.'], 404);
         }
 
@@ -90,6 +92,8 @@ class RazorpayCheckoutController extends Controller
 
         try {
             $payload = $payments->razorpayCheckoutPayload($order);
+        } catch (LockTimeoutException) {
+            return response()->json(['message' => 'Payment is already being started. Please wait a moment.'], 409);
         } catch (RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], $e->getCode() ?: 500);
         }

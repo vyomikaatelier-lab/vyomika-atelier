@@ -111,7 +111,8 @@
 
         updateCalc(calc);
 
-        const orderBtn = calc.querySelector('.va-order-btn');
+        const orderBtn = calc.querySelector('.va-order-btn')
+            || calc.closest('.am-studio-spotlight__calc')?.querySelector('.va-order-btn');
         orderBtn?.addEventListener('click', function () {
             const state = updateCalc(calc);
             const modal = document.getElementById('va-order-modal');

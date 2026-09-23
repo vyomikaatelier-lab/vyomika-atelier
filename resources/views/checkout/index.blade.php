@@ -19,6 +19,15 @@
         <p class="am-checkout-notice am-checkout-notice--error" role="alert">{{ session('error') }}</p>
         @endif
 
+        @if(session('resume_payment_url'))
+        <p class="am-checkout-notice" role="status">
+            @if(session('resume_order_number'))
+            Order #{{ session('resume_order_number') }} still has an active payment.
+            @endif
+            <a href="{{ session('resume_payment_url') }}" class="am-btn am-btn--primary">Resume Payment</a>
+        </p>
+        @endif
+
         @if($errors->any())
         <div class="am-checkout-notice am-checkout-notice--error" role="alert">
             <p>Please fix the following:</p>

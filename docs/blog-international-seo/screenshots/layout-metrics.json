@@ -1,0 +1,41 @@
+[
+  {
+    "viewport": "1440",
+    "screenshot": "D:\\VYOMIKA ATELIER\\docs\\blog-international-seo\\screenshots\\article-layout-1440.png",
+    "containerWidth": 1240,
+    "mainWidth": 780,
+    "sidebarWidth": 280,
+    "mainLeft": 158,
+    "sidebarLeft": 1002,
+    "bodyLeftOfToc": true,
+    "gridTemplateAreas": "\"body toc\"",
+    "mainGridArea": "body",
+    "sidebarGridArea": "toc"
+  },
+  {
+    "viewport": "1024",
+    "screenshot": "D:\\VYOMIKA ATELIER\\docs\\blog-international-seo\\screenshots\\article-layout-1024.png",
+    "containerWidth": 976,
+    "mainWidth": 952,
+    "sidebarWidth": 952,
+    "mainLeft": 36,
+    "sidebarLeft": 36,
+    "bodyLeftOfToc": false,
+    "gridTemplateAreas": "\"toc\" \"body\"",
+    "mainGridArea": "body",
+    "sidebarGridArea": "toc"
+  },
+  {
+    "viewport": "390",
+    "screenshot": "D:\\VYOMIKA ATELIER\\docs\\blog-international-seo\\screenshots\\article-layout-390.png",
+    "containerWidth": 342,
+    "mainWidth": 318,
+    "sidebarWidth": 318,
+    "mainLeft": 36,
+    "sidebarLeft": 36,
+    "bodyLeftOfToc": false,
+    "gridTemplateAreas": "\"toc\" \"body\"",
+    "mainGridArea": "body",
+    "sidebarGridArea": "toc"
+  }
+]
