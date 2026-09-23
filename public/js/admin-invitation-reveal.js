@@ -25,6 +25,19 @@
         window.history.replaceState({}, '', staffIndexUrl);
     }
 
+    document.querySelectorAll('form[data-confirm]').forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            var message = form.getAttribute('data-confirm');
+            if (!message) {
+                return;
+            }
+
+            if (!window.confirm(message)) {
+                event.preventDefault();
+            }
+        });
+    });
+
     var input = document.getElementById('invitation-url');
     var button = document.getElementById('copy-invitation-link');
     var status = document.getElementById('invitation-copy-status');

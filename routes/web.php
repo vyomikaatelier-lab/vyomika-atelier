@@ -288,6 +288,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/staff/invitations/{invitation}/resend', [StaffAdminController::class, 'resend'])
             ->middleware('admin.permission:staff.manage')
             ->name('staff-invitations.resend');
+        Route::delete('/staff/invitations/{invitation}/delete', [StaffAdminController::class, 'destroyRevokedInvitation'])
+            ->middleware('admin.permission:staff.manage')
+            ->name('staff-invitations.destroy');
         Route::delete('/staff/invitations/{invitation}', [StaffAdminController::class, 'revokeInvitation'])
             ->middleware('admin.permission:staff.manage')
             ->name('staff-invitations.revoke');

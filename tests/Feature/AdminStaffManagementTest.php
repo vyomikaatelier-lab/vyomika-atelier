@@ -8,8 +8,10 @@ use App\Models\User;
 use App\Services\StaffInvitationMailer;
 use App\Support\AdminAccess;
 use App\Support\AdminRole;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Log\Events\MessageLogged;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
@@ -92,7 +94,9 @@ class AdminStaffManagementTest extends TestCase
         ]);
 
         $response->assertOk()
-            ->assertSee('class="reveal-title">Staff Invitations</h1>', false)
+            ->assertSee('class="invitations-title text-3xl font-semibold">Staff Invitations</h1>', false)
+            ->assertSee('id="admin-sidebar"', false)
+            ->assertSee('Staff Invitations', false)
             ->assertSee('Back to Staff &amp; Roles', false)
             ->assertSee('Invite staff member', false)
             ->assertSee('Invitation history', false)
@@ -114,7 +118,9 @@ class AdminStaffManagementTest extends TestCase
             ->assertDontSee('smtp-secret', false)
             ->assertDontSee('authentication failed', false)
             ->assertDontSee('min-w-[960px]', false)
-            ->assertDontSee('Role permission comparison table');
+            ->assertDontSee('Role permission comparison table')
+            ->assertDontSee('class="secure-shell"', false)
+            ->assertDontSee('invitation-created', false);
 
         $this->assertSame(200, $response->status());
         $this->assertSame('/admin/staff', parse_url(route('admin.staff.invite'), PHP_URL_PATH));
@@ -123,7 +129,36 @@ class AdminStaffManagementTest extends TestCase
         $this->assertMatchesRegularExpression('/data-staff-index-url="[^"]*\/admin\/staff\/invitations"/', $failureHtml);
         $this->assertMatchesRegularExpression('/class="reveal-close" href="[^"]*\/admin\/staff\/invitations"/', $failureHtml);
         $this->assertDoesNotMatchRegularExpression('/class="reveal-close"[^>]*href="[^"]+\?/', $failureHtml);
-        $this->assertLessThan(strpos($failureHtml, 'class="secure-main"'), strpos($failureHtml, 'data-invitation-fallback-panel'));
+        $headingAt = strpos($failureHtml, 'class="invitations-title');
+        $panelAt = strpos($failureHtml, 'data-invitation-fallback-panel');
+        $formAt = strpos($failureHtml, 'Invite staff member');
+        $mainAt = strpos($failureHtml, 'class="secure-main"');
+        $this->assertNotFalse($headingAt);
+        $this->assertNotFalse($panelAt);
+        $this->assertNotFalse($formAt);
+        $this->assertNotFalse($mainAt);
+        $this->assertLessThan($panelAt, $headingAt);
+        $this->assertLessThan($formAt, $panelAt);
+        $this->assertLessThan($mainAt, $panelAt);
+        $this->assertStringContainsString('class="secure-layout"', $failureHtml);
+        $this->assertStringContainsString('admin-nav-link', $failureHtml);
+        $this->assertStringContainsString('invitation-history-head', $failureHtml);
+        $this->assertStringContainsString('invitation-field-label', $failureHtml);
+        $this->assertStringContainsString('invitation-action', $failureHtml);
+        $this->assertStringContainsString('invite-submit', $failureHtml);
+        $this->assertStringNotContainsString('cdn.tailwindcss.com', $failureHtml);
+        $revealCss = file_get_contents(public_path('css/admin-invitation-reveal.css'));
+        $this->assertIsString($revealCss);
+        $this->assertStringContainsString('grid-template-areas: "main panel";', $revealCss);
+        $this->assertStringContainsString('grid-template-columns: minmax(0, 1fr) minmax(22rem, 26rem);', $revealCss);
+        $this->assertStringContainsString('position: sticky;', $revealCss);
+        $this->assertStringContainsString('@media (max-width: 1279px)', $revealCss);
+        $this->assertStringContainsString('@media (min-width: 1280px)', $revealCss);
+        $this->assertStringNotContainsString('@media (min-width: 900px)', $revealCss);
+        $this->assertStringContainsString('.admin-nav-link,', $revealCss);
+        $this->assertStringContainsString('.invitation-history-head', $revealCss);
+        $this->assertStringContainsString('order: -1;', $revealCss);
+        $this->assertStringNotContainsString('position: fixed', $revealCss);
 
         $this->assertSame(200, $response->status());
         [$invitation, $token, $acceptUrl] = $this->extractInvitationReveal($response, 'fallback@example.com');
@@ -179,6 +214,9 @@ class AdminStaffManagementTest extends TestCase
         $this->assertLocalInvitationAssetVersions($content, $token);
         $this->assertDoesNotMatchRegularExpression('/\bfetch\s*\(|XMLHttpRequest|sendBeacon/i', $content);
         $this->assertStringContainsString('data-invitation-fallback-panel', $content);
+        $this->assertStringContainsString('id="admin-sidebar"', $content);
+        $this->assertStringNotContainsString('class="secure-shell"', $content);
+        $this->assertStringNotContainsString('history.replaceState', $content);
         $this->assertMatchesRegularExpression('/data-staff-index-url="[^"]*\/admin\/staff\/invitations"/', $content);
         $this->assertDoesNotMatchRegularExpression('/data-staff-index-url="[^"]*\/admin\/staff"/', $content);
         $this->assertDoesNotMatchRegularExpression('/data-staff-index-url="[^"]*[?#]/', $content);
@@ -269,7 +307,8 @@ class AdminStaffManagementTest extends TestCase
         $legacy->assertOk()
             ->assertSee('Email could not be delivered', false)
             ->assertSee('data-invitation-fallback-panel', false)
-            ->assertSee('class="reveal-title">Staff Invitations</h1>', false)
+            ->assertSee('class="invitations-title text-3xl font-semibold">Staff Invitations</h1>', false)
+            ->assertSee('id="admin-sidebar"', false)
             ->assertDontSee('Roles and permissions', false)
             ->assertDontSee('min-w-[960px]', false);
         $this->assertMatchesRegularExpression('/data-staff-index-url="[^"]*\/admin\/staff\/invitations"/', $legacy->getContent());
@@ -784,6 +823,216 @@ class AdminStaffManagementTest extends TestCase
             ->assertDontSee('value="'.str_repeat('d', 64).'"', false);
     }
 
+    public function test_invitation_history_offers_delete_only_for_revoked_records(): void
+    {
+        $owner = $this->owner();
+        $pending = $this->invitationRecord($owner, 'pending-visible@example.com');
+        $revoked = $this->invitationRecord($owner, 'revoked-visible@example.com', [
+            'revoked_at' => now(),
+            'pending_email' => null,
+        ]);
+        $expired = $this->invitationRecord($owner, 'expired-visible@example.com', [
+            'expires_at' => now()->subHour(),
+            'pending_email' => null,
+        ]);
+        $accepted = $this->invitationRecord($owner, 'accepted-visible@example.com', [
+            'accepted_at' => now(),
+            'pending_email' => null,
+        ]);
+
+        $html = $this->asVerifiedAdmin($owner)->get(route('admin.staff.invitations.index'))->assertOk()->getContent();
+        $confirm = 'Permanently delete this revoked invitation from history?';
+
+        $pendingArticle = $this->invitationArticle($html, $pending->email);
+        $this->assertStringContainsString('Regenerate Link', $pendingArticle);
+        $this->assertStringContainsString('>Revoke</button>', $pendingArticle);
+        $this->assertStringNotContainsString('>Delete</button>', $pendingArticle);
+        $this->assertStringNotContainsString($confirm, $pendingArticle);
+        $this->assertStringNotContainsString('/delete', $pendingArticle);
+
+        $revokedArticle = $this->invitationArticle($html, $revoked->email);
+        $this->assertStringContainsString('>Delete</button>', $revokedArticle);
+        $this->assertStringContainsString('data-confirm="'.$confirm.'"', $revokedArticle);
+        $this->assertStringContainsString('/admin/staff/invitations/'.$revoked->getKey().'/delete', $revokedArticle);
+        $this->assertStringContainsString('name="_token"', $revokedArticle);
+        $this->assertStringNotContainsString('Regenerate Link', $revokedArticle);
+        $this->assertStringNotContainsString('>Revoke</button>', $revokedArticle);
+
+        foreach ([$expired, $accepted] as $invitation) {
+            $article = $this->invitationArticle($html, $invitation->email);
+            $this->assertStringContainsString('No actions', $article);
+            $this->assertStringNotContainsString('>Delete</button>', $article);
+            $this->assertStringNotContainsString($confirm, $article);
+            $this->assertStringNotContainsString('/delete', $article);
+            $this->assertStringNotContainsString('Regenerate Link', $article);
+            $this->assertStringNotContainsString('>Revoke</button>', $article);
+        }
+    }
+
+    public function test_owner_can_delete_only_the_selected_revoked_invitation(): void
+    {
+        $logs = [];
+        Event::listen(MessageLogged::class, function (MessageLogged $event) use (&$logs): void {
+            $logs[] = $event;
+        });
+
+        $owner = $this->owner();
+        $keeper = User::factory()->admin()->create(['admin_role' => AdminRole::VIEWER]);
+        $revoked = $this->invitationRecord($owner, 'delete-me@example.com', [
+            'revoked_at' => now()->subMinute(),
+            'pending_email' => null,
+            'token_hash' => hash('sha256', str_repeat('f', 64)),
+        ]);
+        $other = $this->invitationRecord($owner, 'keep-me@example.com', [
+            'revoked_at' => now(),
+            'pending_email' => null,
+        ]);
+        $userCount = User::query()->count();
+        $overrideCount = DB::table('admin_role_permission_overrides')->count();
+        $auditCount = DB::table('admin_role_permission_audits')->count();
+
+        $this->assertSame(
+            '/admin/staff/invitations/'.$revoked->getKey().'/delete',
+            parse_url(route('admin.staff-invitations.destroy', $revoked), PHP_URL_PATH),
+        );
+        $this->assertSame(
+            '/admin/staff/invitations/'.$revoked->getKey(),
+            parse_url(route('admin.staff-invitations.revoke', $revoked), PHP_URL_PATH),
+        );
+
+        $this->asVerifiedAdmin($owner)
+            ->delete(route('admin.staff-invitations.destroy', $revoked))
+            ->assertRedirect(route('admin.staff.invitations.index'))
+            ->assertSessionHas('success', 'Revoked invitation deleted.');
+
+        $this->assertDatabaseMissing('staff_invitations', ['id' => $revoked->getKey()]);
+        $this->assertNotNull($other->fresh());
+        $this->assertSame($other->token_hash, $other->fresh()->token_hash);
+        $this->assertNotNull($keeper->fresh());
+        $this->assertTrue($keeper->fresh()->is_active);
+        $this->assertSame(AdminRole::VIEWER, $keeper->fresh()->admin_role);
+        $this->assertSame($userCount, User::query()->count());
+        $this->assertSame($overrideCount, DB::table('admin_role_permission_overrides')->count());
+        $this->assertSame($auditCount, DB::table('admin_role_permission_audits')->count());
+
+        $deletedLog = collect($logs)->first(fn (MessageLogged $event): bool => $event->message === 'admin.staff_invitation_deleted');
+        $this->assertInstanceOf(MessageLogged::class, $deletedLog);
+        $this->assertSame([
+            'actor_id' => $owner->getKey(),
+            'invitation_id' => $revoked->getKey(),
+        ], $deletedLog->context);
+        $encodedLog = json_encode($deletedLog->context);
+        $this->assertStringNotContainsString('delete-me@example.com', $encodedLog);
+        $this->assertStringNotContainsString($revoked->token_hash, $encodedLog);
+        $this->assertStringNotContainsString(str_repeat('f', 64), $encodedLog);
+
+        $this->asVerifiedAdmin($owner)->get(route('admin.staff.invitations.index'))
+            ->assertOk()
+            ->assertSee('Revoked invitation deleted.', false)
+            ->assertSee('keep-me@example.com', false)
+            ->assertDontSee('delete-me@example.com', false);
+    }
+
+    public function test_forged_deletion_does_not_change_pending_expired_or_accepted_invitations(): void
+    {
+        $owner = $this->owner();
+        $cases = [
+            'pending' => $this->invitationRecord($owner, 'forge-pending@example.com'),
+            'expired' => $this->invitationRecord($owner, 'forge-expired@example.com', [
+                'expires_at' => now()->subDay(),
+                'pending_email' => null,
+            ]),
+            'accepted' => $this->invitationRecord($owner, 'forge-accepted@example.com', [
+                'accepted_at' => now()->subHour(),
+                'pending_email' => null,
+            ]),
+            'accepted-and-revoked' => $this->invitationRecord($owner, 'forge-both@example.com', [
+                'accepted_at' => now()->subHour(),
+                'revoked_at' => now()->subMinute(),
+                'pending_email' => null,
+            ]),
+        ];
+
+        foreach ($cases as $invitation) {
+            $before = $invitation->fresh()->getAttributes();
+
+            $this->asVerifiedAdmin($owner)
+                ->delete(route('admin.staff-invitations.destroy', $invitation))
+                ->assertRedirect(route('admin.staff.invitations.index'))
+                ->assertSessionHasErrors('invitation');
+
+            $this->assertNull(session('success'));
+            $this->assertNotNull($invitation->fresh());
+            $this->assertSame($before, $invitation->fresh()->getAttributes());
+        }
+    }
+
+    public function test_guests_and_unauthorized_admins_cannot_delete_revoked_invitations(): void
+    {
+        $owner = $this->owner();
+        $administrator = User::factory()->admin()->create(['admin_role' => AdminRole::ADMINISTRATOR]);
+        $viewer = User::factory()->admin()->create(['admin_role' => AdminRole::VIEWER]);
+        $customer = User::factory()->create(['is_admin' => false]);
+        $invitation = $this->invitationRecord($owner, 'protected-revoked@example.com', [
+            'revoked_at' => now(),
+            'pending_email' => null,
+        ]);
+        $before = $invitation->fresh()->getAttributes();
+
+        $this->delete(route('admin.staff-invitations.destroy', $invitation))
+            ->assertRedirect(route('admin.login'));
+
+        $this->asVerifiedAdmin($administrator)
+            ->delete(route('admin.staff-invitations.destroy', $invitation))
+            ->assertForbidden();
+
+        $this->asVerifiedAdmin($viewer)
+            ->delete(route('admin.staff-invitations.destroy', $invitation))
+            ->assertForbidden();
+
+        $this->actingAs($customer)
+            ->delete(route('admin.staff-invitations.destroy', $invitation))
+            ->assertRedirect(route('admin.login'));
+
+        $this->assertSame($before, $invitation->fresh()->getAttributes());
+    }
+
+    public function test_deleting_a_revoked_invitation_requires_csrf_and_staff_manage(): void
+    {
+        $owner = $this->owner();
+        $invitation = $this->invitationRecord($owner, 'csrf-revoked@example.com', [
+            'revoked_at' => now(),
+            'pending_email' => null,
+        ]);
+
+        $route = app('router')->getRoutes()->getByName('admin.staff-invitations.destroy');
+        $this->assertNotNull($route);
+        $middleware = app('router')->gatherRouteMiddleware($route);
+        $this->assertContains('web', $middleware);
+        $this->assertContains('admin.permission:staff.manage', $middleware);
+        $this->assertContains(
+            ValidateCsrfToken::class,
+            app(\Illuminate\Contracts\Http\Kernel::class)->getMiddlewareGroups()['web'],
+        );
+
+        $this->app->bind(ValidateCsrfToken::class, function ($app) {
+            return new class($app, $app->make('encrypter')) extends ValidateCsrfToken
+            {
+                protected function runningUnitTests(): bool
+                {
+                    return false;
+                }
+            };
+        });
+
+        $this->asVerifiedAdmin($owner)
+            ->delete(route('admin.staff-invitations.destroy', $invitation))
+            ->assertStatus(419);
+
+        $this->assertNotNull($invitation->fresh());
+        $this->assertNotNull($invitation->fresh()->revoked_at);
+    }
+
     public function test_staff_roles_and_invitations_pages_are_separated(): void
     {
         $owner = $this->owner();
@@ -896,6 +1145,31 @@ class AdminStaffManagementTest extends TestCase
             ->assertOk()
             ->assertDontSee('Staff & Roles')
             ->assertDontSee('Staff Invitations');
+    }
+
+    private function invitationRecord(User $owner, string $email, array $overrides = []): StaffInvitation
+    {
+        return StaffInvitation::query()->create(array_merge([
+            'name' => 'Staff Person',
+            'email' => $email,
+            'pending_email' => $email,
+            'admin_role' => AdminRole::VIEWER,
+            'token_hash' => hash('sha256', $email),
+            'invited_by' => $owner->getKey(),
+            'expires_at' => now()->addDays(2),
+        ], $overrides));
+    }
+
+    private function invitationArticle(string $html, string $email): string
+    {
+        preg_match_all('/<article\b[^>]*>[\s\S]*?<\/article>/', $html, $articles);
+        foreach ($articles[0] as $article) {
+            if (str_contains($article, $email)) {
+                return $article;
+            }
+        }
+
+        $this->fail('Invitation row for '.$email.' was not rendered.');
     }
 
     /** @return array{StaffInvitation, string, string} */
