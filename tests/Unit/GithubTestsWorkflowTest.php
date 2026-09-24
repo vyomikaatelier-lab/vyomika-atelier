@@ -33,6 +33,8 @@ class GithubTestsWorkflowTest extends TestCase
         $this->assertMatchesRegularExpression('/name: Run tests\s+run: php artisan test/', $raw);
         $this->assertTrue((bool) preg_match('/^\s+name: MySQL invitation uniqueness\s*$/m', $raw));
         $this->assertStringContainsString('tests/Feature/MysqlStaffInvitationUniquenessTest.php', $raw);
+        $this->assertStringContainsString('tests/Feature/MysqlPaymentReconciliationMigrationTest.php', $raw);
+        $this->assertStringContainsString('MYSQL_PAYMENT_RECONCILIATION_TEST', $raw);
         $this->assertStringContainsString('image: mysql:8.0', $raw);
         $this->assertStringContainsString('php artisan test', $raw);
         $this->assertSame(1, substr_count($raw, '- name: Run tests'));

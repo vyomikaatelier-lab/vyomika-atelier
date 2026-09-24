@@ -10,7 +10,7 @@ class ExpirePendingOrders extends Command
 {
     protected $signature = 'orders:expire-pending';
 
-    protected $description = 'Cancel stale unpaid orders and release their stock reservations';
+    protected $description = 'Cancel expired unpaid pending orders. Paid and reconciliation-required orders are left unchanged.';
 
     public function handle(): int
     {
@@ -26,7 +26,6 @@ class ExpirePendingOrders extends Command
         foreach ($candidates as $order) {
             if (PendingOrderExpiry::expireIfStillPending($order)) {
                 $processed++;
-                $this->line("Cancelled expired order {$order->order_number}");
             } else {
                 $skipped++;
             }

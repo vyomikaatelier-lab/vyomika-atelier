@@ -53,19 +53,16 @@ class RazorpayWebhookController extends Controller
             return response()->json(['status' => 'order_not_found']);
         }
 
-        if (in_array($order->status, ['paid', 'processing', 'shipped', 'delivered'], true)) {
-            return response()->json(['status' => 'already_processed']);
-        }
-
         try {
-            $payments->completeFromGateway($order, $paymentId, $razorpayOrderId);
+            $result = $payments->completeFromGateway($order, $paymentId, $razorpayOrderId);
         } catch (RazorpayReconciliationRequiredException $e) {
             return response()->json(['status' => 'reconciliation_required']);
         } catch (RuntimeException $e) {
             Log::error('Razorpay webhook payment completion failed.', [
+                'event' => 'razorpay.webhook_completion_failed',
                 'order_id' => $order->id,
                 'order_number' => $order->order_number,
-                'error' => $e->getMessage(),
+                'reason' => 'completion_failed',
             ]);
 
             $statusCode = (int) $e->getCode();
@@ -73,9 +70,11 @@ class RazorpayWebhookController extends Controller
                 $statusCode = 500;
             }
 
-            return response()->json(['message' => $e->getMessage()], $statusCode);
+            return response()->json(['message' => 'Payment could not be confirmed.'], $statusCode);
         }
 
-        return response()->json(['status' => 'ok']);
+        $status = $result === 'paid' ? 'ok' : $result;
+
+        return response()->json(['status' => $status]);
     }
 }

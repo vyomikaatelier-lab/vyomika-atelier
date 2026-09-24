@@ -99,3 +99,13 @@ jobs:
           MYSQL_TEST_USERNAME: root
           MYSQL_TEST_PASSWORD: ci_invitation_test_only
         run: php vendor/phpunit/phpunit/phpunit tests/Feature/MysqlStaffInvitationUniquenessTest.php
+
+      - name: Run MySQL payment reconciliation migration proof
+        env:
+          MYSQL_PAYMENT_RECONCILIATION_TEST: '1'
+          MYSQL_TEST_HOST: 127.0.0.1
+          MYSQL_TEST_PORT: 3306
+          MYSQL_TEST_DATABASE: vyomika_invitation_test
+          MYSQL_TEST_USERNAME: root
+          MYSQL_TEST_PASSWORD: ci_invitation_test_only
+        run: php vendor/phpunit/phpunit/phpunit tests/Feature/MysqlPaymentReconciliationMigrationTest.php

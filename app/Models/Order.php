@@ -26,6 +26,8 @@ class Order extends Model
         'payment_method',
         'payment_id',
         'razorpay_order_id',
+        'reconciliation_reason',
+        'reconciliation_meta',
         'notes',
         'admin_notes',
         'shipping_snapshot',
@@ -53,8 +55,13 @@ class Order extends Model
             'payment_email_sent_at' => 'datetime',
             'admin_order_notified_at' => 'datetime',
             'admin_payment_notified_at' => 'datetime',
+            'reconciliation_meta' => 'array',
         ];
     }
+
+    public const STATUS_RECONCILIATION_REQUIRED = 'reconciliation_required';
+
+    public const REVIEW_HEADING = 'Payment received — order under review';
 
     public function items(): HasMany
     {
@@ -73,6 +80,10 @@ class Order extends Model
 
     public function statusLabel(): string
     {
+        if ($this->needsPaymentReview()) {
+            return self::REVIEW_HEADING;
+        }
+
         return match ($this->status) {
             'pending' => 'Pending',
             'paid' => 'Paid',
@@ -80,7 +91,40 @@ class Order extends Model
             'shipped' => 'Shipped',
             'delivered' => 'Delivered',
             'cancelled' => 'Cancelled',
-            default => ucfirst($this->status),
+            self::STATUS_RECONCILIATION_REQUIRED => self::REVIEW_HEADING,
+            default => ucfirst((string) $this->status),
+        };
+    }
+
+    public function isReconciliationRequired(): bool
+    {
+        return $this->status === self::STATUS_RECONCILIATION_REQUIRED;
+    }
+
+    public function needsPaymentReview(): bool
+    {
+        if ($this->isReconciliationRequired() || filled($this->reconciliation_reason)) {
+            return true;
+        }
+
+        $meta = $this->reconciliation_meta ?? [];
+
+        return ($meta['extra_payment_ids'] ?? []) !== []
+            || ($meta['conflicting_payment_ids'] ?? []) !== [];
+    }
+
+    public function reconciliationReasonLabel(): string
+    {
+        return match ($this->reconciliation_reason) {
+            'insufficient_stock' => 'Stock could not be reserved',
+            'stock_unverified' => 'Stock could not be verified',
+            'captured_after_expiry' => 'Payment arrived after the payment session expired',
+            'captured_after_cancel' => 'Payment arrived after the order was cancelled',
+            'captured_after_close' => 'Payment arrived after the order was closed',
+            'payment_id_conflict' => 'Payment reference is already linked to another order',
+            'duplicate_capture' => 'An additional captured payment was reported',
+            'no_line_items' => 'The order has no line items to fulfil',
+            default => 'Payment needs review',
         };
     }
 

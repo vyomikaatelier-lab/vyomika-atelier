@@ -237,6 +237,7 @@ class RazorpayCheckoutTest extends TestCase
     public function test_valid_hmac_plus_captured_payment_succeeds(): void
     {
         $order = $this->makeOrder(['razorpay_order_id' => 'order_paid_test']);
+        $product = $this->addShopItem($order, 5);
         $paymentId = 'pay_valid_test';
         $this->fakePayment($paymentId, 'order_paid_test');
 
@@ -251,6 +252,7 @@ class RazorpayCheckoutTest extends TestCase
         $response->assertOk()->assertJson(['success' => true]);
         $this->assertSame('paid', $order->fresh()->status);
         $this->assertSame($paymentId, $order->fresh()->payment_id);
+        $this->assertSame(4, $product->fresh()->stock);
     }
 
     public function test_valid_hmac_plus_authorized_payment_does_not_mark_paid(): void
@@ -404,8 +406,10 @@ class RazorpayCheckoutTest extends TestCase
             );
         } finally {
             $fresh = $order->fresh();
-            $this->assertSame('pending', $fresh->status);
-            $this->assertNull($fresh->payment_id);
+            $this->assertSame('reconciliation_required', $fresh->status);
+            $this->assertSame($paymentId, $fresh->payment_id);
+            $this->assertSame('captured_after_expiry', $fresh->reconciliation_reason);
+            $this->assertNull($fresh->expires_at);
             $this->assertSame(5, $product->fresh()->stock);
             Mail::assertNothingSent();
             $this->assertTrue($logs->contains(function (MessageLogged $event) use ($order) {
@@ -442,7 +446,11 @@ class RazorpayCheckoutTest extends TestCase
             'currency' => 'INR',
         ])->assertOk()->assertJson(['status' => 'reconciliation_required']);
 
-        $this->assertSame('cancelled', $order->fresh()->status);
+        $fresh = $order->fresh();
+        $this->assertSame('reconciliation_required', $fresh->status);
+        $this->assertSame($paymentId, $fresh->payment_id);
+        $this->assertSame('captured_after_cancel', $fresh->reconciliation_reason);
+        $this->assertNull($fresh->stock_deducted_at);
         $this->assertSame(4, $product->fresh()->stock);
         $this->assertTrue($logs->contains(fn (MessageLogged $event) => ($event->context['event'] ?? null) === 'razorpay.reconciliation_required'));
     }

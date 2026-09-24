@@ -5,6 +5,26 @@
 @section('content')
 <h1 class="text-2xl font-semibold mb-6">Order {{ $order->order_number }}</h1>
 
+@if($order->needsPaymentReview())
+<div class="mb-6 rounded-lg border border-amber-400 bg-amber-50 p-4" role="status">
+    <p class="font-semibold text-amber-950">Reconciliation required</p>
+    <p class="mt-1 text-sm text-amber-950">Payment received — order under review. Do not take another payment for this order.</p>
+    <p class="mt-2 text-sm">Reason: {{ $order->reconciliationReasonLabel() }}</p>
+    @if($order->payment_id)
+        <p class="mt-1 text-sm">Payment reference: {{ $order->payment_id }}</p>
+    @endif
+    @if($order->razorpay_order_id)
+        <p class="mt-1 text-sm">Gateway order reference: {{ $order->razorpay_order_id }}</p>
+    @endif
+    @foreach(($order->reconciliation_meta['extra_payment_ids'] ?? []) as $extraPaymentId)
+        <p class="mt-1 text-sm">Additional payment reference: {{ $extraPaymentId }}</p>
+    @endforeach
+    @foreach(($order->reconciliation_meta['conflicting_payment_ids'] ?? []) as $conflictPaymentId)
+        <p class="mt-1 text-sm">Conflicting payment reference: {{ $conflictPaymentId }}</p>
+    @endforeach
+</div>
+@endif
+
 <div class="grid lg:grid-cols-2 gap-8">
     <div class="bg-white p-6 rounded-lg shadow">
         <h2 class="font-medium mb-4">Customer</h2>
@@ -17,6 +37,11 @@
         <h2 class="font-medium mb-4">Update Order</h2>
         <form method="POST" action="{{ route('admin.orders.update', $order) }}" class="space-y-3">
             @csrf @method('PUT')
+            @if($order->needsPaymentReview())
+            <p class="text-sm">Recorded status: {{ ucfirst((string) $order->status) }}</p>
+            <p class="text-sm">Customer-facing status: {{ $order->statusLabel() }}</p>
+            <p class="text-sm text-gray-600">Status changes are locked while payment reconciliation is open.</p>
+            @else
             <div>
                 <label class="block text-sm mb-1">Status</label>
                 <select name="status" class="border px-3 py-2 rounded w-full">
@@ -25,6 +50,7 @@
                     @endforeach
                 </select>
             </div>
+            @endif
             <div>
                 <label class="block text-sm mb-1">Admin notes</label>
                 <textarea name="admin_notes" rows="4" class="border px-3 py-2 rounded w-full text-sm">{{ old('admin_notes', $order->admin_notes) }}</textarea>

@@ -13,7 +13,13 @@
             <td class="p-3">{{ $order->order_number }}</td>
             <td class="p-3">{{ $order->customer_name }}</td>
             <td class="p-3">₹{{ number_format($order->total, 0) }}</td>
-            <td class="p-3">{{ $order->statusLabel() }}</td>
+            <td class="p-3">
+                @if($order->needsPaymentReview())
+                    <strong>Reconciliation required</strong>
+                @else
+                    {{ $order->statusLabel() }}
+                @endif
+            </td>
             <td class="p-3"><a href="{{ route('admin.orders.show', $order) }}" class="text-blue-600">View</a></td>
         </tr>
         @endforeach

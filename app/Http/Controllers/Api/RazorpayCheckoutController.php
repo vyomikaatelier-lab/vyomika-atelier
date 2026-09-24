@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\OrderPaymentService;
 use App\Services\RazorpayService;
+use App\Support\CheckoutPayments;
 use App\Support\OrderAccess;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\JsonResponse;
@@ -41,13 +42,6 @@ class RazorpayCheckoutController extends Controller
             return response()->json(['message' => 'Order not found.'], 404);
         }
 
-        if ($order->status !== 'pending') {
-            return response()->json([
-                'success' => true,
-                'redirect' => route('checkout.success', $order),
-            ]);
-        }
-
         try {
             $payments->verifyAndComplete(
                 $order,
@@ -56,7 +50,10 @@ class RazorpayCheckoutController extends Controller
                 $validated['razorpay_signature'],
             );
         } catch (RazorpayReconciliationRequiredException $e) {
-            return response()->json(['message' => $e->getMessage()], 409);
+            return response()->json([
+                'message' => 'Payment was received and your order is under review.',
+                'redirect' => route('checkout.pay', $order),
+            ], 409);
         } catch (RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], $e->getCode() ?: 400);
         }
@@ -76,6 +73,14 @@ class RazorpayCheckoutController extends Controller
 
         if (! $order || ! OrderAccess::canAccess($order)) {
             return response()->json(['message' => 'Order not found.'], 404);
+        }
+
+        if (! CheckoutPayments::enabled()) {
+            return response()->json(['message' => CheckoutPayments::UNAVAILABLE_MESSAGE], 503);
+        }
+
+        if ($order->isReconciliationRequired() || $order->needsPaymentReview()) {
+            return response()->json(['message' => 'Payment was received and your order is under review.'], 422);
         }
 
         if ($order->payment_method !== 'razorpay' || $order->status !== 'pending') {
