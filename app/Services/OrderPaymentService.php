@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Services\StockAvailability;
 use App\Support\CartGuard;
 use App\Support\PaymentAtomicLock;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -131,49 +132,74 @@ class OrderPaymentService
             throw new RuntimeException('Payment verification failed.', 400);
         }
 
-        $this->confirmCapturedPaymentThenComplete($order, $razorpayPaymentId);
+        $result = $this->settleAfterCapture($order, $razorpayPaymentId);
+        $fresh = $order->fresh();
+
+        if ($fresh && $fresh->needsPaymentReview()) {
+            throw new RazorpayReconciliationRequiredException(
+                'Payment was received and your order is under review.',
+                409
+            );
+        }
+
+        $this->throwIfReviewRequired($result);
     }
 
     public function completeFromGateway(
         Order $order,
         string $razorpayPaymentId,
         string $razorpayOrderId,
-    ): void {
+    ): string {
         $storedOrderId = $this->requireStoredRazorpayOrderId($order);
 
         if ($razorpayOrderId !== $storedOrderId) {
             throw new RuntimeException('Payment does not match this order.', 400);
         }
 
-        $this->confirmCapturedPaymentThenComplete($order, $razorpayPaymentId);
+        return $this->settleAfterCapture($order, $razorpayPaymentId);
     }
 
-    private function confirmCapturedPaymentThenComplete(Order $order, string $razorpayPaymentId): void
+    private function throwIfReviewRequired(string $result): void
     {
-        $order->refresh();
-
-        if (in_array($order->status, ['paid', 'processing', 'shipped', 'delivered'], true)) {
-            return;
-        }
-
-        $this->assertCapturedPaymentMatchesOrder($order, $razorpayPaymentId);
-
-        $order->refresh();
-
-        if ($order->status === 'cancelled' || $order->isExpired()) {
-            $this->logReconciliationRequired($order, $razorpayPaymentId);
-
+        if (in_array($result, ['reconciliation_required', 'duplicate_capture_flagged'], true)) {
             throw new RazorpayReconciliationRequiredException(
-                'Payment was received but this order needs review. Please contact the studio with your order number.',
+                'Payment was received and your order is under review.',
                 409
             );
         }
+    }
 
-        if ($order->status !== 'pending') {
-            return;
+    /**
+     * @return 'paid'|'already_processed'|'reconciliation_required'|'duplicate_capture_flagged'
+     */
+    private function settleAfterCapture(Order $order, string $razorpayPaymentId): string
+    {
+        $order->refresh();
+        $payment = $this->capturedPayment($order, $razorpayPaymentId);
+
+        try {
+            $result = PaymentAtomicLock::run(
+                PaymentAtomicLock::forRazorpayOrder((int) $order->id),
+                PaymentAtomicLock::razorpayWaitSeconds(),
+                fn () => DB::transaction(
+                    fn () => $this->settleLockedOrder((int) $order->id, $razorpayPaymentId, $payment)
+                )
+            );
+        } catch (LockTimeoutException) {
+            throw new RuntimeException('Payment is already being confirmed. Please wait a moment.', 409);
         }
 
-        $this->fulfilPaidOrder($order, $razorpayPaymentId);
+        $fresh = $order->fresh();
+        if (
+            $fresh
+            && $fresh->isFulfilled()
+            && ! $fresh->needsPaymentReview()
+            && in_array($result, ['paid', 'already_processed'], true)
+        ) {
+            $this->notifications->sendPaymentConfirmed($fresh);
+        }
+
+        return $result;
     }
 
     private function requireStoredRazorpayOrderId(Order $order): string
@@ -187,10 +213,22 @@ class OrderPaymentService
         return $stored;
     }
 
-    private function assertCapturedPaymentMatchesOrder(Order $order, string $razorpayPaymentId): void
+    /**
+     * @return array<string, mixed>
+     */
+    private function capturedPayment(Order $order, string $razorpayPaymentId): array
     {
         $payment = $this->razorpay->fetchPayment($razorpayPaymentId);
+        $this->assertPaymentFacts($order, $razorpayPaymentId, $payment);
 
+        return $payment;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payment
+     */
+    private function assertPaymentFacts(Order $order, string $razorpayPaymentId, array $payment): void
+    {
         $remotePaymentId = (string) ($payment['id'] ?? '');
         $remoteOrderId = (string) ($payment['order_id'] ?? '');
         $remoteStatus = (string) ($payment['status'] ?? '');
@@ -199,8 +237,8 @@ class OrderPaymentService
         $expectedAmount = RazorpayService::amountPaiseFromRupees($order->total);
         $storedOrderId = (string) $order->razorpay_order_id;
 
-        $idOk = hash_equals($remotePaymentId, $razorpayPaymentId);
-        $orderOk = hash_equals($remoteOrderId, $storedOrderId);
+        $idOk = $remotePaymentId !== '' && hash_equals($remotePaymentId, $razorpayPaymentId);
+        $orderOk = $storedOrderId !== '' && hash_equals($remoteOrderId, $storedOrderId);
         $amountOk = $remoteAmount === $expectedAmount;
         $currencyOk = $remoteCurrency === 'INR';
         $captured = $remoteStatus === 'captured';
@@ -210,9 +248,10 @@ class OrderPaymentService
         }
 
         Log::warning('Razorpay payment did not match the local order.', [
+            'event' => 'razorpay.payment_mismatch',
             'order_id' => $order->id,
             'order_number' => $order->order_number,
-            'payment_id' => $razorpayPaymentId,
+            'reason' => 'payment_mismatch',
             'remote_status' => $remoteStatus,
             'id_ok' => $idOk,
             'order_ok' => $orderOk,
@@ -227,54 +266,162 @@ class OrderPaymentService
         throw new RuntimeException('Payment verification failed.', 400);
     }
 
-    private function fulfilPaidOrder(Order $order, string $razorpayPaymentId): void
+    /**
+     * @param  array<string, mixed>  $payment
+     * @return 'paid'|'already_processed'|'reconciliation_required'|'duplicate_capture_flagged'
+     */
+    private function settleLockedOrder(int $orderId, string $paymentId, array $payment): string
     {
-        try {
-            DB::transaction(function () use ($order, $razorpayPaymentId) {
-                $locked = Order::query()->whereKey($order->id)->lockForUpdate()->first();
+        $locked = Order::query()->whereKey($orderId)->lockForUpdate()->first();
 
-                if (! $locked || $locked->status !== 'pending') {
-                    return;
-                }
+        if (! $locked) {
+            throw new RuntimeException('Payment verification failed.', 400);
+        }
 
-                $locked->update([
-                    'status' => 'paid',
-                    'payment_id' => $razorpayPaymentId,
-                    'expires_at' => null,
-                ]);
+        $this->assertPaymentFacts($locked, $paymentId, $payment);
 
-                StockAvailability::deductForPaidOrder($locked->fresh('items.product'));
-            });
-        } catch (RuntimeException $e) {
-            Log::error('Payment confirmed but stock deduction failed.', [
-                'order_id' => $order->id,
-                'order_number' => $order->order_number,
-                'error' => $e->getMessage(),
+        if ($this->paymentReferencedByOtherOrder($locked, $paymentId)) {
+            if ($this->alreadyRecordedConflict($locked, $paymentId)) {
+                return 'reconciliation_required';
+            }
+
+            $this->persistReconciliation($locked, null, 'payment_id_conflict', $paymentId);
+
+            return 'reconciliation_required';
+        }
+
+        $existing = (string) ($locked->payment_id ?? '');
+
+        if ($existing !== '' && hash_equals($existing, $paymentId)) {
+            if ($locked->isReconciliationRequired()) {
+                return 'reconciliation_required';
+            }
+
+            if ($locked->isFulfilled()) {
+                return 'already_processed';
+            }
+        } elseif ($existing !== '') {
+            $this->flagExtraCapture($locked, $paymentId);
+
+            return 'duplicate_capture_flagged';
+        }
+
+        if ($locked->isFulfilled()) {
+            $locked->update([
+                'payment_id' => $paymentId,
+                'expires_at' => null,
             ]);
 
-            throw new RuntimeException(
-                'Payment was received but stock is no longer available. Please contact us.',
-                409
-            );
+            return 'already_processed';
         }
 
-        $order->refresh();
+        if ($locked->isCancelled() || $locked->isExpired() || ! $locked->isPending()) {
+            $reason = match (true) {
+                $locked->isCancelled() => 'captured_after_cancel',
+                $locked->isExpired() => 'captured_after_expiry',
+                default => 'captured_after_close',
+            };
+            $this->persistReconciliation($locked, $paymentId, $reason);
 
-        if ($order->status === 'paid') {
-            $this->notifications->sendPaymentConfirmed($order);
+            return 'reconciliation_required';
         }
+
+        $blocker = StockAvailability::deductIfAvailable($locked);
+
+        if ($blocker !== null) {
+            $this->persistReconciliation($locked, $paymentId, $blocker);
+
+            return 'reconciliation_required';
+        }
+
+        $locked->update([
+            'status' => 'paid',
+            'payment_id' => $paymentId,
+            'expires_at' => null,
+        ]);
+
+        return 'paid';
     }
 
-    private function logReconciliationRequired(Order $order, string $razorpayPaymentId): void
+    private function paymentReferencedByOtherOrder(Order $order, string $paymentId): bool
+    {
+        if (Order::query()->where('payment_id', $paymentId)->whereKeyNot($order->id)->exists()) {
+            return true;
+        }
+
+        return Order::query()
+            ->whereKeyNot($order->id)
+            ->where(function ($query) use ($paymentId) {
+                $query->whereJsonContains('reconciliation_meta->extra_payment_ids', $paymentId)
+                    ->orWhereJsonContains('reconciliation_meta->conflicting_payment_ids', $paymentId);
+            })
+            ->exists();
+    }
+
+    private function alreadyRecordedConflict(Order $order, string $paymentId): bool
+    {
+        $conflicts = $order->reconciliation_meta['conflicting_payment_ids'] ?? [];
+
+        return $order->isReconciliationRequired()
+            && in_array($paymentId, $conflicts, true);
+    }
+
+    private function flagExtraCapture(Order $order, string $paymentId): void
+    {
+        $meta = $order->reconciliation_meta ?? [];
+        $extra = array_values($meta['extra_payment_ids'] ?? []);
+
+        if (in_array($paymentId, $extra, true)) {
+            return;
+        }
+
+        $extra[] = $paymentId;
+        $meta['extra_payment_ids'] = $extra;
+
+        $order->update([
+            'reconciliation_reason' => $order->reconciliation_reason ?: 'duplicate_capture',
+            'reconciliation_meta' => $meta,
+            'expires_at' => null,
+        ]);
+
+        $this->logReconciliationRequired($order, $paymentId, 'duplicate_capture');
+    }
+
+    private function persistReconciliation(Order $order, ?string $paymentId, string $reason, ?string $conflictPaymentId = null): void
+    {
+        $meta = $order->reconciliation_meta ?? [];
+
+        if ($conflictPaymentId !== null && $conflictPaymentId !== '') {
+            $conflicts = array_values($meta['conflicting_payment_ids'] ?? []);
+            if (! in_array($conflictPaymentId, $conflicts, true)) {
+                $conflicts[] = $conflictPaymentId;
+            }
+            $meta['conflicting_payment_ids'] = $conflicts;
+        }
+
+        $attributes = [
+            'status' => Order::STATUS_RECONCILIATION_REQUIRED,
+            'reconciliation_reason' => $reason,
+            'reconciliation_meta' => $meta === [] ? null : $meta,
+            'expires_at' => null,
+        ];
+
+        if ($paymentId !== null && $paymentId !== '') {
+            $attributes['payment_id'] = $paymentId;
+        }
+
+        $order->update($attributes);
+        $this->logReconciliationRequired($order, $paymentId ?: (string) $conflictPaymentId, $reason);
+    }
+
+    private function logReconciliationRequired(Order $order, string $paymentId, string $reason): void
     {
         Log::warning('Razorpay captured payment requires reconciliation.', [
             'event' => 'razorpay.reconciliation_required',
             'order_id' => $order->id,
             'order_number' => $order->order_number,
-            'local_status' => $order->status,
-            'expired' => $order->isExpired(),
-            'razorpay_order_id' => $order->razorpay_order_id,
-            'payment_id' => $razorpayPaymentId,
+            'reason' => $reason,
+            'payment_id' => $paymentId,
         ]);
     }
 

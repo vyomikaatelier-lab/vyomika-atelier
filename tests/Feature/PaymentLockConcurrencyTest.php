@@ -40,6 +40,7 @@ class PaymentLockConcurrencyTest extends TestCase
 
         DB::purge('sqlite');
         DB::reconnect('sqlite');
+        DB::statement('PRAGMA busy_timeout = 8000');
 
         Artisan::call('migrate:fresh', ['--force' => true]);
     }
@@ -210,5 +211,100 @@ class PaymentLockConcurrencyTest extends TestCase
         $this->assertSame('1', trim((string) file_get_contents($counterFile)));
 
         @unlink($counterFile);
+    }
+
+    public function test_callback_and_webhook_workers_deduct_stock_once(): void
+    {
+        $user = User::factory()->create(['is_admin' => false]);
+        $product = $this->shopProduct();
+        $product->update(['stock' => 4]);
+        $order = $this->seedPendingOrder($user, $product);
+        $order->update(['razorpay_order_id' => 'order_parallel_capture']);
+
+        $this->disconnectSharedDatabase();
+
+        $first = $this->startWorker('settle', $this->sharedDbPath, (string) $order->id, 'pay_parallel_once');
+        $second = $this->startWorker('settle', $this->sharedDbPath, (string) $order->id, 'pay_parallel_once');
+        $firstResult = $this->decodeWorkerOutput($first->wait());
+        $secondResult = $this->decodeWorkerOutput($second->wait());
+
+        $this->reconnectSharedDatabase();
+
+        $this->assertEqualsCanonicalizing(
+            ['paid', 'already_processed'],
+            [$firstResult['result'], $secondResult['result']]
+        );
+        $this->assertSame('paid', $order->fresh()->status);
+        $this->assertSame('pay_parallel_once', $order->fresh()->payment_id);
+        $this->assertSame(3, $product->fresh()->stock);
+    }
+
+    public function test_expiry_racing_capture_does_not_drop_the_captured_payment(): void
+    {
+        $user = User::factory()->create(['is_admin' => false]);
+        $product = $this->shopProduct();
+        $product->update(['stock' => 5]);
+        $order = $this->seedPendingOrder($user, $product);
+        $order->update([
+            'razorpay_order_id' => 'order_parallel_expire',
+            'expires_at' => now()->subMinute(),
+        ]);
+
+        $this->disconnectSharedDatabase();
+
+        $settle = $this->startWorker('settle', $this->sharedDbPath, (string) $order->id, 'pay_parallel_expire');
+        $expire = $this->startWorker('expire', $this->sharedDbPath, (string) $order->id);
+        $this->decodeWorkerOutput($settle->wait());
+        $this->decodeWorkerOutput($expire->wait());
+
+        $this->reconnectSharedDatabase();
+
+        $fresh = $order->fresh();
+        $this->assertSame('reconciliation_required', $fresh->status);
+        $this->assertSame('pay_parallel_expire', $fresh->payment_id);
+        $this->assertNull($fresh->stock_deducted_at);
+        $this->assertSame(5, $product->fresh()->stock);
+    }
+
+    public function test_stale_admin_status_write_loses_to_reconciliation(): void
+    {
+        $user = User::factory()->create(['is_admin' => false]);
+        $product = $this->shopProduct();
+        $product->update(['stock' => 0]);
+        $order = $this->seedPendingOrder($user, $product);
+        $order->update([
+            'razorpay_order_id' => 'order_admin_race',
+            'admin_notes' => 'original-note',
+        ]);
+        $gate = tempnam(sys_get_temp_dir(), 'vyomika_admin_gate_');
+        file_put_contents($gate, 'wait');
+
+        $this->disconnectSharedDatabase();
+
+        $admin = $this->startWorker(
+            'admin-update',
+            $this->sharedDbPath,
+            (string) $order->id,
+            'processing',
+            'stale-note',
+            $gate,
+        );
+        $settle = $this->startWorker('settle', $this->sharedDbPath, (string) $order->id, 'pay_admin_race');
+        $this->decodeWorkerOutput($settle->wait());
+        file_put_contents($gate, 'go');
+        $adminResult = $this->decodeWorkerOutput($admin->wait());
+
+        $this->reconnectSharedDatabase();
+
+        $fresh = $order->fresh();
+        $this->assertSame('status_locked', $adminResult['outcome']);
+        $this->assertSame('reconciliation_required', $fresh->status);
+        $this->assertSame('pay_admin_race', $fresh->payment_id);
+        $this->assertSame('insufficient_stock', $fresh->reconciliation_reason);
+        $this->assertSame('original-note', $fresh->admin_notes);
+        $this->assertNull($fresh->stock_deducted_at);
+        $this->assertSame(0, $product->fresh()->stock);
+
+        @unlink($gate);
     }
 }

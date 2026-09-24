@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Admin\Concerns\HandlesAdminUploads;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Services\OrderAdminUpdate;
 use Illuminate\Http\Request;
 
 class OrderAdminController extends Controller
@@ -25,13 +26,23 @@ class OrderAdminController extends Controller
 
     public function update(Request $request, Order $order)
     {
-        $validated = $request->validate([
-            'status' => 'required|in:pending,paid,processing,shipped,delivered,cancelled',
-            'admin_notes' => 'nullable|string|max:5000',
-        ]);
+        $outcome = OrderAdminUpdate::apply(
+            (int) $order->getKey(),
+            $request->input('status'),
+            $request->input('admin_notes'),
+            $request->exists('status'),
+        );
 
-        $order->update($validated);
+        if ($outcome === OrderAdminUpdate::STATUS_LOCKED) {
+            return back()->withErrors([
+                'status' => 'This order is awaiting payment reconciliation and its status cannot be changed here.',
+            ])->withInput();
+        }
 
-        return back()->with('success', 'Order updated.');
+        $message = $outcome === OrderAdminUpdate::NOTES_SAVED
+            ? 'Order notes saved.'
+            : 'Order updated.';
+
+        return back()->with('success', $message);
     }
 }

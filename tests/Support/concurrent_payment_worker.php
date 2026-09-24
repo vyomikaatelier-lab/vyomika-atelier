@@ -8,6 +8,9 @@ declare(strict_types=1);
  * Usage:
  *   php tests/Support/concurrent_payment_worker.php razorpay <dbPath> <orderId> <counterFile>
  *   php tests/Support/concurrent_payment_worker.php checkout <dbPath> <userId> <productId> <counterFile>
+ *   php tests/Support/concurrent_payment_worker.php settle <dbPath> <orderId> <paymentId>
+ *   php tests/Support/concurrent_payment_worker.php expire <dbPath> <orderId>
+ *   php tests/Support/concurrent_payment_worker.php admin-update <dbPath> <orderId> <status> <notes> <gateFile>
  */
 
 use App\Http\Controllers\CheckoutController;
@@ -32,6 +35,9 @@ putenv('APP_ENV=testing');
 putenv('APP_KEY=base64:2fl+Ktvkfl+Fuz4Qp/A75G2RTiWVA/r9BpzVLDGF7WA=');
 putenv('DB_CONNECTION=sqlite');
 putenv('DB_DATABASE='.$dbPath);
+putenv('CHECKOUT_PAYMENTS_ENABLED=true');
+$_ENV['CHECKOUT_PAYMENTS_ENABLED'] = 'true';
+$_SERVER['CHECKOUT_PAYMENTS_ENABLED'] = 'true';
 $_ENV['APP_ENV'] = 'testing';
 $_ENV['DB_CONNECTION'] = 'sqlite';
 $_ENV['DB_DATABASE'] = $dbPath;
@@ -52,6 +58,17 @@ try {
         'razorpay' => runRazorpayWorker(
             (int) ($argv[3] ?? 0),
             (string) ($argv[4] ?? ''),
+        ),
+        'settle' => runSettleWorker(
+            (int) ($argv[3] ?? 0),
+            (string) ($argv[4] ?? ''),
+        ),
+        'expire' => runExpireWorker((int) ($argv[3] ?? 0)),
+        'admin-update' => runAdminUpdateWorker(
+            (int) ($argv[3] ?? 0),
+            (string) ($argv[4] ?? ''),
+            (string) ($argv[5] ?? ''),
+            (string) ($argv[6] ?? ''),
         ),
         'checkout' => runCheckoutWorker(
             (int) ($argv[3] ?? 0),
@@ -80,6 +97,7 @@ function configureSharedRuntime(string $dbPath): void
         'cache.stores.database.lock_table' => 'cache_locks',
         'services.razorpay.key' => 'rzp_test_key',
         'services.razorpay.secret' => 'rzp_test_secret',
+        'checkout.payments_enabled' => true,
         'mail.default' => 'array',
         'mail.from.address' => 'shop@example.com',
         'queue.default' => 'sync',
@@ -87,6 +105,7 @@ function configureSharedRuntime(string $dbPath): void
 
     DB::purge('sqlite');
     DB::reconnect('sqlite');
+    DB::statement('PRAGMA busy_timeout = 8000');
 }
 
 function fakeSlowRazorpayCreate(string $counterFile, string $orderId): void
@@ -120,6 +139,90 @@ function runRazorpayWorker(int $orderId, string $counterFile): void
         'ok' => true,
         'razorpay_order_id' => $razorpayOrderId,
     ], JSON_THROW_ON_ERROR));
+}
+
+function runSettleWorker(int $orderId, string $paymentId): void
+{
+    $order = Order::query()->findOrFail($orderId);
+    $razorpayOrderId = (string) $order->razorpay_order_id;
+    $amount = \App\Services\RazorpayService::amountPaiseFromRupees($order->total);
+
+    Http::fake([
+        'api.razorpay.com/v1/payments/*' => Http::response([
+            'id' => $paymentId,
+            'order_id' => $razorpayOrderId,
+            'amount' => $amount,
+            'currency' => 'INR',
+            'status' => 'captured',
+        ], 200),
+    ]);
+
+    $result = retryWhileSqliteBusy(fn () => app(OrderPaymentService::class)->completeFromGateway(
+        $order->fresh(),
+        $paymentId,
+        $razorpayOrderId,
+    ));
+
+    fwrite(STDOUT, json_encode([
+        'ok' => true,
+        'result' => $result,
+    ], JSON_THROW_ON_ERROR));
+}
+
+function runAdminUpdateWorker(int $orderId, string $status, string $notes, string $gateFile): void
+{
+    $deadline = microtime(true) + 20;
+
+    while (trim((string) @file_get_contents($gateFile)) !== 'go') {
+        if (microtime(true) > $deadline) {
+            throw new RuntimeException('Admin update worker timed out waiting for settlement.');
+        }
+
+        usleep(50000);
+    }
+
+    $outcome = retryWhileSqliteBusy(fn () => \App\Services\OrderAdminUpdate::apply(
+        $orderId,
+        $status,
+        $notes,
+        true,
+    ));
+
+    fwrite(STDOUT, json_encode([
+        'ok' => true,
+        'outcome' => $outcome,
+    ], JSON_THROW_ON_ERROR));
+}
+
+function runExpireWorker(int $orderId): void
+{
+    $order = Order::query()->findOrFail($orderId);
+    $expired = retryWhileSqliteBusy(
+        fn () => \App\Services\PendingOrderExpiry::expireIfStillPending($order->fresh())
+    );
+
+    fwrite(STDOUT, json_encode([
+        'ok' => true,
+        'expired' => $expired,
+    ], JSON_THROW_ON_ERROR));
+}
+
+function retryWhileSqliteBusy(callable $callback): mixed
+{
+    $attempt = 0;
+
+    while (true) {
+        try {
+            return $callback();
+        } catch (Throwable $e) {
+            $attempt++;
+            if ($attempt > 6 || ! str_contains($e->getMessage(), 'database is locked')) {
+                throw $e;
+            }
+
+            usleep(150000 * $attempt);
+        }
+    }
 }
 
 function runCheckoutWorker(int $userId, int $productId, string $counterFile): void

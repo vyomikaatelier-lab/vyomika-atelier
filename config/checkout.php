@@ -3,6 +3,29 @@
 return [
     /*
     |--------------------------------------------------------------------------
+    | New checkout and payment initiation
+    |--------------------------------------------------------------------------
+    |
+    | CHECKOUT_PAYMENTS_ENABLED
+    |
+    | false or absent: customers cannot start a new checkout, create an order,
+    | or open a new Razorpay payment. Cart browsing stays available. The pay
+    | page explains that checkout is temporarily unavailable.
+    |
+    | true: signed-in customers can place orders and start Razorpay Checkout.
+    |
+    | The Razorpay callback (POST /checkout/pay/{order}) and the webhook
+    | (POST /webhooks/razorpay) stay available in both modes so a payment that
+    | already started can still be recorded.
+    |
+    | The default is false. A deploy does not accept new payments until an
+    | operator sets this flag to true. The value is only a boolean switch.
+    |
+    */
+    'payments_enabled' => filter_var(env('CHECKOUT_PAYMENTS_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
+
+    /*
+    |--------------------------------------------------------------------------
     | Retired: require a verified customer phone number at checkout
     |--------------------------------------------------------------------------
     |

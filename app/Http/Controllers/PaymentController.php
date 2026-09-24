@@ -6,6 +6,7 @@ use App\Exceptions\RazorpayReconciliationRequiredException;
 use App\Models\Order;
 use App\Services\OrderPaymentService;
 use App\Services\RazorpayService;
+use App\Support\CheckoutPayments;
 use App\Support\OrderAccess;
 use App\Support\StorefrontRoutes;
 use Illuminate\Http\Request;
@@ -24,6 +25,10 @@ class PaymentController extends Controller
             return redirect(StorefrontRoutes::primaryShopUrl())->with('error', 'Order not found.');
         }
 
+        if ($order->needsPaymentReview()) {
+            return view('checkout.payment-review', ['order' => $order]);
+        }
+
         if ($order->isFulfilled()) {
             return redirect()->route('checkout.success', $order);
         }
@@ -39,6 +44,10 @@ class PaymentController extends Controller
         if ($order->status !== 'pending' || $order->payment_method !== 'razorpay') {
             return redirect(StorefrontRoutes::primaryShopUrl())
                 ->with('error', 'This order is not awaiting payment.');
+        }
+
+        if (! CheckoutPayments::enabled()) {
+            return view('checkout.unavailable');
         }
 
         if (! $this->razorpay->isConfigured()) {
@@ -72,19 +81,19 @@ class PaymentController extends Controller
             return redirect()->route('checkout.pay', $order);
         }
 
-        if ($order->isFulfilled()) {
-            return redirect()->route('checkout.success', $order);
+        if ($this->sameStoredPayment($order, $paymentId) && $order->needsPaymentReview()) {
+            return redirect()->route('checkout.pay', $order);
         }
 
-        // Cancelled, expired or otherwise unpayable: the payment page renders
-        // the correct state for the customer under their own session.
-        if (! $order->isAwaitingPayment()) {
-            return redirect()->route('checkout.pay', $order);
+        if ($this->sameStoredPayment($order, $paymentId) && $order->isFulfilled()) {
+            return redirect()->route('checkout.success', $order);
         }
 
         try {
             $this->payments->verifyAndComplete($order, $paymentId, $submittedOrderId, $signature);
-        } catch (RazorpayReconciliationRequiredException|RuntimeException) {
+        } catch (RazorpayReconciliationRequiredException) {
+            return redirect()->route('checkout.pay', $order);
+        } catch (RuntimeException) {
             return redirect()->route('checkout.pay', $order);
         }
 
@@ -117,6 +126,13 @@ class PaymentController extends Controller
         }
 
         return $this->razorpay->verifySignature($storedOrderId, $paymentId, $signature);
+    }
+
+    private function sameStoredPayment(Order $order, string $paymentId): bool
+    {
+        $stored = (string) $order->payment_id;
+
+        return $stored !== '' && $paymentId !== '' && hash_equals($stored, $paymentId);
     }
 
     private function stringInput(Request $request, string $key): string

@@ -13,6 +13,7 @@ use App\Services\RazorpayService;
 use App\Services\StockAvailability;
 use App\Support\CartGuard;
 use App\Support\CheckoutCustomer;
+use App\Support\CheckoutPayments;
 use App\Support\CheckoutSnapshot;
 use App\Support\OrderAccess;
 use App\Support\PaymentAtomicLock;
@@ -42,6 +43,10 @@ class CheckoutController extends Controller
 
     public function index()
     {
+        if (! CheckoutPayments::enabled()) {
+            return view('checkout.unavailable');
+        }
+
         if ($this->cart->checkoutIsEmpty()) {
             return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
         }
@@ -67,6 +72,10 @@ class CheckoutController extends Controller
 
     public function store(Request $request)
     {
+        if (! CheckoutPayments::enabled()) {
+            return redirect()->route('checkout.index');
+        }
+
         if ($message = CheckoutCustomer::denialMessage(Auth::user())) {
             return redirect()->route('checkout.index')->with('error', $message);
         }
@@ -195,6 +204,10 @@ class CheckoutController extends Controller
         }
 
         $order->load('items');
+
+        if ($order->needsPaymentReview()) {
+            return view('checkout.payment-review', ['order' => $order]);
+        }
 
         if ($order->isFulfilled()) {
             return view('checkout.success', [
