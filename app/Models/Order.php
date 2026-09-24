@@ -25,6 +25,10 @@ class Order extends Model
         'status',
         'payment_method',
         'payment_id',
+        'captured_amount_paise',
+        'refunded_amount_paise',
+        'refund_pending_amount_paise',
+        'refund_status',
         'razorpay_order_id',
         'reconciliation_reason',
         'reconciliation_meta',
@@ -47,6 +51,9 @@ class Order extends Model
             'subtotal' => 'decimal:2',
             'shipping_cost' => 'decimal:2',
             'total' => 'decimal:2',
+            'captured_amount_paise' => 'integer',
+            'refunded_amount_paise' => 'integer',
+            'refund_pending_amount_paise' => 'integer',
             'shipping_snapshot' => 'array',
             'billing_snapshot' => 'array',
             'expires_at' => 'datetime',
@@ -66,6 +73,11 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function refunds(): HasMany
+    {
+        return $this->hasMany(OrderRefund::class);
     }
 
     public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -153,6 +165,88 @@ class Order extends Model
     public function isAwaitingPayment(): bool
     {
         return $this->isPending() && ! $this->isExpired();
+    }
+
+    public function hasCapturedPayment(): bool
+    {
+        return filled($this->payment_id)
+            || $this->stock_deducted_at !== null
+            || $this->isFulfilled();
+    }
+
+    public function canOfferRefund(): bool
+    {
+        return $this->payment_method === 'razorpay'
+            && filled($this->payment_id)
+            && filled($this->razorpay_order_id)
+            && $this->isFulfilled()
+            && ! $this->needsPaymentReview()
+            && $this->refund_status !== 'refunded';
+    }
+
+    public function showsRefundedCancellation(): bool
+    {
+        return $this->isCancelled()
+            && $this->refund_status === 'refunded'
+            && (int) $this->refunded_amount_paise > 0;
+    }
+
+    public function customerRefundSummary(): ?string
+    {
+        $processed = \App\Services\RefundMoney::formatRupees((int) $this->refunded_amount_paise);
+        $pending = \App\Services\RefundMoney::formatRupees((int) $this->refund_pending_amount_paise);
+
+        return match ($this->refund_status) {
+            'pending' => (int) $this->refunded_amount_paise > 0
+                ? 'Your payment was received. ₹'.$processed.' has been refunded, and a further refund of ₹'.$pending.' is in progress.'
+                : 'Your payment was received. A refund of ₹'.$pending.' is in progress.',
+            'partial' => 'Your payment was received. ₹'.$processed.' has been refunded.',
+            'refunded' => 'Your payment was received and fully refunded (₹'.$processed.').',
+            'failed' => 'Your payment was received. The refund could not be completed.',
+            default => null,
+        };
+    }
+
+    public function customerStatusLabel(): string
+    {
+        $refund = $this->customerRefundSummary();
+        $base = $this->statusLabel();
+
+        if ($refund === null) {
+            return $base;
+        }
+
+        if ($this->showsRefundedCancellation()) {
+            return $refund;
+        }
+
+        return $base.' · '.$refund;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function adminStatusOptions(): array
+    {
+        if ($this->needsPaymentReview()) {
+            return [];
+        }
+
+        if ($this->refund_status === 'refunded') {
+            return [(string) $this->status];
+        }
+
+        if ($this->hasCapturedPayment()) {
+            $options = ['paid', 'processing', 'shipped', 'delivered'];
+
+            if (! in_array($this->status, $options, true)) {
+                array_unshift($options, (string) $this->status);
+            }
+
+            return $options;
+        }
+
+        return ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled'];
     }
 
     /**

@@ -10,6 +10,8 @@ class OrderAdminUpdate
 {
     public const STATUS_LOCKED = 'status_locked';
 
+    public const REFUND_REQUIRED = 'refund_required';
+
     public const NOTES_SAVED = 'notes_saved';
 
     public const UPDATED = 'updated';
@@ -47,6 +49,10 @@ class OrderAdminUpdate
                 ['status' => 'required|in:pending,paid,processing,shipped,delivered,cancelled'],
             )->validate();
 
+            if (self::refundFlowOwnsStatus($locked, (string) $statusValidated['status'])) {
+                return self::REFUND_REQUIRED;
+            }
+
             $locked->forceFill([
                 'status' => $statusValidated['status'],
                 'admin_notes' => $notes['admin_notes'] ?? null,
@@ -54,5 +60,19 @@ class OrderAdminUpdate
 
             return self::UPDATED;
         });
+    }
+
+    private static function refundFlowOwnsStatus(Order $order, string $newStatus): bool
+    {
+        if ($order->refund_status === 'refunded' && $newStatus !== (string) $order->status) {
+            return true;
+        }
+
+        if (! $order->hasCapturedPayment()) {
+            return false;
+        }
+
+        return in_array($newStatus, ['cancelled', 'pending'], true)
+            && $newStatus !== (string) $order->status;
     }
 }

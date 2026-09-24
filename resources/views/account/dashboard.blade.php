@@ -163,7 +163,7 @@
                     @forelse($orders as $order)
                     <article class="am-account-list-item">
                         <strong>{{ $order->order_number }}</strong>
-                        <p class="am-account-meta">{{ $order->created_at->format('d M Y') }} · {{ $order->statusLabel() }} · ₹{{ number_format($order->total, 0) }}</p>
+                        <p class="am-account-meta">{{ $order->created_at->format('d M Y') }} · {{ $order->customerStatusLabel() }} · ₹{{ number_format($order->total, 0) }}</p>
                     </article>
                     @empty
                     <p class="am-account-empty">No orders yet. <a href="{{ \App\Support\StorefrontRoutes::primaryShopUrl() }}">Browse the shop</a></p>

@@ -62,4 +62,16 @@ return [
     'customer_lock_wait' => 10,
     'razorpay_lock_seconds' => 60,
     'razorpay_lock_wait' => 10,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Refund recovery pagination
+    |--------------------------------------------------------------------------
+    |
+    | One recovery scan reads at most this many pages of 100 refunds. The value
+    | must be a positive integer from 1 through 100. Anything else uses 100.
+    | A scan that reaches the ceiling leaves the refund unchanged.
+    |
+    */
+    'refund_recovery_max_pages' => 100,
 ];
