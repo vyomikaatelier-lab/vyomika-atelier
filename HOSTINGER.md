@@ -343,25 +343,27 @@ Origin `.htaccess` already sets 30-day `Cache-Control` for CSS/JS/images. Redepl
 
 ---
 
-## Cron — expire unpaid orders
+## Scheduler — checkout readiness
 
-Add this in hPanel → **Advanced** → **Cron Jobs** (runs every 15 minutes):
+Checkout stays disabled until scheduler invocation is independently proven. `CHECKOUT_PAYMENTS_ENABLED` defaults to false. Do not enable checkout because a command appears in `php artisan schedule:list`.
 
-```bash
-/usr/bin/php /home/u550969814/vyomika-atelier/artisan orders:expire-pending >> /home/u550969814/vyomika-atelier/storage/logs/cron-expire-orders.log 2>&1
-```
-
-Unpaid orders are held for `ORDER_PENDING_EXPIRY_HOURS` (default 24) before stock reservations are released.
-
----
-
-## Cron — daily lead summary
-
-Add this in hPanel → **Advanced** → **Cron Jobs** (runs daily at 8:00 AM IST):
+The host must invoke Laravel's scheduler every minute, using this server's PHP binary and application path:
 
 ```bash
-/usr/bin/php /home/u550969814/vyomika-atelier/artisan leads:daily-summary >> /home/u550969814/vyomika-atelier/storage/logs/cron-leads-summary.log 2>&1
+/usr/bin/php /home/u550969814/vyomika-atelier/artisan schedule:run >> /home/u550969814/vyomika-atelier/storage/logs/scheduler.log 2>&1
 ```
+
+`orders:expire-pending` is registered every 15 minutes. It cancels expired unpaid pending orders and leaves paid and reconciliation-required rows unchanged. It does not run unless `schedule:run` is invoked. A direct cron of `orders:expire-pending` does not prove the scheduler itself is running.
+
+`leads:daily-summary` is registered daily at 08:00. It runs through the same every-minute `schedule:run` entry.
+
+`orders:reconcile-refunds` is a manual recovery command. It is not scheduled. It never creates a refund or a new idempotency key. Do not add it to cron.
+
+Verify execution without customer data:
+
+1. Run `php artisan schedule:list` and confirm `orders:expire-pending` is every 15 minutes and `orders:reconcile-refunds` is absent.
+2. After the every-minute host entry exists, check only the scheduler log's modification time and whether it records the runner. Do not print order rows, customer fields, or payment identifiers.
+3. If a database check is required, use an aggregate count of pending orders past `expires_at`. Do not select customer columns.
 
 Set `MARKETING_EMAIL`, `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, and `LEAD_IP_HASH_SALT` in `.env` before going live. Upload the catalogue PDF to `storage/app/catalogue/vyomika-atelier-catalogue.pdf` (create the folder if needed). Run migrations after deploy:
 

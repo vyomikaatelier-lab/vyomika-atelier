@@ -1,7 +1,13 @@
 @component('mail::message')
+@if($order->hasDurableCapturedPaymentEvidence())
 # Payment confirmed
 
 Thank you — we have received your payment for order **{{ $order->order_number }}**.
+@else
+# Payment not confirmed
+
+We do not have a captured payment for order **{{ $order->order_number }}** yet.
+@endif
 
 @component('mail::table')
 | Item | Qty | Total |

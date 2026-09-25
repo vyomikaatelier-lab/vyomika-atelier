@@ -7,6 +7,7 @@ use App\Mail\AdminPaymentReceivedMail;
 use App\Mail\OrderReceivedMail;
 use App\Mail\PaymentSuccessfulMail;
 use App\Models\Order;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -41,6 +42,10 @@ class OrderNotificationService
 
     public function sendPaymentConfirmed(Order $order): bool
     {
+        if ($order->payment_method === 'razorpay' && ! $order->hasDurableCapturedPaymentEvidence()) {
+            return false;
+        }
+
         $order->loadMissing('items');
 
         $customerSent = $this->sendOnce(
@@ -113,7 +118,7 @@ class OrderNotificationService
     {
         $queue = config('queue.default', 'sync');
 
-        if ($queue !== 'sync' && $mailable instanceof \Illuminate\Contracts\Queue\ShouldQueue) {
+        if ($queue !== 'sync' && $mailable instanceof ShouldQueue) {
             Mail::to($recipient)->queue($mailable);
 
             return;

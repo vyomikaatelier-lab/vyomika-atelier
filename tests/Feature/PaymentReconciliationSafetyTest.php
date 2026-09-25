@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Exceptions\RazorpayReconciliationRequiredException;
 use App\Mail\PaymentSuccessfulMail;
 use App\Models\Category;
 use App\Models\Order;
@@ -500,7 +501,7 @@ class PaymentReconciliationSafetyTest extends TestCase
         $this->assertNull($fresh->stock_deducted_at);
     }
 
-    public function test_pending_order_admin_update_still_saves_status_and_notes(): void
+    public function test_pending_razorpay_order_without_capture_cannot_be_marked_processing(): void
     {
         $order = $this->makeOrder();
 
@@ -510,11 +511,11 @@ class PaymentReconciliationSafetyTest extends TestCase
                 'admin_notes' => 'Pack after confirmation.',
             ])
             ->assertRedirect()
-            ->assertSessionHasNoErrors();
+            ->assertSessionHasErrors('status');
 
         $fresh = $order->fresh();
-        $this->assertSame('processing', $fresh->status);
-        $this->assertSame('Pack after confirmation.', $fresh->admin_notes);
+        $this->assertSame('pending', $fresh->status);
+        $this->assertNull($fresh->admin_notes);
         $this->assertNull($fresh->payment_id);
         $this->assertNull($fresh->reconciliation_reason);
         $this->assertNull($fresh->reconciliation_meta);
@@ -551,7 +552,7 @@ class PaymentReconciliationSafetyTest extends TestCase
                 $paymentId,
                 (string) $order->razorpay_order_id,
             );
-        } catch (\App\Exceptions\RazorpayReconciliationRequiredException) {
+        } catch (RazorpayReconciliationRequiredException) {
             // Customer verify throws; gateway completion returns a status.
         }
     }

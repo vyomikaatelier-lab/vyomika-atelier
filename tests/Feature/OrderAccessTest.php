@@ -71,7 +71,7 @@ class OrderAccessTest extends TestCase
 
     public function test_guest_can_view_checkout_success_for_session_order(): void
     {
-        $order = $this->makeOrder(['status' => 'paid']);
+        $order = $this->makeOrder(['status' => 'paid', 'payment_id' => 'pay_session_owner']);
         $user = $this->orderOwner($order);
 
         $response = $this->actingAs($user)
@@ -119,6 +119,7 @@ class OrderAccessTest extends TestCase
             'user_id' => $user->id,
             'customer_email' => $user->email,
             'status' => 'paid',
+            'payment_id' => 'pay_user_owner',
         ]);
 
         $this->actingAs($user);
@@ -348,6 +349,7 @@ class OrderAccessTest extends TestCase
         $legacy = $this->makeOrder([
             'user_id' => null,
             'status' => 'paid',
+            'payment_id' => 'pay_legacy_session',
         ]);
         $placer = User::factory()->create();
 
@@ -370,6 +372,7 @@ class OrderAccessTest extends TestCase
             'user_id' => $owner->id,
             'customer_name' => 'Owned Customer',
             'status' => 'paid',
+            'payment_id' => 'pay_admin_access',
             'admin_notes' => 'Pack with care.',
         ]);
         $admin = User::factory()->admin()->create();

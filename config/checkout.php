@@ -21,6 +21,10 @@ return [
     | The default is false. A deploy does not accept new payments until an
     | operator sets this flag to true. The value is only a boolean switch.
     |
+    | Checkout offers Razorpay only. Cash on delivery is not offered.
+    | bank_transfer remains a historical orders.payment_method value and is
+    | not offered at checkout. This application does not add a workflow for it.
+    |
     */
     'payments_enabled' => filter_var(env('CHECKOUT_PAYMENTS_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
 

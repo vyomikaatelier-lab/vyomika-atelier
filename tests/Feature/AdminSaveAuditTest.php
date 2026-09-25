@@ -213,6 +213,7 @@ class AdminSaveAuditTest extends TestCase
             'total' => 1199,
             'status' => 'pending',
             'payment_method' => 'razorpay',
+            'payment_id' => 'pay_audit_status',
         ]);
 
         $this->actingAsAdmin($admin)->put(route('admin.orders.update', $order), [

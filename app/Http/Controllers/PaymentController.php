@@ -29,7 +29,7 @@ class PaymentController extends Controller
             return view('checkout.payment-review', ['order' => $order]);
         }
 
-        if (filled($order->payment_id) || $order->isFulfilled()) {
+        if ($order->showsRefundedCancellation() || $order->showsCapturedPaymentConfirmation()) {
             return redirect()->route('checkout.success', $order);
         }
 

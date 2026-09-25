@@ -21,6 +21,7 @@ use App\Support\StorefrontRoutes;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -130,8 +131,8 @@ class CheckoutController extends Controller
         $noteLines = array_filter([
             $validatedAddress['delivery_instructions'] ?? null,
             $validatedAddress['notes'] ?? null,
-            filled($validatedAddress['company'] ?? null) ? 'Company: ' . $validatedAddress['company'] : null,
-            $snapshot['country'] ? 'Country/Region: ' . $snapshot['country'] : null,
+            filled($validatedAddress['company'] ?? null) ? 'Company: '.$validatedAddress['company'] : null,
+            $snapshot['country'] ? 'Country/Region: '.$snapshot['country'] : null,
         ]);
 
         $fromBuyNow = $this->cart->hasBuyNow();
@@ -209,11 +210,11 @@ class CheckoutController extends Controller
             return view('checkout.payment-review', ['order' => $order]);
         }
 
-        if (filled($order->payment_id) || $order->isFulfilled()) {
-            if ($order->showsRefundedCancellation()) {
-                return view('checkout.payment-refunded', ['order' => $order]);
-            }
+        if ($order->showsRefundedCancellation()) {
+            return view('checkout.payment-refunded', ['order' => $order]);
+        }
 
+        if ($order->showsCapturedPaymentConfirmation()) {
             return view('checkout.success', [
                 'order' => $order,
                 'orderEmailSent' => $order->order_received_email_sent_at !== null,
@@ -242,7 +243,7 @@ class CheckoutController extends Controller
      * @param  array<string, mixed>  $snapshot
      * @param  array<string, mixed>  $validatedAddress
      * @param  array<int, string|null>  $noteLines
-     * @param  \Illuminate\Support\Collection<int, array<string, mixed>>  $items
+     * @param  Collection<int, array<string, mixed>>  $items
      */
     private function selectOrCreatePayableOrder(
         Request $request,
@@ -351,7 +352,7 @@ class CheckoutController extends Controller
      * @param  array<string, mixed>  $snapshot
      * @param  array<string, mixed>  $validatedAddress
      * @param  array<int, string|null>  $noteLines
-     * @param  \Illuminate\Support\Collection<int, array<string, mixed>>  $items
+     * @param  Collection<int, array<string, mixed>>  $items
      */
     private function createLocalOrder(
         Request $request,

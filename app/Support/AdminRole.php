@@ -34,6 +34,8 @@ final class AdminRole
 
     public const ORDERS_REFUND = 'orders.refund';
 
+    public const ORDERS_DELETE_TEST = 'orders.delete_test';
+
     public const ENQUIRIES_VIEW = 'enquiries.view';
 
     public const ENQUIRIES_MANAGE = 'enquiries.manage';
@@ -105,6 +107,7 @@ final class AdminRole
             self::ORDERS_VIEW => 'View orders',
             self::ORDERS_MANAGE => 'Manage orders',
             self::ORDERS_REFUND => 'Refund orders',
+            self::ORDERS_DELETE_TEST => 'Delete inert test orders',
             self::ENQUIRIES_VIEW => 'View enquiries',
             self::ENQUIRIES_MANAGE => 'Manage enquiries',
             self::CUSTOMERS_VIEW => 'View customers',
@@ -145,6 +148,7 @@ final class AdminRole
                 self::ORDERS_VIEW,
                 self::ORDERS_MANAGE,
                 self::ORDERS_REFUND,
+                self::ORDERS_DELETE_TEST,
             ],
             'Customers' => [
                 self::CUSTOMERS_VIEW,
@@ -186,6 +190,7 @@ final class AdminRole
             self::CATALOG_PUBLISH => 'Make catalogue changes visible on the storefront.',
             self::ORDERS_MANAGE => 'Update order status and fulfilment.',
             self::ORDERS_REFUND => 'Refund a captured payment or cancel a paid order.',
+            self::ORDERS_DELETE_TEST => 'Delete a pending or cancelled order that has no payment, gateway, refund, reconciliation, or stock evidence.',
             self::CUSTOMERS_MANAGE => 'Edit customer records.',
             self::CONTENT_MANAGE => 'Create and edit projects, pages and posts.',
             self::CONTENT_PUBLISH => 'Publish editorial content.',
@@ -247,6 +252,7 @@ final class AdminRole
             self::ORDERS_VIEW,
             self::ORDERS_MANAGE,
             self::ORDERS_REFUND,
+            self::ORDERS_DELETE_TEST,
             self::ENQUIRIES_VIEW,
             self::ENQUIRIES_MANAGE,
             self::CUSTOMERS_VIEW,
@@ -271,7 +277,7 @@ final class AdminRole
     {
         return match ($role) {
             self::OWNER => self::permissions(),
-            self::ADMINISTRATOR => self::without(self::STAFF_MANAGE, self::ORDERS_REFUND),
+            self::ADMINISTRATOR => self::without(self::STAFF_MANAGE, self::ORDERS_REFUND, self::ORDERS_DELETE_TEST),
             self::CATALOG_MANAGER => [
                 self::DASHBOARD_VIEW,
                 self::CATALOG_VIEW,
@@ -351,7 +357,7 @@ final class AdminRole
      */
     private static function legacyPermissions(): array
     {
-        return self::without(self::STAFF_VIEW, self::STAFF_MANAGE, self::ORDERS_REFUND);
+        return self::without(self::STAFF_VIEW, self::STAFF_MANAGE, self::ORDERS_REFUND, self::ORDERS_DELETE_TEST);
     }
 
     /** @return list<string> */
