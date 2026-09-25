@@ -142,6 +142,12 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('vendor-proposal', fn (Request $request) => Limit::perHour(2)->by($request->ip()));
 
         RateLimiter::for('file-upload-forms', fn (Request $request) => Limit::perMinutes(30, 2)->by($request->ip()));
+
+        RateLimiter::for('admin-refund', function (Request $request) {
+            $actor = $request->user()?->id ?: $request->ip();
+
+            return Limit::perMinute(5)->by('admin-refund:'.$actor);
+        });
     }
 
     private function configureSocialiteProviders(): void

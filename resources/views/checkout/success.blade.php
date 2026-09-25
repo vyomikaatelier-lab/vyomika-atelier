@@ -23,6 +23,9 @@
                 <h2 class="am-checkout-success-card__title">Thank you for your order</h2>
                 <p class="am-checkout-success-card__text">Your order has been placed successfully.</p>
                 <p class="am-checkout-success-card__order">Order #{{ $order->order_number }}</p>
+                @if($order->customerRefundSummary())
+                <p class="am-checkout-success-card__text">{{ $order->customerRefundSummary() }}</p>
+                @endif
                 @if($orderEmailSent)
                 <p class="am-checkout-success-card__email">Confirmation email sent to <strong>{{ $order->customer_email }}</strong></p>
                 @else

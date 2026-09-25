@@ -6,7 +6,10 @@ use App\Http\Controllers\Admin\Concerns\HandlesAdminUploads;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\OrderAdminUpdate;
+use App\Services\RazorpayRefundRequest;
+use App\Support\AdminRole;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class OrderAdminController extends Controller
 {
@@ -19,9 +22,21 @@ class OrderAdminController extends Controller
 
     public function show(Order $order)
     {
-        $order->load('items.product');
+        $order->load(['items.product', 'refunds.lines']);
 
-        return view('admin.orders.show', compact('order'));
+        $idempotencyKey = null;
+        if ($requestUser = auth()->user()) {
+            if ($requestUser->hasAdminPermission(AdminRole::ORDERS_REFUND) && $order->canOfferRefund()) {
+                $sessionKey = 'order_refund_idempotency.'.$order->getKey();
+                $idempotencyKey = session($sessionKey);
+                if (! is_string($idempotencyKey) || ! RazorpayRefundRequest::validIdempotencyKey($idempotencyKey)) {
+                    $idempotencyKey = (string) Str::uuid();
+                    session([$sessionKey => $idempotencyKey]);
+                }
+            }
+        }
+
+        return view('admin.orders.show', compact('order', 'idempotencyKey'));
     }
 
     public function update(Request $request, Order $order)
@@ -36,6 +51,12 @@ class OrderAdminController extends Controller
         if ($outcome === OrderAdminUpdate::STATUS_LOCKED) {
             return back()->withErrors([
                 'status' => 'This order is awaiting payment reconciliation and its status cannot be changed here.',
+            ])->withInput();
+        }
+
+        if ($outcome === OrderAdminUpdate::REFUND_REQUIRED) {
+            return back()->withErrors([
+                'status' => 'Paid orders are cancelled by issuing a refund. The status was not changed.',
             ])->withInput();
         }
 

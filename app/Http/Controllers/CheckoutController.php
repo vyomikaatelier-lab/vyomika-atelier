@@ -209,7 +209,11 @@ class CheckoutController extends Controller
             return view('checkout.payment-review', ['order' => $order]);
         }
 
-        if ($order->isFulfilled()) {
+        if (filled($order->payment_id) || $order->isFulfilled()) {
+            if ($order->showsRefundedCancellation()) {
+                return view('checkout.payment-refunded', ['order' => $order]);
+            }
+
             return view('checkout.success', [
                 'order' => $order,
                 'orderEmailSent' => $order->order_received_email_sent_at !== null,

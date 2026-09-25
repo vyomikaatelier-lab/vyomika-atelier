@@ -6,7 +6,9 @@ use App\Exceptions\RazorpayReconciliationRequiredException;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\OrderPaymentService;
+use App\Services\OrderRefundService;
 use App\Services\RazorpayService;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -14,7 +16,7 @@ use RuntimeException;
 
 class RazorpayWebhookController extends Controller
 {
-    public function __invoke(Request $request, RazorpayService $razorpay, OrderPaymentService $payments): JsonResponse
+    public function __invoke(Request $request, RazorpayService $razorpay, OrderPaymentService $payments, OrderRefundService $refunds): JsonResponse
     {
         $signature = $request->header('X-Razorpay-Signature', '');
         $body = $request->getContent();
@@ -25,6 +27,10 @@ class RazorpayWebhookController extends Controller
 
         $payload = $request->json()->all();
         $event = $payload['event'] ?? '';
+
+        if (in_array($event, ['refund.created', 'refund.processed', 'refund.failed', 'refund.speed_changed'], true)) {
+            return $this->refundWebhook($body, $payload, (string) $event, $refunds);
+        }
 
         if (! in_array($event, ['payment.captured', 'order.paid'], true)) {
             return response()->json(['status' => 'ignored']);
@@ -76,5 +82,31 @@ class RazorpayWebhookController extends Controller
         $status = $result === 'paid' ? 'ok' : $result;
 
         return response()->json(['status' => $status]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function refundWebhook(string $body, array $payload, string $event, OrderRefundService $refunds): JsonResponse
+    {
+        $entity = data_get($payload, 'payload.refund.entity');
+
+        if (! is_array($entity)) {
+            return response()->json(['message' => 'Refund could not be confirmed.'], 422);
+        }
+
+        try {
+            $result = $refunds->applyWebhook($entity, $event, hash('sha256', $body));
+        } catch (LockTimeoutException) {
+            return response()->json(['message' => 'Refund could not be confirmed.'], 500);
+        } catch (RuntimeException) {
+            Log::error('Razorpay refund webhook could not be recorded.', [
+                'event' => 'razorpay.refund_webhook_failed',
+            ]);
+
+            return response()->json(['message' => 'Refund could not be confirmed.'], 500);
+        }
+
+        return response()->json(['status' => $result]);
     }
 }

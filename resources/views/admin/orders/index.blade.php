@@ -17,7 +17,7 @@
                 @if($order->needsPaymentReview())
                     <strong>Reconciliation required</strong>
                 @else
-                    {{ $order->statusLabel() }}
+                    {{ $order->customerStatusLabel() }}
                 @endif
             </td>
             <td class="p-3"><a href="{{ route('admin.orders.show', $order) }}" class="text-blue-600">View</a></td>

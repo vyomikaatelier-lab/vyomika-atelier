@@ -12,6 +12,10 @@ trait ActsAsAdmin
         $admin ??= User::factory()->admin()->create();
 
         return $this->actingAs($admin)
-            ->withSession([AdminAccess::SESSION_KEY => true]);
+            ->withSession([
+                AdminAccess::SESSION_KEY => true,
+                AdminAccess::SESSION_VERSION_KEY => (int) ($admin->admin_session_version ?? 1),
+                AdminAccess::SESSION_USER_KEY => $admin->getKey(),
+            ]);
     }
 }

@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\LegalPageAdminController;
 use App\Http\Controllers\Admin\MediaAdminController;
 use App\Http\Controllers\Admin\MfaController;
 use App\Http\Controllers\Admin\OrderAdminController;
+use App\Http\Controllers\Admin\OrderRefundController;
 use App\Http\Controllers\Admin\PageHeroAdminController;
 use App\Http\Controllers\Admin\PasskeyController as AdminPasskeyController;
 use App\Http\Controllers\Admin\ProductAdminController;
@@ -307,6 +308,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('products/reorder', [ProductAdminController::class, 'reorder'])->name('products.reorder');
         Route::post('products/bulk', [ProductAdminController::class, 'bulk'])->name('products.bulk');
         Route::resource('products', ProductAdminController::class)->except(['show']);
+        Route::post('orders/{order}/refunds', [OrderRefundController::class, 'store'])
+            ->middleware(['admin.permission:orders.refund', 'throttle:admin-refund'])
+            ->name('orders.refunds.store');
+        Route::post('orders/{order}/refunds/{refund}/retry', [OrderRefundController::class, 'retry'])
+            ->middleware(['admin.permission:orders.refund', 'throttle:admin-refund'])
+            ->name('orders.refunds.retry');
         Route::resource('orders', OrderAdminController::class)->only(['index', 'show', 'update']);
         Route::resource('leads', LeadAdminController::class)->only(['index', 'show', 'update', 'destroy']);
         Route::post('leads/{lead}/false-positive', [LeadAdminController::class, 'markFalsePositive'])->name('leads.false-positive');
