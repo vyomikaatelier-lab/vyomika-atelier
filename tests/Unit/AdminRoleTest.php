@@ -32,6 +32,7 @@ class AdminRoleTest extends TestCase
         $this->assertTrue($admin->hasAdminPermission(AdminRole::SETTINGS_MANAGE));
         $this->assertFalse($admin->hasAdminPermission(AdminRole::ORDERS_REFUND));
         $this->assertFalse($admin->hasAdminPermission(AdminRole::ORDERS_DELETE_TEST));
+        $this->assertFalse($admin->hasAdminPermission(AdminRole::ORDERS_ARCHIVE_TEST));
     }
 
     public function test_fixed_operational_roles_are_least_privilege(): void
@@ -48,6 +49,7 @@ class AdminRoleTest extends TestCase
         $this->assertFalse($orders->hasAdminPermission(AdminRole::CUSTOMERS_MANAGE));
         $this->assertFalse($orders->hasAdminPermission(AdminRole::ORDERS_REFUND));
         $this->assertFalse($orders->hasAdminPermission(AdminRole::ORDERS_DELETE_TEST));
+        $this->assertFalse($orders->hasAdminPermission(AdminRole::ORDERS_ARCHIVE_TEST));
     }
 
     public function test_customer_inactive_admin_and_unknown_role_fail_closed(): void
@@ -74,6 +76,7 @@ class AdminRoleTest extends TestCase
         $this->assertFalse($legacy->hasAdminPermission(AdminRole::STAFF_MANAGE));
         $this->assertFalse($legacy->hasAdminPermission(AdminRole::ORDERS_REFUND));
         $this->assertFalse($legacy->hasAdminPermission(AdminRole::ORDERS_DELETE_TEST));
+        $this->assertFalse($legacy->hasAdminPermission(AdminRole::ORDERS_ARCHIVE_TEST));
     }
 
     public function test_permission_matrix_matches_permissions_for_every_fixed_role(): void
@@ -99,6 +102,9 @@ class AdminRoleTest extends TestCase
         $this->assertNotNull($matrix[AdminRole::VIEWER]['locks'][AdminRole::STAFF_MANAGE]);
         $this->assertNotNull($matrix[AdminRole::ORDER_MANAGER]['locks'][AdminRole::ORDERS_DELETE_TEST]);
         $this->assertNull($matrix[AdminRole::OWNER]['locks'][AdminRole::ORDERS_DELETE_TEST]);
+        $this->assertNotNull($matrix[AdminRole::ADMINISTRATOR]['locks'][AdminRole::ORDERS_ARCHIVE_TEST]);
+        $this->assertNull($matrix[AdminRole::OWNER]['locks'][AdminRole::ORDERS_ARCHIVE_TEST]);
+        $this->assertFalse($matrix[AdminRole::ORDER_MANAGER]['permissions'][AdminRole::ORDERS_ARCHIVE_TEST]);
         $this->assertNull($matrix[AdminRole::VIEWER]['locks'][AdminRole::ORDERS_VIEW]);
     }
 

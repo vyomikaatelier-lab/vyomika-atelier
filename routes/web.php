@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\MediaAdminController;
 use App\Http\Controllers\Admin\MfaController;
 use App\Http\Controllers\Admin\OrderAdminController;
 use App\Http\Controllers\Admin\OrderRefundController;
+use App\Http\Controllers\Admin\OrderTestArchiveController;
 use App\Http\Controllers\Admin\OrderTestDeletionController;
 use App\Http\Controllers\Admin\PageHeroAdminController;
 use App\Http\Controllers\Admin\PasskeyController as AdminPasskeyController;
@@ -328,6 +329,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('orders/{order}/test-deletion', [OrderTestDeletionController::class, 'destroy'])
             ->middleware('admin.permission:orders.delete_test')
             ->name('orders.test-deletion.destroy');
+        Route::post('orders/{order}/test-archive', [OrderTestArchiveController::class, 'store'])
+            ->middleware('admin.permission:orders.archive_test')
+            ->name('orders.test-archive.store');
+        Route::post('orders/{order}/test-unarchive', [OrderTestArchiveController::class, 'destroy'])
+            ->middleware('admin.permission:orders.archive_test')
+            ->name('orders.test-archive.destroy');
         Route::resource('leads', LeadAdminController::class)->only(['index', 'show', 'update', 'destroy']);
         Route::post('leads/{lead}/false-positive', [LeadAdminController::class, 'markFalsePositive'])->name('leads.false-positive');
         Route::post('leads/{lead}/qualified', [LeadAdminController::class, 'markQualified'])->name('leads.qualified');

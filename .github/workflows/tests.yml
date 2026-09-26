@@ -167,6 +167,23 @@ jobs:
           MYSQL_TEST_PASSWORD: ci_refund_test_only
         run: php vendor/phpunit/phpunit/phpunit tests/Feature/MysqlOrderRefundMigrationTest.php
 
+      - name: Run MySQL archive migration proof
+        env:
+          MYSQL_ORDER_ARCHIVE_TEST: '1'
+          MYSQL_TEST_HOST: 127.0.0.1
+          MYSQL_TEST_PORT: 3306
+          MYSQL_TEST_DATABASE: vyomika_refund_test
+          MYSQL_TEST_USERNAME: root
+          MYSQL_TEST_PASSWORD: ci_refund_test_only
+        run: |
+          set -o pipefail
+          php vendor/phpunit/phpunit/phpunit --do-not-cache-result tests/Feature/MysqlOrderArchiveMigrationTest.php | tee archive-proof.txt
+          grep -E 'OK \([1-9][0-9]* tests?, [1-9][0-9]* assertions?\)' archive-proof.txt
+          if grep -q 'Skipped:' archive-proof.txt; then
+            echo 'Archive proof must not skip' >&2
+            exit 1
+          fi
+
   mariadb-refund-migration:
     name: MariaDB refund ledger proof
     runs-on: ubuntu-latest
@@ -223,3 +240,20 @@ jobs:
           MYSQL_TEST_USERNAME: root
           MYSQL_TEST_PASSWORD: ci_refund_test_only
         run: php vendor/phpunit/phpunit/phpunit tests/Feature/MysqlOrderRefundMigrationTest.php
+
+      - name: Run MariaDB archive migration proof
+        env:
+          MYSQL_ORDER_ARCHIVE_TEST: '1'
+          MYSQL_TEST_HOST: 127.0.0.1
+          MYSQL_TEST_PORT: 3306
+          MYSQL_TEST_DATABASE: vyomika_refund_test
+          MYSQL_TEST_USERNAME: root
+          MYSQL_TEST_PASSWORD: ci_refund_test_only
+        run: |
+          set -o pipefail
+          php vendor/phpunit/phpunit/phpunit --do-not-cache-result tests/Feature/MysqlOrderArchiveMigrationTest.php | tee archive-proof.txt
+          grep -E 'OK \([1-9][0-9]* tests?, [1-9][0-9]* assertions?\)' archive-proof.txt
+          if grep -q 'Skipped:' archive-proof.txt; then
+            echo 'Archive proof must not skip' >&2
+            exit 1
+          fi
