@@ -1,11 +1,16 @@
 @component('mail::message')
+@if($order->hasDurableCapturedPaymentEvidence())
 # Payment received
 
 Verified payment for order **{{ $order->order_number }}**.
+@else
+# Payment not confirmed
+
+No captured payment is stored for order **{{ $order->order_number }}**.
+@endif
 
 **Customer:** {{ $order->customer_name }} ({{ $order->customer_email }})  
-**Amount:** ₹{{ number_format($order->total, 0) }}  
-**Payment ID:** {{ $order->payment_id }}
+**Amount:** ₹{{ number_format($order->total, 0) }}
 
 @component('mail::table')
 | Item | Qty | Total |

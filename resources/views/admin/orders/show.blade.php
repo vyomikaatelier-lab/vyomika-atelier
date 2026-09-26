@@ -39,7 +39,7 @@
             @csrf @method('PUT')
             @if($order->needsPaymentReview())
             <p class="text-sm">Recorded status: {{ ucfirst((string) $order->status) }}</p>
-            <p class="text-sm">Customer-facing status: {{ $order->statusLabel() }}</p>
+            <p class="text-sm">Customer-facing status: {{ $order->paymentAwareStatusLabel() }}</p>
             <p class="text-sm text-gray-600">Status changes are locked while payment reconciliation is open.</p>
             @else
             <div>
@@ -49,7 +49,7 @@
                         <option value="{{ $status }}" @selected($order->status === $status)>{{ ucfirst($status) }}</option>
                     @endforeach
                 </select>
-                @if($order->hasCapturedPayment())
+                @if($order->hasDurableCapturedPaymentEvidence())
                 <p class="text-sm text-gray-600 mt-2">Cancelling a paid order requires a refund.</p>
                 @endif
             </div>
@@ -165,4 +165,23 @@
         </div>
     @endforeach
 </div>
+
+@if(auth()->user()?->hasAdminPermission(\App\Support\AdminRole::ORDERS_DELETE_TEST))
+<div class="bg-white p-6 rounded-lg shadow mt-8">
+    <h2 class="font-medium mb-2">Delete test order</h2>
+    <p class="text-sm text-gray-600 mb-4">Only an order without payment, gateway, refund, reconciliation, or stock evidence may be deleted. This cannot be undone.</p>
+    <form method="POST" action="{{ route('admin.orders.test-deletion.destroy', $order) }}" class="space-y-3">
+        @csrf
+        <div>
+            <label class="block text-sm mb-1" for="delete_order_number">Type the order number</label>
+            <input id="delete_order_number" name="order_number_confirmation" value="{{ old('order_number_confirmation') }}" class="border px-3 py-2 rounded w-full max-w-sm" autocomplete="off">
+        </div>
+        <div>
+            <label class="block text-sm mb-1" for="delete_password">Current password</label>
+            <input id="delete_password" type="password" name="current_password" required autocomplete="current-password" class="border px-3 py-2 rounded w-full max-w-sm">
+        </div>
+        <button type="submit" class="bg-red-700 text-white px-4 py-2 rounded text-sm">Delete test order</button>
+    </form>
+</div>
+@endif
 @endsection

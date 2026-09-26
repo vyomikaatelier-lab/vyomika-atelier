@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Admin\Concerns\HandlesAdminUploads;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\OrderAdminUpdate;
@@ -57,6 +56,18 @@ class OrderAdminController extends Controller
         if ($outcome === OrderAdminUpdate::REFUND_REQUIRED) {
             return back()->withErrors([
                 'status' => 'Paid orders are cancelled by issuing a refund. The status was not changed.',
+            ])->withInput();
+        }
+
+        if ($outcome === OrderAdminUpdate::CAPTURE_REQUIRED) {
+            return back()->withErrors([
+                'status' => 'This order cannot be marked paid, processing, shipped, or delivered until payment is captured. The status was not changed.',
+            ])->withInput();
+        }
+
+        if ($outcome === OrderAdminUpdate::INVESTIGATION_REQUIRED) {
+            return back()->withErrors([
+                'status' => 'This order has stock, payment, or refund evidence and cannot be changed here. It needs manual investigation. The status was not changed.',
             ])->withInput();
         }
 

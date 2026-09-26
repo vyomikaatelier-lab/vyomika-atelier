@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class CheckoutTest extends TestCase
@@ -124,8 +125,8 @@ class CheckoutTest extends TestCase
             'services.razorpay.secret' => 'secret_test',
         ]);
 
-        \Illuminate\Support\Facades\Http::fake([
-            'api.razorpay.com/*' => \Illuminate\Support\Facades\Http::response([
+        Http::fake([
+            'api.razorpay.com/*' => Http::response([
                 'id' => 'order_test_xyz',
                 'amount' => 3162300,
                 'currency' => 'INR',
@@ -153,5 +154,27 @@ class CheckoutTest extends TestCase
 
         $response->assertRedirect(route('account.login'));
         $this->assertSame(0, Order::query()->count());
+    }
+
+    public function test_checkout_offers_razorpay_only(): void
+    {
+        [$user, $session] = $this->verifiedUserWithCart();
+
+        $page = $this->actingAs($user)
+            ->withSession($session)
+            ->get(route('checkout.index'));
+
+        $page->assertOk();
+        $page->assertSee('name="payment_method" value="razorpay"', false);
+        $page->assertDontSee('value="cod"', false);
+        $page->assertDontSee('value="bank_transfer"', false);
+        $page->assertDontSee('Cash on delivery', false);
+
+        $rules = (string) file_get_contents(app_path('Services/AddressValidationService.php'));
+        $this->assertStringContainsString("\$rules['payment_method'] = 'sometimes|in:razorpay';", $rules);
+
+        $checkout = (string) file_get_contents(config_path('checkout.php'));
+        $this->assertStringContainsString('Cash on delivery is not offered.', $checkout);
+        $this->assertStringContainsString('bank_transfer remains a historical', $checkout);
     }
 }

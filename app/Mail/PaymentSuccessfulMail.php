@@ -18,8 +18,12 @@ class PaymentSuccessfulMail extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
+        $subject = $this->order->hasDurableCapturedPaymentEvidence()
+            ? "Payment confirmed — {$this->order->order_number}"
+            : "Payment not confirmed — {$this->order->order_number}";
+
         return new Envelope(
-            subject: "Payment confirmed — {$this->order->order_number}",
+            subject: $subject,
         );
     }
 

@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Services\RefundMoney;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Order extends Model
@@ -80,14 +82,14 @@ class Order extends Model
         return $this->hasMany(OrderRefund::class);
     }
 
-    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
     public static function generateOrderNumber(): string
     {
-        return 'VA-' . strtoupper(substr(uniqid(), -8));
+        return 'VA-'.strtoupper(substr(uniqid(), -8));
     }
 
     public function statusLabel(): string
@@ -115,14 +117,79 @@ class Order extends Model
 
     public function needsPaymentReview(): bool
     {
+        return $this->hasReconciliationEvidence();
+    }
+
+    /**
+     * Fail closed for any reconciliation evidence.
+     *
+     * Clean values are null, an empty array, an empty object, false, zero,
+     * and an empty string, including those values nested inside otherwise
+     * empty structures. A non-empty extra_payment_ids or
+     * conflicting_payment_ids collection is evidence even when its elements
+     * look empty. Any other non-empty value must be investigated.
+     */
+    public function hasReconciliationEvidence(): bool
+    {
         if ($this->isReconciliationRequired() || filled($this->reconciliation_reason)) {
             return true;
         }
 
-        $meta = $this->reconciliation_meta ?? [];
+        return self::reconciliationValueHasEvidence($this->reconciliation_meta);
+    }
 
-        return ($meta['extra_payment_ids'] ?? []) !== []
-            || ($meta['conflicting_payment_ids'] ?? []) !== [];
+    public static function reconciliationValueHasEvidence(mixed $value, ?string $key = null): bool
+    {
+        if ($value instanceof \stdClass) {
+            $value = (array) $value;
+        }
+
+        if (self::isReservedPaymentCollection($key, $value)) {
+            return true;
+        }
+
+        if ($value === null || $value === false || $value === '' || $value === []) {
+            return false;
+        }
+
+        if (is_array($value)) {
+            foreach ($value as $nestedKey => $nested) {
+                $childKey = is_string($nestedKey) ? $nestedKey : null;
+
+                if (self::reconciliationValueHasEvidence($nested, $childKey)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        if ($value === true) {
+            return true;
+        }
+
+        if (is_int($value) || is_float($value)) {
+            return $value !== 0 && $value !== 0.0;
+        }
+
+        if (is_string($value)) {
+            return true;
+        }
+
+        return true;
+    }
+
+    private static function isReservedPaymentCollection(?string $key, mixed $value): bool
+    {
+        if (! in_array($key, ['extra_payment_ids', 'conflicting_payment_ids'], true)) {
+            return false;
+        }
+
+        if ($value instanceof \stdClass) {
+            $value = (array) $value;
+        }
+
+        return is_array($value) && $value !== [];
     }
 
     public function reconciliationReasonLabel(): string
@@ -174,6 +241,28 @@ class Order extends Model
             || $this->isFulfilled();
     }
 
+    /**
+     * Stored gateway payment id. Fulfilment status is not captured payment.
+     */
+    public function hasDurableCapturedPaymentEvidence(): bool
+    {
+        return filled($this->payment_id);
+    }
+
+    public function paymentAwareStatusLabel(): string
+    {
+        if (
+            $this->payment_method === 'razorpay'
+            && ! $this->hasDurableCapturedPaymentEvidence()
+            && ! $this->needsPaymentReview()
+            && $this->isFulfilled()
+        ) {
+            return 'Payment not confirmed';
+        }
+
+        return $this->statusLabel();
+    }
+
     public function canOfferRefund(): bool
     {
         return $this->payment_method === 'razorpay'
@@ -193,8 +282,8 @@ class Order extends Model
 
     public function customerRefundSummary(): ?string
     {
-        $processed = \App\Services\RefundMoney::formatRupees((int) $this->refunded_amount_paise);
-        $pending = \App\Services\RefundMoney::formatRupees((int) $this->refund_pending_amount_paise);
+        $processed = RefundMoney::formatRupees((int) $this->refunded_amount_paise);
+        $pending = RefundMoney::formatRupees((int) $this->refund_pending_amount_paise);
 
         return match ($this->refund_status) {
             'pending' => (int) $this->refunded_amount_paise > 0
@@ -209,6 +298,19 @@ class Order extends Model
 
     public function customerStatusLabel(): string
     {
+        if ($this->needsPaymentReview()) {
+            return $this->statusLabel();
+        }
+
+        if (
+            $this->payment_method === 'razorpay'
+            && ! $this->hasDurableCapturedPaymentEvidence()
+            && ! $this->needsPaymentReview()
+            && $this->isFulfilled()
+        ) {
+            return 'Payment not confirmed';
+        }
+
         $refund = $this->customerRefundSummary();
         $base = $this->statusLabel();
 
@@ -236,7 +338,11 @@ class Order extends Model
             return [(string) $this->status];
         }
 
-        if ($this->hasCapturedPayment()) {
+        if ($this->payment_method === 'razorpay' && ! $this->hasDurableCapturedPaymentEvidence()) {
+            return ['pending', 'cancelled'];
+        }
+
+        if ($this->hasDurableCapturedPaymentEvidence() || ($this->payment_method !== 'razorpay' && $this->hasCapturedPayment())) {
             $options = ['paid', 'processing', 'shipped', 'delivered'];
 
             if (! in_array($this->status, $options, true)) {
@@ -250,7 +356,20 @@ class Order extends Model
     }
 
     /**
-     * Paid or later fulfilment states that may show confirmed/success UI.
+     * Razorpay confirmation copy requires a stored payment id.
+     * Historical non-Razorpay rows keep their stored fulfilment wording.
+     */
+    public function showsCapturedPaymentConfirmation(): bool
+    {
+        if ($this->payment_method === 'razorpay') {
+            return filled($this->payment_id);
+        }
+
+        return filled($this->payment_id) || $this->isFulfilled();
+    }
+
+    /**
+     * Paid or later fulfilment states.
      */
     public function isFulfilled(): bool
     {

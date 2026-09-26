@@ -101,7 +101,41 @@ class OrderMailRenderTest extends TestCase
 
         $html = (new AdminPaymentReceivedMail($order))->render();
 
-        $this->assertStringContainsString('pay_test_render', $html);
+        $this->assertStringNotContainsString('pay_test_render', $html);
         $this->assertStringContainsString('Aria Mirror Frame', $html);
+        $this->assertStringContainsString('Payment received', $html);
+    }
+
+    public function test_inconsistent_razorpay_mail_does_not_claim_payment_was_received(): void
+    {
+        foreach (['paid', 'processing', 'shipped', 'delivered'] as $status) {
+            $order = $this->orderWithItems();
+            $order->forceFill([
+                'status' => $status,
+                'payment_id' => null,
+                'razorpay_order_id' => 'order_hidden_'.$status,
+            ])->save();
+            $order = $order->fresh('items');
+
+            $adminNew = new AdminNewOrderMail($order);
+            $adminPaid = new AdminPaymentReceivedMail($order);
+            $customerPaid = new PaymentSuccessfulMail($order);
+
+            foreach ([
+                $adminNew->render(),
+                $adminPaid->render(),
+                $customerPaid->render(),
+                $adminNew->envelope()->subject,
+                $adminPaid->envelope()->subject,
+                $customerPaid->envelope()->subject,
+            ] as $rendered) {
+                $this->assertStringNotContainsString('Payment received', $rendered);
+                $this->assertStringNotContainsString('Paid', $rendered);
+                $this->assertStringNotContainsString('order_hidden_'.$status, $rendered);
+            }
+
+            $this->assertStringContainsString('Payment not confirmed', $adminNew->render());
+            $this->assertSame('Payment not confirmed', $order->paymentAwareStatusLabel());
+        }
     }
 }

@@ -48,6 +48,7 @@ class AdminPermissionResolver
     {
         return [
             AdminRole::STAFF_MANAGE,
+            AdminRole::ORDERS_DELETE_TEST,
         ];
     }
 
@@ -108,7 +109,11 @@ class AdminPermissionResolver
         }
 
         if (in_array($permission, self::ownerOnlyPermissions(), true) && $role !== AdminRole::OWNER) {
-            return 'Only the Owner can manage staff, invitations and role access.';
+            return match ($permission) {
+                AdminRole::STAFF_MANAGE => 'Only the Owner can manage staff, invitations and role access.',
+                AdminRole::ORDERS_DELETE_TEST => 'Only the Owner can delete a financially inert test order.',
+                default => 'Only the Owner can use this permission.',
+            };
         }
 
         return null;

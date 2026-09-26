@@ -31,6 +31,7 @@ class AdminRoleTest extends TestCase
         $this->assertFalse($admin->hasAdminPermission(AdminRole::STAFF_MANAGE));
         $this->assertTrue($admin->hasAdminPermission(AdminRole::SETTINGS_MANAGE));
         $this->assertFalse($admin->hasAdminPermission(AdminRole::ORDERS_REFUND));
+        $this->assertFalse($admin->hasAdminPermission(AdminRole::ORDERS_DELETE_TEST));
     }
 
     public function test_fixed_operational_roles_are_least_privilege(): void
@@ -46,6 +47,7 @@ class AdminRoleTest extends TestCase
         $this->assertTrue($orders->hasAdminPermission(AdminRole::ORDERS_MANAGE));
         $this->assertFalse($orders->hasAdminPermission(AdminRole::CUSTOMERS_MANAGE));
         $this->assertFalse($orders->hasAdminPermission(AdminRole::ORDERS_REFUND));
+        $this->assertFalse($orders->hasAdminPermission(AdminRole::ORDERS_DELETE_TEST));
     }
 
     public function test_customer_inactive_admin_and_unknown_role_fail_closed(): void
@@ -71,6 +73,7 @@ class AdminRoleTest extends TestCase
         $this->assertFalse($legacy->hasAdminPermission(AdminRole::STAFF_VIEW));
         $this->assertFalse($legacy->hasAdminPermission(AdminRole::STAFF_MANAGE));
         $this->assertFalse($legacy->hasAdminPermission(AdminRole::ORDERS_REFUND));
+        $this->assertFalse($legacy->hasAdminPermission(AdminRole::ORDERS_DELETE_TEST));
     }
 
     public function test_permission_matrix_matches_permissions_for_every_fixed_role(): void
@@ -94,6 +97,8 @@ class AdminRoleTest extends TestCase
         $this->assertSame(AdminRole::permissions(), array_keys($matrix[AdminRole::OWNER]['permissions']));
         $this->assertNotNull($matrix[AdminRole::OWNER]['locks'][AdminRole::STAFF_MANAGE]);
         $this->assertNotNull($matrix[AdminRole::VIEWER]['locks'][AdminRole::STAFF_MANAGE]);
+        $this->assertNotNull($matrix[AdminRole::ORDER_MANAGER]['locks'][AdminRole::ORDERS_DELETE_TEST]);
+        $this->assertNull($matrix[AdminRole::OWNER]['locks'][AdminRole::ORDERS_DELETE_TEST]);
         $this->assertNull($matrix[AdminRole::VIEWER]['locks'][AdminRole::ORDERS_VIEW]);
     }
 

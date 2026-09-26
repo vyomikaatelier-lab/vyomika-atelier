@@ -8,7 +8,7 @@ A new order has been placed on the storefront.
 **Email:** {{ $order->customer_email }}  
 **Phone:** {{ $order->customer_phone }}  
 **Total:** ₹{{ number_format($order->total, 0) }}  
-**Status:** {{ $order->statusLabel() }}
+**Status:** {{ $order->paymentAwareStatusLabel() }}
 
 @component('mail::table')
 | Item | Qty | Total |

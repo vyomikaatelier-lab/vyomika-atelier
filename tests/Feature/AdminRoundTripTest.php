@@ -35,8 +35,9 @@ class AdminRoundTripTest extends TestCase
             'pincode' => '400050',
             'subtotal' => 12000,
             'total' => 12000,
-            'status' => 'pending',
+            'status' => 'paid',
             'payment_method' => 'razorpay',
+            'payment_id' => 'pay_roundtrip',
         ]);
 
         $admin = $this->admin();

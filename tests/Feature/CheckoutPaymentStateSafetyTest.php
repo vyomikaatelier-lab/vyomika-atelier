@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\User;
 use App\Services\PendingOrderExpiry;
 use App\Support\CheckoutSnapshot;
+use App\Support\PaymentAtomicLock;
 use App\Support\StorefrontRoutes;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -105,7 +106,10 @@ class CheckoutPaymentStateSafetyTest extends TestCase
     public function test_paid_success_route_contains_confirmed_wording(): void
     {
         $user = $this->customer();
-        $order = $this->makePendingOrder($user, $this->shopProduct(), ['status' => 'paid']);
+        $order = $this->makePendingOrder($user, $this->shopProduct(), [
+            'status' => 'paid',
+            'payment_id' => 'pay_confirmed',
+        ]);
 
         $this->actingAs($user)->get(route('checkout.success', $order))
             ->assertOk()
@@ -140,7 +144,11 @@ class CheckoutPaymentStateSafetyTest extends TestCase
         $user = $this->customer();
         $product = $this->shopProduct();
 
-        $paid = $this->makePendingOrder($user, $product, ['status' => 'paid', 'order_number' => Order::generateOrderNumber()]);
+        $paid = $this->makePendingOrder($user, $product, [
+            'status' => 'paid',
+            'payment_id' => 'pay_route_paid',
+            'order_number' => Order::generateOrderNumber(),
+        ]);
         $this->actingAs($user)->get(route('checkout.pay', $paid))->assertRedirect(route('checkout.success', $paid));
 
         $pending = $this->makePendingOrder($user, $product, ['order_number' => Order::generateOrderNumber()]);
@@ -212,6 +220,7 @@ class CheckoutPaymentStateSafetyTest extends TestCase
         foreach (['processing', 'shipped', 'delivered'] as $status) {
             $order = $this->makePendingOrder($user, $product, [
                 'status' => $status,
+                'payment_id' => 'pay_'.$status,
                 'order_number' => Order::generateOrderNumber(),
             ]);
 
@@ -266,7 +275,7 @@ class CheckoutPaymentStateSafetyTest extends TestCase
 
         $user = $this->customer();
         $order = $this->makePendingOrder($user, $this->shopProduct(), ['razorpay_order_id' => null]);
-        $lock = \App\Support\PaymentAtomicLock::forRazorpayOrder((int) $order->id);
+        $lock = PaymentAtomicLock::forRazorpayOrder((int) $order->id);
         $this->assertTrue($lock->get());
 
         try {

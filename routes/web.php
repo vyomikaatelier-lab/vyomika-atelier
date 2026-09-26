@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\MediaAdminController;
 use App\Http\Controllers\Admin\MfaController;
 use App\Http\Controllers\Admin\OrderAdminController;
 use App\Http\Controllers\Admin\OrderRefundController;
+use App\Http\Controllers\Admin\OrderTestDeletionController;
 use App\Http\Controllers\Admin\PageHeroAdminController;
 use App\Http\Controllers\Admin\PasskeyController as AdminPasskeyController;
 use App\Http\Controllers\Admin\ProductAdminController;
@@ -25,9 +26,9 @@ use App\Http\Controllers\Admin\ProjectAdminController;
 use App\Http\Controllers\Admin\RailingQuoteAdminController;
 use App\Http\Controllers\Admin\ServiceAdminController;
 use App\Http\Controllers\Admin\SiteSettingAdminController;
-use App\Http\Controllers\Admin\StaticPageSeoAdminController;
 use App\Http\Controllers\Admin\StaffAdminController;
 use App\Http\Controllers\Admin\StaffInvitationController;
+use App\Http\Controllers\Admin\StaticPageSeoAdminController;
 use App\Http\Controllers\Admin\UrlRedirectAdminController;
 use App\Http\Controllers\Api\RazorpayCheckoutController;
 use App\Http\Controllers\Api\RazorpayWebhookController;
@@ -56,9 +57,15 @@ use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SocialAuthController;
 use App\Http\Controllers\StudioController;
 use App\Http\Controllers\VendorProposalController;
+use App\Http\Middleware\CaptureAttribution;
 use App\Support\StorefrontNavigation;
 use App\Support\StorefrontRoutes;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Laravel\Passkeys\Http\Controllers\PasskeyLoginController;
 
 // Public storefront
@@ -109,12 +116,12 @@ Route::middleware('checkout.customer')->group(function () {
 // middleware stay in place.
 Route::post('/checkout/pay/{order}', [PaymentController::class, 'verify'])
     ->withoutMiddleware([
-        \Illuminate\Cookie\Middleware\EncryptCookies::class,
-        \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
-        \Illuminate\Session\Middleware\StartSession::class,
-        \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-        \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
-        \App\Http\Middleware\CaptureAttribution::class,
+        EncryptCookies::class,
+        AddQueuedCookiesToResponse::class,
+        StartSession::class,
+        ShareErrorsFromSession::class,
+        ValidateCsrfToken::class,
+        CaptureAttribution::class,
     ])
     ->name('checkout.pay.verify');
 
@@ -314,7 +321,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('orders/{order}/refunds/{refund}/retry', [OrderRefundController::class, 'retry'])
             ->middleware(['admin.permission:orders.refund', 'throttle:admin-refund'])
             ->name('orders.refunds.retry');
-        Route::resource('orders', OrderAdminController::class)->only(['index', 'show', 'update']);
+        Route::resource('orders', OrderAdminController::class)->only(['index', 'show']);
+        Route::match(['put', 'patch'], 'orders/{order}', [OrderAdminController::class, 'update'])
+            ->middleware('admin.permission:orders.manage')
+            ->name('orders.update');
+        Route::post('orders/{order}/test-deletion', [OrderTestDeletionController::class, 'destroy'])
+            ->middleware('admin.permission:orders.delete_test')
+            ->name('orders.test-deletion.destroy');
         Route::resource('leads', LeadAdminController::class)->only(['index', 'show', 'update', 'destroy']);
         Route::post('leads/{lead}/false-positive', [LeadAdminController::class, 'markFalsePositive'])->name('leads.false-positive');
         Route::post('leads/{lead}/qualified', [LeadAdminController::class, 'markQualified'])->name('leads.qualified');
