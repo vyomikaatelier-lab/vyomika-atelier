@@ -49,6 +49,7 @@ class AdminPermissionResolver
         return [
             AdminRole::STAFF_MANAGE,
             AdminRole::ORDERS_DELETE_TEST,
+            AdminRole::ORDERS_ARCHIVE_TEST,
         ];
     }
 
@@ -112,6 +113,7 @@ class AdminPermissionResolver
             return match ($permission) {
                 AdminRole::STAFF_MANAGE => 'Only the Owner can manage staff, invitations and role access.',
                 AdminRole::ORDERS_DELETE_TEST => 'Only the Owner can delete a financially inert test order.',
+                AdminRole::ORDERS_ARCHIVE_TEST => 'Only the Owner can archive a protected test order.',
                 default => 'Only the Owner can use this permission.',
             };
         }

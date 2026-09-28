@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\OrderAdminUpdate;
+use App\Services\OrderTestArchive;
 use App\Services\RazorpayRefundRequest;
 use App\Support\AdminRole;
 use Illuminate\Http\Request;
@@ -12,11 +13,25 @@ use Illuminate\Support\Str;
 
 class OrderAdminController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $orders = Order::latest()->paginate(15);
+        $archivedView = $request->query('archived') === '1';
 
-        return view('admin.orders.index', compact('orders'));
+        if ($archivedView && ! $request->user()?->hasAdminPermission(AdminRole::ORDERS_ARCHIVE_TEST)) {
+            abort(403);
+        }
+
+        $orders = Order::query()
+            ->when(
+                $archivedView,
+                fn ($query) => $query->whereNotNull('admin_archived_at'),
+                fn ($query) => $query->visibleInDefaultAdminIndex(),
+            )
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('admin.orders.index', compact('orders', 'archivedView'));
     }
 
     public function show(Order $order)
@@ -24,7 +39,8 @@ class OrderAdminController extends Controller
         $order->load(['items.product', 'refunds.lines']);
 
         $idempotencyKey = null;
-        if ($requestUser = auth()->user()) {
+        $requestUser = auth()->user();
+        if ($requestUser) {
             if ($requestUser->hasAdminPermission(AdminRole::ORDERS_REFUND) && $order->canOfferRefund()) {
                 $sessionKey = 'order_refund_idempotency.'.$order->getKey();
                 $idempotencyKey = session($sessionKey);
@@ -35,7 +51,19 @@ class OrderAdminController extends Controller
             }
         }
 
-        return view('admin.orders.show', compact('order', 'idempotencyKey'));
+        $canArchiveTestOrder = $requestUser !== null
+            && $requestUser->hasAdminPermission(AdminRole::ORDERS_ARCHIVE_TEST)
+            && app(OrderTestArchive::class)->appearsEligible($order);
+        $canUnarchiveTestOrder = $requestUser !== null
+            && $requestUser->hasAdminPermission(AdminRole::ORDERS_ARCHIVE_TEST)
+            && $order->hasAdminArchiveMetadata();
+
+        return view('admin.orders.show', compact(
+            'order',
+            'idempotencyKey',
+            'canArchiveTestOrder',
+            'canUnarchiveTestOrder',
+        ));
     }
 
     public function update(Request $request, Order $order)

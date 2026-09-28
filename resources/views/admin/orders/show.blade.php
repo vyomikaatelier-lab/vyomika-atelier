@@ -166,7 +166,59 @@
     @endforeach
 </div>
 
-@if(auth()->user()?->hasAdminPermission(\App\Support\AdminRole::ORDERS_DELETE_TEST))
+@if($order->hasAdminArchiveMetadata())
+<div class="bg-white p-6 rounded-lg shadow mt-8" role="status">
+    <h2 class="font-medium mb-2">Archived test order</h2>
+    <p class="text-sm">Recorded status:
+        @if($order->needsPaymentReview())
+            <strong>Reconciliation required</strong>
+        @else
+            <strong>{{ $order->customerStatusLabel() }}</strong>
+        @endif
+    </p>
+    <p class="text-sm text-gray-600 mt-2">Archiving did not delete the order or its records. The archive mark stays until an Owner unarchives it.</p>
+</div>
+@endif
+
+@if($canArchiveTestOrder)
+<div class="bg-white p-6 rounded-lg shadow mt-8">
+    <h2 class="font-medium mb-2">Archive test order</h2>
+    <p class="text-sm text-gray-600 mb-4">This hides the order from the default admin list only while it stays financially inert. A later payment, stock change, reconciliation, or refund puts it back on that list. It does not delete the order, its items, stock, payment records, or any gateway reference, and it does not make the order safe to delete. Only a pending or cancelled order with no captured payment, stock movement, reconciliation evidence, or refund evidence can be archived. A stored gateway order reference, when one exists, is kept.</p>
+    <form method="POST" action="{{ route('admin.orders.test-archive.store', $order) }}" class="space-y-3">
+        @csrf
+        <div>
+            <label class="block text-sm mb-1" for="archive_order_number">Type the order number</label>
+            <input id="archive_order_number" name="order_number_confirmation" value="{{ old('order_number_confirmation') }}" class="border px-3 py-2 rounded w-full max-w-sm" autocomplete="off">
+        </div>
+        <div>
+            <label class="block text-sm mb-1" for="archive_password">Current password</label>
+            <input id="archive_password" type="password" name="current_password" required autocomplete="current-password" class="border px-3 py-2 rounded w-full max-w-sm">
+        </div>
+        <button type="submit" class="bg-stone-800 text-white px-4 py-2 rounded text-sm">Archive test order</button>
+    </form>
+</div>
+@endif
+
+@if($canUnarchiveTestOrder)
+<div class="bg-white p-6 rounded-lg shadow mt-8">
+    <h2 class="font-medium mb-2">Unarchive test order</h2>
+    <p class="text-sm text-gray-600 mb-4">This clears the archive mark. It does not change payment, stock, refund, or fulfilment records.</p>
+    <form method="POST" action="{{ route('admin.orders.test-archive.destroy', $order) }}" class="space-y-3">
+        @csrf
+        <div>
+            <label class="block text-sm mb-1" for="unarchive_order_number">Type the order number</label>
+            <input id="unarchive_order_number" name="order_number_confirmation" value="{{ old('order_number_confirmation') }}" class="border px-3 py-2 rounded w-full max-w-sm" autocomplete="off">
+        </div>
+        <div>
+            <label class="block text-sm mb-1" for="unarchive_password">Current password</label>
+            <input id="unarchive_password" type="password" name="current_password" required autocomplete="current-password" class="border px-3 py-2 rounded w-full max-w-sm">
+        </div>
+        <button type="submit" class="bg-stone-800 text-white px-4 py-2 rounded text-sm">Unarchive</button>
+    </form>
+</div>
+@endif
+
+@if(auth()->user()?->hasAdminPermission(\App\Support\AdminRole::ORDERS_DELETE_TEST) && ! $order->hasAdminArchiveMetadata())
 <div class="bg-white p-6 rounded-lg shadow mt-8">
     <h2 class="font-medium mb-2">Delete test order</h2>
     <p class="text-sm text-gray-600 mb-4">Only an order without payment, gateway, refund, reconciliation, or stock evidence may be deleted. This cannot be undone.</p>

@@ -45,6 +45,8 @@ class OrderTestDeletion
 
     public const BLOCKED_BUSY = 'blocked_busy';
 
+    public const BLOCKED_ARCHIVED = 'blocked_archived';
+
     /**
      * The Razorpay order cache lock is acquired before any database transaction.
      * Order creation holds that same lock across its gateway HTTP call, so a
@@ -117,6 +119,9 @@ class OrderTestDeletion
                 ->whereNull('payment_id')
                 ->whereNull('razorpay_order_id')
                 ->whereNull('stock_deducted_at')
+                ->whereNull('admin_archived_at')
+                ->whereNull('admin_archived_by_user_id')
+                ->whereNull('admin_archive_reason')
                 ->whereIn('status', ['pending', 'cancelled'])
                 ->where(function ($query): void {
                     $query->whereNull('reconciliation_reason')->orWhere('reconciliation_reason', '');
@@ -163,12 +168,21 @@ class OrderTestDeletion
             self::BLOCKED_CONFIRMATION => 'Enter the order number exactly to confirm deletion.',
             self::BLOCKED_PASSWORD => 'The password is incorrect.',
             self::BLOCKED_BUSY => 'This order is busy; try again.',
+            self::BLOCKED_ARCHIVED => 'This order is archived and cannot be deleted.',
             default => 'Only a pending or cancelled order without payment evidence can be deleted.',
         };
     }
 
     private function blockReason(Order $order): ?string
     {
+        if (
+            $order->getRawOriginal('admin_archived_at') !== null
+            || $order->getRawOriginal('admin_archived_by_user_id') !== null
+            || $order->getRawOriginal('admin_archive_reason') !== null
+        ) {
+            return self::BLOCKED_ARCHIVED;
+        }
+
         if ($order->payment_id !== null) {
             return self::BLOCKED_PAYMENT;
         }

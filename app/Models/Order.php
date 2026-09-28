@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use App\Services\RefundMoney;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 
 class Order extends Model
 {
@@ -64,6 +66,7 @@ class Order extends Model
             'payment_email_sent_at' => 'datetime',
             'admin_order_notified_at' => 'datetime',
             'admin_payment_notified_at' => 'datetime',
+            'admin_archived_at' => 'datetime',
             'reconciliation_meta' => 'array',
         ];
     }
@@ -85,6 +88,11 @@ class Order extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function archivedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'admin_archived_by_user_id');
     }
 
     public static function generateOrderNumber(): string
@@ -227,6 +235,126 @@ class Order extends Model
     public function isCancelled(): bool
     {
         return $this->status === 'cancelled';
+    }
+
+    public function isAdminArchived(): bool
+    {
+        return $this->admin_archived_at !== null;
+    }
+
+    public function hasAdminArchiveMetadata(): bool
+    {
+        return $this->getRawOriginal('admin_archived_at') !== null
+            || $this->getRawOriginal('admin_archived_by_user_id') !== null
+            || $this->getRawOriginal('admin_archive_reason') !== null;
+    }
+
+    /**
+     * Default admin index rows. Unarchived orders stay visible. An archived
+     * order stays hidden only while its archive metadata is complete and the
+     * row is still proven financially inert. Every other archived row is
+     * visible. This is not a global scope.
+     *
+     * @param  Builder<Order>  $query
+     * @return Builder<Order>
+     */
+    public function scopeVisibleInDefaultAdminIndex(Builder $query): Builder
+    {
+        return $query->where(function (Builder $query): void {
+            $query->where(function (Builder $query): void {
+                static::whereArchiveMetadataIsIncomplete($query);
+            })->orWhere(function (Builder $query): void {
+                $query->whereNot(function (Builder $query): void {
+                    static::constrainFinanciallyInert($query);
+                });
+            });
+        });
+    }
+
+    /**
+     * @param  Builder<Order>|QueryBuilder  $query
+     */
+    public static function whereArchiveMetadataIsIncomplete(Builder|QueryBuilder $query): void
+    {
+        $query->whereNull('admin_archived_at')
+            ->orWhereNull('admin_archived_by_user_id')
+            ->orWhereNull('admin_archive_reason')
+            ->orWhere('admin_archive_reason', '')
+            ->orWhereRaw("trim(admin_archive_reason) = ''");
+    }
+
+    /**
+     * Positive proof that an order is still safe to keep off the default list.
+     * A stored non-empty Razorpay order id may remain. Anything the SQL cannot
+     * prove is excluded from this predicate and therefore stays visible.
+     *
+     * @param  Builder<Order>|QueryBuilder  $query
+     */
+    public static function constrainFinanciallyInert(Builder|QueryBuilder $query): void
+    {
+        $query->whereIn('status', ['pending', 'cancelled'])
+            ->whereNull('payment_id')
+            ->whereNull('stock_deducted_at')
+            ->where(function (Builder|QueryBuilder $query): void {
+                $query->whereNull('reconciliation_reason')
+                    ->orWhere('reconciliation_reason', '');
+            })
+            ->where(function (Builder|QueryBuilder $query): void {
+                $query->whereNull('reconciliation_meta')
+                    ->orWhereIn('reconciliation_meta', ['[]', 'null', '{}']);
+            })
+            ->where(function (Builder|QueryBuilder $query): void {
+                $query->whereNull('razorpay_order_id')
+                    ->orWhereRaw("trim(razorpay_order_id) <> ''");
+            });
+
+        foreach (['captured_amount_paise', 'refunded_amount_paise', 'refund_pending_amount_paise'] as $column) {
+            static::wherePaiseIsClear($query, $column);
+        }
+
+        $query->where(function (Builder|QueryBuilder $query): void {
+            $query->whereNull('refund_status')
+                ->orWhere('refund_status', 'none');
+        })
+            ->whereNotExists(function (QueryBuilder $query): void {
+                $query->selectRaw('1')
+                    ->from('order_refunds')
+                    ->whereColumn('order_refunds.order_id', 'orders.id');
+            })
+            ->whereNotExists(function (QueryBuilder $query): void {
+                $query->selectRaw('1')
+                    ->from('order_refund_lines')
+                    ->join('order_items', 'order_items.id', '=', 'order_refund_lines.order_item_id')
+                    ->whereColumn('order_items.order_id', 'orders.id');
+            })
+            ->whereNotExists(function (QueryBuilder $query): void {
+                $query->selectRaw('1')
+                    ->from('order_refund_events')
+                    ->join('order_refunds', 'order_refunds.id', '=', 'order_refund_events.order_refund_id')
+                    ->whereColumn('order_refunds.order_id', 'orders.id');
+            });
+    }
+
+    /**
+     * @param  Builder<Order>|QueryBuilder  $query
+     */
+    private static function wherePaiseIsClear(Builder|QueryBuilder $query, string $column): void
+    {
+        $driver = $query->getConnection()->getDriverName();
+
+        $query->where(function (Builder|QueryBuilder $query) use ($column, $driver): void {
+            $query->whereNull($column);
+
+            if (in_array($driver, ['mysql', 'mariadb'], true)) {
+                $query->orWhereRaw($column.' = 0');
+
+                return;
+            }
+
+            $query->orWhereRaw(
+                "(typeof({$column}) in ('integer', 'real') and {$column} = 0) or (typeof({$column}) = 'text' and {$column} = '0')"
+            );
+        });
     }
 
     public function isAwaitingPayment(): bool
