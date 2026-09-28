@@ -343,27 +343,34 @@ Origin `.htaccess` already sets 30-day `Cache-Control` for CSS/JS/images. Redepl
 
 ---
 
-## Scheduler — checkout readiness
+## Scheduler
 
-Checkout stays disabled until scheduler invocation is independently proven. `CHECKOUT_PAYMENTS_ENABLED` defaults to false. Do not enable checkout because a command appears in `php artisan schedule:list`.
+Checkout remains disabled. `CHECKOUT_PAYMENTS_ENABLED` defaults to false. Do not enable checkout because this cron is installed or because a command appears in `php artisan schedule:list`.
 
-The host must invoke Laravel's scheduler every minute, using this server's PHP binary and application path:
+`orders:expire-pending` is registered every 15 minutes. It cancels expired unpaid pending orders and leaves paid and reconciliation-required rows unchanged. It runs only when `schedule:run` is invoked.
 
-```bash
-/usr/bin/php /home/u550969814/vyomika-atelier/artisan schedule:run >> /home/u550969814/vyomika-atelier/storage/logs/scheduler.log 2>&1
+`leads:daily-summary` is registered only when `LEADS_DAILY_SUMMARY_ENABLED` is true. The default is false, so the scheduler does not send that email. Outbound mail is unavailable until a Hostinger mailbox is purchased and delivery is verified. The intended recipient, once mail works, is `vyomikaatelier@gmail.com`.
+
+`orders:reconcile-refunds` is a manual recovery command. It is not scheduled. Do not add it to cron.
+
+After this change is deployed, and while the summary flag is still false, install exactly one Vyomika cron entry. Copy `scripts/vyomika-scheduler.sh` to `/home/u550969814/vyomika-scheduler.sh` and set mode `700`. In hPanel set minute, hour, day, month, and weekday to `*`, and set the command to:
+
+```text
+/home/u550969814/vyomika-scheduler.sh
 ```
 
-`orders:expire-pending` is registered every 15 minutes. It cancels expired unpaid pending orders and leaves paid and reconciliation-required rows unchanged. It does not run unless `schedule:run` is invoked. A direct cron of `orders:expire-pending` does not prove the scheduler itself is running.
+Leave the Print On Walls cron jobs unchanged. The wrapper lock stops overlapping runs only. A second Vyomika entry would run the due tasks again. Do not install this cron until the deployed schedule has been checked.
 
-`leads:daily-summary` is registered daily at 08:00. It runs through the same every-minute `schedule:run` entry.
+The wrapper appends to `storage/logs/scheduler.log`. A minute other than 0, 15, 30, or 45 should record the idle scheduler sentence and `end exit=0`. A quarter-hour minute should record `orders:expire-pending` with `DONE`. `schedule:list` shows registration; it does not prove the cron ran. If a database check is required, count pending orders past `expires_at`. Do not select customer columns or payment identifiers.
 
-`orders:reconcile-refunds` is a manual recovery command. It is not scheduled. It never creates a refund or a new idempotency key. Do not add it to cron.
+Keep `LEADS_DAILY_SUMMARY_ENABLED` false until a Hostinger mailbox is the sender and an authorized delivery test has succeeded. The current mail settings are not that setup. After both have succeeded:
 
-Verify execution without customer data:
+1. Set `ADMIN_EMAIL=vyomikaatelier@gmail.com`.
+2. Set `LEADS_DAILY_SUMMARY_ENABLED=true`.
+3. From the application directory, run `/opt/alt/php83/usr/bin/php artisan config:cache`.
+4. Confirm `schedule:list` shows `leads:daily-summary` at 08:00 Asia/Kolkata, `orders:expire-pending` every 15 minutes, and `orders:reconcile-refunds` absent. `schedule:list` is registration evidence. It does not prove the cron ran. Confirm checkout is still false.
 
-1. Run `php artisan schedule:list` and confirm `orders:expire-pending` is every 15 minutes and `orders:reconcile-refunds` is absent.
-2. After the every-minute host entry exists, check only the scheduler log's modification time and whether it records the runner. Do not print order rows, customer fields, or payment identifiers.
-3. If a database check is required, use an aggregate count of pending orders past `expires_at`. Do not select customer columns.
+Use the same cron entry. Do not add another one.
 
 Set `MARKETING_EMAIL`, `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, and `LEAD_IP_HASH_SALT` in `.env` before going live. Upload the catalogue PDF to `storage/app/catalogue/vyomika-atelier-catalogue.pdf` (create the folder if needed). Run migrations after deploy:
 
