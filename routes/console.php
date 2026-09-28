@@ -9,4 +9,9 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('orders:expire-pending')->everyFifteenMinutes();
-Schedule::command('leads:daily-summary')->dailyAt('08:00');
+
+if (config('leads.daily_summary_enabled')) {
+    Schedule::command('leads:daily-summary')
+        ->dailyAt('08:00')
+        ->timezone('Asia/Kolkata');
+}
