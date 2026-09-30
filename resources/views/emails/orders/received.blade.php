@@ -13,8 +13,10 @@ Thank you for your order with **Vyomika Atelier**.
 @endforeach
 @endcomponent
 
-**Subtotal:** ₹{{ number_format($order->subtotal, 0) }}  
-**Shipping:** ₹{{ number_format($order->shipping_cost, 0) }}  
+**Subtotal:** ₹{{ number_format($order->subtotal, 0) }}
+
+**Shipping:** {{ (float) $order->shipping_cost > 0 ? '₹'.number_format($order->shipping_cost, 0) : 'Included' }}
+
 **Total:** ₹{{ number_format($order->total, 0) }}
 
 **Delivery address**  

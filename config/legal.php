@@ -139,30 +139,36 @@ return [
         'shipping' => [
             'title' => 'Shipping & Delivery Policy',
             'meta_title' => 'Shipping & Delivery Policy — Vyomika Atelier',
-            'meta_description' => 'Delivery timelines, logistics, and installation notes for custom Vyomika Atelier metal products across India.',
+            'meta_description' => 'India shipping is included in the product price. International shipping is confirmed by the studio before payment.',
             'sections' => [
                 [
-                    'heading' => 'Made-to-Order Production',
+                    'heading' => 'Shipping and Delivery Timeline',
                     'paragraphs' => [
-                        'Every {{brand_name}} product is fabricated after design approval. Delivery timelines depend on design complexity, finish selection, approval cycles, and current studio workload — typically **3–4 weeks** from order confirmation, unless otherwise quoted.',
+                        'Within India, ready stock is an estimated 5 to 12 business days after order confirmation. Made-to-order and customized products are an estimated 15 to 35 business days after order confirmation and approval of final specifications. These are estimates. The estimate can change with product size, finish, customization, quantity, and delivery location.',
                     ],
                 ],
                 [
-                    'heading' => 'Delivery Location',
+                    'heading' => 'Delivery within India',
                     'paragraphs' => [
-                        'We deliver across major cities in {{country}}. Project location, site access, and local regulations may affect scheduling. Remote or difficult-access sites may require additional coordination.',
+                        'Shipping within India is included in the displayed product price. There is no minimum order for that included shipping. {{brand_name}} delivers across major cities in India. Project location, site access, and local conditions may affect scheduling. Remote or difficult-access sites may require additional coordination.',
                     ],
                 ],
                 [
-                    'heading' => 'Transportation & Installation',
+                    'heading' => 'International delivery',
                     'paragraphs' => [
-                        'Standard quotes include secure packaging and dispatch to your delivery address. **Transportation beyond the quoted zone, crane hire, on-site installation, and civil works are charged separately** unless explicitly included in your written quotation.',
+                        'For delivery outside India, customers submit an enquiry with the selected products and destination. Our team confirms shipping charges, estimated delivery time, and import-duty responsibility before payment. An international enquiry does not start an online payment. The website does not calculate an international shipping charge.',
+                    ],
+                ],
+                [
+                    'heading' => 'Transportation and Installation',
+                    'paragraphs' => [
+                        'Within India, shipping is included in the displayed product price, including secure packaging and dispatch to the delivery address. Transportation beyond the agreed delivery, crane hire, on-site installation, and civil works are charged separately unless explicitly included in the written quotation. International shipping charges are confirmed by our team before payment.',
                     ],
                 ],
                 [
                     'heading' => 'Inspection on Delivery',
                     'paragraphs' => [
-                        'Please inspect items upon receipt. Report visible transit damage within **48 hours** with photographs so we can arrange assessment and remedy where applicable.',
+                        'Please inspect items upon receipt. Report visible transit damage within 48 hours with photographs so we can arrange assessment and remedy where applicable.',
                     ],
                 ],
                 [

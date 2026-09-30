@@ -41,7 +41,7 @@ HTML,
             ],
             [
                 'question' => 'How long does custom partition fabrication take?',
-                'answer' => 'Standard lead time is 3–4 weeks from approved drawings. Complex laser-cut patterns or full-height acoustic systems may extend to 5 weeks. Pan-India delivery is included.',
+                'answer' => 'Within India, made-to-order work is an estimate of 15–35 business days after approval of final specifications. Shipping within India is included in the displayed product price. For international delivery, our team confirms shipping charges and estimated delivery time before payment.',
             ],
             [
                 'question' => 'Can partitions be freestanding or must they be fixed?',
@@ -140,7 +140,7 @@ HTML,
         'content' => <<<'HTML'
 <p>Off-the-shelf furniture rarely satisfies architect drawings. <strong>Custom metal furniture</strong> — coffee tables, console tables, bar counters, and retail display racks — lets you control dimensions, finish, and structural details precisely.</p>
 
-<p>Our Mumbai studio handles the full fabrication chain: CNC cutting, TIG welding, surface grinding, PVD coating or powder coating, and QC photography before dispatch. Typical lead time is 3–4 weeks for single pieces; batch orders for hotels may run 6–8 weeks.</p>
+<p>Our Mumbai studio handles the full fabrication chain: CNC cutting, TIG welding, surface grinding, PVD coating or powder coating, and QC photography before dispatch. Within India, made-to-order work is an estimate of 15–35 business days. Shipping within India is included in the displayed product price.</p>
 
 <p>Popular requests include:</p>
 

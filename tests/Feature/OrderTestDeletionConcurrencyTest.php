@@ -132,6 +132,7 @@ class OrderTestDeletionConcurrencyTest extends TestCase
             'user_id' => $customer->id,
             'order_number' => 'VA-GATE1',
             'total' => 1000,
+            'country' => 'India',
         ]);
         $product = $this->attachItem($order, 'gate-a');
         $holding = sys_get_temp_dir().DIRECTORY_SEPARATOR.'vyomika-hold-'.uniqid();

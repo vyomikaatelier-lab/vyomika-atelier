@@ -141,6 +141,7 @@ class OrderTestArchiveConcurrencyTest extends TestCase
             'user_id' => $customer->id,
             'order_number' => 'VA-GATE1',
             'total' => 1000,
+            'country' => 'India',
         ]);
         $product = $this->attachItem($order, 'gate-archive');
         $holding = sys_get_temp_dir().DIRECTORY_SEPARATOR.'vyomika-archive-hold-'.uniqid();

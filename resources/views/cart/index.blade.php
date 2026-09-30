@@ -49,7 +49,7 @@
             </div>
         @else
             @php
-                $shippingEst = $subtotal >= 5000 ? 0 : 199;
+                $shippingEst = 0;
             @endphp
             <div class="am-checkout-layout">
                 <div class="am-checkout-main">

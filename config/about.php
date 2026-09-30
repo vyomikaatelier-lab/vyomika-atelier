@@ -100,7 +100,7 @@ return [
             ],
             [
                 'title' => 'Reliable Execution',
-                'text' => 'Clear timelines, secure packaging and Pan-India delivery — typically 3–4 weeks from drawing approval.',
+                'text' => 'Clear timelines and secure packaging. Within India, ready stock is an estimate of 5–12 business days and made-to-order work is an estimate of 15–35 business days.',
             ],
         ],
     ],

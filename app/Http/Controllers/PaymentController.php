@@ -7,8 +7,10 @@ use App\Models\Order;
 use App\Services\OrderPaymentService;
 use App\Services\RazorpayService;
 use App\Support\CheckoutPayments;
+use App\Support\IndiaDelivery;
 use App\Support\OrderAccess;
 use App\Support\StorefrontRoutes;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\Request;
 use RuntimeException;
 
@@ -48,6 +50,18 @@ class PaymentController extends Controller
 
         if (! CheckoutPayments::enabled()) {
             return view('checkout.unavailable');
+        }
+
+        try {
+            $this->payments->assertInitiationAllowed($order);
+        } catch (LockTimeoutException) {
+            return redirect()
+                ->route('checkout.index')
+                ->with('error', 'Payment is already being started. Please wait a moment.');
+        } catch (RuntimeException $e) {
+            return redirect()
+                ->route('checkout.index')
+                ->with('error', $e->getMessage() ?: IndiaDelivery::PAYMENT_BLOCKED);
         }
 
         if (! $this->razorpay->isConfigured()) {

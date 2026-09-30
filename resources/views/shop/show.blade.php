@@ -94,7 +94,7 @@
                 <ul class="am-pdp__trust">
                     <li>✓ PVD stainless fabrication</li>
                     <li>✓ Secure packaging</li>
-                    <li>✓ Estimated delivery: <strong>3–4 weeks</strong></li>
+                    <li>✓ {{ \App\Support\IndiaDelivery::READY_STOCK_ESTIMATE }} {{ \App\Support\IndiaDelivery::MADE_TO_ORDER_ESTIMATE }}</li>
                 </ul>
 
                 @include('partials.am-mirror-dimensions', ['product' => $product])

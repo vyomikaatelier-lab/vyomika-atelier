@@ -61,6 +61,7 @@ class RazorpayCheckoutTest extends TestCase
             'shipping_address' => '123 Test Street',
             'city' => 'Mumbai',
             'pincode' => '400001',
+            'country' => 'India',
             'subtotal' => 1000,
             'shipping_cost' => 199,
             'total' => 1199,
@@ -159,7 +160,10 @@ class RazorpayCheckoutTest extends TestCase
             ], 200),
         ]);
 
-        $order = $this->makeOrder();
+        $order = $this->makeOrder([
+            'shipping_cost' => 0,
+            'total' => 1000,
+        ]);
 
         $response = $this->actingForOrder($order)
             ->postJson(route('api.create-order'), ['store_order_id' => $order->id]);
@@ -167,7 +171,7 @@ class RazorpayCheckoutTest extends TestCase
         $response->assertOk()
             ->assertJson([
                 'order_id' => 'order_api_test',
-                'amount' => 119900,
+                'amount' => 100000,
                 'currency' => 'INR',
                 'key' => 'rzp_test_key',
             ]);

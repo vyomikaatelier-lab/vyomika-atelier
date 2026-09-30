@@ -2,7 +2,7 @@
     <ul class="am-pdp-shipping-notes">
         <li>
             <svg class="am-pdp-shipping-notes__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-            <span>Estimated delivery: <strong>3–4 weeks</strong> from order confirmation. <a href="{{ route('legal.shipping') }}">Shipping details</a></span>
+            <span>{{ \App\Support\IndiaDelivery::CUSTOMER_NOTE }} <a href="{{ route('legal.shipping') }}">Shipping details</a></span>
         </li>
     </ul>
 
@@ -20,9 +20,6 @@
             </span>
             <span class="am-pay-logo am-pay-logo--razorpay" role="listitem" title="Razorpay">
                 <svg viewBox="0 0 72 16" aria-hidden="true"><text x="0" y="12" font-family="Arial, sans-serif" font-size="10" font-weight="700" fill="#072654">Razorpay</text></svg>
-            </span>
-            <span class="am-pay-logo am-pay-logo--paypal" role="listitem" title="PayPal">
-                <svg viewBox="0 0 64 16" aria-hidden="true"><text x="0" y="12" font-family="Arial, sans-serif" font-size="11" font-weight="700"><tspan fill="#003087">Pay</tspan><tspan fill="#009CDE">Pal</tspan></text></svg>
             </span>
         </div>
     </div>

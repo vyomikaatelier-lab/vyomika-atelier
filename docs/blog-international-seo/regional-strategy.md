@@ -48,7 +48,7 @@ Each regional URL must include unique sections — not city-name swaps:
 | Business location statement | Delhi studio; Pan-India delivery | India manufacture; UK projects via export/local install partner | India manufacture; UAE projects via export/local install partner |
 | Terminology | PVD partition, main entrance door, glass railing | Metal room divider, balustrade, slimline internal doors | PVD stainless steel, villa entrance doors, decorative screens |
 | Currency / quote | INR; ₹ only with approved prices | GBP quotation on request; no fake GBP prices | AED quotation on request |
-| Lead time | 3–4 weeks post-approval (verified) | Export + shipping — **confirm with owner** | Export + shipping — **confirm with owner** |
+| Lead time | India estimates: 5–12 business days ready stock, 15–35 business days made-to-order. Shipping included. | Export + shipping — confirm before payment | Export + shipping — confirm before payment |
 | Climate / design | Monsoon, dust, coastal India notes | UK weathering, drainage (no unverified Building Regs claims) | Heat, humidity, coastal salt — no Civil Defence claims |
 | Projects | Indian project slugs from `/projects` | Only if verified export/UK-relevant | Only if verified UAE/Middle East |
 | FAQs | GST, Pan-India logistics | Export crating, UK install responsibility | Shipping to GCC, local compliance boundaries |
