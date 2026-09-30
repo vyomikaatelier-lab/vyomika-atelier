@@ -6,6 +6,7 @@ use App\Exceptions\RazorpayReconciliationRequiredException;
 use App\Models\Order;
 use App\Services\StockAvailability;
 use App\Support\CartGuard;
+use App\Support\CheckoutPayments;
 use App\Support\IndiaDelivery;
 use App\Support\PaymentAtomicLock;
 use Illuminate\Contracts\Cache\LockTimeoutException;
@@ -79,6 +80,8 @@ class OrderPaymentService
      */
     private function underInitiationLock(Order $order, callable $afterDecision, bool $retireUntouched = false): mixed
     {
+        $this->refuseWhenCheckoutDisabled();
+
         return PaymentAtomicLock::run(
             PaymentAtomicLock::forRazorpayOrder((int) $order->id),
             PaymentAtomicLock::razorpayWaitSeconds(),
@@ -116,6 +119,16 @@ class OrderPaymentService
                 return $afterDecision($decision);
             }
         );
+    }
+
+    /**
+     * Customer initiation only. Settlement, refunds, and expiry do not call this.
+     */
+    private function refuseWhenCheckoutDisabled(): void
+    {
+        if (! CheckoutPayments::enabled()) {
+            throw new RuntimeException(CheckoutPayments::UNAVAILABLE_MESSAGE, 503);
+        }
     }
 
     /**

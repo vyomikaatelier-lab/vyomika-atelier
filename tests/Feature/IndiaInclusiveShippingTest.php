@@ -8,7 +8,9 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\OrderPaymentService;
 use App\Services\TurnstileService;
+use App\Support\CheckoutPayments;
 use App\Support\IndiaDelivery;
 use App\Support\OrderAccess;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -17,6 +19,7 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
+use RuntimeException;
 use Tests\Concerns\ActsAsAdmin;
 use Tests\TestCase;
 
@@ -677,6 +680,256 @@ class IndiaInclusiveShippingTest extends TestCase
             "filter_var(env('LEADS_DAILY_SUMMARY_ENABLED', false), FILTER_VALIDATE_BOOLEAN)",
             $leads
         );
+    }
+
+    public function test_disabled_checkout_empty_cart_post_does_not_resume_or_create_a_gateway_id(): void
+    {
+        Http::preventStrayRequests();
+        Http::fake(fn () => throw new RuntimeException('No gateway request is allowed while checkout is disabled.'));
+        config(['checkout.payments_enabled' => false]);
+
+        $user = User::factory()->create();
+        $order = $this->pendingOrder($user, [
+            'country' => 'India',
+            'shipping_cost' => 0,
+            'subtotal' => 1000,
+            'total' => 1000,
+            'razorpay_order_id' => null,
+        ]);
+        $this->addItem($order, 4);
+        $before = $this->staleSnapshot($order);
+
+        $this->actingAs($user)
+            ->post(route('checkout.store'), [])
+            ->assertRedirect(route('checkout.index'))
+            ->assertSessionHas('error', CheckoutPayments::UNAVAILABLE_MESSAGE)
+            ->assertSessionMissing('info')
+            ->assertSessionMissing('resume_payment_url');
+
+        $this->assertSame($before, $this->staleSnapshot($order));
+        $this->assertNull($order->fresh()->razorpay_order_id);
+        Http::assertNothingSent();
+    }
+
+    public function test_disabled_checkout_does_not_resume_an_order_that_already_has_a_gateway_id(): void
+    {
+        Http::preventStrayRequests();
+        Http::fake(fn () => throw new RuntimeException('No gateway request is allowed while checkout is disabled.'));
+        config(['checkout.payments_enabled' => false]);
+
+        $user = User::factory()->create();
+        $order = $this->pendingOrder($user, [
+            'country' => 'India',
+            'shipping_cost' => 0,
+            'subtotal' => 1000,
+            'total' => 1000,
+            'razorpay_order_id' => 'order_already_started',
+        ]);
+        $this->addItem($order, 4);
+        $before = $this->staleSnapshot($order);
+
+        $this->actingAs($user)
+            ->post(route('checkout.store'), [])
+            ->assertRedirect(route('checkout.index'))
+            ->assertSessionHas('error', CheckoutPayments::UNAVAILABLE_MESSAGE)
+            ->assertSessionMissing('resume_payment_url');
+
+        $pay = $this->actingAs($user)->get(route('checkout.pay', $order));
+        $pay->assertOk();
+        $pay->assertSee(CheckoutPayments::UNAVAILABLE_MESSAGE, false);
+        $pay->assertDontSee('order_already_started', false);
+        $pay->assertDontSee('rzp_test_key', false);
+        $pay->assertDontSee('checkout.razorpay.com', false);
+
+        $api = $this->actingAs($user)->postJson(route('api.create-order'), ['store_order_id' => $order->id]);
+        $api->assertStatus(503)->assertJson(['message' => CheckoutPayments::UNAVAILABLE_MESSAGE]);
+        $this->assertStringNotContainsString('order_already_started', $api->getContent());
+        $this->assertStringNotContainsString('rzp_test_key', $api->getContent());
+
+        $this->assertSame($before, $this->staleSnapshot($order));
+        Http::assertNothingSent();
+    }
+
+    public function test_disabled_checkout_blocks_initiation_paths_and_the_service_boundary(): void
+    {
+        Http::preventStrayRequests();
+        Http::fake(fn () => throw new RuntimeException('No gateway request is allowed while checkout is disabled.'));
+        config(['checkout.payments_enabled' => false]);
+
+        [$user, $product] = $this->shopperWithProduct(1500, 'Disabled India Shelf');
+        $beforeOrders = Order::query()->count();
+
+        $this->actingAs($user)
+            ->withSession($this->cartSession($product))
+            ->post(route('checkout.store'), $this->addressPayload())
+            ->assertRedirect(route('checkout.index'))
+            ->assertSessionHas('error', CheckoutPayments::UNAVAILABLE_MESSAGE);
+        $this->assertSame($beforeOrders, Order::query()->count());
+
+        $pending = $this->pendingOrder($user, ['razorpay_order_id' => null]);
+        $this->addItem($pending, 3);
+        $before = $this->staleSnapshot($pending);
+
+        $this->actingAs($user)
+            ->get(route('checkout.pay', $pending))
+            ->assertOk()
+            ->assertSee(CheckoutPayments::UNAVAILABLE_MESSAGE, false)
+            ->assertDontSee('rzp_test_key', false);
+
+        $this->actingAs($user)
+            ->postJson(route('api.create-order'), ['store_order_id' => $pending->id])
+            ->assertStatus(503)
+            ->assertJson(['message' => CheckoutPayments::UNAVAILABLE_MESSAGE]);
+
+        $service = app(OrderPaymentService::class);
+        foreach (['ensureRazorpayOrderId', 'assertInitiationAllowed', 'razorpayCheckoutPayload'] as $method) {
+            try {
+                $service->{$method}($pending);
+                $this->fail($method.' bypassed the disabled checkout switch.');
+            } catch (RuntimeException $exception) {
+                $this->assertSame(CheckoutPayments::UNAVAILABLE_MESSAGE, $exception->getMessage());
+                $this->assertSame(503, $exception->getCode());
+            }
+        }
+
+        $this->assertSame($before, $this->staleSnapshot($pending));
+        Http::assertNothingSent();
+    }
+
+    public function test_disabled_checkout_still_saves_an_international_enquiry_when_mail_fails(): void
+    {
+        Http::preventStrayRequests();
+        Mail::shouldReceive('raw')->once()->andThrow(new RuntimeException('SMTP 550'));
+        config(['checkout.payments_enabled' => false]);
+
+        [$user, $product] = $this->shopperWithProduct(4200, 'Disabled Enquiry Partition');
+
+        $this->actingAs($user)
+            ->withSession($this->cartSession($product))
+            ->post(route('checkout.store'), array_merge($this->addressPayload(), [
+                'country' => 'United Kingdom',
+                'state' => 'England',
+                'city' => 'London',
+                'pincode' => 'SW1A 1AA',
+                'customer_phone' => '02079460958',
+            ], $this->protectionFields()))
+            ->assertRedirect(route('checkout.index'))
+            ->assertSessionHas('success', IndiaDelivery::ENQUIRY_SAVED);
+
+        $this->assertSame(0, Order::query()->count());
+        $this->assertFalse(config('checkout.payments_enabled'));
+        Http::assertNothingSent();
+
+        $lead = Lead::query()->where('type', 'international_shipping')->firstOrFail();
+        $this->assertTrue($lead->metadata['international_shipping_enquiry']);
+        $this->assertFalse($lead->metadata['payment_started']);
+        $this->assertSame('United Kingdom', $lead->metadata['destination']['country']);
+
+        $this->actingAsAdmin()
+            ->get(route('admin.leads.show', $lead))
+            ->assertOk()
+            ->assertSee('No online payment was taken.', false);
+    }
+
+    public function test_disabled_checkout_still_settles_a_signed_callback_and_webhook(): void
+    {
+        config(['checkout.payments_enabled' => false]);
+        Http::preventStrayRequests();
+        Http::fake(function (Request $request) {
+            $payments = [
+                'pay_disabled_capture' => 'order_disabled_capture',
+                'pay_disabled_callback' => 'order_disabled_callback',
+            ];
+
+            foreach ($payments as $paymentId => $razorpayOrderId) {
+                if (str_ends_with($request->url(), '/payments/'.$paymentId)) {
+                    return Http::response([
+                        'id' => $paymentId,
+                        'order_id' => $razorpayOrderId,
+                        'amount' => 100000,
+                        'currency' => 'INR',
+                        'status' => 'captured',
+                    ], 200);
+                }
+            }
+
+            throw new RuntimeException('Unexpected request '.$request->url());
+        });
+
+        $user = User::factory()->create();
+        $order = $this->pendingOrder($user, [
+            'country' => 'India',
+            'razorpay_order_id' => 'order_disabled_capture',
+            'subtotal' => 1000,
+            'shipping_cost' => 0,
+            'total' => 1000,
+        ]);
+        $product = $this->addItem($order, 4);
+
+        $this->postWebhook([
+            'id' => 'pay_disabled_capture',
+            'order_id' => 'order_disabled_capture',
+            'status' => 'captured',
+            'amount' => 100000,
+            'currency' => 'INR',
+        ])->assertOk()->assertJson(['status' => 'ok']);
+
+        $this->assertSame('paid', $order->fresh()->status);
+        $this->assertSame('pay_disabled_capture', $order->fresh()->payment_id);
+        $this->assertSame(3, $product->fresh()->stock);
+        $this->assertFalse(config('checkout.payments_enabled'));
+
+        $callback = $this->pendingOrder(User::factory()->create(), [
+            'country' => 'India',
+            'razorpay_order_id' => 'order_disabled_callback',
+            'subtotal' => 1000,
+            'shipping_cost' => 0,
+            'total' => 1000,
+        ]);
+        $this->addItem($callback, 2);
+        $signature = hash_hmac('sha256', 'order_disabled_callback|pay_disabled_callback', 'rzp_test_secret');
+
+        $this->post(route('checkout.pay.verify', $callback), [
+            'razorpay_payment_id' => 'pay_disabled_callback',
+            'razorpay_order_id' => 'order_disabled_callback',
+            'razorpay_signature' => $signature,
+        ])->assertRedirect(route('checkout.success', $callback));
+
+        $this->assertSame('paid', $callback->fresh()->status);
+        $this->assertSame('pay_disabled_callback', $callback->fresh()->payment_id);
+        $this->assertFalse(config('checkout.payments_enabled'));
+    }
+
+    public function test_disabled_checkout_does_not_retire_a_stale_shipping_order(): void
+    {
+        Http::preventStrayRequests();
+        Http::fake(fn () => throw new RuntimeException('No gateway request is allowed while checkout is disabled.'));
+        config(['checkout.payments_enabled' => false]);
+
+        [$user, $product] = $this->shopperWithProduct(2500, 'Stale While Disabled');
+        $stale = $this->staleIndianOrder($user);
+        $before = $this->staleSnapshot($stale);
+
+        $this->actingAs($user)
+            ->withSession($this->cartSession($product))
+            ->post(route('checkout.store'), $this->addressPayload())
+            ->assertRedirect(route('checkout.index'))
+            ->assertSessionHas('error', CheckoutPayments::UNAVAILABLE_MESSAGE);
+
+        $this->assertSame($before, $this->staleSnapshot($stale));
+        $this->assertSame('pending', $stale->fresh()->status);
+        $this->assertSame(1, Order::query()->where('user_id', $user->id)->count());
+
+        try {
+            app(OrderPaymentService::class)->retireUntouchedObsoleteShipping($stale);
+            $this->fail('Retirement bypassed the disabled checkout switch.');
+        } catch (RuntimeException $exception) {
+            $this->assertSame(CheckoutPayments::UNAVAILABLE_MESSAGE, $exception->getMessage());
+            $this->assertSame(503, $exception->getCode());
+        }
+
+        $this->assertSame($before, $this->staleSnapshot($stale));
+        Http::assertNothingSent();
     }
 
     /**
