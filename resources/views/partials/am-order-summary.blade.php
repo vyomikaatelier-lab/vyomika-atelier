@@ -6,13 +6,23 @@
     'title' => 'Order Summary',
     'showThumbs' => true,
     'compact' => false,
+    'summaryMode' => 'unselected',
 ])
 
 @php
     $grandTotal = $total ?? ($subtotal + $shipping);
+    $summaryMode = in_array($summaryMode, ['india', 'international', 'unselected'], true) ? $summaryMode : 'unselected';
+    $subtotalLabel = $summaryMode === 'international'
+        ? \App\Support\IndiaDelivery::MERCHANDISE_SUBTOTAL
+        : 'Subtotal';
+    $shippingLabel = match ($summaryMode) {
+        'international' => \App\Support\IndiaDelivery::SHIPPING_QUOTED,
+        'india' => 'Shipping included',
+        default => \App\Support\IndiaDelivery::SHIPPING_INCLUDED_INDIA,
+    };
 @endphp
 
-<aside class="am-order-summary {{ $compact ? 'am-order-summary--compact' : '' }}">
+<aside class="am-order-summary {{ $compact ? 'am-order-summary--compact' : '' }}" data-order-summary data-summary-mode="{{ $summaryMode }}">
     <div class="am-order-summary__card am-card">
         <div class="am-card__body">
             <h2 class="am-order-summary__title">{{ $title }}</h2>
@@ -50,18 +60,18 @@
 
             <div class="am-order-summary__totals">
                 <div class="am-order-summary__row">
-                    <span>Subtotal</span>
+                    <span data-subtotal-label>{{ $subtotalLabel }}</span>
                     <span>₹{{ number_format($subtotal, 0) }}</span>
                 </div>
                 <div class="am-order-summary__row am-order-summary__row--muted">
                     <span>Shipping</span>
-                    <span>{{ $shipping > 0 ? '₹'.number_format($shipping, 0) : 'Free' }}</span>
+                    <span data-shipping-label>{{ $summaryMode === 'unselected' || $shipping <= 0 ? $shippingLabel : '₹'.number_format($shipping, 0) }}</span>
                 </div>
-                <div class="am-order-summary__row am-order-summary__row--total">
+                <div class="am-order-summary__row am-order-summary__row--total" data-payable-total @if($summaryMode === 'international') hidden @endif>
                     <span>Total</span>
                     <span>₹{{ number_format($grandTotal, 0) }}</span>
                 </div>
-                <p class="am-order-summary__tax">Prices include GST where applicable. Delivery is calculated on the server.</p>
+                <p class="am-order-summary__tax">Prices include GST where applicable. {{ $summaryMode === 'international' ? \App\Support\IndiaDelivery::ENQUIRY_HINT : \App\Support\IndiaDelivery::CUSTOMER_NOTE }}</p>
             </div>
         </div>
     </div>

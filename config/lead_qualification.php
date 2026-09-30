@@ -14,6 +14,7 @@ return [
     'catalogue' => 'Catalogue Request',
     'general' => 'General Enquiry',
     'vendor_marketing' => 'Vendor / Marketing',
+    'international_shipping' => 'International shipping',
   ],
 
   'type_to_enquiry' => [
@@ -27,6 +28,7 @@ return [
     'dealer_application' => 'dealer',
     'catalogue_request' => 'catalogue',
     'vendor_proposal' => 'vendor_marketing',
+    'international_shipping' => 'international_shipping',
   ],
 
   'workflow_statuses' => [

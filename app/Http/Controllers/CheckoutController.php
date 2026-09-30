@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Services\AddressValidationService;
 use App\Services\CartService;
+use App\Services\InternationalShippingEnquiry;
 use App\Services\OrderNotificationService;
 use App\Services\OrderPaymentService;
 use App\Services\PendingOrderExpiry;
@@ -15,6 +16,7 @@ use App\Support\CartGuard;
 use App\Support\CheckoutCustomer;
 use App\Support\CheckoutPayments;
 use App\Support\CheckoutSnapshot;
+use App\Support\IndiaDelivery;
 use App\Support\OrderAccess;
 use App\Support\PaymentAtomicLock;
 use App\Support\StorefrontRoutes;
@@ -40,27 +42,19 @@ class CheckoutController extends Controller
         private OrderNotificationService $notifications,
         private AddressValidationService $addresses,
         private OrderPaymentService $payments,
+        private InternationalShippingEnquiry $internationalEnquiries,
     ) {}
 
     public function index()
     {
-        if (! CheckoutPayments::enabled()) {
-            return view('checkout.unavailable');
-        }
-
-        if ($this->cart->checkoutIsEmpty()) {
-            return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
-        }
-
         $user = Auth::user();
         $items = $this->cart->checkoutItems();
         $subtotal = $this->cart->checkoutSubtotal();
-        $shipping = $subtotal >= 5000 ? 0 : 199;
-        $total = $subtotal + $shipping;
+        $shipping = 0.0;
+        $total = $subtotal;
         $defaultAddress = $user?->addresses()->where('is_default', true)->first()
             ?? $user?->addresses()->first();
-
-        return view('checkout.index', [
+        $checkoutView = [
             'items' => $items,
             'subtotal' => $subtotal,
             'shipping' => $shipping,
@@ -68,15 +62,22 @@ class CheckoutController extends Controller
             'razorpayEnabled' => $this->razorpay->isConfigured(),
             'defaultAddress' => $defaultAddress,
             'user' => $user,
-        ]);
+            'paymentsEnabled' => CheckoutPayments::enabled(),
+        ];
+
+        if (! CheckoutPayments::enabled()) {
+            return view('checkout.unavailable', $checkoutView);
+        }
+
+        if ($this->cart->checkoutIsEmpty()) {
+            return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
+        }
+
+        return view('checkout.index', $checkoutView);
     }
 
     public function store(Request $request)
     {
-        if (! CheckoutPayments::enabled()) {
-            return redirect()->route('checkout.index');
-        }
-
         if ($message = CheckoutCustomer::denialMessage(Auth::user())) {
             return redirect()->route('checkout.index')->with('error', $message);
         }
@@ -86,17 +87,15 @@ class CheckoutController extends Controller
             if ($user) {
                 $this->expireStalePendingOrders((int) $user->id);
                 $existing = $this->activePayableOrderFor((int) $user->id);
-                if ($existing) {
+                if ($response = $this->responseForObsoleteShipping($existing, false)) {
+                    return $response;
+                }
+                if ($existing && IndiaDelivery::canInitiateSelfServicePayment($existing)) {
                     return $this->resumePayableOrder($existing);
                 }
             }
 
             return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
-        }
-
-        if (! $this->razorpay->isConfigured()) {
-            return redirect()->route('checkout.index')
-                ->with('error', config('addresses.payment_unavailable_message'));
         }
 
         $ineligible = $this->cart->checkoutItems()->first(
@@ -125,6 +124,26 @@ class CheckoutController extends Controller
                 ->withInput();
         }
 
+        if (! IndiaDelivery::isIndia($validatedAddress['country'] ?? null)) {
+            return $this->internationalEnquiries->store(
+                $request,
+                $this->cart->checkoutItems(),
+                $validatedAddress,
+            );
+        }
+
+        if (! CheckoutPayments::enabled()) {
+            return redirect()
+                ->route('checkout.index')
+                ->withInput()
+                ->with('error', CheckoutPayments::UNAVAILABLE_MESSAGE);
+        }
+
+        if (! $this->razorpay->isConfigured()) {
+            return redirect()->route('checkout.index')
+                ->with('error', config('addresses.payment_unavailable_message'));
+        }
+
         $snapshot = $this->addresses->toSnapshot($validatedAddress);
         $user = Auth::user();
 
@@ -139,8 +158,8 @@ class CheckoutController extends Controller
         $source = $fromBuyNow ? CheckoutSnapshot::SOURCE_BUY_NOW : CheckoutSnapshot::SOURCE_CART;
         $items = $this->cart->checkoutItems();
         $subtotal = $this->cart->checkoutSubtotal();
-        $shipping = $subtotal >= 5000 ? 0 : 199;
-        $total = $subtotal + $shipping;
+        $shipping = 0.0;
+        $total = $subtotal;
 
         if ($subtotal <= 0 || $total <= 0) {
             return redirect()->route('cart.index')
@@ -262,6 +281,19 @@ class CheckoutController extends Controller
 
         $existing = $this->activePayableOrderFor($userId);
 
+        if ($existing && ! IndiaDelivery::isIndia($existing->country)) {
+            $existing = null;
+        }
+
+        if ($response = $this->responseForObsoleteShipping($existing, true)) {
+            return $response;
+        }
+
+        $existing = $this->activePayableOrderFor($userId);
+        if ($existing && ! IndiaDelivery::isIndia($existing->country)) {
+            $existing = null;
+        }
+
         if ($existing) {
             if (CheckoutSnapshot::matches(CheckoutSnapshot::fromOrder($existing), $desiredSnapshot)) {
                 $redirect = $this->resumePayableOrder($existing);
@@ -299,6 +331,37 @@ class CheckoutController extends Controller
 
         return redirect()->route('checkout.pay', $order)
             ->with('order_email_sent', $emailSent);
+    }
+
+    private function responseForObsoleteShipping(?Order $existing, bool $retireUntouched = false): ?RedirectResponse
+    {
+        if (! $existing
+            || ! IndiaDelivery::isIndia($existing->country)
+            || ! IndiaDelivery::hasObsoleteShippingCharge($existing)) {
+            return null;
+        }
+
+        try {
+            if ($retireUntouched) {
+                $this->payments->retireUntouchedObsoleteShipping($existing);
+            } else {
+                $this->payments->assertInitiationAllowed($existing);
+            }
+        } catch (LockTimeoutException) {
+            return redirect()->route('checkout.index')->with('error', self::MSG_CHECKOUT_IN_PROGRESS);
+        } catch (RuntimeException $e) {
+            if ($retireUntouched && $e->getMessage() === IndiaDelivery::STALE_ORDER_RETIRED) {
+                session()->flash('info', IndiaDelivery::STALE_ORDER_RETIRED);
+
+                return null;
+            }
+
+            return redirect()
+                ->route($retireUntouched ? 'checkout.index' : 'cart.index')
+                ->with('error', $e->getMessage() ?: IndiaDelivery::STALE_SHIPPING_SUPPORT);
+        }
+
+        return null;
     }
 
     private function resumePayableOrder(Order $order): RedirectResponse

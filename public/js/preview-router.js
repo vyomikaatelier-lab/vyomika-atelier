@@ -995,7 +995,7 @@ ${hero ? serviceHeroHtml(hero) : pageHero('Studio', service.name, meta.action, f
       <ul class="am-pdp-shipping-notes">
         <li>
           <svg class="am-pdp-shipping-notes__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-          <span>Estimated delivery: <strong>3–4 weeks</strong> from order confirmation. <a href="/shipping-delivery-policy">Shipping details</a></span>
+          <span>Shipping included within India. For international delivery, our team will confirm shipping charges and estimated delivery time before payment. <a href="/shipping-delivery-policy">Shipping details</a></span>
         </li>
       </ul>
       <div class="am-pdp-safe-checkout">
@@ -1005,7 +1005,6 @@ ${hero ? serviceHeroHtml(hero) : pageHero('Studio', service.name, meta.action, f
           <span class="am-pay-logo am-pay-logo--mastercard" title="Mastercard"><svg viewBox="0 0 32 20"><circle cx="12" cy="10" r="8" fill="#EB001B"/><circle cx="20" cy="10" r="8" fill="#F79E1B" fill-opacity="0.9"/></svg></span>
           <span class="am-pay-logo am-pay-logo--rupay" title="RuPay"><svg viewBox="0 0 56 16"><text x="0" y="12" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#097B44">RuPay</text></svg></span>
           <span class="am-pay-logo am-pay-logo--razorpay" title="Razorpay"><svg viewBox="0 0 72 16"><text x="0" y="12" font-family="Arial, sans-serif" font-size="10" font-weight="700" fill="#072654">Razorpay</text></svg></span>
-          <span class="am-pay-logo am-pay-logo--paypal" title="PayPal"><svg viewBox="0 0 64 16"><text x="0" y="12" font-family="Arial, sans-serif" font-size="11" font-weight="700"><tspan fill="#003087">Pay</tspan><tspan fill="#009CDE">Pal</tspan></text></svg></span>
         </div>
       </div>
     </div>`;
@@ -1401,7 +1400,8 @@ ${pageHero('Products', catLabel, 'Mirror frames, tables, and door hardware — o
         <ul class="am-pdp__trust">
           <li>✓ PVD stainless fabrication</li>
           <li>✓ Secure packaging</li>
-          <li>✓ Estimated delivery: <strong>3–4 weeks</strong></li>
+          <li>✓ Within India, ready stock is an estimate of 5–12 business days.</li>
+          <li>✓ Within India, made-to-order work is an estimate of 15–35 business days.</li>
         </ul>
         ${finishSwatchesHtml()}
         <div class="am-prose am-pdp__desc"><p>${product.description}</p></div>
@@ -1420,7 +1420,7 @@ ${pageHero('Products', catLabel, 'Mirror frames, tables, and door hardware — o
     setTitle('Cart');
     const cart = window.AmPreviewCart;
     const items = cart.read();
-    const shipping = cart.subtotal() >= 5000 ? 0 : 199;
+    const shipping = 0;
     document.getElementById('am-main').innerHTML = `
 ${pageHero('Cart', 'Your Cart', items.length ? `${items.length} line item${items.length === 1 ? '' : 's'}` : 'Your cart is empty.')}
 <section class="am-page-body">
@@ -1461,7 +1461,7 @@ ${pageHero('Cart', 'Your Cart', items.length ? `${items.length} line item${items
             </li>`).join('')}</ul>
           <div class="am-order-summary__totals">
             <div class="am-order-summary__row"><span>Subtotal</span><span>${cart.fmt(cart.subtotal())}</span></div>
-            <div class="am-order-summary__row am-order-summary__row--muted"><span>Shipping</span><span>${shipping ? cart.fmt(shipping) : 'Free'}</span></div>
+            <div class="am-order-summary__row am-order-summary__row--muted"><span>Shipping</span><span>${shipping ? cart.fmt(shipping) : 'Shipping included within India'}</span></div>
             <div class="am-order-summary__row am-order-summary__row--total"><span>Total</span><span>${cart.fmt(cart.subtotal() + shipping)}</span></div>
           </div>
         </div></div></aside>
@@ -1515,7 +1515,7 @@ ${pageHero('Cart', 'Your Cart', items.length ? `${items.length} line item${items
     setTitle('Checkout');
     const cart = window.AmPreviewCart;
     const items = cart.read();
-    const shipping = cart.subtotal() >= 5000 ? 0 : 199;
+    const shipping = 0;
     document.getElementById('am-main').innerHTML = `
 ${pageHero('Secure Checkout', 'Checkout', 'Preview mode — form submission is simulated.')}
 <section class="am-page-body">
@@ -1525,7 +1525,7 @@ ${pageHero('Secure Checkout', 'Checkout', 'Preview mode — form submission is s
       <input type="hidden" name="payment_method" value="razorpay">
       <div class="am-card am-checkout-panel"><div class="am-card__body">
         <h2 class="am-checkout-panel__title">Shipping details</h2>
-        <p class="am-checkout-panel__hint">Worldwide delivery · estimated 3–4 weeks after order confirmation</p>
+        <p class="am-checkout-panel__hint">Shipping included within India. For international delivery, our team will confirm shipping charges and estimated delivery time before payment.</p>
         ${addressFormGridHtml()}
       </div></div>
       <div class="am-card am-checkout-panel am-checkout-panel--payment"><div class="am-card__body">
@@ -1547,7 +1547,7 @@ ${pageHero('Secure Checkout', 'Checkout', 'Preview mode — form submission is s
           </li>`).join('')}</ul>
         <div class="am-order-summary__totals">
           <div class="am-order-summary__row"><span>Subtotal</span><span>${cart.fmt(cart.subtotal())}</span></div>
-          <div class="am-order-summary__row am-order-summary__row--muted"><span>Shipping</span><span>${shipping ? cart.fmt(shipping) : 'Free'}</span></div>
+          <div class="am-order-summary__row am-order-summary__row--muted"><span>Shipping</span><span>${shipping ? cart.fmt(shipping) : 'Shipping included within India'}</span></div>
           <div class="am-order-summary__row am-order-summary__row--total"><span>Total</span><span>${cart.fmt(cart.subtotal() + shipping)}</span></div>
         </div>
       </div></div></aside>
@@ -1632,7 +1632,7 @@ ${pageHero('Secure Checkout', 'Checkout', 'Preview mode — form submission is s
           <div class="am-prose am-pdp-tabs__prose">
             <h3>Product Specifications</h3>
             <dl class="am-pdp-spec-table">${specRows}
-              <div><dt>Delivery</dt><dd>3–4 weeks — Pan-India from Mumbai studio</dd></div>
+              <div><dt>Delivery</dt><dd>Within India, ready stock is an estimate of 5–12 business days. Within India, made-to-order work is an estimate of 15–35 business days.</dd></div>
             </dl>
           </div>
         </div>
@@ -1650,10 +1650,10 @@ ${pageHero('Secure Checkout', 'Checkout', 'Preview mode — form submission is s
         <div class="am-pdp-tabs__panel" data-am-panel="shipping" hidden>
           <div class="am-prose am-pdp-tabs__prose">
             <h3>Shipping</h3>
-            <p>Fabrication from our Mumbai studio with delivery across India. Estimated lead time: <strong>3–4 weeks</strong> from order confirmation.</p>
+            <p>Shipping included within India. For international delivery, our team will confirm shipping charges and estimated delivery time before payment.</p>
             <ul class="am-pdp-tabs__care-list">
-              <li><strong>Metro cities:</strong> Door delivery with installation support on request</li>
-              <li><strong>Other locations:</strong> Pan-India courier or freight partner</li>
+              <li>Within India, ready stock is an estimate of 5–12 business days.</li>
+              <li>Within India, made-to-order work is an estimate of 15–35 business days.</li>
               <li><strong>Made to order:</strong> All items are custom fabricated — no returns on bespoke metalwork</li>
             </ul>
             <p><a href="/shipping-delivery-policy">Full shipping policy →</a></p>
@@ -2432,7 +2432,8 @@ ${finishesHtml ? `<section class="am-section am-section--white"><div class="am-c
         <ul class="am-pdp__trust">
           <li>✓ PVD stainless frame fabrication</li>
           <li>✓ Secure crated packaging</li>
-          <li>✓ Estimated delivery: <strong>3–4 weeks</strong></li>
+          <li>✓ Within India, ready stock is an estimate of 5–12 business days.</li>
+          <li>✓ Within India, made-to-order work is an estimate of 15–35 business days.</li>
         </ul>
         ${highlightsHtml ? `<ul class="am-mirror-frames-highlights">${highlightsHtml}</ul>` : ''}
         ${finishSwatchesHtml()}

@@ -70,7 +70,7 @@
                         <div><dt>Finish options</dt><dd>8 PVD finishes available</dd></div>
                         <div><dt>Fabrication</dt><dd>Custom dimensions from Delhi studio</dd></div>
                     @endif
-                    <div><dt>Delivery</dt><dd>3–4 weeks — Pan-India from Delhi studio</dd></div>
+                    <div><dt>Delivery</dt><dd>{{ \App\Support\IndiaDelivery::READY_STOCK_ESTIMATE }} {{ \App\Support\IndiaDelivery::MADE_TO_ORDER_ESTIMATE }}</dd></div>
                 </dl>
                 @endif
             </div>
@@ -120,11 +120,10 @@
                 </ul>
                 @else
                 <h3>Shipping</h3>
-                <p>Fabrication from our Delhi studio with secure packaging and delivery to major cities across India.</p>
+                <p>{{ \App\Support\IndiaDelivery::CUSTOMER_NOTE }}</p>
                 <ul class="am-pdp-tabs__care-list">
-                    <li><strong>Lead time:</strong> 3–4 weeks from order confirmation</li>
-                    <li><strong>Metro cities:</strong> Door delivery with installation support on request</li>
-                    <li><strong>Other locations:</strong> Pan-India courier or freight partner</li>
+                    <li>{{ \App\Support\IndiaDelivery::READY_STOCK_ESTIMATE }}</li>
+                    <li>{{ \App\Support\IndiaDelivery::MADE_TO_ORDER_ESTIMATE }}</li>
                     <li><strong>Made to order:</strong> All items are custom fabricated — no returns on bespoke metalwork</li>
                 </ul>
                 <p><a href="{{ route('legal.shipping') }}">Full shipping policy →</a></p>

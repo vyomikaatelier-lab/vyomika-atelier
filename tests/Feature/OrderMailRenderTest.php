@@ -73,6 +73,21 @@ class OrderMailRenderTest extends TestCase
         $this->assertStringContainsString('Brushed Brass', $html);
         $this->assertStringContainsString('36 x 24 in', $html);
         $this->assertStringContainsString('Slim Partition', $html);
+        $this->assertStringContainsString('Shipping:', $html);
+        $this->assertStringContainsString('₹199', $html);
+        $this->assertStringContainsString('Total:', $html);
+        $this->assertStringContainsString('₹12,199', $html);
+        $this->assertMailAlternatives($order, '₹199', '₹12,199');
+
+        $order->forceFill(['shipping_cost' => 0, 'total' => 12000])->save();
+        $included = $order->fresh('items');
+        $includedHtml = (new OrderReceivedMail($included))->render();
+        $this->assertStringContainsString('Shipping:', $includedHtml);
+        $this->assertStringContainsString('Included', $includedHtml);
+        $this->assertStringContainsString('Total:', $includedHtml);
+        $this->assertStringContainsString('₹12,000', $includedHtml);
+        $this->assertStringNotContainsString('₹199', $includedHtml);
+        $this->assertMailAlternatives($included, 'Included', '₹12,000');
     }
 
     public function test_admin_new_order_mail_renders(): void
@@ -93,6 +108,29 @@ class OrderMailRenderTest extends TestCase
 
         $this->assertStringContainsString($order->order_number, $html);
         $this->assertStringContainsString('Slim Partition', $html);
+        $this->assertStringContainsString('Shipping:', $html);
+        $this->assertStringContainsString('₹199', $html);
+        $this->assertStringContainsString('Total:', $html);
+        $this->assertStringContainsString('₹12,199', $html);
+        $this->assertMailAlternatives($order, '₹199', '₹12,199', 'emails.orders.payment-successful');
+    }
+
+    private function assertMailAlternatives(Order $order, string $shipping, string $total, string $view = 'emails.orders.received'): void
+    {
+        $text = (string) app(\Illuminate\Mail\Markdown::class)->renderText($view, [
+            'order' => $order,
+            'supportEmail' => 'studio@example.com',
+        ]);
+
+        $this->assertStringContainsString('**Shipping:** '.$shipping, $text);
+        $this->assertStringContainsString('**Total:** '.$total, $text);
+        $this->assertStringNotContainsString('\\', $text);
+        $this->assertDoesNotMatchRegularExpression('/Shipping:\*\* '.$this->quote($shipping).'[ \t]+\n/', $text);
+    }
+
+    private function quote(string $value): string
+    {
+        return preg_quote($value, '/');
     }
 
     public function test_admin_payment_received_mail_renders(): void

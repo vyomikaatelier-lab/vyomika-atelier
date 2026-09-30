@@ -6,6 +6,7 @@ use App\Exceptions\RazorpayReconciliationRequiredException;
 use App\Models\Order;
 use App\Services\StockAvailability;
 use App\Support\CartGuard;
+use App\Support\IndiaDelivery;
 use App\Support\PaymentAtomicLock;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -35,84 +36,196 @@ class OrderPaymentService
     }
 
     /**
+     * Read-only eligibility check. Does not cancel the order or change totals.
+     * An existing gateway id is not returned until the order is eligible.
+     */
+    public function assertInitiationAllowed(Order $order): void
+    {
+        $this->underInitiationLock($order, function (array $decision): void {
+            $this->throwIfInitiationRefused($decision);
+        });
+    }
+
+    /**
+     * Cancel one untouched obsolete Indian order. Caller is the authenticated
+     * checkout POST, which already holds the customer lock when required.
+     */
+    public function retireUntouchedObsoleteShipping(Order $order): void
+    {
+        $this->underInitiationLock($order, function (array $decision): void {
+            $this->throwIfInitiationRefused($decision);
+        }, true);
+    }
+
+    /**
      * One local order may receive only one Razorpay order ID.
      * Concurrent callers wait, re-read, and reuse the persisted ID.
      */
     public function ensureRazorpayOrderId(Order $order): string
     {
-        if (filled($order->razorpay_order_id)) {
-            return (string) $order->razorpay_order_id;
-        }
+        return $this->underInitiationLock($order, function (array $decision) use ($order): string {
+            $this->throwIfInitiationRefused($decision);
 
+            if ($decision['type'] === 'reuse') {
+                return (string) $decision['id'];
+            }
+
+            return $this->createGatewayOrder($order);
+        });
+    }
+
+    /**
+     * @param  callable(array{type: string, id?: string}): mixed  $afterDecision
+     */
+    private function underInitiationLock(Order $order, callable $afterDecision, bool $retireUntouched = false): mixed
+    {
         return PaymentAtomicLock::run(
             PaymentAtomicLock::forRazorpayOrder((int) $order->id),
             PaymentAtomicLock::razorpayWaitSeconds(),
-            function () use ($order) {
-                $locked = Order::query()->find($order->id);
+            function () use ($order, $afterDecision, $retireUntouched) {
+                $decision = DB::transaction(function () use ($order, $retireUntouched) {
+                    $locked = Order::query()->whereKey($order->id)->lockForUpdate()->first();
 
-                if (! $locked) {
-                    throw new RuntimeException('Order not found.', 404);
-                }
-
-                if (filled($locked->razorpay_order_id)) {
-                    return (string) $locked->razorpay_order_id;
-                }
-
-                $result = $this->razorpay->createPaymentOrder(
-                    RazorpayService::amountPaiseFromRupees($locked->total),
-                    $locked->order_number,
-                    [
-                        'order_id' => (string) $locked->id,
-                        'customer_email' => $locked->customer_email,
-                    ]
-                );
-
-                if (! $result['success']) {
-                    throw new RuntimeException($result['message'], $result['status']);
-                }
-
-                $locked->refresh();
-
-                if (filled($locked->razorpay_order_id)) {
-                    return (string) $locked->razorpay_order_id;
-                }
-
-                $newId = (string) ($result['data']['order_id'] ?? '');
-
-                if ($newId === '') {
-                    throw new RuntimeException('Could not create Razorpay order.', 500);
-                }
-
-                try {
-                    $locked->update(['razorpay_order_id' => $newId]);
-                } catch (UniqueConstraintViolationException $e) {
-                    $locked->refresh();
-
-                    if (filled($locked->razorpay_order_id)) {
-                        return (string) $locked->razorpay_order_id;
+                    if (! $locked) {
+                        throw new RuntimeException('Order not found.', 404);
                     }
 
-                    throw $e;
-                } catch (\Throwable $e) {
-                    $this->logCreatePersistFailed($locked, $newId, $e);
+                    if (! IndiaDelivery::isIndia($locked->country)) {
+                        return ['type' => 'blocked'];
+                    }
 
-                    throw new RuntimeException(
-                        'Could not start payment. Please try again.',
-                        500,
-                        $e
-                    );
-                }
+                    if (IndiaDelivery::hasObsoleteShippingCharge($locked)) {
+                        if ($retireUntouched && PendingOrderExpiry::cancelUntouchedObsoleteShipping($locked)) {
+                            return ['type' => 'retired'];
+                        }
 
-                $persisted = (string) ($locked->fresh()->razorpay_order_id ?? '');
+                        if ($locked->isPending() && $locked->lacksPaymentEvidence()) {
+                            return ['type' => 'refresh'];
+                        }
 
-                if ($persisted === '') {
-                    $this->logCreatePersistFailed($locked, $newId, new RuntimeException('razorpay_order_id missing after update'));
+                        return ['type' => 'support'];
+                    }
 
-                    throw new RuntimeException('Could not start payment. Please try again.', 500);
-                }
+                    if (filled($locked->razorpay_order_id)) {
+                        return ['type' => 'reuse', 'id' => (string) $locked->razorpay_order_id];
+                    }
 
-                return $persisted;
+                    return ['type' => 'create'];
+                });
+
+                return $afterDecision($decision);
             }
+        );
+    }
+
+    /**
+     * @param  array{type: string, id?: string}  $decision
+     */
+    private function throwIfInitiationRefused(array $decision): void
+    {
+        if ($decision['type'] === 'blocked') {
+            throw new RuntimeException(IndiaDelivery::PAYMENT_BLOCKED, 422);
+        }
+
+        if ($decision['type'] === 'refresh') {
+            throw new RuntimeException(IndiaDelivery::STALE_ORDER_REFRESH, 422);
+        }
+
+        if ($decision['type'] === 'retired') {
+            throw new RuntimeException(IndiaDelivery::STALE_ORDER_RETIRED, 422);
+        }
+
+        if ($decision['type'] === 'support') {
+            throw new RuntimeException(IndiaDelivery::STALE_SHIPPING_SUPPORT, 422);
+        }
+    }
+
+    private function createGatewayOrder(Order $order): string
+    {
+        $locked = Order::query()->find($order->id);
+
+        if (! $locked) {
+            throw new RuntimeException('Order not found.', 404);
+        }
+
+        $this->refuseIneligibleGatewayReuse($locked);
+
+        if (filled($locked->razorpay_order_id)) {
+            return (string) $locked->razorpay_order_id;
+        }
+
+        $result = $this->razorpay->createPaymentOrder(
+            RazorpayService::amountPaiseFromRupees($locked->total),
+            $locked->order_number,
+            [
+                'order_id' => (string) $locked->id,
+                'customer_email' => $locked->customer_email,
+            ]
+        );
+
+        if (! $result['success']) {
+            throw new RuntimeException($result['message'], $result['status']);
+        }
+
+        $locked->refresh();
+        $this->refuseIneligibleGatewayReuse($locked);
+
+        if (filled($locked->razorpay_order_id)) {
+            return (string) $locked->razorpay_order_id;
+        }
+
+        $newId = (string) ($result['data']['order_id'] ?? '');
+
+        if ($newId === '') {
+            throw new RuntimeException('Could not create Razorpay order.', 500);
+        }
+
+        try {
+            $locked->update(['razorpay_order_id' => $newId]);
+        } catch (UniqueConstraintViolationException $e) {
+            $locked->refresh();
+            $this->refuseIneligibleGatewayReuse($locked);
+
+            if (filled($locked->razorpay_order_id)) {
+                return (string) $locked->razorpay_order_id;
+            }
+
+            throw $e;
+        } catch (\Throwable $e) {
+            $this->logCreatePersistFailed($locked, $newId, $e);
+
+            throw new RuntimeException(
+                'Could not start payment. Please try again.',
+                500,
+                $e
+            );
+        }
+
+        $persisted = (string) ($locked->fresh()->razorpay_order_id ?? '');
+
+        if ($persisted === '') {
+            $this->logCreatePersistFailed($locked, $newId, new RuntimeException('razorpay_order_id missing after update'));
+
+            throw new RuntimeException('Could not start payment. Please try again.', 500);
+        }
+
+        return $persisted;
+    }
+
+    /**
+     * A stored gateway id is returned only after the order is still eligible.
+     */
+    private function refuseIneligibleGatewayReuse(Order $locked): void
+    {
+        if (IndiaDelivery::canInitiateSelfServicePayment($locked)) {
+            return;
+        }
+
+        throw new RuntimeException(
+            IndiaDelivery::isIndia($locked->country)
+                ? IndiaDelivery::STALE_SHIPPING_SUPPORT
+                : IndiaDelivery::PAYMENT_BLOCKED,
+            422
         );
     }
 

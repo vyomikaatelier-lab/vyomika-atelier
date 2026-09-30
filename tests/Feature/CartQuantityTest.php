@@ -174,6 +174,7 @@ class CartQuantityTest extends TestCase
         $order = Order::query()->first();
         $this->assertNotNull($order);
         $this->assertSame(2500.0, (float) $order->subtotal);
-        $this->assertSame(2699.0, (float) $order->total);
+        $this->assertSame(0.0, (float) $order->shipping_cost);
+        $this->assertSame(2500.0, (float) $order->total);
     }
 }

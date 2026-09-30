@@ -65,7 +65,7 @@
                 <ul class="am-pdp__trust">
                     <li>✓ PVD stainless frame fabrication</li>
                     <li>✓ Secure crated packaging</li>
-                    <li>✓ Estimated delivery: <strong>3–4 weeks</strong></li>
+                    <li>✓ {{ \App\Support\IndiaDelivery::READY_STOCK_ESTIMATE }} {{ \App\Support\IndiaDelivery::MADE_TO_ORDER_ESTIMATE }}</li>
                 </ul>
 
                 @php

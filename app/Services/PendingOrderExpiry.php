@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Order;
+use App\Support\IndiaDelivery;
 use App\Support\PaymentAtomicLock;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\DB;
@@ -66,5 +67,34 @@ class PendingOrderExpiry
 
             return $affected === 1;
         });
+    }
+
+    /**
+     * Cancel one pending India order that still carries a separate shipping
+     * charge and has no payment evidence. Caller holds the Razorpay order
+     * cache lock and the order row lock. Totals and items are left as stored.
+     */
+    public static function cancelUntouchedObsoleteShipping(Order $locked): bool
+    {
+        if (! $locked->isPending()
+            || ! IndiaDelivery::isIndia($locked->country)
+            || ! IndiaDelivery::hasObsoleteShippingCharge($locked)
+            || ! $locked->lacksPaymentEvidence()) {
+            return false;
+        }
+
+        $affected = Order::query()
+            ->whereKey($locked->id)
+            ->where('status', 'pending')
+            ->whereNull('payment_id')
+            ->whereNull('razorpay_order_id')
+            ->whereNull('stock_deducted_at')
+            ->where('shipping_cost', '>', 0)
+            ->update([
+                'status' => 'cancelled',
+                'expires_at' => null,
+            ]);
+
+        return $affected === 1;
     }
 }

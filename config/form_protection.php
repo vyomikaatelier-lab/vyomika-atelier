@@ -66,6 +66,7 @@ return [
         'catalogue_request' => 'catalogue_request',
         'vendor_proposal' => 'vendor_proposal',
         'dealer_application' => 'dealer_application',
+        'international_shipping' => 'general_enquiry',
         'account_register' => 'otp_send',
         'account_login_otp' => 'otp_send',
         'account_forgot_otp' => 'otp_send',

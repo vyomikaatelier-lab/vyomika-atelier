@@ -377,6 +377,33 @@ class Order extends Model
         return filled($this->payment_id);
     }
 
+    /**
+     * No gateway, capture, stock, reconciliation, or refund evidence.
+     * A stored shipping total by itself is not payment evidence.
+     */
+    public function lacksPaymentEvidence(): bool
+    {
+        if (filled($this->razorpay_order_id) || filled($this->payment_id) || $this->stock_deducted_at !== null) {
+            return false;
+        }
+
+        if ($this->hasReconciliationEvidence()) {
+            return false;
+        }
+
+        if ((int) $this->captured_amount_paise !== 0
+            || (int) $this->refunded_amount_paise !== 0
+            || (int) $this->refund_pending_amount_paise !== 0) {
+            return false;
+        }
+
+        if (! in_array($this->refund_status, [null, '', 'none'], true)) {
+            return false;
+        }
+
+        return ! $this->refunds()->exists();
+    }
+
     public function paymentAwareStatusLabel(): string
     {
         if (

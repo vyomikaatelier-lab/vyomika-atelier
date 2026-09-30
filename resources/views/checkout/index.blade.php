@@ -15,6 +15,14 @@
 
         @include('partials.am-checkout-steps', ['current' => 2])
 
+        @if(session('success'))
+        <p class="am-checkout-notice" role="status">{{ session('success') }}</p>
+        @endif
+        @if(session('info'))
+        <p class="am-checkout-notice" role="status">{{ session('info') }}</p>
+        @endif
+        @include('partials.am-enquiry-receipt')
+
         @if(session('error'))
         <p class="am-checkout-notice am-checkout-notice--error" role="alert">{{ session('error') }}</p>
         @endif
@@ -48,16 +56,22 @@
             $addrMeta = $addr ? \App\Models\CustomerAddress::decodeLine2($addr->address_line2) : ['company' => '', 'country' => 'India'];
             $checkoutName = old('customer_name', $addr?->name ?? $user?->name ?? '');
             $checkoutParts = $checkoutName ? explode(' ', $checkoutName, 2) : ['', ''];
+            $selectedCountry = old('country', $addr?->country ?? $addrMeta['country'] ?? 'India');
+            $destinationIsIndia = \App\Support\IndiaDelivery::isIndia($selectedCountry);
+            $summaryMode = $destinationIsIndia ? 'india' : 'international';
         @endphp
 
         <form action="{{ route('checkout.store') }}" method="POST" class="am-checkout-stack am-checkout-form am-address-form">
             @csrf
             <input type="hidden" name="payment_method" value="razorpay">
+            <x-form-protection-fields form-key="international_shipping" :show-intent="false" />
+            <input type="hidden" name="enquiry_intent" value="general_enquiry">
 
             <div class="am-card am-checkout-panel">
                 <div class="am-card__body">
                     <h2 class="am-checkout-panel__title">Shipping details</h2>
-                    <p class="am-checkout-panel__hint">Worldwide delivery · estimated 3–4 weeks after order confirmation</p>
+                    <p class="am-checkout-panel__hint" data-destination-hint>{{ $destinationIsIndia ? \App\Support\IndiaDelivery::CUSTOMER_NOTE : \App\Support\IndiaDelivery::ENQUIRY_HINT }}</p>
+                    <p class="am-checkout-panel__hint">{{ \App\Support\IndiaDelivery::READY_STOCK_ESTIMATE }} {{ \App\Support\IndiaDelivery::MADE_TO_ORDER_ESTIMATE }}</p>
 
                     <div class="am-checkout-form__address">
                         @include('partials.am-address-form-grid', [
@@ -94,7 +108,7 @@
             <div class="am-card am-checkout-panel am-checkout-panel--payment">
                 <div class="am-card__body">
                     <h2 class="am-checkout-panel__title">Payment</h2>
-                    <p class="am-checkout-panel__hint">Pay securely online with UPI or card after you place the order.</p>
+                    <p class="am-checkout-panel__hint" data-payment-hint>{{ $destinationIsIndia ? 'India orders are paid with Razorpay (UPI, card, or net banking).' : 'International delivery is saved as an enquiry. Our team confirms shipping before payment.' }}</p>
                     <div class="am-checkout-pay-badges" aria-label="Accepted payment methods">
                         <span class="am-checkout-pay-badge">UPI</span>
                         <span class="am-checkout-pay-badge">Debit / Credit Card</span>
@@ -110,13 +124,52 @@
                 'shipping' => $shipping,
                 'total' => $total,
                 'compact' => true,
+                'summaryMode' => $summaryMode,
             ])
 
             <div class="am-checkout-stack__actions">
-                <button type="submit" class="am-btn am-btn--primary am-btn--full am-btn--lg" @disabled(!$razorpayEnabled)>Continue to Payment</button>
+                <button type="submit" class="am-btn am-btn--primary am-btn--full am-btn--lg" data-checkout-submit data-pay-label="Continue to Payment" data-enquiry-label="Save shipping enquiry" data-razorpay-ready="{{ $razorpayEnabled ? '1' : '0' }}" @disabled($destinationIsIndia && !$razorpayEnabled)>{{ $destinationIsIndia ? 'Continue to Payment' : 'Save shipping enquiry' }}</button>
                 <a href="{{ route('cart.index') }}" class="am-btn am-btn--outline am-btn--full">Back to Cart</a>
             </div>
         </form>
     </div>
 </section>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var select = document.querySelector('[data-country-select]');
+    var button = document.querySelector('[data-checkout-submit]');
+    if (!select || !button) return;
+    var payLabel = button.getAttribute('data-pay-label');
+    var enquiryLabel = button.getAttribute('data-enquiry-label');
+    var razorpayReady = button.getAttribute('data-razorpay-ready') === '1';
+    var hint = document.querySelector('[data-destination-hint]');
+    var paymentHint = document.querySelector('[data-payment-hint]');
+    var indiaHint = @json(\App\Support\IndiaDelivery::CUSTOMER_NOTE);
+    var enquiryHint = @json(\App\Support\IndiaDelivery::ENQUIRY_HINT);
+    var sync = function () {
+        var india = select.value === 'India';
+        button.textContent = india ? payLabel : enquiryLabel;
+        button.disabled = india && !razorpayReady;
+        if (hint) hint.textContent = india ? indiaHint : enquiryHint;
+        if (paymentHint) {
+            paymentHint.textContent = india
+                ? 'India orders are paid with Razorpay (UPI, card, or net banking).'
+                : 'International delivery is saved as an enquiry. Our team confirms shipping before payment.';
+        }
+        document.querySelectorAll('[data-order-summary]').forEach(function (summary) {
+            var subtotal = summary.querySelector('[data-subtotal-label]');
+            var shipping = summary.querySelector('[data-shipping-label]');
+            var payable = summary.querySelector('[data-payable-total]');
+            if (subtotal) subtotal.textContent = india ? 'Subtotal' : @json(\App\Support\IndiaDelivery::MERCHANDISE_SUBTOTAL);
+            if (shipping) shipping.textContent = india ? 'Shipping included' : @json(\App\Support\IndiaDelivery::SHIPPING_QUOTED);
+            if (payable) payable.hidden = !india;
+        });
+    };
+    select.addEventListener('change', sync);
+    sync();
+});
+</script>
+@endpush
