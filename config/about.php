@@ -100,7 +100,7 @@ return [
             ],
             [
                 'title' => 'Reliable Execution',
-                'text' => 'Clear timelines and secure packaging. Within India, ready stock is an estimate of 5–12 business days and made-to-order work is an estimate of 15–35 business days.',
+                'text' => 'Clear timelines and secure packaging. Production and delivery timelines depend on the product and destination. Please refer to the product’s shipping information; our team will confirm the applicable timeline before payment.',
             ],
         ],
     ],

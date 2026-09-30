@@ -71,7 +71,7 @@
                     <span>Total</span>
                     <span>₹{{ number_format($grandTotal, 0) }}</span>
                 </div>
-                <p class="am-order-summary__tax">Prices include GST where applicable. {{ $summaryMode === 'international' ? \App\Support\IndiaDelivery::ENQUIRY_HINT : \App\Support\IndiaDelivery::CUSTOMER_NOTE }}</p>
+                <p class="am-order-summary__tax">Prices include GST where applicable. {{ $summaryMode === 'international' ? \App\Support\IndiaDelivery::ENQUIRY_HINT : \App\Support\IndiaDelivery::SHOP_INDIA_SHIPPING }}</p>
             </div>
         </div>
     </div>

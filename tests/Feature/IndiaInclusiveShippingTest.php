@@ -629,8 +629,11 @@ class IndiaInclusiveShippingTest extends TestCase
         $policy->assertSee('Shipping within India is included in the displayed product price.', false);
         $policy->assertSee('There is no minimum order for that included shipping.', false);
         $policy->assertSee('The website does not calculate an international shipping charge.', false);
-        $policy->assertSee('estimated 5 to 12 business days', false);
-        $policy->assertSee('estimated 15 to 35 business days', false);
+        $policy->assertSee(IndiaDelivery::TIMELINE_CONFIRMATION, false);
+        $policy->assertSee('quoted separately at dispatch and agreed with the client before dispatch', false);
+        $policy->assertDontSee('estimated 5 to 12 business days', false);
+        $policy->assertDontSee('estimated 15 to 35 business days', false);
+        $policy->assertDontSee('15–35 business days', false);
         $policy->assertDontSee('3–4 weeks', false);
 
         config(['checkout.payments_enabled' => false]);

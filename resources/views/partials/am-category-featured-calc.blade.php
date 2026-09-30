@@ -33,7 +33,7 @@
                     'serviceName' => $title,
                     'calcTitle' => $calcTitle,
                 ])
-                @include('partials.am-pdp-checkout-trust')
+                @include('partials.am-pdp-checkout-trust', ['shippingContext' => 'studio'])
             </div>
         </div>
     </div>

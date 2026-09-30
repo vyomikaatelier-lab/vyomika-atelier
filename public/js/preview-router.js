@@ -990,12 +990,21 @@ ${hero ? serviceHeroHtml(hero) : pageHero('Studio', service.name, meta.action, f
     }).join('')}</ol></nav>`;
   }
 
-  function checkoutTrustHtml() {
+  const TIMELINE_CONFIRMATION = 'Production and delivery timelines depend on the product and destination. Please refer to the product’s shipping information; our team will confirm the applicable timeline before payment.';
+  const SHOP_SHIPPING_NOTE = 'Shipping within India is included in the displayed price. For international delivery, shipping charges and estimated delivery time are confirmed before payment.';
+  const STUDIO_SHIPPING_NOTE = 'Shipping and packing are quoted separately at dispatch and agreed with the client before dispatch.';
+
+  function shippingNoteHtml(product, context) {
+    if (context === 'studio' || (product && isStudioProduct(product))) return STUDIO_SHIPPING_NOTE;
+    return SHOP_SHIPPING_NOTE;
+  }
+
+  function checkoutTrustHtml(product, context) {
     return `<div class="am-pdp-checkout-trust">
       <ul class="am-pdp-shipping-notes">
         <li>
           <svg class="am-pdp-shipping-notes__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-          <span>Shipping included within India. For international delivery, our team will confirm shipping charges and estimated delivery time before payment. <a href="/shipping-delivery-policy">Shipping details</a></span>
+          <span>${shippingNoteHtml(product, context)} <a href="/shipping-delivery-policy">Shipping details</a></span>
         </li>
       </ul>
       <div class="am-pdp-safe-checkout">
@@ -1035,7 +1044,7 @@ ${hero ? serviceHeroHtml(hero) : pageHero('Studio', service.name, meta.action, f
       { ...service, calc_label: label },
       { name: product.name, slug: product.slug }
     );
-    return `<div class="am-pdp__calc-inline" id="buy">${calcHtml}${checkoutTrustHtml()}</div>`;
+    return `<div class="am-pdp__calc-inline" id="buy">${calcHtml}${checkoutTrustHtml(product)}</div>`;
   }
 
   function shopProducts(data) {
@@ -1385,7 +1394,7 @@ ${pageHero('Products', catLabel, 'Mirror frames, tables, and door hardware — o
       <div class="am-pdp__info">
         ${catHtml}
         <h1 class="am-pdp__title">${product.name}</h1>
-        <p class="am-featured__meta">SKU: ${product.sku} · Pan-India shipping</p>
+        <p class="am-featured__meta">${isStudioProduct(product) ? `SKU: ${product.sku}` : `SKU: ${product.sku} · Pan-India shipping`}</p>
         ${showCalc ? `
         <div class="am-featured__price am-featured__price--sqft">
           <div class="am-pdp__sqft-price">
@@ -1400,14 +1409,13 @@ ${pageHero('Products', catLabel, 'Mirror frames, tables, and door hardware — o
         <ul class="am-pdp__trust">
           <li>✓ PVD stainless fabrication</li>
           <li>✓ Secure packaging</li>
-          <li>✓ Within India, ready stock is an estimate of 5–12 business days.</li>
-          <li>✓ Within India, made-to-order work is an estimate of 15–35 business days.</li>
+          <li>✓ ${TIMELINE_CONFIRMATION}</li>
         </ul>
         ${finishSwatchesHtml()}
         <div class="am-prose am-pdp__desc"><p>${product.description}</p></div>
         ${showCalc ? inlineCalcHtml(product) : usesCheckoutFlow(product)
-          ? `<div class="am-pdp__buy-inline" id="buy">${pdpBuyActionsHtml(product)}${checkoutTrustHtml()}</div>`
-          : `<div class="am-pdp__quote-cta" id="buy"><button type="button" class="am-btn am-btn--primary am-btn--lg am-btn--full" data-open-order-popup data-product-name="${product.name}" data-product-slug="${product.slug}" data-service-slug="${serviceSlugForProduct(product)}">Order Now</button>${checkoutTrustHtml()}</div>`}
+          ? `<div class="am-pdp__buy-inline" id="buy">${pdpBuyActionsHtml(product)}${checkoutTrustHtml(product)}</div>`
+          : `<div class="am-pdp__quote-cta" id="buy"><button type="button" class="am-btn am-btn--primary am-btn--lg am-btn--full" data-open-order-popup data-product-name="${product.name}" data-product-slug="${product.slug}" data-service-slug="${serviceSlugForProduct(product)}">Order Now</button>${checkoutTrustHtml(product)}</div>`}
       </div>
     </div>
     ${productTabsHtml(product.name, '<p>' + product.description + '</p>', careGuidelinesForProduct(product), related, product, sectionLabel)}
@@ -1525,7 +1533,8 @@ ${pageHero('Secure Checkout', 'Checkout', 'Preview mode — form submission is s
       <input type="hidden" name="payment_method" value="razorpay">
       <div class="am-card am-checkout-panel"><div class="am-card__body">
         <h2 class="am-checkout-panel__title">Shipping details</h2>
-        <p class="am-checkout-panel__hint">Shipping included within India. For international delivery, our team will confirm shipping charges and estimated delivery time before payment.</p>
+        <p class="am-checkout-panel__hint">Shipping within India is included in the displayed price.</p>
+        <p class="am-checkout-panel__hint">${TIMELINE_CONFIRMATION}</p>
         ${addressFormGridHtml()}
       </div></div>
       <div class="am-card am-checkout-panel am-checkout-panel--payment"><div class="am-card__body">
@@ -1591,7 +1600,7 @@ ${pageHero('Secure Checkout', 'Checkout', 'Preview mode — form submission is s
     return '';
   }
 
-  function productTabsHtml(title, contentHtml, careItems, relatedProducts, product, categoryLabel) {
+  function productTabsHtml(title, contentHtml, careItems, relatedProducts, product, categoryLabel, shippingContext) {
     const care = (careItems || []).map((item) => `<li>${item}</li>`).join('');
     const related = relatedProducts?.length ? `
     <div class="am-pdp-related-block">
@@ -1632,7 +1641,7 @@ ${pageHero('Secure Checkout', 'Checkout', 'Preview mode — form submission is s
           <div class="am-prose am-pdp-tabs__prose">
             <h3>Product Specifications</h3>
             <dl class="am-pdp-spec-table">${specRows}
-              <div><dt>Delivery</dt><dd>Within India, ready stock is an estimate of 5–12 business days. Within India, made-to-order work is an estimate of 15–35 business days.</dd></div>
+              <div><dt>Delivery</dt><dd>${TIMELINE_CONFIRMATION}</dd></div>
             </dl>
           </div>
         </div>
@@ -1650,10 +1659,9 @@ ${pageHero('Secure Checkout', 'Checkout', 'Preview mode — form submission is s
         <div class="am-pdp-tabs__panel" data-am-panel="shipping" hidden>
           <div class="am-prose am-pdp-tabs__prose">
             <h3>Shipping</h3>
-            <p>Shipping included within India. For international delivery, our team will confirm shipping charges and estimated delivery time before payment.</p>
+            <p>${shippingNoteHtml(product, shippingContext)}</p>
             <ul class="am-pdp-tabs__care-list">
-              <li>Within India, ready stock is an estimate of 5–12 business days.</li>
-              <li>Within India, made-to-order work is an estimate of 15–35 business days.</li>
+              <li>${TIMELINE_CONFIRMATION}</li>
               <li><strong>Made to order:</strong> All items are custom fabricated — no returns on bespoke metalwork</li>
             </ul>
             <p><a href="/shipping-delivery-policy">Full shipping policy →</a></p>
@@ -1737,7 +1745,7 @@ ${pageHero('Secure Checkout', 'Checkout', 'Preview mode — form submission is s
           </div>
           <div class="am-pdp__calc-column">
             ${serviceCalcHtml(service, design)}
-            ${checkoutTrustHtml()}
+            ${checkoutTrustHtml(null, 'studio')}
           </div>
         </div>
       </div>
@@ -1843,7 +1851,7 @@ ${pageHero(service.name, design.name, design.description)}
 ${serviceFeaturedSection(service, design)}
 <section class="am-page-body">
   <div class="am-container">
-    ${productTabsHtml(design.name, '<p>' + design.description + '</p>', service.care, related)}
+    ${productTabsHtml(design.name, '<p>' + design.description + '</p>', service.care, related, null, null, 'studio')}
   </div>
 </section>`;
     document.dispatchEvent(new CustomEvent('am-content-ready'));
@@ -2432,15 +2440,14 @@ ${finishesHtml ? `<section class="am-section am-section--white"><div class="am-c
         <ul class="am-pdp__trust">
           <li>✓ PVD stainless frame fabrication</li>
           <li>✓ Secure crated packaging</li>
-          <li>✓ Within India, ready stock is an estimate of 5–12 business days.</li>
-          <li>✓ Within India, made-to-order work is an estimate of 15–35 business days.</li>
+          <li>✓ ${TIMELINE_CONFIRMATION}</li>
         </ul>
         ${highlightsHtml ? `<ul class="am-mirror-frames-highlights">${highlightsHtml}</ul>` : ''}
         ${finishSwatchesHtml()}
         <div class="am-prose am-pdp__desc"><p>${design.description || product.description}</p></div>
         <div class="am-pdp__buy-inline">
           ${pdpBuyActionsHtml(product)}
-          ${checkoutTrustHtml()}
+          ${checkoutTrustHtml(product)}
         </div>
       </div>
     </div>

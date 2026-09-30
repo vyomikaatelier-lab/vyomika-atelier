@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Order;
+use App\Models\Product;
 
 /**
  * India self-service checkout includes shipping in the product price.
@@ -11,11 +12,15 @@ use App\Models\Order;
  */
 final class IndiaDelivery
 {
-    public const CUSTOMER_NOTE = 'Shipping included within India. For international delivery, our team will confirm shipping charges and estimated delivery time before payment.';
+    public const SHOP_INDIA_SHIPPING = 'Shipping within India is included in the displayed price.';
 
-    public const READY_STOCK_ESTIMATE = 'Within India, ready stock is an estimate of 5–12 business days.';
+    public const SHOP_INTERNATIONAL_SHIPPING = 'For international delivery, shipping charges and estimated delivery time are confirmed before payment.';
 
-    public const MADE_TO_ORDER_ESTIMATE = 'Within India, made-to-order work is an estimate of 15–35 business days.';
+    public const STUDIO_SHIPPING_NOTE = 'Shipping and packing are quoted separately at dispatch and agreed with the client before dispatch.';
+
+    public const TIMELINE_CONFIRMATION = 'Production and delivery timelines depend on the product and destination. Please refer to the product’s shipping information; our team will confirm the applicable timeline before payment.';
+
+    public const CUSTOMER_NOTE = self::SHOP_INDIA_SHIPPING;
 
     public const ENQUIRY_SAVED = 'Your international delivery enquiry has been saved. Our team will confirm shipping charges and estimated delivery time before payment.';
 
@@ -34,6 +39,19 @@ final class IndiaDelivery
     public const MERCHANDISE_SUBTOTAL = 'Merchandise subtotal';
 
     public const ENQUIRY_HINT = 'Shipping quoted separately. Our team will confirm shipping charges, estimated delivery time, and import-duty responsibility before payment.';
+
+    public static function shippingTrustNote(?Product $product): string
+    {
+        if ($product?->isStudioItem()) {
+            return self::STUDIO_SHIPPING_NOTE;
+        }
+
+        if ($product !== null && ! $product->isShopProduct()) {
+            return self::TIMELINE_CONFIRMATION;
+        }
+
+        return self::SHOP_INDIA_SHIPPING.' '.self::SHOP_INTERNATIONAL_SHIPPING;
+    }
 
     public static function isIndia(?string $country): bool
     {

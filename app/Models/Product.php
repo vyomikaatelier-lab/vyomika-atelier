@@ -304,6 +304,10 @@ class Product extends Model
             return '';
         }
 
+        if ($this->isStudioItem()) {
+            return 'SKU: '.$this->sku;
+        }
+
         return 'SKU: '.$this->sku.' · Pan-India shipping';
     }
 
