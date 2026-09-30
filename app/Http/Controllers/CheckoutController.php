@@ -83,6 +83,12 @@ class CheckoutController extends Controller
         }
 
         if ($this->cart->checkoutIsEmpty()) {
+            if (! CheckoutPayments::enabled()) {
+                return redirect()
+                    ->route('checkout.index')
+                    ->with('error', CheckoutPayments::UNAVAILABLE_MESSAGE);
+            }
+
             $user = Auth::user();
             if ($user) {
                 $this->expireStalePendingOrders((int) $user->id);

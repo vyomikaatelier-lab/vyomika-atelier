@@ -48,7 +48,7 @@ config([
     'cache.default' => 'database',
     'cache.stores.database.connection' => 'sqlite',
     'cache.stores.database.lock_connection' => 'sqlite',
-    'checkout.payments_enabled' => false,
+    'checkout.payments_enabled' => true, // this worker is an in-flight initiation
     'services.razorpay.key' => 'rzp_test_key',
     'services.razorpay.secret' => 'rzp_test_secret',
     'mail.default' => 'array',
