@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Services\AddressValidationService;
 use App\Services\CartService;
+use App\Services\ChargeConfirmationEnquiry;
 use App\Services\InternationalShippingEnquiry;
 use App\Services\OrderNotificationService;
 use App\Services\OrderPaymentService;
@@ -17,6 +18,7 @@ use App\Support\CheckoutCustomer;
 use App\Support\CheckoutPayments;
 use App\Support\CheckoutSnapshot;
 use App\Support\IndiaDelivery;
+use App\Support\ProductFulfilment;
 use App\Support\OrderAccess;
 use App\Support\PaymentAtomicLock;
 use App\Support\StorefrontRoutes;
@@ -43,22 +45,29 @@ class CheckoutController extends Controller
         private AddressValidationService $addresses,
         private OrderPaymentService $payments,
         private InternationalShippingEnquiry $internationalEnquiries,
+        private ChargeConfirmationEnquiry $chargeEnquiries,
     ) {}
 
     public function index()
     {
         $user = Auth::user();
         $items = $this->cart->checkoutItems();
-        $subtotal = $this->cart->checkoutSubtotal();
-        $shipping = 0.0;
-        $total = $subtotal;
+        $quote = ProductFulfilment::quote($items, true);
+        $subtotal = $quote['lines'] === []
+            ? $this->cart->checkoutSubtotal()
+            : (float) \App\Services\RefundMoney::formatRupees((int) $quote['merchandise_paise']);
+        $shipping = $quote['shipping_paise'] === null ? 0.0 : (float) \App\Services\RefundMoney::formatRupees((int) $quote['shipping_paise']);
+        $packing = $quote['packing_paise'] === null ? 0.0 : (float) \App\Services\RefundMoney::formatRupees((int) $quote['packing_paise']);
+        $total = $subtotal + $shipping + $packing;
         $defaultAddress = $user?->addresses()->where('is_default', true)->first()
             ?? $user?->addresses()->first();
         $checkoutView = [
             'items' => $items,
             'subtotal' => $subtotal,
             'shipping' => $shipping,
+            'packing' => $packing,
             'total' => $total,
+            'fulfilmentQuote' => $quote,
             'razorpayEnabled' => $this->razorpay->isConfigured(),
             'defaultAddress' => $defaultAddress,
             'user' => $user,
@@ -138,6 +147,21 @@ class CheckoutController extends Controller
             );
         }
 
+        $snapshot = $this->addresses->toSnapshot($validatedAddress);
+        $user = Auth::user();
+        $items = $this->cart->checkoutItems();
+        $quote = ProductFulfilment::quote($items, true);
+
+        if (! $quote['payable']) {
+            if (CheckoutPayments::enabled()) {
+                if ($response = $this->responseForChangedTerms((int) $user->id, $items, $quote)) {
+                    return $response;
+                }
+            }
+
+            return $this->chargeEnquiries->store($request, $items, $validatedAddress, $quote);
+        }
+
         if (! CheckoutPayments::enabled()) {
             return redirect()
                 ->route('checkout.index')
@@ -150,9 +174,6 @@ class CheckoutController extends Controller
                 ->with('error', config('addresses.payment_unavailable_message'));
         }
 
-        $snapshot = $this->addresses->toSnapshot($validatedAddress);
-        $user = Auth::user();
-
         $noteLines = array_filter([
             $validatedAddress['delivery_instructions'] ?? null,
             $validatedAddress['notes'] ?? null,
@@ -162,12 +183,18 @@ class CheckoutController extends Controller
 
         $fromBuyNow = $this->cart->hasBuyNow();
         $source = $fromBuyNow ? CheckoutSnapshot::SOURCE_BUY_NOW : CheckoutSnapshot::SOURCE_CART;
-        $items = $this->cart->checkoutItems();
-        $subtotal = $this->cart->checkoutSubtotal();
-        $shipping = 0.0;
-        $total = $subtotal;
+        $subtotal = \App\Services\RefundMoney::formatRupees((int) $quote['merchandise_paise']);
+        $shippingAmount = \App\Services\RefundMoney::formatRupees((int) $quote['shipping_paise']);
+        $packingAmount = \App\Services\RefundMoney::formatRupees((int) $quote['packing_paise']);
+        $totalAmount = \App\Services\RefundMoney::formatRupees(
+            (int) $quote['merchandise_paise'] + (int) $quote['shipping_paise'] + (int) $quote['packing_paise']
+        );
+        $shipping = (float) $shippingAmount;
+        $packing = (float) $packingAmount;
+        $total = (float) $totalAmount;
+        $fulfilment = ProductFulfilment::orderSnapshot($quote);
 
-        if ($subtotal <= 0 || $total <= 0) {
+        if ((float) $subtotal <= 0 || (float) $total <= 0) {
             return redirect()->route('cart.index')
                 ->with('error', CartGuard::MSG_NO_PRICE);
         }
@@ -189,9 +216,10 @@ class CheckoutController extends Controller
             $source,
             $items,
             $subtotal,
-            $shipping,
-            $total,
+            $shippingAmount,
+            $totalAmount,
             $snapshot,
+            $packingAmount,
         );
 
         try {
@@ -208,8 +236,10 @@ class CheckoutController extends Controller
                     $noteLines,
                     $items,
                     $subtotal,
-                    $shipping,
-                    $total,
+                    $shippingAmount,
+                    $totalAmount,
+                    $packingAmount,
+                    $fulfilment,
                 ),
             );
         } catch (LockTimeoutException) {
@@ -279,9 +309,11 @@ class CheckoutController extends Controller
         array $validatedAddress,
         array $noteLines,
         $items,
-        float $subtotal,
-        float $shipping,
-        float $total,
+        string $subtotal,
+        string $shipping,
+        string $total,
+        string $packing,
+        array $fulfilment,
     ): RedirectResponse {
         $this->expireStalePendingOrders($userId);
 
@@ -308,10 +340,22 @@ class CheckoutController extends Controller
                 return $redirect;
             }
 
-            return redirect()->route('checkout.index')
-                ->with('error', self::MSG_ACTIVE_PAYMENT)
-                ->with('resume_payment_url', route('checkout.pay', $existing))
-                ->with('resume_order_number', $existing->order_number);
+            if ($this->sameCheckoutItems($existing, $desiredSnapshot)
+                && $existing->lacksPaymentEvidence()
+                && ! IndiaDelivery::hasObsoleteShippingCharge($existing)) {
+                $retired = $this->payments->retireUntouchedStaleTerms($existing);
+                if ($retired) {
+                    session()->flash('info', ProductFulfilment::TERMS_UPDATED);
+                    $existing = null;
+                }
+            }
+
+            if ($existing) {
+                return redirect()->route('checkout.index')
+                    ->with('error', self::MSG_ACTIVE_PAYMENT)
+                    ->with('resume_payment_url', route('checkout.pay', $existing))
+                    ->with('resume_order_number', $existing->order_number);
+            }
         }
 
         $order = $this->createLocalOrder(
@@ -325,6 +369,8 @@ class CheckoutController extends Controller
             $subtotal,
             $shipping,
             $total,
+            $packing,
+            $fulfilment,
         );
 
         $this->ensureRazorpayOrderOrFail($order);
@@ -431,9 +477,11 @@ class CheckoutController extends Controller
         array $validatedAddress,
         array $noteLines,
         $items,
-        float $subtotal,
-        float $shipping,
-        float $total,
+        string $subtotal,
+        string $shipping,
+        string $total,
+        string $packing,
+        array $fulfilment,
     ): Order {
         $checkoutToken = (string) Str::uuid();
         $request->session()->put('checkout_submit_token', $checkoutToken);
@@ -450,6 +498,8 @@ class CheckoutController extends Controller
             $subtotal,
             $shipping,
             $total,
+            $packing,
+            $fulfilment,
             $checkoutToken,
         ) {
             $user = Auth::user();
@@ -468,11 +518,13 @@ class CheckoutController extends Controller
                 'country' => $snapshot['country'],
                 'subtotal' => $subtotal,
                 'shipping_cost' => $shipping,
+                'packing_cost' => $packing,
                 'total' => $total,
                 'status' => 'pending',
                 'payment_method' => 'razorpay',
                 'notes' => $noteLines ? implode("\n", $noteLines) : null,
                 'shipping_snapshot' => $shippingSnapshot,
+                'fulfilment_snapshot' => $fulfilment,
                 'billing_snapshot' => $validatedAddress['billing_same_as_shipping'] ? $shippingSnapshot : null,
                 'checkout_token' => $checkoutToken,
                 'expires_at' => now()->addHours(Order::pendingExpiryHours()),
@@ -489,6 +541,7 @@ class CheckoutController extends Controller
                     'price' => $item['unit_price'],
                     'quantity' => $item['quantity'],
                     'total' => $item['line_total'],
+                    'fulfilment_snapshot' => $this->lineSnapshot($fulfilment, (int) $item['product']->id, (int) $item['quantity'], $item['size_label'] ?? null),
                 ]);
             }
 
@@ -520,5 +573,109 @@ class CheckoutController extends Controller
 
             return $order;
         });
+    }
+
+    /**
+     * @param  Collection<int, array<string, mixed>>  $items
+     * @param  array<string, mixed>  $quote
+     */
+    private function responseForChangedTerms(int $userId, $items, array $quote): ?RedirectResponse
+    {
+        $this->expireStalePendingOrders($userId);
+        $existing = $this->activePayableOrderFor($userId);
+        if (! $existing || ! IndiaDelivery::isIndia($existing->country)) {
+            return null;
+        }
+
+        $stored = CheckoutSnapshot::fromOrder($existing);
+        $sameItems = $this->sameCheckoutItems($existing, [
+            'items' => collect($items)->map(fn (array $item) => [
+                'product_id' => (int) $item['product']->id,
+                'size_label' => $item['size_label'] ?? null,
+                'finish_slug' => $item['finish_slug'] ?? null,
+                'quantity' => (int) $item['quantity'],
+            ])->all(),
+        ]);
+
+        if (! $sameItems) {
+            return redirect()->route('checkout.index')
+                ->with('error', self::MSG_ACTIVE_PAYMENT)
+                ->with('resume_payment_url', route('checkout.pay', $existing))
+                ->with('resume_order_number', $existing->order_number);
+        }
+
+        if (! $existing->lacksPaymentEvidence()) {
+            return redirect()->route('checkout.index')
+                ->with('error', self::MSG_ACTIVE_PAYMENT)
+                ->with('resume_payment_url', route('checkout.pay', $existing))
+                ->with('resume_order_number', $existing->order_number);
+        }
+
+        if ($quote['payable']) {
+            return null;
+        }
+
+        $shipping = \App\Services\RefundMoney::formatRupees((int) ($quote['shipping_paise'] ?? 0));
+        if (($stored['shipping_cost'] ?? null) === $shipping && ($stored['packing_cost'] ?? '0.00') === '0.00' && $quote['reasons'] === []) {
+            return null;
+        }
+
+        try {
+            if ($this->payments->retireUntouchedStaleTerms($existing)) {
+                session()->flash('info', ProductFulfilment::TERMS_UPDATED);
+            }
+        } catch (LockTimeoutException) {
+            return redirect()->route('checkout.index')->with('error', self::MSG_CHECKOUT_IN_PROGRESS);
+        } catch (RuntimeException $e) {
+            return redirect()->route('checkout.index')->with('error', $e->getMessage() ?: self::MSG_CHECKOUT_IN_PROGRESS);
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $desiredSnapshot
+     */
+    private function sameCheckoutItems(Order $order, array $desiredSnapshot): bool
+    {
+        $stored = CheckoutSnapshot::fromOrder($order);
+        $left = $stored['items'] ?? [];
+        $right = $desiredSnapshot['items'] ?? [];
+        $simplify = function (array $items): array {
+            $rows = array_map(function (array $item): array {
+                return [
+                    'product_id' => (int) ($item['product_id'] ?? 0),
+                    'size_label' => strtolower(trim((string) ($item['size_label'] ?? ''))),
+                    'finish_slug' => strtolower(trim((string) ($item['finish_slug'] ?? ''))),
+                    'quantity' => (int) ($item['quantity'] ?? 0),
+                ];
+            }, $items);
+            usort($rows, fn (array $left, array $right): int => [$left['product_id'], $left['size_label'], $left['finish_slug']]
+                <=> [$right['product_id'], $right['size_label'], $right['finish_slug']]);
+
+            return $rows;
+        };
+
+        return $simplify($left) === $simplify($right);
+    }
+
+    /**
+     * @param  array<string, mixed>  $fulfilment
+     * @return array<string, mixed>|null
+     */
+    private function lineSnapshot(array $fulfilment, int $productId, int $quantity, mixed $itemSize = null): ?array
+    {
+        foreach ($fulfilment['lines'] ?? [] as $line) {
+            if ((int) ($line['product_id'] ?? 0) !== $productId || (int) ($line['quantity'] ?? 0) !== $quantity) {
+                continue;
+            }
+            if (($line['size_label'] ?? null) !== ($itemSize ?? null)) {
+                continue;
+            }
+
+            return $line;
+        }
+
+        return null;
     }
 }

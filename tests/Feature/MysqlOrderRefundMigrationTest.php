@@ -80,6 +80,53 @@ class MysqlOrderRefundMigrationTest extends TestCase
 
         Artisan::call('migrate:fresh', ['--force' => true]);
 
+        $this->assertTrue(Schema::hasColumn('products', 'availability_mode'));
+        $this->assertTrue(Schema::hasColumn('orders', 'packing_cost'));
+        $this->assertTrue(Schema::hasColumn('orders', 'fulfilment_snapshot'));
+        $this->assertTrue(Schema::hasColumn('order_refunds', 'packing_amount_paise'));
+        $this->assertTrue(Schema::hasTable('product_fulfilment_originals'));
+
+        $historicalId = DB::table('orders')->insertGetId([
+            'order_number' => 'VA-HISTORICAL',
+            'customer_name' => 'Historical',
+            'customer_email' => 'historical@example.com',
+            'customer_phone' => '9999999999',
+            'shipping_address' => '123 Test Street',
+            'city' => 'Mumbai',
+            'pincode' => '400001',
+            'subtotal' => 1000,
+            'shipping_cost' => 199,
+            'total' => 1199,
+            'status' => 'paid',
+            'payment_method' => 'razorpay',
+            'payment_id' => 'pay_historical',
+            'refund_status' => 'none',
+            'refunded_amount_paise' => 0,
+            'refund_pending_amount_paise' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $fulfilmentMigration = require base_path('database/migrations/2026_10_01_160000_add_product_fulfilment_and_order_charge_snapshots.php');
+        $fulfilmentMigration->up();
+        $this->assertSame('199.00', number_format((float) DB::table('orders')->where('id', $historicalId)->value('shipping_cost'), 2, '.', ''));
+        $this->assertNull(DB::table('orders')->where('id', $historicalId)->value('packing_cost'));
+        $this->assertNull(DB::table('orders')->where('id', $historicalId)->value('fulfilment_snapshot'));
+
+        DB::table('orders')->where('id', $historicalId)->update([
+            'fulfilment_snapshot' => json_encode(['version' => 1]),
+        ]);
+        try {
+            Artisan::call('migrate:rollback', [
+                '--path' => 'database/migrations/2026_10_01_160000_add_product_fulfilment_and_order_charge_snapshots.php',
+                '--force' => true,
+            ]);
+            $this->fail('Rollback should refuse while fulfilment evidence exists.');
+        } catch (Throwable $exception) {
+            $this->assertStringContainsString('fulfilment evidence', $exception->getMessage());
+        }
+        DB::table('orders')->where('id', $historicalId)->update(['fulfilment_snapshot' => null]);
+        $this->assertSame('pay_historical', DB::table('orders')->where('id', $historicalId)->value('payment_id'));
+
         $this->assertTrue(Schema::hasTable('order_refunds'));
         $this->assertTrue(Schema::hasIndex('order_refunds', 'order_refunds_idempotency_uq', 'unique'));
         $this->assertTrue(Schema::hasIndex('order_refunds', 'order_refunds_gateway_uq', 'unique'));

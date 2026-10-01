@@ -416,7 +416,7 @@ class ProductAdminController extends Controller
             ]);
         }
 
-        return $validated;
+        return array_merge($validated, \App\Support\ProductFulfilment::attributesFromRequest($request, $existing));
     }
 
     private function recordProductSlugRedirect(string $oldSlug, string $newSlug): void

@@ -57,6 +57,10 @@ final class IndiaDelivery
 
     public static function shippingNoteFor(?Product $product, ?string $context = null): string
     {
+        if ($product !== null && filled($product->availability_mode) && ($context === null || $context === 'india' || $context === 'shop')) {
+            return ProductFulfilment::customerShippingNote($product, $context);
+        }
+
         return match ($context) {
             'studio' => self::STUDIO_SHIPPING_NOTE,
             'shop' => self::SHOP_INDIA_SHIPPING.' '.self::SHOP_INTERNATIONAL_SHIPPING,
@@ -97,7 +101,18 @@ final class IndiaDelivery
 
     public static function hasObsoleteShippingCharge(Order $order): bool
     {
+        if (self::hasConfiguredFulfilment($order)) {
+            return false;
+        }
+
         return (float) $order->shipping_cost > 0;
+    }
+
+    public static function hasConfiguredFulfilment(Order $order): bool
+    {
+        $snapshot = $order->fulfilment_snapshot;
+
+        return is_array($snapshot) && ($snapshot['version'] ?? null) === 1;
     }
 
     public static function canInitiateSelfServicePayment(Order $order): bool

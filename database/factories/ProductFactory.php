@@ -12,6 +12,28 @@ use Illuminate\Support\Str;
  */
 class ProductFactory extends Factory
 {
+    public function configure(): static
+    {
+        return $this->afterMaking(function (Product $product) {
+            if (! in_array($product->section, [Product::SECTION_STUDIO, Product::SECTION_RAILINGS], true)) {
+                return;
+            }
+
+            $product->availability_mode = 'confirm_with_team';
+            $product->shipping_india_mode = 'quoted';
+            $product->packing_india_mode = 'quoted';
+            $product->shipping_international_mode = 'quoted';
+            $product->packing_international_mode = 'quoted';
+            $product->shipping_india_amount = null;
+            $product->packing_india_amount = null;
+            $product->shipping_international_amount = null;
+            $product->packing_international_amount = null;
+            $product->shipping_india_basis = null;
+            $product->packing_india_basis = null;
+            $product->shipping_international_basis = null;
+            $product->packing_international_basis = null;
+        });
+    }
     public function definition(): array
     {
         $name = $this->faker->unique()->words(3, true);
@@ -31,6 +53,11 @@ class ProductFactory extends Factory
             'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
             'pricing_type' => Product::PRICING_FIXED,
             'is_gallery_visible' => true,
+            'availability_mode' => 'ready_stock',
+            'shipping_india_mode' => 'included',
+            'packing_india_mode' => 'included',
+            'shipping_international_mode' => 'quoted',
+            'packing_international_mode' => 'quoted',
         ];
     }
 
@@ -49,6 +76,11 @@ class ProductFactory extends Factory
             'section' => Product::SECTION_STUDIO,
             'purchase_mode' => Product::PURCHASE_MODE_ENQUIRY,
             'pricing_type' => Product::PRICING_SQUARE_FOOT,
+            'availability_mode' => 'confirm_with_team',
+            'shipping_india_mode' => 'quoted',
+            'packing_india_mode' => 'quoted',
+            'shipping_international_mode' => 'quoted',
+            'packing_international_mode' => 'quoted',
         ]);
     }
 
@@ -58,6 +90,11 @@ class ProductFactory extends Factory
             'section' => Product::SECTION_RAILINGS,
             'purchase_mode' => Product::PURCHASE_MODE_QUOTE,
             'pricing_type' => Product::PRICING_QUOTATION_ONLY,
+            'availability_mode' => 'confirm_with_team',
+            'shipping_india_mode' => 'quoted',
+            'packing_india_mode' => 'quoted',
+            'shipping_international_mode' => 'quoted',
+            'packing_international_mode' => 'quoted',
         ]);
     }
 

@@ -25,6 +25,7 @@ class CheckoutSnapshot
         float|int|string $shipping,
         float|int|string $total,
         array $addressSnapshot,
+        float|int|string $packing = 0,
     ): array {
         return self::normalize([
             'source' => self::normalizeSource($source),
@@ -38,6 +39,7 @@ class CheckoutSnapshot
             ])->all(),
             'subtotal' => self::money($subtotal),
             'shipping_cost' => self::money($shipping),
+            'packing_cost' => self::money($packing),
             'total' => self::money($total),
             'customer_name' => self::normalizeText($addressSnapshot['full_name'] ?? ''),
             'customer_email' => self::normalizeEmail($addressSnapshot['email'] ?? ''),
@@ -71,6 +73,7 @@ class CheckoutSnapshot
             ])->all(),
             'subtotal' => self::money($order->subtotal),
             'shipping_cost' => self::money($order->shipping_cost),
+            'packing_cost' => self::money($order->packing_cost ?? 0),
             'total' => self::money($order->total),
             'customer_name' => self::normalizeText($order->customer_name),
             'customer_email' => self::normalizeEmail($order->customer_email),
@@ -151,6 +154,10 @@ class CheckoutSnapshot
 
     private static function money(mixed $value): string
     {
+        if (is_string($value) && preg_match('/^\d+\.\d{2}$/', $value) === 1) {
+            return $value;
+        }
+
         return number_format((float) $value, 2, '.', '');
     }
 }

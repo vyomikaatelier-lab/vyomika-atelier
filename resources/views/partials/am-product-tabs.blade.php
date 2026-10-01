@@ -65,7 +65,7 @@
                         <div><dt>Material</dt><dd>Grade 304/316 stainless steel with PVD coating</dd></div>
                         <div><dt>Finish options</dt><dd>Gold Mirror, Gold Brush, Rose Gold Mirror, Rose Gold Brush, Champagne Mirror, Champagne Brush, Black Mirror (+30%), Black Brush (+30%)</dd></div>
                         <div><dt>Price</dt><dd>{{ $product->formattedPrice() }}</dd></div>
-                        <div><dt>Availability</dt><dd>{{ $product->inStock() ? 'In stock' : 'Made to order' }}</dd></div>
+                        <div><dt>Availability</dt><dd>{{ $product instanceof \App\Models\Product && filled($product->availability_mode) ? \App\Support\ProductFulfilment::availabilityLabel($product) : ($product->inStock() ? 'In stock' : 'Made to order') }}</dd></div>
                     @else
                         <div><dt>Material</dt><dd>Grade 304/316 stainless steel with PVD coating</dd></div>
                         <div><dt>Finish options</dt><dd>8 PVD finishes available</dd></div>
@@ -114,9 +114,19 @@
                 @endphp
                 @if(count($shippingLines))
                 <h3>Shipping</h3>
+                @php
+                    $shippingProduct = $product instanceof \App\Models\Product ? $product : null;
+                @endphp
                 <ul class="am-pdp-tabs__care-list">
+                    @if($shippingProduct && filled($shippingProduct->availability_mode))
+                        @foreach(\App\Support\ProductFulfilment::customerDetailLines($shippingProduct) as $detailLine)
+                            <li>{{ $detailLine }}</li>
+                        @endforeach
+                    @endif
                     @foreach($shippingLines as $line)
+                        @if(\App\Support\ProductFulfilment::legacyLineVisible($line, $shippingProduct))
                         <li>{{ $line }}</li>
+                        @endif
                     @endforeach
                 </ul>
                 @else
@@ -131,7 +141,9 @@
                 <p>{{ $shippingFallback }}</p>
                 <ul class="am-pdp-tabs__care-list">
                     <li>{{ \App\Support\IndiaDelivery::TIMELINE_CONFIRMATION }}</li>
+                    @if(!($shippingProduct instanceof \App\Models\Product) || $shippingProduct->availability_mode === \App\Support\ProductFulfilment::AVAILABILITY_MADE)
                     <li><strong>Made to order:</strong> All items are custom fabricated — no returns on bespoke metalwork</li>
+                    @endif
                 </ul>
                 <p><a href="{{ route('legal.shipping') }}">Full shipping policy →</a></p>
                 @endif

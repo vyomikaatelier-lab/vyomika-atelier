@@ -115,6 +115,7 @@
                 @endphp
                 <textarea id="tab_shipping" name="tab_shipping" rows="6" placeholder="Shop, India: shipping is included in the displayed price.&#10;International Shop: shipping charges and delivery are confirmed before payment.&#10;Studio: shipping and packing are quoted separately at dispatch and agreed before dispatch.&#10;Keep any product-specific production estimate. Do not add a transit time unless it is already confirmed." class="w-full border px-3 py-2 rounded text-sm bg-white leading-relaxed">{{ $shippingValue }}</textarea>
                 @error('tab_shipping')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
+                @include('admin.products.fulfilment-fields', ['product' => $product ?? null])
             </div>
         </fieldset>
     </section>

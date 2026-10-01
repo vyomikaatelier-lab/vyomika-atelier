@@ -49,7 +49,14 @@
             </div>
         @else
             @php
-                $shippingEst = 0;
+                $cartQuote = \App\Support\ProductFulfilment::quote($items, true);
+                $shippingEst = $cartQuote['shipping_paise'] === null ? 0 : (float) \App\Services\RefundMoney::formatRupees((int) $cartQuote['shipping_paise']);
+                $packingEst = $cartQuote['packing_paise'] === null ? 0 : (float) \App\Services\RefundMoney::formatRupees((int) $cartQuote['packing_paise']);
+                $cartNote = ($cartQuote['payable']
+                    && $cartQuote['shipping_label'] === 'Shipping included'
+                    && $cartQuote['packing_label'] === 'Packing included')
+                    ? \App\Support\IndiaDelivery::SHOP_INDIA_SHIPPING.' '.\App\Support\IndiaDelivery::SHOP_INTERNATIONAL_SHIPPING
+                    : $cartQuote['customer_note'];
             @endphp
             <div class="am-checkout-layout">
                 <div class="am-checkout-main">
@@ -99,7 +106,14 @@
                         </div>
                     </div>
 
-                    @include('partials.am-pdp-checkout-trust', ['shippingContext' => 'shop'])
+                    @include('partials.am-pdp-checkout-trust', ['shippingNote' => $cartNote])
+                    @if($cartQuote['reasons'] !== [])
+                    <ul class="am-pdp-shipping-notes">
+                        @foreach($cartQuote['reasons'] as $reason)
+                        <li>{{ $reason }}</li>
+                        @endforeach
+                    </ul>
+                    @endif
                 </div>
 
                 <div class="am-checkout-sidebar">
@@ -107,6 +121,11 @@
                         'items' => $items,
                         'subtotal' => $subtotal,
                         'shipping' => $shippingEst,
+                        'packing' => $packingEst,
+                        'total' => $subtotal + $shippingEst + $packingEst,
+                        'shippingLabel' => $cartQuote['shipping_label'],
+                        'packingLabel' => $cartQuote['packing_label'],
+                        'chargeNote' => $cartNote,
                         'showThumbs' => false,
                     ])
                     <div class="am-checkout-sidebar__actions">

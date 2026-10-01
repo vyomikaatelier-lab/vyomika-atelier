@@ -7,6 +7,10 @@
     'showThumbs' => true,
     'compact' => false,
     'summaryMode' => 'unselected',
+    'packing' => 0,
+    'shippingLabel' => null,
+    'packingLabel' => null,
+    'chargeNote' => null,
 ])
 
 @php
@@ -15,11 +19,14 @@
     $subtotalLabel = $summaryMode === 'international'
         ? \App\Support\IndiaDelivery::MERCHANDISE_SUBTOTAL
         : 'Subtotal';
-    $shippingLabel = match ($summaryMode) {
+    $shippingLabel = $shippingLabel ?? match ($summaryMode) {
         'international' => \App\Support\IndiaDelivery::SHIPPING_QUOTED,
         'india' => 'Shipping included',
         default => \App\Support\IndiaDelivery::SHIPPING_INCLUDED_INDIA,
     };
+    $chargeNote = $chargeNote ?? ($summaryMode === 'international'
+        ? \App\Support\IndiaDelivery::ENQUIRY_HINT
+        : \App\Support\IndiaDelivery::SHOP_INDIA_SHIPPING);
 @endphp
 
 <aside class="am-order-summary {{ $compact ? 'am-order-summary--compact' : '' }}" data-order-summary data-summary-mode="{{ $summaryMode }}">
@@ -67,11 +74,17 @@
                     <span>Shipping</span>
                     <span data-shipping-label>{{ $summaryMode === 'unselected' || $shipping <= 0 ? $shippingLabel : '₹'.number_format($shipping, 0) }}</span>
                 </div>
+                @if($packingLabel)
+                <div class="am-order-summary__row am-order-summary__row--muted">
+                    <span>Packing</span>
+                    <span data-packing-label>{{ $packingLabel }}</span>
+                </div>
+                @endif
                 <div class="am-order-summary__row am-order-summary__row--total" data-payable-total @if($summaryMode === 'international') hidden @endif>
                     <span>Total</span>
                     <span>₹{{ number_format($grandTotal, 0) }}</span>
                 </div>
-                <p class="am-order-summary__tax">Prices include GST where applicable. {{ $summaryMode === 'international' ? \App\Support\IndiaDelivery::ENQUIRY_HINT : \App\Support\IndiaDelivery::SHOP_INDIA_SHIPPING }}</p>
+                <p class="am-order-summary__tax">Prices include GST where applicable. {{ $chargeNote }}</p>
             </div>
         </div>
     </div>

@@ -87,6 +87,34 @@ class Product extends Model
         'seo_keyword',
         'canonical_url',
         'robots_index',
+        'availability_mode',
+        'production_min',
+        'production_max',
+        'production_unit',
+        'production_starts',
+        'shipping_india_mode',
+        'shipping_india_amount',
+        'shipping_india_basis',
+        'shipping_international_mode',
+        'shipping_international_amount',
+        'shipping_international_basis',
+        'packing_india_mode',
+        'packing_india_amount',
+        'packing_india_basis',
+        'packing_international_mode',
+        'packing_international_amount',
+        'packing_international_basis',
+        'fulfilment_review_note',
+        'needs_fulfilment_review',
+    ];
+
+    protected $attributes = [
+        'availability_mode' => 'confirm_with_team',
+        'shipping_india_mode' => 'quoted',
+        'shipping_international_mode' => 'quoted',
+        'packing_india_mode' => 'quoted',
+        'packing_international_mode' => 'quoted',
+        'needs_fulfilment_review' => false,
     ];
 
     protected function casts(): array
@@ -102,6 +130,11 @@ class Product extends Model
             'is_active' => 'boolean',
             'is_gallery_visible' => 'boolean',
             'hide_when_out_of_stock' => 'boolean',
+            'needs_fulfilment_review' => 'boolean',
+            'shipping_india_amount' => 'decimal:2',
+            'shipping_international_amount' => 'decimal:2',
+            'packing_india_amount' => 'decimal:2',
+            'packing_international_amount' => 'decimal:2',
             'weight_kg' => 'decimal:3',
             'robots_index' => 'boolean',
         ];

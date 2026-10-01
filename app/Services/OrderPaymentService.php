@@ -122,6 +122,42 @@ class OrderPaymentService
     }
 
     /**
+     * Cancel one untouched pending order whose fulfilment terms no longer match.
+     * Gateway-backed and financially evidenced orders are left unchanged.
+     */
+    public function retireUntouchedStaleTerms(Order $order): bool
+    {
+        $this->refuseWhenCheckoutDisabled();
+
+        return PaymentAtomicLock::run(
+            PaymentAtomicLock::forRazorpayOrder((int) $order->id),
+            PaymentAtomicLock::razorpayWaitSeconds(),
+            function () use ($order): bool {
+                return DB::transaction(function () use ($order): bool {
+                    $locked = Order::query()->whereKey($order->id)->lockForUpdate()->first();
+
+                    if (! $locked || ! $locked->isPending() || ! $locked->lacksPaymentEvidence()) {
+                        return false;
+                    }
+
+                    $affected = Order::query()
+                        ->whereKey($locked->id)
+                        ->where('status', 'pending')
+                        ->whereNull('payment_id')
+                        ->whereNull('razorpay_order_id')
+                        ->whereNull('stock_deducted_at')
+                        ->update([
+                            'status' => 'cancelled',
+                            'expires_at' => null,
+                        ]);
+
+                    return $affected === 1;
+                });
+            }
+        );
+    }
+
+    /**
      * Customer initiation only. Settlement, refunds, and expiry do not call this.
      */
     private function refuseWhenCheckoutDisabled(): void
@@ -168,7 +204,7 @@ class OrderPaymentService
         }
 
         $result = $this->razorpay->createPaymentOrder(
-            RazorpayService::amountPaiseFromRupees($locked->total),
+            RefundMoney::paiseFromDecimal((string) $locked->total),
             $locked->order_number,
             [
                 'order_id' => (string) $locked->id,

@@ -384,6 +384,7 @@ class OrderRefundService
             'status' => OrderRefund::STATUS_RESERVED,
             'includes_shipping' => $allocation['shipping'] > 0,
             'shipping_amount_paise' => $allocation['shipping'],
+            'packing_amount_paise' => $allocation['packing'],
             'actor_user_id' => $actor->id,
             'actor_staff_id' => $actor->staff_id,
             'internal_note' => $intent->internalNote,
@@ -424,6 +425,7 @@ class OrderRefundService
         }
 
         $shippingRemaining = $this->remainingShippingPaise($order);
+        $packingRemaining = $this->remainingPackingPaise($order);
         $lines = [];
         $linePaise = 0;
 
@@ -442,6 +444,7 @@ class OrderRefundService
                 $linePaise += $amount;
             }
             $shipping = $shippingRemaining;
+            $packing = $packingRemaining;
             $kind = 'full';
         } else {
             foreach ($intent->lineQuantities as $itemId => $quantity) {
@@ -477,12 +480,13 @@ class OrderRefundService
             }
 
             $shipping = $intent->includeShipping ? $shippingRemaining : 0;
+            $packing = 0;
             $consumesLines = $this->consumesEveryRemainingLine($items, $lines);
-            $consumesShipping = $shipping === $shippingRemaining;
-            $kind = ($linePaise + $shipping) === $remaining && $consumesLines && $consumesShipping ? 'full' : 'partial';
+            $consumesShipping = $shipping === $shippingRemaining && $packing === $packingRemaining;
+            $kind = ($linePaise + $shipping + $packing) === $remaining && $consumesLines && $consumesShipping ? 'full' : 'partial';
         }
 
-        $amount = $linePaise + $shipping;
+        $amount = $linePaise + $shipping + $packing;
 
         if ($amount < RefundMoney::MINIMUM_PAISE) {
             throw ValidationException::withMessages([
@@ -506,6 +510,7 @@ class OrderRefundService
             'kind' => $kind,
             'amount' => $amount,
             'shipping' => $shipping,
+            'packing' => $packing,
             'lines' => $lines,
         ];
     }
@@ -765,13 +770,26 @@ class OrderRefundService
 
     private function remainingShippingPaise(Order $order): int
     {
-        $shipping = RefundMoney::paiseFromDecimal((string) $order->shipping_cost);
-        $used = (int) OrderRefund::query()
+        $refunded = (int) OrderRefund::query()
             ->where('order_id', $order->id)
             ->whereIn('status', OrderRefund::COMMITTED_STATUSES)
             ->sum('shipping_amount_paise');
 
-        return max(0, $shipping - $used);
+        return max(0, RefundMoney::paiseFromDecimal((string) $order->shipping_cost) - $refunded);
+    }
+
+    private function remainingPackingPaise(Order $order): int
+    {
+        if ($order->packing_cost === null) {
+            return 0;
+        }
+
+        $refunded = (int) OrderRefund::query()
+            ->where('order_id', $order->id)
+            ->whereIn('status', OrderRefund::COMMITTED_STATUSES)
+            ->sum('packing_amount_paise');
+
+        return max(0, RefundMoney::paiseFromDecimal((string) $order->packing_cost) - $refunded);
     }
 
     private function remainingQuantity(OrderItem $item): int
