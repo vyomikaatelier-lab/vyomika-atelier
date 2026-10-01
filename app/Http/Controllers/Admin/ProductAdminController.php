@@ -333,6 +333,9 @@ class ProductAdminController extends Controller
         if ($category) {
             $categorySection = $category->resolvedSection();
             $knownSectionSlugs = ProductCatalog::categorySlugsForSection($section);
+            if ($existing && (int) $existing->category_id === (int) $category->id && $categorySection === $section) {
+                $knownSectionSlugs[] = $category->slug;
+            }
 
             if ($categorySection !== null && $categorySection !== $section) {
                 throw ValidationException::withMessages([

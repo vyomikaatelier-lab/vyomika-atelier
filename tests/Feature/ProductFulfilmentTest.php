@@ -138,6 +138,55 @@ class ProductFulfilmentTest extends TestCase
         $this->assertSame(Product::PURCHASE_MODE_CHECKOUT, $saved->purchase_mode);
     }
 
+    public function test_admin_can_keep_a_product_in_a_disabled_category(): void
+    {
+        $admin = User::factory()->admin()->create();
+        Category::factory()->create(['slug' => 'mirror-frames', 'section' => 'shop', 'is_active' => true]);
+        $disabled = Category::factory()->create(['slug' => 'coffee-tables', 'section' => 'shop', 'is_active' => false]);
+        $product = Product::factory()->create([
+            'category_id' => $disabled->id,
+            'is_active' => false,
+            'section' => Product::SECTION_SHOP,
+            'purchase_mode' => Product::PURCHASE_MODE_CHECKOUT,
+            'pricing_type' => Product::PRICING_FIXED,
+            'availability_mode' => ProductFulfilment::AVAILABILITY_CONFIRM,
+        ]);
+
+        $this->actingAsAdmin($admin)
+            ->put(route('admin.products.update', $product), $this->adminPayload($disabled, [
+                'slug' => $product->slug,
+                'name' => $product->name,
+                'availability_mode' => 'ready_stock',
+                'shipping_india_mode' => 'included',
+                'packing_india_mode' => 'quoted',
+                'shipping_international_mode' => 'quoted',
+                'packing_international_mode' => 'quoted',
+                'is_active' => '0',
+            ]))
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $saved = $product->fresh();
+        $this->assertSame($disabled->id, $saved->category_id);
+        $this->assertFalse($saved->is_active);
+        $this->assertSame(ProductFulfilment::AVAILABILITY_READY, $saved->availability_mode);
+        $this->assertSame(ProductFulfilment::CHARGE_INCLUDED, $saved->shipping_india_mode);
+        $this->assertSame(ProductFulfilment::CHARGE_QUOTED, $saved->packing_india_mode);
+
+        $this->actingAsAdmin($admin)
+            ->post(route('admin.products.store'), $this->adminPayload($disabled, [
+                'name' => 'New Disabled Category Product',
+                'slug' => 'new-disabled-category-product',
+                'availability_mode' => 'confirm_with_team',
+                'shipping_india_mode' => 'quoted',
+                'packing_india_mode' => 'quoted',
+                'shipping_international_mode' => 'quoted',
+                'packing_international_mode' => 'quoted',
+            ]))
+            ->assertSessionHasErrors('category_id');
+        $this->assertNull(Product::query()->where('slug', 'new-disabled-category-product')->first());
+    }
+
     public function test_ready_stock_wording_follows_tracked_inventory(): void
     {
         $tracked = Product::factory()->create([
