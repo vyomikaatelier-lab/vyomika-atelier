@@ -100,7 +100,7 @@ class CatalogSyncSeeder extends Seeder
                 'name' => 'PVD Partitions',
                 'slug' => 'partitions',
                 'summary' => 'Custom wave, fluted, and laser-cut PVD partition systems with online sq ft calculator.',
-                'content' => '<p>Engineered stainless partitions in champagne gold, rose gold, matte black, and bespoke finishes. Each system is fabricated to your dimensions with Pan-India delivery and installation support.</p>',
+                'content' => '<p>Engineered stainless partitions in champagne gold, rose gold, matte black, and bespoke finishes. Each system is fabricated to your dimensions. Pan-India delivery is available. Shipping, packing, and installation are quoted separately and agreed before dispatch.</p>',
                 'image' => 'https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg',
                 'has_calculator' => true,
                 'has_designs' => true,

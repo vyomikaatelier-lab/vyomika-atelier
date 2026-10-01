@@ -108,7 +108,7 @@ class Service extends Model
                 'Designed in: Delhi, India',
                 'Fabrication: VYOMIKA SALES — custom dimensions',
                 'Care: Wipe with soft microfibre; avoid abrasives and harsh chemicals',
-                'Installation: Pan-India delivery; on-site installation available on request',
+                'Installation: on-site installation available on request. Shipping and packing are quoted separately at dispatch and agreed before dispatch.',
             ],
             'rack-systems-metal-pvd' => [
                 'Material: Stainless steel with PVD finish — wall or freestanding configurations',

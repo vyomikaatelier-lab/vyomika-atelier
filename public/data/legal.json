@@ -145,24 +145,38 @@
         "shipping": {
             "title": "Shipping & Delivery Policy",
             "meta_title": "Shipping & Delivery Policy — Vyomika Atelier LLP",
-            "meta_description": "Delivery timelines, logistics, and installation notes for custom Vyomika Atelier LLP metal products across India.",
+            "meta_description": "Shop shipping within India is included in the displayed price. Studio shipping and packing are agreed separately before dispatch. International Shop shipping terms are confirmed before payment.",
             "sections": [
                 {
-                    "heading": "Made-to-Order Production",
+                    "heading": "Shipping and Delivery Timeline",
                     "paragraphs": [
-                        "Every {{brand_name}} product is fabricated after design approval. Delivery timelines depend on design complexity, finish selection, approval cycles, and current studio workload — typically **3–4 weeks** from order confirmation, unless otherwise quoted."
+                        "Production time and delivery time are different. Production time is the time needed to make the product after order confirmation and, where the product requires it, approval of final specifications. Transit and delivery time is the time needed to carry the finished product to the agreed delivery address.",
+                        "Production and delivery timelines depend on the product and destination. Please refer to the product’s shipping information; our team will confirm the applicable timeline before payment.",
+                        "Where a product states its own production timeline, that stated timeline applies. It is not replaced by a general estimate. The timeline that applies to an order is confirmed before payment."
                     ]
                 },
                 {
-                    "heading": "Delivery Location",
+                    "heading": "Delivery within India",
                     "paragraphs": [
-                        "We deliver across major cities in {{country}}. Project location, site access, and local regulations may affect scheduling. Remote or difficult-access sites may require additional coordination."
+                        "Shipping within India is included in the displayed product price. There is no minimum order for that included shipping. Transport to the agreed Indian delivery address, including a remote area and the vehicle required to complete that delivery, is part of the included shipping."
                     ]
                 },
                 {
-                    "heading": "Transportation & Installation",
+                    "heading": "Studio orders",
                     "paragraphs": [
-                        "Standard quotes include secure packaging and dispatch to your delivery address. **Transportation beyond the quoted zone, crane hire, on-site installation, and civil works are charged separately** unless explicitly included in your written quotation."
+                        "Shipping and packing are not included in a Studio per-square-foot rate. They are quoted separately at dispatch and agreed with the client before dispatch. This arrangement is disclosed in the initial quotation, before an advance is taken. The final agreed charges are recorded in writing, even when discussed by phone."
+                    ]
+                },
+                {
+                    "heading": "International delivery",
+                    "paragraphs": [
+                        "For delivery outside India, customers submit an enquiry with the selected products and destination. Our team confirms shipping charges, estimated delivery time, and import-duty responsibility before payment. An international enquiry does not start an online payment. The website does not calculate an international shipping charge."
+                    ]
+                },
+                {
+                    "heading": "Transportation and Installation",
+                    "paragraphs": [
+                        "For Shop orders delivered within India, shipping is included in the displayed product price. Optional installation, crane hire, and work outside the agreed delivery scope are separate from that included shipping. Their scope and any charges are agreed before payment. International Shop shipping charges are confirmed before payment."
                     ]
                 },
                 {

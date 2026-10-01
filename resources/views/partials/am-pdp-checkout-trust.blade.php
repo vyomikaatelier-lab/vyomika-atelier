@@ -1,8 +1,17 @@
+@props(['product' => null, 'shippingContext' => null])
+
+@php
+    $shippingNote = \App\Support\IndiaDelivery::shippingNoteFor(
+        $product instanceof \App\Models\Product ? $product : null,
+        is_string($shippingContext) ? $shippingContext : null,
+    );
+@endphp
+
 <div class="am-pdp-checkout-trust">
     <ul class="am-pdp-shipping-notes">
         <li>
             <svg class="am-pdp-shipping-notes__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-            <span>{{ \App\Support\IndiaDelivery::CUSTOMER_NOTE }} <a href="{{ route('legal.shipping') }}">Shipping details</a></span>
+            <span data-shipping-trust>{{ $shippingNote }}</span> <a href="{{ route('legal.shipping') }}">Shipping details</a>
         </li>
     </ul>
 

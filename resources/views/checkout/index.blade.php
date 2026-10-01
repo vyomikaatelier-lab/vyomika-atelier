@@ -70,8 +70,8 @@
             <div class="am-card am-checkout-panel">
                 <div class="am-card__body">
                     <h2 class="am-checkout-panel__title">Shipping details</h2>
-                    <p class="am-checkout-panel__hint" data-destination-hint>{{ $destinationIsIndia ? \App\Support\IndiaDelivery::CUSTOMER_NOTE : \App\Support\IndiaDelivery::ENQUIRY_HINT }}</p>
-                    <p class="am-checkout-panel__hint">{{ \App\Support\IndiaDelivery::READY_STOCK_ESTIMATE }} {{ \App\Support\IndiaDelivery::MADE_TO_ORDER_ESTIMATE }}</p>
+                    <p class="am-checkout-panel__hint" data-destination-hint>{{ $destinationIsIndia ? \App\Support\IndiaDelivery::SHOP_INDIA_SHIPPING : \App\Support\IndiaDelivery::ENQUIRY_HINT }}</p>
+                    <p class="am-checkout-panel__hint">{{ \App\Support\IndiaDelivery::TIMELINE_CONFIRMATION }}</p>
 
                     <div class="am-checkout-form__address">
                         @include('partials.am-address-form-grid', [
@@ -114,7 +114,7 @@
                         <span class="am-checkout-pay-badge">Debit / Credit Card</span>
                         <span class="am-checkout-pay-badge">Net Banking</span>
                     </div>
-                    @include('partials.am-pdp-checkout-trust')
+                    @include('partials.am-pdp-checkout-trust', ['shippingContext' => $destinationIsIndia ? 'india' : 'international'])
                 </div>
             </div>
 
@@ -147,13 +147,15 @@ document.addEventListener('DOMContentLoaded', function () {
     var razorpayReady = button.getAttribute('data-razorpay-ready') === '1';
     var hint = document.querySelector('[data-destination-hint]');
     var paymentHint = document.querySelector('[data-payment-hint]');
-    var indiaHint = @json(\App\Support\IndiaDelivery::CUSTOMER_NOTE);
+    var indiaHint = @json(\App\Support\IndiaDelivery::SHOP_INDIA_SHIPPING);
     var enquiryHint = @json(\App\Support\IndiaDelivery::ENQUIRY_HINT);
     var sync = function () {
         var india = select.value === 'India';
         button.textContent = india ? payLabel : enquiryLabel;
         button.disabled = india && !razorpayReady;
         if (hint) hint.textContent = india ? indiaHint : enquiryHint;
+        var shippingTrust = document.querySelector('[data-shipping-trust]');
+        if (shippingTrust) shippingTrust.textContent = india ? indiaHint : enquiryHint;
         if (paymentHint) {
             paymentHint.textContent = india
                 ? 'India orders are paid with Razorpay (UPI, card, or net banking).'

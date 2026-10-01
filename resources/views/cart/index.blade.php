@@ -99,7 +99,7 @@
                         </div>
                     </div>
 
-                    @include('partials.am-pdp-checkout-trust')
+                    @include('partials.am-pdp-checkout-trust', ['shippingContext' => 'shop'])
                 </div>
 
                 <div class="am-checkout-sidebar">

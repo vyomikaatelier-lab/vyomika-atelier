@@ -43,7 +43,7 @@
                     'serviceName' => $name,
                     'calcTitle' => 'Estimate your ' . $estimateLabel,
                 ])
-                @include('partials.am-pdp-checkout-trust')
+                @include('partials.am-pdp-checkout-trust', ['shippingContext' => 'studio'])
             </div>
         </div>
     </div>

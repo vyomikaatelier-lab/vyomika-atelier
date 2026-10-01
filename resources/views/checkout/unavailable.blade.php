@@ -25,7 +25,8 @@
             <div class="am-card__body">
                 <h2 class="am-checkout-success-card__title">Checkout is temporarily unavailable</h2>
                 <p class="am-checkout-success-card__text">{{ \App\Support\CheckoutPayments::UNAVAILABLE_MESSAGE }}</p>
-                <p class="am-checkout-success-card__text">{{ \App\Support\IndiaDelivery::CUSTOMER_NOTE }}</p>
+                <p class="am-checkout-success-card__text">{{ \App\Support\IndiaDelivery::SHOP_INDIA_SHIPPING }}</p>
+                <p class="am-checkout-success-card__text">{{ \App\Support\IndiaDelivery::TIMELINE_CONFIRMATION }}</p>
                 <div class="am-checkout-success-card__actions">
                     <a href="{{ route('cart.index') }}" class="am-btn am-btn--primary">Return to cart</a>
                     <a href="{{ \App\Support\StorefrontRoutes::primaryShopUrl() }}" class="am-btn am-btn--outline">Continue shopping</a>
@@ -51,7 +52,7 @@
                 <div class="am-card__body">
                     <h2 class="am-checkout-panel__title" data-checkout-heading>{{ $destinationIsIndia ? 'Checkout unavailable' : 'International shipping enquiry' }}</h2>
                     <p class="am-checkout-panel__hint" data-destination-hint>{{ $destinationIsIndia ? \App\Support\CheckoutPayments::UNAVAILABLE_MESSAGE : \App\Support\IndiaDelivery::ENQUIRY_HINT }}</p>
-                    <p class="am-checkout-panel__hint">{{ \App\Support\IndiaDelivery::READY_STOCK_ESTIMATE }} {{ \App\Support\IndiaDelivery::MADE_TO_ORDER_ESTIMATE }}</p>
+                    <p class="am-checkout-panel__hint">{{ \App\Support\IndiaDelivery::TIMELINE_CONFIRMATION }}</p>
                     @include('partials.am-address-form-grid', [
                         'mode' => 'checkout',
                         'userEmail' => old('customer_email', $user?->email),

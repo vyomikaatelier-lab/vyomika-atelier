@@ -139,18 +139,26 @@ return [
         'shipping' => [
             'title' => 'Shipping & Delivery Policy',
             'meta_title' => 'Shipping & Delivery Policy — Vyomika Atelier',
-            'meta_description' => 'India shipping is included in the product price. International shipping is confirmed by the studio before payment.',
+            'meta_description' => 'Shop shipping within India is included in the displayed price. Studio shipping and packing are agreed separately before dispatch. International Shop shipping terms are confirmed before payment.',
             'sections' => [
                 [
                     'heading' => 'Shipping and Delivery Timeline',
                     'paragraphs' => [
-                        'Within India, ready stock is an estimated 5 to 12 business days after order confirmation. Made-to-order and customized products are an estimated 15 to 35 business days after order confirmation and approval of final specifications. These are estimates. The estimate can change with product size, finish, customization, quantity, and delivery location.',
+                        'Production time and delivery time are different. Production time is the time needed to make the product after order confirmation and, where the product requires it, approval of final specifications. Transit and delivery time is the time needed to carry the finished product to the agreed delivery address.',
+                        'Production and delivery timelines depend on the product and destination. Please refer to the product’s shipping information; our team will confirm the applicable timeline before payment.',
+                        'Where a product states its own production timeline, that stated timeline applies. It is not replaced by a general estimate. The timeline that applies to an order is confirmed before payment.',
                     ],
                 ],
                 [
                     'heading' => 'Delivery within India',
                     'paragraphs' => [
-                        'Shipping within India is included in the displayed product price. There is no minimum order for that included shipping. {{brand_name}} delivers across major cities in India. Project location, site access, and local conditions may affect scheduling. Remote or difficult-access sites may require additional coordination.',
+                        'Shipping within India is included in the displayed product price. There is no minimum order for that included shipping. Transport to the agreed Indian delivery address, including a remote area and the vehicle required to complete that delivery, is part of the included shipping.',
+                    ],
+                ],
+                [
+                    'heading' => 'Studio orders',
+                    'paragraphs' => [
+                        'Shipping and packing are not included in a Studio per-square-foot rate. They are quoted separately at dispatch and agreed with the client before dispatch. This arrangement is disclosed in the initial quotation, before an advance is taken. The final agreed charges are recorded in writing, even when discussed by phone.',
                     ],
                 ],
                 [
@@ -162,7 +170,7 @@ return [
                 [
                     'heading' => 'Transportation and Installation',
                     'paragraphs' => [
-                        'Within India, shipping is included in the displayed product price, including secure packaging and dispatch to the delivery address. Transportation beyond the agreed delivery, crane hire, on-site installation, and civil works are charged separately unless explicitly included in the written quotation. International shipping charges are confirmed by our team before payment.',
+                        'For Shop orders delivered within India, shipping is included in the displayed product price. Optional installation, crane hire, and work outside the agreed delivery scope are separate from that included shipping. Their scope and any charges are agreed before payment. International Shop shipping charges are confirmed before payment.',
                     ],
                 ],
                 [

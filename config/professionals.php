@@ -105,7 +105,7 @@ return [
         'items' => [
             ['title' => 'Quality & Craftsmanship', 'text' => 'Delhi studio fabrication with documented QC, secure packaging and Pan-India delivery.'],
             ['title' => 'Innovation', 'text' => 'CNC cutting, PVD finishes, Corten systems and bespoke engineering for complex briefs.'],
-            ['title' => 'Reliable Timelines', 'text' => 'Made-to-order metalwork within India is an estimate of 15–35 business days after approval. Ready stock is an estimate of 5–12 business days.'],
+            ['title' => 'Reliable Timelines', 'text' => 'Production and delivery timelines depend on the product and destination. Please refer to the product’s shipping information; our team will confirm the applicable timeline before payment.'],
             ['title' => 'End-to-end Support', 'text' => 'From drawing review and sampling through delivery and installation coordination.'],
         ],
     ],
@@ -129,7 +129,7 @@ return [
             ['q' => 'How is B2B pricing structured?', 'a' => 'Pricing tiers reflect project volume, repeat business and product category. Your relationship manager shares tier details upon approval.'],
             ['q' => 'Can contractors apply without a design practice?', 'a' => 'Yes — contractors and fit-out agencies with documented project history are eligible.'],
             ['q' => 'Do you support CAD/BIM coordination?', 'a' => 'We work from PDF, DWG and dimensioned drawings and can align with your project documentation workflow.'],
-            ['q' => 'What are typical lead times?', 'a' => 'Made-to-order fabrication within India is an estimate of 15–35 business days from drawing approval. Ready stock is an estimate of 5–12 business days. These are estimates and can change with the specification.'],
+            ['q' => 'What are typical lead times?', 'a' => 'Production and delivery timelines depend on the product and destination. Please refer to the product’s shipping information; our team will confirm the applicable timeline before payment. A product that states its own production timeline keeps that timeline.'],
             ['q' => 'Who is my point of contact?', 'a' => 'Each approved partner is assigned a dedicated relationship manager for quotes, production updates and sampling.'],
         ],
     ],

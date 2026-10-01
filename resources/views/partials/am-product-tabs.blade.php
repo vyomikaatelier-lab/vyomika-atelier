@@ -9,6 +9,7 @@
     'related' => null,
     'product' => null,
     'categoryLabel' => null,
+    'shippingContext' => null,
 ])
 
 <section class="am-pdp-tabs-wrap">
@@ -70,7 +71,7 @@
                         <div><dt>Finish options</dt><dd>8 PVD finishes available</dd></div>
                         <div><dt>Fabrication</dt><dd>Custom dimensions from Delhi studio</dd></div>
                     @endif
-                    <div><dt>Delivery</dt><dd>{{ \App\Support\IndiaDelivery::READY_STOCK_ESTIMATE }} {{ \App\Support\IndiaDelivery::MADE_TO_ORDER_ESTIMATE }}</dd></div>
+                    <div><dt>Delivery</dt><dd>{{ \App\Support\IndiaDelivery::TIMELINE_CONFIRMATION }}</dd></div>
                 </dl>
                 @endif
             </div>
@@ -92,7 +93,7 @@
                 </ul>
                 @else
                 <h3>Packaging &amp; Handling</h3>
-                <p>Every Vyomika Atelier piece is wrapped in protective foam and corner guards, then crated in plywood for transit. PVD surfaces are film-wrapped to prevent scratches during Pan-India shipping.</p>
+                <p>Every Vyomika Atelier piece is wrapped in protective foam and corner guards, then crated in plywood for transit. {{ \App\Support\IndiaDelivery::packagingFilmSentence($product instanceof \App\Models\Product ? $product : null, is_string($shippingContext) ? $shippingContext : null) }}</p>
                 <ul class="am-pdp-tabs__care-list">
                     <li>Individual partition panels — vertical crate with foam spacers</li>
                     <li>Door systems — reinforced frame crate with glass protection</li>
@@ -120,10 +121,16 @@
                 </ul>
                 @else
                 <h3>Shipping</h3>
-                <p>{{ \App\Support\IndiaDelivery::CUSTOMER_NOTE }}</p>
+                @php
+                    $shippingProduct = $product instanceof \App\Models\Product ? $product : null;
+                    $shippingFallback = \App\Support\IndiaDelivery::shippingNoteFor(
+                        $shippingProduct,
+                        is_string($shippingContext) ? $shippingContext : null,
+                    );
+                @endphp
+                <p>{{ $shippingFallback }}</p>
                 <ul class="am-pdp-tabs__care-list">
-                    <li>{{ \App\Support\IndiaDelivery::READY_STOCK_ESTIMATE }}</li>
-                    <li>{{ \App\Support\IndiaDelivery::MADE_TO_ORDER_ESTIMATE }}</li>
+                    <li>{{ \App\Support\IndiaDelivery::TIMELINE_CONFIRMATION }}</li>
                     <li><strong>Made to order:</strong> All items are custom fabricated — no returns on bespoke metalwork</li>
                 </ul>
                 <p><a href="{{ route('legal.shipping') }}">Full shipping policy →</a></p>

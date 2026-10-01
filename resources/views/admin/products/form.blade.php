@@ -65,8 +65,8 @@
 
         <div>
             <label for="headline_text" class="text-sm font-medium text-gray-800 block mb-1">Line under title <span class="font-normal text-gray-500">(optional)</span></label>
-            <p class="text-xs text-gray-500 mb-2">Small grey line below the product name, e.g. <em>SKU: MF-001 · Pan-India shipping</em>. Leave blank to auto-build from SKU only; hidden on the site when both this field and SKU are empty.</p>
-            <input id="headline_text" type="text" name="headline_text" value="{{ old('headline_text', $product->headline_text ?? '') }}" placeholder="e.g. SKU: MF-001 · Pan-India shipping" class="w-full border px-3 py-2 rounded bg-white">
+            <p class="text-xs text-gray-500 mb-2">Small grey line below the product name. Leave blank to auto-build from the SKU: Shop products add “· Pan-India shipping”; Studio, railings, and unclassified products show the SKU only. A saved headline is shown unchanged.</p>
+            <input id="headline_text" type="text" name="headline_text" value="{{ old('headline_text', $product->headline_text ?? '') }}" placeholder="e.g. SKU: MF-001" class="w-full border px-3 py-2 rounded bg-white">
             @error('headline_text')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
         </div>
 
@@ -95,7 +95,7 @@
                 @php
                     $specificationsValue = old('tab_specifications', isset($product) ? implode("\n", $product->specificationLines()) : '');
                 @endphp
-                <textarea id="tab_specifications" name="tab_specifications" rows="8" placeholder="Material: Grade 304/316 stainless with PVD coating&#10;Finish options: Gold, Rose Gold, Champagne, Black&#10;Delivery: estimates of 5–12 business days for ready stock and 15–35 business days for made-to-order, within India" class="w-full border px-3 py-2 rounded text-sm bg-white leading-relaxed">{{ $specificationsValue }}</textarea>
+                <textarea id="tab_specifications" name="tab_specifications" rows="8" placeholder="Material: Grade 304/316 stainless with PVD coating&#10;Finish options: Gold, Rose Gold, Champagne, Black&#10;Production: state this product’s own production estimate when one applies" class="w-full border px-3 py-2 rounded text-sm bg-white leading-relaxed">{{ $specificationsValue }}</textarea>
                 @error('tab_specifications')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
             </div>
             <div>
@@ -113,7 +113,7 @@
                 @php
                     $shippingValue = old('tab_shipping', isset($product) ? implode("\n", \App\Models\Product::linesFromTabText($product->tab_shipping)) : '');
                 @endphp
-                <textarea id="tab_shipping" name="tab_shipping" rows="6" placeholder="Shipping included within India.&#10;Ready stock estimate: 5–12 business days.&#10;Made-to-order estimate: 15–35 business days.&#10;International delivery is confirmed by the team before payment." class="w-full border px-3 py-2 rounded text-sm bg-white leading-relaxed">{{ $shippingValue }}</textarea>
+                <textarea id="tab_shipping" name="tab_shipping" rows="6" placeholder="Shop, India: shipping is included in the displayed price.&#10;International Shop: shipping charges and delivery are confirmed before payment.&#10;Studio: shipping and packing are quoted separately at dispatch and agreed before dispatch.&#10;Keep any product-specific production estimate. Do not add a transit time unless it is already confirmed." class="w-full border px-3 py-2 rounded text-sm bg-white leading-relaxed">{{ $shippingValue }}</textarea>
                 @error('tab_shipping')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
             </div>
         </fieldset>

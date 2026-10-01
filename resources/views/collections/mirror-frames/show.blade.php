@@ -65,7 +65,7 @@
                 <ul class="am-pdp__trust">
                     <li>✓ PVD stainless frame fabrication</li>
                     <li>✓ Secure crated packaging</li>
-                    <li>✓ {{ \App\Support\IndiaDelivery::READY_STOCK_ESTIMATE }} {{ \App\Support\IndiaDelivery::MADE_TO_ORDER_ESTIMATE }}</li>
+                    <li>✓ {{ \App\Support\IndiaDelivery::TIMELINE_CONFIRMATION }}</li>
                 </ul>
 
                 @php
@@ -98,7 +98,7 @@
                         'class' => 'am-btn am-btn--primary am-btn--lg am-btn--full',
                     ])
                     @endif
-                    @include('partials.am-pdp-checkout-trust')
+                    @include('partials.am-pdp-checkout-trust', ['product' => $product])
                 </div>
             </div>
         </div>

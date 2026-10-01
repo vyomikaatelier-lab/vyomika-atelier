@@ -364,8 +364,8 @@
         },
         {
             "icon": "delivery",
-            "title": "3–4 Week Delivery",
-            "text": "Made-to-order fabrication from Delhi studio."
+            "title": "Timelines confirmed",
+            "text": "Production and delivery timelines depend on the product and destination."
         },
         {
             "icon": "support",
@@ -483,7 +483,7 @@
             "slug": "partitions",
             "name": "PVD Partitions",
             "summary": "Custom wave, fluted, and laser-cut PVD partition systems with online sq ft calculator.",
-            "content": "<p>Engineered stainless partitions in champagne gold, rose gold, matte black, and bespoke finishes. Each system is fabricated to your dimensions with Pan-India delivery and installation support.</p>",
+            "content": "<p>Engineered stainless partitions in champagne gold, rose gold, matte black, and bespoke finishes. Each system is fabricated to your dimensions. Pan-India delivery is available. Shipping, packing, and installation are quoted separately and agreed before dispatch.</p>",
             "image": "https://www.vyomikaatelier.com/assets/campaign-partitions.jpeg",
             "has_calculator": true,
             "lead_form": "popup",

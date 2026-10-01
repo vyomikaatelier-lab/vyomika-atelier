@@ -94,7 +94,7 @@
                 <ul class="am-pdp__trust">
                     <li>✓ PVD stainless fabrication</li>
                     <li>✓ Secure packaging</li>
-                    <li>✓ {{ \App\Support\IndiaDelivery::READY_STOCK_ESTIMATE }} {{ \App\Support\IndiaDelivery::MADE_TO_ORDER_ESTIMATE }}</li>
+                    <li>✓ {{ \App\Support\IndiaDelivery::TIMELINE_CONFIRMATION }}</li>
                 </ul>
 
                 @include('partials.am-mirror-dimensions', ['product' => $product])
@@ -115,12 +115,12 @@
                         'serviceName' => $product->name,
                         'calcTitle' => 'Estimate your ' . $calcLabel,
                     ])
-                    @include('partials.am-pdp-checkout-trust')
+                    @include('partials.am-pdp-checkout-trust', ['product' => $product])
                 </div>
                 @elseif($showCheckoutBuy)
                 <div class="am-pdp__buy-inline" id="buy">
                     @include('partials.am-pdp-buy-actions', ['product' => $product, 'externalSizeSelector' => $hasSizeOptions])
-                    @include('partials.am-pdp-checkout-trust')
+                    @include('partials.am-pdp-checkout-trust', ['product' => $product])
                 </div>
                 @else
                 <div class="am-pdp__quote-cta" id="buy">
@@ -132,7 +132,7 @@
                         'price' => $product->price,
                         'class' => 'am-btn am-btn--primary am-btn--lg am-btn--full',
                     ])
-                    @include('partials.am-pdp-checkout-trust')
+                    @include('partials.am-pdp-checkout-trust', ['product' => $product])
                 </div>
                 @endif
             </div>
@@ -144,7 +144,10 @@
             'specificationsHtml' => $product->tab_specifications,
             'packagingHtml' => $product->tab_packaging,
             'shippingHtml' => $product->tab_shipping,
-            'careItems' => ProductCatalog::careGuidelinesForProduct($product->slug, $categorySlug),
+            'careItems' => array_map(
+                static fn (string $line): string => \App\Support\IndiaDelivery::qualifiedCareDeliveryLine($line, $product),
+                ProductCatalog::careGuidelinesForProduct($product->slug, $categorySlug),
+            ),
             'related' => $related,
             'product' => $product,
             'categoryLabel' => $sectionLabel,
