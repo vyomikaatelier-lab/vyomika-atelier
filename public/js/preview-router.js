@@ -1009,12 +1009,51 @@ ${hero ? serviceHeroHtml(hero) : pageHero('Studio', service.name, meta.action, f
     return productClassification(product).section === 'shop';
   }
 
+  function structuredShippingNote(product) {
+    if (!product || typeof product !== 'object' || !product.availability_mode) return null;
+    const section = product.section;
+    const ship = product.shipping_india_mode;
+    const pack = product.packing_india_mode;
+    if (section === 'studio' && ship === 'quoted' && pack === 'quoted') return STUDIO_SHIPPING_NOTE;
+    if (section === 'shop' && ship === 'included' && pack === 'included') return SHOP_SHIPPING_NOTE;
+    if (section !== 'shop' && section !== 'studio') return QUOTATION_SHIPPING_NOTE;
+    const parts = [
+      chargeSentence('Shipping within India', ship, product.shipping_india_amount, product.shipping_india_basis),
+      chargeSentence('Packing within India', pack, product.packing_india_amount, product.packing_india_basis),
+    ];
+    if (section === 'shop') {
+      parts.push('For international delivery, shipping charges and estimated delivery time are confirmed before payment.');
+    }
+    return parts.join(' ');
+  }
+
+  function chargeSentence(label, mode, amount, basis) {
+    if (mode === 'included') return label + ' is included in the displayed price.';
+    if (mode === 'fixed') {
+      const money = fixedAmount(amount);
+      const basisLabel = basis === 'per_unit' ? 'per unit' : (basis === 'per_line' ? 'per product line' : '');
+      if (money && basisLabel) return label + ' is a fixed charge of ₹' + money + ' ' + basisLabel + '.';
+    }
+    return label + ' is quoted separately.';
+  }
+
+  function fixedAmount(amount) {
+    if (typeof amount === 'number' && Number.isFinite(amount) && amount >= 0) return amount.toFixed(2);
+    if (typeof amount === 'string' && /^\d+(\.\d{1,2})?$/.test(amount)) {
+      const parts = amount.split('.');
+      return String(Number(parts[0])) + '.' + ((parts[1] || '') + '00').slice(0, 2);
+    }
+    return '';
+  }
+
   function shippingNoteHtml(product, context) {
     if (context === 'studio') return STUDIO_SHIPPING_NOTE;
     if (context === 'shop') return SHOP_SHIPPING_NOTE;
     if (context === 'india') return INDIA_SHIPPING_NOTE;
     if (context === 'international') return INTERNATIONAL_ENQUIRY_NOTE;
     if (context === 'quotation') return QUOTATION_SHIPPING_NOTE;
+    const structured = structuredShippingNote(product);
+    if (structured) return structured;
     if (product && isStudioProduct(product)) return STUDIO_SHIPPING_NOTE;
     if (product && isShopProduct(product)) return SHOP_SHIPPING_NOTE;
     return QUOTATION_SHIPPING_NOTE;

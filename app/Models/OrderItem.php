@@ -17,6 +17,7 @@ class OrderItem extends Model
         'price',
         'quantity',
         'total',
+        'fulfilment_snapshot',
     ];
 
     protected function casts(): array
@@ -24,6 +25,7 @@ class OrderItem extends Model
         return [
             'price' => 'decimal:2',
             'total' => 'decimal:2',
+            'fulfilment_snapshot' => 'array',
         ];
     }
 

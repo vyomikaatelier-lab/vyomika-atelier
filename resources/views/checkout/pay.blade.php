@@ -73,7 +73,10 @@
                     <p class="am-checkout-pay-test-hint">Test mode: UPI <code>test@razorpay</code> · Card <code>4111 1111 1111 1111</code></p>
                     @endif
 
-                    @include('partials.am-pdp-checkout-trust', ['shippingContext' => 'india'])
+                    @include('partials.am-pdp-checkout-trust', [
+                        'shippingContext' => 'india',
+                        'shippingNote' => is_array($order->fulfilment_snapshot ?? null) ? ($order->fulfilment_snapshot['customer_note'] ?? null) : null,
+                    ])
                 </div>
             </div>
 

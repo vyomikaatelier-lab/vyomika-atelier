@@ -1,14 +1,23 @@
-@props(['product' => null, 'shippingContext' => null])
+@props(['product' => null, 'shippingContext' => null, 'shippingNote' => null])
 
 @php
-    $shippingNote = \App\Support\IndiaDelivery::shippingNoteFor(
+    $shippingNote = $shippingNote
+    ?? \App\Support\IndiaDelivery::shippingNoteFor(
         $product instanceof \App\Models\Product ? $product : null,
         is_string($shippingContext) ? $shippingContext : null,
     );
+    $detailLines = $product instanceof \App\Models\Product && filled($product->availability_mode) && $shippingContext === null
+        ? \App\Support\ProductFulfilment::customerDetailLines($product)
+        : [];
 @endphp
 
 <div class="am-pdp-checkout-trust">
     <ul class="am-pdp-shipping-notes">
+        @foreach($detailLines as $detailLine)
+        <li>
+            <span>{{ $detailLine }}</span>
+        </li>
+        @endforeach
         <li>
             <svg class="am-pdp-shipping-notes__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
             <span data-shipping-trust>{{ $shippingNote }}</span> <a href="{{ route('legal.shipping') }}">Shipping details</a>

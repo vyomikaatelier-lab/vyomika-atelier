@@ -114,7 +114,17 @@
                         <span class="am-checkout-pay-badge">Debit / Credit Card</span>
                         <span class="am-checkout-pay-badge">Net Banking</span>
                     </div>
-                    @include('partials.am-pdp-checkout-trust', ['shippingContext' => $destinationIsIndia ? 'india' : 'international'])
+                    @include('partials.am-pdp-checkout-trust', [
+                        'shippingContext' => $destinationIsIndia ? 'india' : 'international',
+                        'shippingNote' => $destinationIsIndia ? ($fulfilmentQuote['customer_note'] ?? null) : \App\Support\IndiaDelivery::ENQUIRY_HINT,
+                    ])
+                    @if($destinationIsIndia && ($fulfilmentQuote['reasons'] ?? []) !== [])
+                    <ul class="am-pdp-shipping-notes">
+                        @foreach($fulfilmentQuote['reasons'] as $reason)
+                        <li>{{ $reason }}</li>
+                        @endforeach
+                    </ul>
+                    @endif
                 </div>
             </div>
 
@@ -125,10 +135,13 @@
                 'total' => $total,
                 'compact' => true,
                 'summaryMode' => $summaryMode,
+                'shippingLabel' => $destinationIsIndia ? ($fulfilmentQuote['shipping_label'] ?? null) : null,
+                'packingLabel' => $destinationIsIndia ? ($fulfilmentQuote['packing_label'] ?? null) : null,
+                'chargeNote' => $destinationIsIndia ? ($fulfilmentQuote['customer_note'] ?? null) : \App\Support\IndiaDelivery::ENQUIRY_HINT,
             ])
 
             <div class="am-checkout-stack__actions">
-                <button type="submit" class="am-btn am-btn--primary am-btn--full am-btn--lg" data-checkout-submit data-pay-label="Continue to Payment" data-enquiry-label="Save shipping enquiry" data-razorpay-ready="{{ $razorpayEnabled ? '1' : '0' }}" @disabled($destinationIsIndia && !$razorpayEnabled)>{{ $destinationIsIndia ? 'Continue to Payment' : 'Save shipping enquiry' }}</button>
+                <button type="submit" class="am-btn am-btn--primary am-btn--full am-btn--lg" data-checkout-submit data-pay-label="Continue to Payment" data-enquiry-label="Save shipping enquiry" data-razorpay-ready="{{ $razorpayEnabled ? '1' : '0' }}" @disabled($destinationIsIndia && ($fulfilmentQuote['payable'] ?? false) && !$razorpayEnabled)>{{ $destinationIsIndia ? (($fulfilmentQuote['payable'] ?? false) ? 'Continue to Payment' : 'Request quotation') : 'Save shipping enquiry' }}</button>
                 <a href="{{ route('cart.index') }}" class="am-btn am-btn--outline am-btn--full">Back to Cart</a>
             </div>
         </form>
@@ -147,12 +160,14 @@ document.addEventListener('DOMContentLoaded', function () {
     var razorpayReady = button.getAttribute('data-razorpay-ready') === '1';
     var hint = document.querySelector('[data-destination-hint]');
     var paymentHint = document.querySelector('[data-payment-hint]');
-    var indiaHint = @json(\App\Support\IndiaDelivery::SHOP_INDIA_SHIPPING);
+    var indiaHint = @json($fulfilmentQuote['customer_note'] ?? \App\Support\IndiaDelivery::SHOP_INDIA_SHIPPING);
     var enquiryHint = @json(\App\Support\IndiaDelivery::ENQUIRY_HINT);
+    var indiaShippingLabel = @json($fulfilmentQuote['shipping_label'] ?? 'Shipping included');
+    var needsQuote = @json(! ($fulfilmentQuote['payable'] ?? true));
     var sync = function () {
         var india = select.value === 'India';
-        button.textContent = india ? payLabel : enquiryLabel;
-        button.disabled = india && !razorpayReady;
+        button.textContent = india ? (needsQuote ? 'Request quotation' : payLabel) : enquiryLabel;
+        button.disabled = india && !needsQuote && !razorpayReady;
         if (hint) hint.textContent = india ? indiaHint : enquiryHint;
         var shippingTrust = document.querySelector('[data-shipping-trust]');
         if (shippingTrust) shippingTrust.textContent = india ? indiaHint : enquiryHint;
@@ -166,7 +181,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var shipping = summary.querySelector('[data-shipping-label]');
             var payable = summary.querySelector('[data-payable-total]');
             if (subtotal) subtotal.textContent = india ? 'Subtotal' : @json(\App\Support\IndiaDelivery::MERCHANDISE_SUBTOTAL);
-            if (shipping) shipping.textContent = india ? 'Shipping included' : @json(\App\Support\IndiaDelivery::SHIPPING_QUOTED);
+            if (shipping) shipping.textContent = india ? indiaShippingLabel : @json(\App\Support\IndiaDelivery::SHIPPING_QUOTED);
             if (payable) payable.hidden = !india;
         });
     };

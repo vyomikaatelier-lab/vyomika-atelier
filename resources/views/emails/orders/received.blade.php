@@ -16,6 +16,9 @@ Thank you for your order with **Vyomika Atelier**.
 **Subtotal:** ₹{{ number_format($order->subtotal, 0) }}
 
 **Shipping:** {{ (float) $order->shipping_cost > 0 ? '₹'.number_format($order->shipping_cost, 0) : 'Included' }}
+@if(is_array($order->fulfilment_snapshot))
+**Packing:** {{ ($order->fulfilment_snapshot['packing_label'] ?? null) === 'Packing included' ? 'Included' : (($order->packing_cost ?? 0) > 0 ? '₹'.number_format($order->packing_cost, 2) : '₹'.number_format((float) ($order->packing_cost ?? 0), 2)) }}
+@endif
 
 **Total:** ₹{{ number_format($order->total, 0) }}
 
