@@ -122,7 +122,7 @@ class MysqlOrderRefundMigrationTest extends TestCase
             ]);
             $this->fail('Rollback should refuse while fulfilment evidence exists.');
         } catch (Throwable $exception) {
-            $this->assertStringContainsString('fulfilment evidence', $exception->getMessage());
+            $this->assertStringContainsString('Cannot roll back fulfilment settings', $exception->getMessage());
         }
         DB::table('orders')->where('id', $historicalId)->update(['fulfilment_snapshot' => null]);
         $this->assertSame('pay_historical', DB::table('orders')->where('id', $historicalId)->value('payment_id'));
