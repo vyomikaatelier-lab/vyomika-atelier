@@ -382,7 +382,7 @@ return [
 
     'trust_badges' => [
         ['icon' => 'shipping', 'title' => 'Pan-India Shipping', 'text' => 'Fabrication & delivery across major cities.'],
-        ['icon' => 'delivery', 'title' => '3–4 Week Delivery', 'text' => 'Made-to-order fabrication from Delhi studio.'],
+        ['icon' => 'delivery', 'title' => 'Timelines confirmed', 'text' => 'Production and delivery timelines depend on the product and destination.'],
         ['icon' => 'support', 'title' => 'Expert Support', 'text' => 'Delhi studio team — Mon–Sat, 10am–7pm IST.'],
         ['icon' => 'discount', 'title' => 'Trade Discounts', 'text' => 'Special pricing for architects & designers.'],
     ],

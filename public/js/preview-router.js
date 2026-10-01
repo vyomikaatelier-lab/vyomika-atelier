@@ -147,6 +147,13 @@
   }
 
   function productClassification(product) {
+    if (!product || typeof product !== 'object') {
+      return { section: 'unknown', service_slug: null, shop_category: null };
+    }
+    const explicit = product.section;
+    if (explicit === 'shop' || explicit === 'studio' || explicit === 'railings') {
+      return { section: explicit, service_slug: null, shop_category: explicit === 'shop' ? (categorySlug(product) || null) : null };
+    }
     const map = buildProductClassificationMap();
     if (product?.slug && map[product.slug]) return map[product.slug];
     const cat = categorySlug(product);
@@ -912,6 +919,7 @@ ${hero ? serviceHeroHtml(hero) : pageHero('Studio', service.name, meta.action, f
   }
 
   function categorySlug(product) {
+    if (!product || typeof product !== 'object') return '';
     const cat = (product.category || '').toLowerCase();
     const slug = (product.slug || '').toLowerCase();
     if (cat.includes('fluted') || slug.includes('fluted')) return 'fluted-panels';
@@ -993,11 +1001,37 @@ ${hero ? serviceHeroHtml(hero) : pageHero('Studio', service.name, meta.action, f
   const TIMELINE_CONFIRMATION = 'Production and delivery timelines depend on the product and destination. Please refer to the product’s shipping information; our team will confirm the applicable timeline before payment.';
   const SHOP_SHIPPING_NOTE = 'Shipping within India is included in the displayed price. For international delivery, shipping charges and estimated delivery time are confirmed before payment.';
   const STUDIO_SHIPPING_NOTE = 'Shipping and packing are quoted separately at dispatch and agreed with the client before dispatch.';
+  const QUOTATION_SHIPPING_NOTE = 'Shipping terms and timelines are confirmed in the quotation.';
+  const INDIA_SHIPPING_NOTE = 'Shipping within India is included in the displayed price.';
+  const INTERNATIONAL_ENQUIRY_NOTE = 'Shipping quoted separately. Our team will confirm shipping charges, estimated delivery time, and import-duty responsibility before payment.';
+
+  function isShopProduct(product) {
+    return productClassification(product).section === 'shop';
+  }
 
   function shippingNoteHtml(product, context) {
-    if (context === 'studio' || (product && isStudioProduct(product))) return STUDIO_SHIPPING_NOTE;
-    return SHOP_SHIPPING_NOTE;
+    if (context === 'studio') return STUDIO_SHIPPING_NOTE;
+    if (context === 'shop') return SHOP_SHIPPING_NOTE;
+    if (context === 'india') return INDIA_SHIPPING_NOTE;
+    if (context === 'international') return INTERNATIONAL_ENQUIRY_NOTE;
+    if (context === 'quotation') return QUOTATION_SHIPPING_NOTE;
+    if (product && isStudioProduct(product)) return STUDIO_SHIPPING_NOTE;
+    if (product && isShopProduct(product)) return SHOP_SHIPPING_NOTE;
+    return QUOTATION_SHIPPING_NOTE;
   }
+
+  function previewHeadline(product) {
+    if (product && typeof product.headline_text === 'string' && product.headline_text.trim() !== '') {
+      return product.headline_text.trim();
+    }
+    if (!product || !product.sku) return '';
+    return isShopProduct(product)
+      ? `SKU: ${product.sku} · Pan-India shipping`
+      : `SKU: ${product.sku}`;
+  }
+
+  window.AmPreviewRouterApi.shippingNoteHtml = shippingNoteHtml;
+  window.AmPreviewRouterApi.previewHeadline = previewHeadline;
 
   function checkoutTrustHtml(product, context) {
     return `<div class="am-pdp-checkout-trust">
@@ -1394,7 +1428,7 @@ ${pageHero('Products', catLabel, 'Mirror frames, tables, and door hardware — o
       <div class="am-pdp__info">
         ${catHtml}
         <h1 class="am-pdp__title">${product.name}</h1>
-        <p class="am-featured__meta">${isStudioProduct(product) ? `SKU: ${product.sku}` : `SKU: ${product.sku} · Pan-India shipping`}</p>
+        <p class="am-featured__meta">${previewHeadline(product)}</p>
         ${showCalc ? `
         <div class="am-featured__price am-featured__price--sqft">
           <div class="am-pdp__sqft-price">
@@ -1457,7 +1491,7 @@ ${pageHero('Cart', 'Your Cart', items.length ? `${items.length} line item${items
             </div>
           </article>`).join('')}
         </div></div>
-        ${checkoutTrustHtml()}
+        ${checkoutTrustHtml(null, 'shop')}
       </div>
       <div class="am-checkout-sidebar">
         <aside class="am-order-summary"><div class="am-order-summary__card am-card"><div class="am-card__body">
@@ -1545,7 +1579,7 @@ ${pageHero('Secure Checkout', 'Checkout', 'Preview mode — form submission is s
           <span class="am-checkout-pay-badge">Debit / Credit Card</span>
           <span class="am-checkout-pay-badge">Net Banking</span>
         </div>
-        ${checkoutTrustHtml()}
+        ${checkoutTrustHtml(null, 'india')}
       </div></div>
       <aside class="am-order-summary am-order-summary--compact"><div class="am-order-summary__card am-card"><div class="am-card__body">
         <h2 class="am-order-summary__title">Order Summary</h2>
@@ -1600,6 +1634,14 @@ ${pageHero('Secure Checkout', 'Checkout', 'Preview mode — form submission is s
     return '';
   }
 
+  function packagingFallbackHtml(product, shippingContext) {
+    const isShop = shippingContext === 'shop' || shippingContext === 'india'
+      || ((shippingContext == null || shippingContext === '') && !!product && isShopProduct(product));
+    return isShop
+      ? 'Protective foam, corner guards, and plywood crating for Pan-India transit. PVD surfaces are film-wrapped against scratches during Pan-India shipping.'
+      : 'Protective foam, corner guards, and plywood crating for transit. PVD surfaces are film-wrapped against scratches.';
+  }
+
   function productTabsHtml(title, contentHtml, careItems, relatedProducts, product, categoryLabel, shippingContext) {
     const care = (careItems || []).map((item) => `<li>${item}</li>`).join('');
     const related = relatedProducts?.length ? `
@@ -1648,7 +1690,7 @@ ${pageHero('Secure Checkout', 'Checkout', 'Preview mode — form submission is s
         <div class="am-pdp-tabs__panel" data-am-panel="packaging" hidden>
           <div class="am-prose am-pdp-tabs__prose">
             <h3>Packaging &amp; Handling</h3>
-            <p>Protective foam, corner guards, and plywood crating for Pan-India transit. PVD surfaces are film-wrapped against scratches.</p>
+            <p>${packagingFallbackHtml(product, shippingContext)}</p>
             <ul class="am-pdp-tabs__care-list">
               <li>Partition panels — vertical crate with foam spacers</li>
               <li>Door systems — reinforced frame crate with glass protection</li>
@@ -1851,11 +1893,18 @@ ${pageHero(service.name, design.name, design.description)}
 ${serviceFeaturedSection(service, design)}
 <section class="am-page-body">
   <div class="am-container">
-    ${productTabsHtml(design.name, '<p>' + design.description + '</p>', service.care, related, null, null, 'studio')}
+    ${productTabsHtml(design.name, '<p>' + (design.description || '') + '</p>', service.care, related, null, null)}
   </div>
 </section>`;
     document.dispatchEvent(new CustomEvent('am-content-ready'));
   }
+
+  window.AmPreviewRouterApi.renderServiceDesign = renderServiceDesign;
+  window.AmPreviewRouterApi.renderProduct = renderProduct;
+  window.AmPreviewRouterApi.renderCheckout = renderCheckout;
+  window.AmPreviewRouterApi.useSiteData = function (data) {
+    siteData = data;
+  };
 
   function renderServices() {
     setTitle('Studio');
@@ -2433,7 +2482,7 @@ ${finishesHtml ? `<section class="am-section am-section--white"><div class="am-c
       <div class="am-pdp__info">
         <p class="am-featured__cat">Mirror Frames</p>
         <h1 class="am-pdp__title">${design.name}</h1>
-        <p class="am-featured__meta">SKU: ${product.sku} · Pan-India shipping</p>
+        <p class="am-featured__meta">${previewHeadline(product)}</p>
         <div class="am-featured__price">
           <span class="am-featured__price-current">${fmt(product.price)}</span>${old}${badge}
         </div>

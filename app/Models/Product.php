@@ -304,11 +304,11 @@ class Product extends Model
             return '';
         }
 
-        if ($this->isStudioItem()) {
-            return 'SKU: '.$this->sku;
+        if ($this->isShopProduct()) {
+            return 'SKU: '.$this->sku.' · Pan-India shipping';
         }
 
-        return 'SKU: '.$this->sku.' · Pan-India shipping';
+        return 'SKU: '.$this->sku;
     }
 
     public function resolvedSwatchesNote(): string

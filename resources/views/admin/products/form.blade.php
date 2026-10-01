@@ -65,8 +65,8 @@
 
         <div>
             <label for="headline_text" class="text-sm font-medium text-gray-800 block mb-1">Line under title <span class="font-normal text-gray-500">(optional)</span></label>
-            <p class="text-xs text-gray-500 mb-2">Small grey line below the product name, e.g. <em>SKU: MF-001 · Pan-India shipping</em>. Leave blank to auto-build from SKU only; hidden on the site when both this field and SKU are empty.</p>
-            <input id="headline_text" type="text" name="headline_text" value="{{ old('headline_text', $product->headline_text ?? '') }}" placeholder="e.g. SKU: MF-001 · Pan-India shipping" class="w-full border px-3 py-2 rounded bg-white">
+            <p class="text-xs text-gray-500 mb-2">Small grey line below the product name. Leave blank to auto-build from the SKU: Shop products add “· Pan-India shipping”; Studio, railings, and unclassified products show the SKU only. A saved headline is shown unchanged.</p>
+            <input id="headline_text" type="text" name="headline_text" value="{{ old('headline_text', $product->headline_text ?? '') }}" placeholder="e.g. SKU: MF-001" class="w-full border px-3 py-2 rounded bg-white">
             @error('headline_text')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
         </div>
 

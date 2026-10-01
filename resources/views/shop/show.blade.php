@@ -144,13 +144,10 @@
             'specificationsHtml' => $product->tab_specifications,
             'packagingHtml' => $product->tab_packaging,
             'shippingHtml' => $product->tab_shipping,
-            'careItems' => $isStudio
-                ? array_map(static function (string $line): string {
-                    return str_contains($line, 'Pan-India')
-                        ? 'Shipping and packing: quoted separately at dispatch and agreed before dispatch'
-                        : $line;
-                }, ProductCatalog::careGuidelinesForProduct($product->slug, $categorySlug))
-                : ProductCatalog::careGuidelinesForProduct($product->slug, $categorySlug),
+            'careItems' => array_map(
+                static fn (string $line): string => \App\Support\IndiaDelivery::qualifiedCareDeliveryLine($line, $product),
+                ProductCatalog::careGuidelinesForProduct($product->slug, $categorySlug),
+            ),
             'related' => $related,
             'product' => $product,
             'categoryLabel' => $sectionLabel,

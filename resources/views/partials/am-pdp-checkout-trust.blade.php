@@ -1,12 +1,10 @@
 @props(['product' => null, 'shippingContext' => null])
 
 @php
-    $shippingNote = match ($shippingContext) {
-        'studio' => \App\Support\IndiaDelivery::STUDIO_SHIPPING_NOTE,
-        'international' => \App\Support\IndiaDelivery::ENQUIRY_HINT,
-        'india' => \App\Support\IndiaDelivery::SHOP_INDIA_SHIPPING,
-        default => \App\Support\IndiaDelivery::shippingTrustNote($product instanceof \App\Models\Product ? $product : null),
-    };
+    $shippingNote = \App\Support\IndiaDelivery::shippingNoteFor(
+        $product instanceof \App\Models\Product ? $product : null,
+        is_string($shippingContext) ? $shippingContext : null,
+    );
 @endphp
 
 <div class="am-pdp-checkout-trust">

@@ -93,7 +93,7 @@
                 </ul>
                 @else
                 <h3>Packaging &amp; Handling</h3>
-                <p>Every Vyomika Atelier piece is wrapped in protective foam and corner guards, then crated in plywood for transit. {{ ($product instanceof \App\Models\Product && $product->isStudioItem()) || $shippingContext === 'studio' || ! ($product instanceof \App\Models\Product) ? 'PVD surfaces are film-wrapped to prevent scratches in transit.' : 'PVD surfaces are film-wrapped to prevent scratches during Pan-India shipping.' }}</p>
+                <p>Every Vyomika Atelier piece is wrapped in protective foam and corner guards, then crated in plywood for transit. {{ \App\Support\IndiaDelivery::packagingFilmSentence($product instanceof \App\Models\Product ? $product : null, is_string($shippingContext) ? $shippingContext : null) }}</p>
                 <ul class="am-pdp-tabs__care-list">
                     <li>Individual partition panels — vertical crate with foam spacers</li>
                     <li>Door systems — reinforced frame crate with glass protection</li>
@@ -123,9 +123,10 @@
                 <h3>Shipping</h3>
                 @php
                     $shippingProduct = $product instanceof \App\Models\Product ? $product : null;
-                    $shippingFallback = ($shippingContext === 'studio' || $shippingProduct === null)
-                        ? \App\Support\IndiaDelivery::STUDIO_SHIPPING_NOTE
-                        : \App\Support\IndiaDelivery::shippingTrustNote($shippingProduct);
+                    $shippingFallback = \App\Support\IndiaDelivery::shippingNoteFor(
+                        $shippingProduct,
+                        is_string($shippingContext) ? $shippingContext : null,
+                    );
                 @endphp
                 <p>{{ $shippingFallback }}</p>
                 <ul class="am-pdp-tabs__care-list">
