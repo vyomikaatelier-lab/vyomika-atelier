@@ -167,6 +167,23 @@ jobs:
           MYSQL_TEST_PASSWORD: ci_refund_test_only
         run: php vendor/phpunit/phpunit/phpunit tests/Feature/MysqlOrderRefundMigrationTest.php
 
+      - name: Run MySQL fulfilment migration proof
+        env:
+          MYSQL_ORDER_REFUND_TEST: '1'
+          MYSQL_TEST_HOST: 127.0.0.1
+          MYSQL_TEST_PORT: 3306
+          MYSQL_TEST_DATABASE: vyomika_refund_test
+          MYSQL_TEST_USERNAME: root
+          MYSQL_TEST_PASSWORD: ci_refund_test_only
+        run: |
+          set -o pipefail
+          php vendor/phpunit/phpunit/phpunit --do-not-cache-result tests/Feature/MysqlProductFulfilmentMigrationTest.php | tee fulfilment-proof.txt
+          grep -E 'OK \([1-9][0-9]* tests?, [1-9][0-9]* assertions?\)' fulfilment-proof.txt
+          if grep -q 'Skipped:' fulfilment-proof.txt; then
+            echo 'Fulfilment proof must not skip' >&2
+            exit 1
+          fi
+
       - name: Run MySQL archive migration proof
         env:
           MYSQL_ORDER_ARCHIVE_TEST: '1'
@@ -240,6 +257,23 @@ jobs:
           MYSQL_TEST_USERNAME: root
           MYSQL_TEST_PASSWORD: ci_refund_test_only
         run: php vendor/phpunit/phpunit/phpunit tests/Feature/MysqlOrderRefundMigrationTest.php
+
+      - name: Run MariaDB fulfilment migration proof
+        env:
+          MYSQL_ORDER_REFUND_TEST: '1'
+          MYSQL_TEST_HOST: 127.0.0.1
+          MYSQL_TEST_PORT: 3306
+          MYSQL_TEST_DATABASE: vyomika_refund_test
+          MYSQL_TEST_USERNAME: root
+          MYSQL_TEST_PASSWORD: ci_refund_test_only
+        run: |
+          set -o pipefail
+          php vendor/phpunit/phpunit/phpunit --do-not-cache-result tests/Feature/MysqlProductFulfilmentMigrationTest.php | tee fulfilment-proof.txt
+          grep -E 'OK \([1-9][0-9]* tests?, [1-9][0-9]* assertions?\)' fulfilment-proof.txt
+          if grep -q 'Skipped:' fulfilment-proof.txt; then
+            echo 'Fulfilment proof must not skip' >&2
+            exit 1
+          fi
 
       - name: Run MariaDB archive migration proof
         env:

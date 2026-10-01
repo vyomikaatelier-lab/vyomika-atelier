@@ -407,7 +407,7 @@ class ProductFulfilmentTest extends TestCase
             'availability_mode' => ProductFulfilment::AVAILABILITY_CONFIRM,
             'shipping_india_mode' => ProductFulfilment::CHARGE_QUOTED,
             'packing_india_mode' => ProductFulfilment::CHARGE_QUOTED,
-            'tab_shipping' => "Estimated production time: 3–4 weeks.\nShipping within India is included in the displayed price.",
+            'tab_shipping' => "Estimated production time: 3–4 weeks.\nThe estimated production lead time will be confirmed after your order is placed.\nShipping within India is included in the displayed price.",
         ]);
         $studio = Product::factory()->studio()->create([
             'tab_shipping' => 'Estimated production time: approximately 4–6 weeks after approval of final dimensions.',
@@ -420,6 +420,7 @@ class ProductFulfilmentTest extends TestCase
             'availability_mode' => ProductFulfilment::AVAILABILITY_CONFIRM,
             'shipping_india_mode' => ProductFulfilment::CHARGE_QUOTED,
             'packing_india_mode' => ProductFulfilment::CHARGE_QUOTED,
+            'tab_shipping' => 'Delivery is usually 5 to 12 business days and is included in the displayed price.',
         ]);
 
         $counts = app(ProductFulfilmentBackfill::class)->run();
@@ -437,8 +438,11 @@ class ProductFulfilmentTest extends TestCase
         $this->assertSame(ProductFulfilment::CHARGE_QUOTED, $shop->shipping_international_mode);
         $this->assertSame(0, $shop->stock);
         $this->assertFalse($shop->hide_when_out_of_stock);
-        $this->assertTrue($shop->needs_fulfilment_review);
+        $this->assertFalse($shop->needs_fulfilment_review);
+        $this->assertNull($shop->fulfilment_review_note);
         $this->assertStringContainsString('3–4 weeks', $shop->tab_shipping);
+        $this->assertStringContainsString('confirmed after your order is placed', $shop->tab_shipping);
+        $this->assertTrue($unknown->needs_fulfilment_review);
 
         $this->assertSame(ProductFulfilment::AVAILABILITY_MADE, $studio->availability_mode);
         $this->assertSame(4, $studio->production_min);
@@ -459,6 +463,70 @@ class ProductFulfilmentTest extends TestCase
         $original = ProductFulfilmentOriginal::query()->where('product_id', $shop->id)->firstOrFail();
         $this->assertSame(0, $original->original['stock']);
         $this->assertStringContainsString('3–4 weeks', $original->original['tab_shipping']);
+    }
+
+    public function test_ready_stock_confirmation_clears_only_resolved_production_flags(): void
+    {
+        $shop = Product::factory()->create([
+            'section' => Product::SECTION_SHOP,
+            'stock' => 4,
+            'hide_when_out_of_stock' => true,
+            'availability_mode' => ProductFulfilment::AVAILABILITY_READY,
+            'needs_fulfilment_review' => true,
+            'tab_shipping' => 'Estimated production time: 3–4 weeks. Inspect the crate on delivery.',
+            'fulfilment_review_note' => 'A production range is saved, but the text does not say whether it starts at order confirmation or final-specification approval. Ready stock was applied. Complete the structured production fields only if this product is not ready stock.',
+        ]);
+        $confirmedAfter = Product::factory()->create([
+            'section' => Product::SECTION_SHOP,
+            'stock' => 1,
+            'availability_mode' => ProductFulfilment::AVAILABILITY_READY,
+            'needs_fulfilment_review' => true,
+            'tab_shipping' => 'The estimated production lead time will be confirmed after your order is placed.',
+            'fulfilment_review_note' => 'The saved text says the production lead time will be confirmed after the order is placed. Enter the estimate and its start event before showing a production period.',
+        ]);
+        $mixed = Product::factory()->create([
+            'section' => Product::SECTION_SHOP,
+            'stock' => 2,
+            'availability_mode' => ProductFulfilment::AVAILABILITY_READY,
+            'needs_fulfilment_review' => true,
+            'fulfilment_review_note' => "A production range is saved, but the text does not say whether it starts at order confirmation or final-specification approval. Ready stock was applied. Complete the structured production fields only if this product is not ready stock.\nThe saved text contains a generic delivery window. It was not copied into the structured fields.",
+        ]);
+        $studio = Product::factory()->studio()->create([
+            'stock' => 3,
+            'needs_fulfilment_review' => true,
+            'fulfilment_review_note' => 'The saved production text could not be mapped to a minimum, maximum, unit, and start event. Complete it in the product form.',
+        ]);
+        ProductFulfilmentOriginal::query()->create([
+            'product_id' => $shop->id,
+            'original' => ['stock' => 4, 'tab_shipping' => $shop->tab_shipping],
+            'applied' => ['section_treated_as' => 'shop'],
+            'applied_at' => now(),
+        ]);
+
+        $counts = app(ProductFulfilmentBackfill::class)->clearResolvedReadyStockFlags();
+
+        $this->assertSame(2, $counts['cleared']);
+        $this->assertSame(1, $counts['trimmed']);
+        $this->assertSame(0, $counts['kept']);
+        $shop->refresh();
+        $confirmedAfter->refresh();
+        $mixed->refresh();
+        $studio->refresh();
+        $this->assertFalse($shop->needs_fulfilment_review);
+        $this->assertNull($shop->fulfilment_review_note);
+        $this->assertSame(4, $shop->stock);
+        $this->assertTrue($shop->hide_when_out_of_stock);
+        $this->assertStringContainsString('Inspect the crate on delivery.', $shop->tab_shipping);
+        $this->assertFalse($confirmedAfter->needs_fulfilment_review);
+        $this->assertSame(1, $confirmedAfter->stock);
+        $this->assertTrue($mixed->needs_fulfilment_review);
+        $this->assertStringContainsString('generic delivery window', $mixed->fulfilment_review_note);
+        $this->assertStringNotContainsString('production range is saved', $mixed->fulfilment_review_note);
+        $this->assertTrue($studio->needs_fulfilment_review);
+        $this->assertSame(3, $studio->stock);
+        $original = ProductFulfilmentOriginal::query()->where('product_id', $shop->id)->firstOrFail();
+        $this->assertSame(4, $original->original['stock']);
+        $this->assertSame(1, ProductFulfilmentOriginal::query()->count());
     }
 
     public function test_historical_shipping_stays_obsolete_and_refunds_include_packing_once(): void
@@ -552,7 +620,7 @@ class ProductFulfilmentTest extends TestCase
             'availability_mode' => ProductFulfilment::AVAILABILITY_READY,
             'hide_when_out_of_stock' => false,
             'stock' => 0,
-            'tab_shipping' => "Estimated production time: 3–4 weeks.\nInspect the crate on delivery.",
+            'tab_shipping' => "Estimated production time: 3–4 weeks.\nThe estimated production lead time will be confirmed after your order is placed.\nInspect the crate on delivery.",
         ]);
 
         $this->get(route('shop.show', $product->slug))
@@ -560,7 +628,8 @@ class ProductFulfilmentTest extends TestCase
             ->assertSee('Ready stock.')
             ->assertSee('Shipping within India is included in the displayed price.')
             ->assertSee('Inspect the crate on delivery.')
-            ->assertDontSee('Estimated production time: 3–4 weeks.', false);
+            ->assertDontSee('Estimated production time: 3–4 weeks.', false)
+            ->assertDontSee('confirmed after your order is placed', false);
     }
 
     /**
