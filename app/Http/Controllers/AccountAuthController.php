@@ -11,16 +11,18 @@ use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 use InvalidArgumentException;
+use Throwable;
 
 class AccountAuthController extends Controller
 {
     public const INVALID_CREDENTIALS = 'These credentials do not match our records.';
 
-    public const RESET_LINK_STATUS = 'If an account exists for that email, we have sent password reset instructions.';
+    public const RESET_LINK_STATUS = 'If an account exists for that email, check your inbox for password reset instructions. If none arrive, try again later.';
 
     public function __construct(
         private PhoneNumberService $phones,
@@ -155,7 +157,14 @@ class AccountAuthController extends Controller
             ->first();
 
         if ($user) {
-            Password::sendResetLink(['email' => $user->email]);
+            try {
+                Password::sendResetLink(['email' => $user->email]);
+            } catch (Throwable $e) {
+                Log::warning('account.password_reset_mail_failed', [
+                    'user_id' => $user->getKey(),
+                    'exception' => $e::class,
+                ]);
+            }
         }
 
         return back()->with('status', self::RESET_LINK_STATUS);
