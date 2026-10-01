@@ -69,6 +69,81 @@ class ProductFulfilmentBackfill
     }
 
     /**
+     * Remove ready-stock review notes that only asked for a production estimate.
+     * Stock, saved text, and original snapshots are left unchanged.
+     *
+     * @return array{cleared: int, trimmed: int, kept: int}
+     */
+    public function clearResolvedReadyStockFlags(): array
+    {
+        $counts = ['cleared' => 0, 'trimmed' => 0, 'kept' => 0];
+
+        $ids = Product::query()
+            ->where('section', Product::SECTION_SHOP)
+            ->where('availability_mode', ProductFulfilment::AVAILABILITY_READY)
+            ->where('needs_fulfilment_review', true)
+            ->orderBy('id')
+            ->pluck('id');
+
+        foreach ($ids as $productId) {
+            $outcome = DB::transaction(function () use ($productId) {
+                $product = Product::query()->whereKey($productId)->lockForUpdate()->first();
+                if (! $product
+                    || $product->section !== Product::SECTION_SHOP
+                    || $product->availability_mode !== ProductFulfilment::AVAILABILITY_READY
+                    || ! $product->needs_fulfilment_review) {
+                    return 'kept';
+                }
+
+                $stock = $product->stock;
+                $hide = (bool) $product->hide_when_out_of_stock;
+                $text = $product->tab_shipping;
+                $remaining = self::withoutResolvedReadyStockNotes((string) $product->fulfilment_review_note);
+                if ($remaining === (string) $product->fulfilment_review_note) {
+                    return 'kept';
+                }
+
+                $product->forceFill([
+                    'fulfilment_review_note' => $remaining === '' ? null : $remaining,
+                    'needs_fulfilment_review' => $remaining !== '',
+                ])->save();
+
+                $product->refresh();
+                if ((int) $product->stock !== (int) $stock
+                    || (bool) $product->hide_when_out_of_stock !== $hide
+                    || (string) $product->tab_shipping !== (string) $text) {
+                    throw new \RuntimeException('Clearing a ready-stock review flag changed product data.');
+                }
+
+                return $remaining === '' ? 'cleared' : 'trimmed';
+            });
+
+            $counts[$outcome]++;
+        }
+
+        return $counts;
+    }
+
+    public static function withoutResolvedReadyStockNotes(string $note): string
+    {
+        $resolved = [
+            'A production range is saved, but the text does not say whether it starts at order confirmation or final-specification approval. Ready stock was applied. Complete the structured production fields only if this product is not ready stock.',
+            'The saved text says the production lead time will be confirmed after the order is placed. Enter the estimate and its start event before showing a production period.',
+        ];
+        $lines = preg_split("/\r\n|\n|\r/", $note) ?: [];
+        $kept = [];
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '' || in_array($line, $resolved, true)) {
+                continue;
+            }
+            $kept[] = $line;
+        }
+
+        return implode("\n", $kept);
+    }
+
+    /**
      * @return array{attributes: array<string, mixed>, applied: array<string, mixed>, bucket: array{section: string, flagged: bool}}
      */
     private function decision(Product $product, string $section): array
@@ -116,14 +191,6 @@ class ProductFulfilmentBackfill
      */
     private function flagShopText(string $text, array &$notes): void
     {
-        if (preg_match('/estimated production time\s*:\s*\d+\s*[–\-]\s*\d+\s*weeks/iu', $text) === 1) {
-            $notes[] = 'A production range is saved, but the text does not say whether it starts at order confirmation or final-specification approval. Ready stock was applied. Complete the structured production fields only if this product is not ready stock.';
-        }
-
-        if (preg_match('/lead time will be confirmed after your order is placed/i', $text) === 1) {
-            $notes[] = 'The saved text says the production lead time will be confirmed after the order is placed. Enter the estimate and its start event before showing a production period.';
-        }
-
         if (preg_match('/\b(5\s*(to|–|-)\s*12|15\s*(to|–|-)\s*35)\b/i', $text) === 1) {
             $notes[] = 'The saved text contains a generic delivery window. It was not copied into the structured fields.';
         }

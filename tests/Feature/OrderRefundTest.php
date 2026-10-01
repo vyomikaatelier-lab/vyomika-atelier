@@ -100,6 +100,85 @@ class OrderRefundTest extends TestCase
         $this->assertSame('cancelled', $order->fresh()->status);
         $this->assertSame(4, $first->fresh()->stock);
         $this->assertSame(4, $second->fresh()->stock);
+        $this->assertSame(0, (int) $firstRefund->packing_amount_paise);
+        $this->assertSame(0, (int) $secondRefund->packing_amount_paise);
+    }
+
+    public function test_partial_shipping_refunds_leave_packing_for_a_later_full_refund(): void
+    {
+        [$order, $product] = $this->paidOrder(overrides: [
+            'subtotal' => 1000,
+            'shipping_cost' => 199,
+            'packing_cost' => '5.00',
+            'total' => '1204.00',
+            'captured_amount_paise' => 120400,
+            'fulfilment_snapshot' => ['version' => 1, 'packing' => '5.00'],
+        ]);
+        Http::fake(function (Request $request) {
+            if (str_ends_with($request->url(), '/refund')) {
+                $body = json_decode($request->body(), true);
+
+                return Http::response($this->refundBody(is_array($body) ? $body : [], 'processed', 'rfnd_'.($body['amount'] ?? 'x')), 200);
+            }
+
+            return Http::response([
+                'id' => 'pay_refund',
+                'order_id' => 'order_refund',
+                'amount' => 120400,
+                'currency' => 'INR',
+                'status' => 'captured',
+            ], 200);
+        });
+
+        $item = OrderItem::query()->where('order_id', $order->id)->firstOrFail();
+        $partial = $this->submit($order, 'partial', [
+            $item->id => 1,
+        ], includeShipping: true);
+
+        $this->assertSame(100000 + 19900, (int) $partial->amount_paise);
+        $this->assertSame(19900, (int) $partial->shipping_amount_paise);
+        $this->assertSame(0, (int) $partial->packing_amount_paise);
+        $this->assertSame('partial', $partial->kind);
+        $this->assertSame('paid', $order->fresh()->status);
+        $this->assertSame(119900, (int) $order->fresh()->refunded_amount_paise);
+
+        $owner = $this->owner();
+        $repeat = $this->actingAsAdmin($owner)
+            ->from(route('admin.orders.show', $order))
+            ->post(route('admin.orders.refunds.store', $order), $this->payload(
+                $order->fresh(),
+                'partial',
+                'idem-packing-repeat',
+                [$item->id => 1],
+                true,
+            ));
+        $repeat->assertRedirect(route('admin.orders.show', $order));
+        $repeat->assertSessionHasErrors();
+        $this->assertSame(1, OrderRefund::query()->where('order_id', $order->id)->count());
+        $this->assertSame(119900, (int) $order->fresh()->refunded_amount_paise);
+        $this->assertSame(5, $product->fresh()->stock);
+
+        $closing = $this->submit($order->fresh(), 'full', key: 'idem-packing-full');
+
+        $this->assertSame(500, (int) $closing->packing_amount_paise);
+        $this->assertSame(0, (int) $closing->shipping_amount_paise);
+        $this->assertSame(500, (int) $closing->amount_paise);
+        $this->assertSame('full', $closing->kind);
+        $this->assertSame(120400, (int) $order->fresh()->refunded_amount_paise);
+        $this->assertSame('cancelled', $order->fresh()->status);
+
+        $extra = $this->actingAsAdmin($owner)
+            ->from(route('admin.orders.show', $order))
+            ->post(route('admin.orders.refunds.store', $order), $this->payload(
+                $order->fresh(),
+                'partial',
+                'idem-packing-over',
+                [],
+                true,
+            ));
+        $extra->assertSessionHasErrors();
+        $this->assertSame(120400, (int) $order->fresh()->refunded_amount_paise);
+        $this->assertSame(2, OrderRefund::query()->where('order_id', $order->id)->count());
     }
 
     public function test_same_key_retries_use_the_identical_body_and_a_different_body_is_rejected(): void
