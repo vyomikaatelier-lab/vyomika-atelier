@@ -7,7 +7,7 @@
     <div class="am-account-card am-account-theme">
         <header class="am-account-card__header">
             <h1 class="am-account-card__hero-title">Reset password</h1>
-            <p class="am-account-card__subtitle">Enter the email for your account. If it exists, we will send a reset link.</p>
+            <p class="am-account-card__subtitle">Enter the email for your account. If it exists, check your inbox for a reset link and try again later if none arrives.</p>
         </header>
 
         @include('partials.am-account-alerts')
