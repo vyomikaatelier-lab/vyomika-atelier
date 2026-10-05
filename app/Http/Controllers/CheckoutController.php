@@ -92,7 +92,7 @@ class CheckoutController extends Controller
         }
 
         $user = Auth::user();
-        if (! CheckoutPayments::canInitiate($user)) {
+        if (CheckoutPayments::enabled() && ! CheckoutPayments::canInitiate($user)) {
             $resume = null;
             if ($user && $this->cart->checkoutIsEmpty()) {
                 $this->expireStalePendingOrders((int) $user->id);
