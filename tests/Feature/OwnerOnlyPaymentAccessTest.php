@@ -405,6 +405,42 @@ class OwnerOnlyPaymentAccessTest extends TestCase
         $this->assertSame(0, PaymentWebhookReceipt::query()->count());
     }
 
+    public function test_suppressed_success_page_does_not_promise_an_email(): void
+    {
+        $product = $this->product([
+            'sku' => 'VA-LIVE-TEST-WORDING',
+            'is_gallery_visible' => false,
+        ]);
+        $owner = User::factory()->create(['email' => 'owner-test@example.com']);
+        $suppressed = $this->pendingOrder($owner, $product, [
+            'status' => 'paid',
+            'payment_id' => 'pay_wording',
+            'razorpay_order_id' => 'order_wording',
+            'shipping_snapshot' => [
+                CheckoutPayments::SNAPSHOT_SUPPRESS_NOTIFICATIONS => true,
+            ],
+        ]);
+        $ordinary = $this->pendingOrder($owner, $product, [
+            'status' => 'paid',
+            'payment_id' => 'pay_ordinary_wording',
+            'razorpay_order_id' => 'order_ordinary_wording',
+        ]);
+
+        $this->actingAs($owner)
+            ->get(route('checkout.success', $suppressed))
+            ->assertOk()
+            ->assertSee('No email will be sent for this order.', false)
+            ->assertDontSee('If you do not receive an email shortly', false)
+            ->assertDontSee('Confirmation email sent', false)
+            ->assertDontSee('A payment confirmation email has been sent', false);
+
+        $this->actingAs($owner)
+            ->get(route('checkout.success', $ordinary))
+            ->assertOk()
+            ->assertSee('If you do not receive an email shortly', false)
+            ->assertDontSee('No email will be sent for this order.', false);
+    }
+
     public function test_one_rupee_meets_the_gateway_minimum(): void
     {
         $this->assertSame(100, RazorpayService::MIN_AMOUNT_PAISE);
