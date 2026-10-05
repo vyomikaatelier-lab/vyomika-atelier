@@ -302,6 +302,35 @@ class ProductPublicationPolicyTest extends TestCase
             ->assertSee('name="robots" content="noindex,nofollow"', false);
     }
 
+    public function test_live_test_sku_is_direct_only_and_not_indexed(): void
+    {
+        $category = $this->shopCategory();
+        $product = $this->publishedShopProduct($category, [
+            'sku' => 'VA-LIVE-TEST-R1',
+            'slug' => 'va-live-test-rupee',
+            'name' => 'Payment validation item',
+            'price' => 1,
+            'is_gallery_visible' => false,
+            'robots_index' => false,
+        ]);
+
+        $this->assertTrue(ProductPublicationPolicy::isLiveTestItem($product));
+        $this->assertTrue(ProductPublicationPolicy::isPubliclyAccessible($product->fresh('category')));
+        $this->assertFalse(ProductPublicationPolicy::isGalleryListed($product->fresh('category')));
+        $this->assertFalse(ProductPublicationPolicy::isSitemapListed($product->fresh('category')));
+        $this->assertTrue(ProductPublicationPolicy::isCartEligible($product->fresh('category')));
+        $this->assertSame('noindex,follow', ProductPublicationPolicy::robotsMeta($product));
+
+        $this->get(route('shop.show', $product->slug))
+            ->assertOk()
+            ->assertSee('Payment validation item', false)
+            ->assertSee('name="robots" content="noindex,follow"', false);
+
+        $this->get(route('shop.show', 'coffee-tables'))->assertDontSee('Payment validation item', false);
+        $xml = $this->get(route('sitemap'))->assertOk()->getContent();
+        $this->assertStringNotContainsString(route('shop.show', $product->slug), $xml);
+    }
+
     public function test_robots_index_false_is_excluded_from_sitemap_and_outputs_noindex(): void
     {
         $category = $this->shopCategory();

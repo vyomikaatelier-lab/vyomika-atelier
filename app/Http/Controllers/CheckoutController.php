@@ -91,8 +91,14 @@ class CheckoutController extends Controller
             return redirect()->route('checkout.index')->with('error', $message);
         }
 
+        if (CheckoutPayments::initiationDenied(Auth::user())) {
+            return redirect()
+                ->route('checkout.index')
+                ->with('error', CheckoutPayments::UNAVAILABLE_MESSAGE);
+        }
+
         if ($this->cart->checkoutIsEmpty()) {
-            if (! CheckoutPayments::enabled()) {
+            if (! CheckoutPayments::canInitiate(Auth::user())) {
                 return redirect()
                     ->route('checkout.index')
                     ->with('error', CheckoutPayments::UNAVAILABLE_MESSAGE);
@@ -162,7 +168,7 @@ class CheckoutController extends Controller
             return $this->chargeEnquiries->store($request, $items, $validatedAddress, $quote);
         }
 
-        if (! CheckoutPayments::enabled()) {
+        if (! CheckoutPayments::canInitiate(Auth::user())) {
             return redirect()
                 ->route('checkout.index')
                 ->withInput()
@@ -486,6 +492,9 @@ class CheckoutController extends Controller
         $checkoutToken = (string) Str::uuid();
         $request->session()->put('checkout_submit_token', $checkoutToken);
         $shippingSnapshot = CheckoutSnapshot::withSource($snapshot, $source);
+        if (CheckoutPayments::shouldSuppressOrderMail(Auth::user())) {
+            $shippingSnapshot[CheckoutPayments::SNAPSHOT_SUPPRESS_NOTIFICATIONS] = true;
+        }
 
         return DB::transaction(function () use (
             $request,
