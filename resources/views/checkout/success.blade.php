@@ -28,6 +28,8 @@
                 @endif
                 @if($orderEmailSent)
                 <p class="am-checkout-success-card__email">Confirmation email sent to <strong>{{ $order->customer_email }}</strong></p>
+                @elseif($orderMailSuppressed)
+                <p class="am-checkout-success-card__email">No email will be sent for this order.</p>
                 @else
                 <p class="am-checkout-success-card__email">Order details for <strong>{{ $order->customer_email }}</strong>. If you do not receive an email shortly, contact us at <a href="mailto:{{ config('site.brand.email') }}">{{ config('site.brand.email') }}</a>.</p>
                 @endif

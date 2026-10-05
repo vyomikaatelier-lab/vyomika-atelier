@@ -292,6 +292,7 @@ class CheckoutController extends Controller
                 'order' => $order,
                 'orderEmailSent' => $order->order_received_email_sent_at !== null,
                 'paymentEmailSent' => $order->payment_email_sent_at !== null,
+                'orderMailSuppressed' => CheckoutPayments::orderMailSuppressed($order),
             ]);
         }
 
