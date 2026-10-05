@@ -100,7 +100,7 @@
                     <li>Furniture &amp; racks — flat-pack or assembled crate per product</li>
                     <li>Hardware kits — sealed boxes with installation guide</li>
                 </ul>
-                <p>Unpack within 48 hours of delivery and inspect for transit damage. Report issues with photos for prompt resolution.</p>
+                <p>Please record a continuous video of delivery and unpacking that shows the sealed packaging, the unpacking, and the product’s condition, and take photographs. Report visible transit damage within 48 hours with that video and photographs. A missing video or a later report does not by itself end a valid claim under applicable law.</p>
                 @endif
             </div>
         </div>
@@ -142,7 +142,7 @@
                 <ul class="am-pdp-tabs__care-list">
                     <li>{{ \App\Support\IndiaDelivery::TIMELINE_CONFIRMATION }}</li>
                     @if(!($shippingProduct instanceof \App\Models\Product) || $shippingProduct->availability_mode === \App\Support\ProductFulfilment::AVAILABILITY_MADE)
-                    <li><strong>Made to order:</strong> All items are custom fabricated — no returns on bespoke metalwork</li>
+                    <li><strong>Made to order:</strong> These items are fabricated for the order. We do not offer a routine change-of-mind return. Damage is reviewed under our warranty and returns policy.</li>
                     @endif
                 </ul>
                 <p><a href="{{ route('legal.shipping') }}">Full shipping policy →</a></p>
