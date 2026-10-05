@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class ProductPublicationPolicy
 {
+    public const LIVE_TEST_SKU_PREFIX = 'VA-LIVE-TEST-';
+
     /**
      * Shared prerequisites: active, classified, valid slug, active category.
      */
@@ -48,7 +50,26 @@ class ProductPublicationPolicy
      * Direct public product URL may return HTTP 200.
      * Gallery-hidden products return 404 (no confirmed direct-access requirement).
      */
+    public static function isLiveTestItem(?Product $product): bool
+    {
+        if (! $product || ! is_string($product->sku) || $product->sku === '') {
+            return false;
+        }
+
+        return str_starts_with(strtoupper($product->sku), self::LIVE_TEST_SKU_PREFIX);
+    }
+
     public static function isPubliclyAccessible(?Product $product): bool
+    {
+        if (! self::passesBasePublicationRules($product)) {
+            return false;
+        }
+
+        return (bool) $product->is_gallery_visible || self::isLiveTestItem($product);
+    }
+
+    /** Galleries, search, homepage sections, related products, internal lists. */
+    public static function isGalleryListed(?Product $product): bool
     {
         if (! self::passesBasePublicationRules($product)) {
             return false;
@@ -57,16 +78,10 @@ class ProductPublicationPolicy
         return (bool) $product->is_gallery_visible;
     }
 
-    /** Galleries, search, homepage sections, related products, internal lists. */
-    public static function isGalleryListed(?Product $product): bool
-    {
-        return self::isPubliclyAccessible($product);
-    }
-
     /** Included in sitemap.xml product URLs. */
     public static function isSitemapListed(?Product $product): bool
     {
-        if (! self::isPubliclyAccessible($product)) {
+        if (! self::isGalleryListed($product)) {
             return false;
         }
 
@@ -76,7 +91,7 @@ class ProductPublicationPolicy
     /** Product / Offer JSON-LD and rich-result eligibility. */
     public static function isStructuredDataEligible(?Product $product): bool
     {
-        if (! self::isPubliclyAccessible($product)) {
+        if (! self::isPubliclyAccessible($product) || self::isLiveTestItem($product)) {
             return false;
         }
 
@@ -98,7 +113,7 @@ class ProductPublicationPolicy
             return false;
         }
 
-        if (! $product->is_gallery_visible) {
+        if (! $product->is_gallery_visible && ! self::isLiveTestItem($product)) {
             return false;
         }
 
@@ -112,7 +127,7 @@ class ProductPublicationPolicy
             return null;
         }
 
-        if ($product->robots_index === false) {
+        if (self::isLiveTestItem($product) || $product->robots_index === false) {
             return 'noindex,follow';
         }
 

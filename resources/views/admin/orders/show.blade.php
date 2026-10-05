@@ -61,6 +61,11 @@
             <button type="submit" class="bg-gray-900 text-white px-4 py-2 rounded text-sm">Update</button>
         </form>
         <p class="mt-4 text-sm">Payment: {{ ucfirst(str_replace('_', ' ', $order->payment_method)) }}</p>
+        @if($order->stock_deducted_at)
+        <p class="text-sm mt-2">Stock deducted at {{ $order->stock_deducted_at->timezone(config('app.timezone'))->format('j F Y H:i') }}.</p>
+        @else
+        <p class="text-sm mt-2 text-gray-600">Stock has not been deducted for this order.</p>
+        @endif
         <p class="text-lg font-semibold mt-2">Total: ₹{{ number_format($order->total, 0) }}</p>
         @if($order->customerRefundSummary())
         <p class="text-sm mt-2">{{ $order->customerRefundSummary() }}</p>
@@ -83,6 +88,9 @@
             @if($refund->internal_note)
             <p class="mt-1">Internal note: {{ $refund->internal_note }}</p>
             @endif
+            @foreach($refund->lines as $line)
+            <p class="text-gray-600">Line {{ $line->order_item_id }}: stock {{ str_replace('_', ' ', $line->stock_restoration) }}@if($line->stock_restored_at) at {{ $line->stock_restored_at->timezone(config('app.timezone'))->format('j F Y H:i') }}@endif</p>
+            @endforeach
             @if(in_array($refund->status, [\App\Models\OrderRefund::STATUS_RESERVED, \App\Models\OrderRefund::STATUS_SUBMIT_UNCERTAIN], true))
             @if($refund->status === \App\Models\OrderRefund::STATUS_SUBMIT_UNCERTAIN)
             <p class="mt-2">Outcome not yet confirmed. Retrying uses the same idempotency key and cannot change the amount.</p>

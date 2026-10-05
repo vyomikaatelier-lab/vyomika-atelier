@@ -30,6 +30,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Optional initiation allowlist
+    |--------------------------------------------------------------------------
+    |
+    | Empty: any signed-in non-admin customer may start payment when
+    | payments_enabled is true. Non-empty: only those customer emails may
+    | POST checkout, resume, open the pay page, or call create-order.
+    | Signed Razorpay callbacks and webhooks stay reachable either way.
+    |
+    */
+    'payments_allowed_emails' => env('CHECKOUT_PAYMENTS_ALLOWED_EMAILS', ''),
+
+    /*
+    |--------------------------------------------------------------------------
     | Retired: require a verified customer phone number at checkout
     |--------------------------------------------------------------------------
     |

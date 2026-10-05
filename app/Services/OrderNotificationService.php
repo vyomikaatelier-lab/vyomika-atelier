@@ -7,6 +7,7 @@ use App\Mail\AdminPaymentReceivedMail;
 use App\Mail\OrderReceivedMail;
 use App\Mail\PaymentSuccessfulMail;
 use App\Models\Order;
+use App\Support\CheckoutPayments;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Log;
@@ -74,6 +75,15 @@ class OrderNotificationService
     {
         if ($order->{$flagColumn} !== null) {
             return true;
+        }
+
+        if (CheckoutPayments::orderMailSuppressed($order)) {
+            Log::info("Order notification skipped ({$context}): suppressed for this order.", [
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+            ]);
+
+            return false;
         }
 
         if (! $this->isMailConfigured()) {
