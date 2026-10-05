@@ -1743,7 +1743,7 @@ ${pageHero('Secure Checkout', 'Checkout', 'Preview mode — form submission is s
             <p>${shippingNoteHtml(product, shippingContext)}</p>
             <ul class="am-pdp-tabs__care-list">
               <li>${TIMELINE_CONFIRMATION}</li>
-              <li><strong>Made to order:</strong> All items are custom fabricated — no returns on bespoke metalwork</li>
+              ${(!product || product.availability_mode === 'made_to_order') ? '<li><strong>Made to order:</strong> These items are fabricated for the order. We do not offer a routine change-of-mind return. Damage is reviewed under our warranty and returns policy.</li>' : ''}
             </ul>
             <p><a href="/shipping-delivery-policy">Full shipping policy →</a></p>
           </div>

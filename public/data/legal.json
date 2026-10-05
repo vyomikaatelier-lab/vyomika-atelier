@@ -112,7 +112,7 @@
                 {
                     "heading": "Products & Custom Orders",
                     "paragraphs": [
-                        "{{brand_name}} specialises in {{business_type}}. All items are made to order unless explicitly stated otherwise. Specifications, finishes, dimensions, and pricing are confirmed in writing before production begins.",
+                        "{{brand_name}} specialises in {{business_type}}. A product is ready stock, made to order, or confirmed with our team before purchase, as stated on its page. Specifications, finishes, dimensions, and pricing for made-to-order work are confirmed in writing before production begins.",
                         "Images and renderings on this website are representative. Actual colours, textures, PVD finishes, and metal tones may vary slightly due to lighting, screen settings, batch variation, and the handmade nature of fabrication."
                     ]
                 },
@@ -182,7 +182,7 @@
                 {
                     "heading": "Inspection on Delivery",
                     "paragraphs": [
-                        "Please inspect items upon receipt. Report visible transit damage within **48 hours** with photographs so we can arrange assessment and remedy where applicable."
+                        "Please record a continuous video of delivery and unpacking that shows the sealed packaging, the unpacking, and the product’s condition, and take photographs. Report visible transit damage within 48 hours with that video and photographs so we can review the evidence. A missing video or a report after 48 hours does not by itself end a valid claim under applicable law."
                     ]
                 },
                 {
@@ -196,18 +196,18 @@
         "cancellation": {
             "title": "Cancellation & Refund Policy",
             "meta_title": "Cancellation & Refund Policy — Vyomika Atelier LLP",
-            "meta_description": "Cancellation rules and refund terms for custom-made Vyomika Atelier LLP orders.",
+            "meta_description": "Cancellation and refund terms for Vyomika Atelier LLP orders. Damage and refund requests are reviewed on the evidence.",
             "sections": [
                 {
-                    "heading": "Custom / Made-to-Order Products",
+                    "heading": "Cancellation before dispatch",
                     "paragraphs": [
-                        "All {{brand_name}} products are made to your specifications. **Orders cannot be cancelled once production has begun** or materials have been procured for your project."
+                        "We do not offer a routine return for a change of mind. Whether an order can be cancelled before dispatch depends on the product and how far the order has progressed, and is confirmed in writing. Made-to-order work cannot ordinarily be cancelled once production has begun or materials have been procured for that order. A ready-stock order that has not been dispatched may be cancelled by agreement before dispatch. These limits do not remove a remedy for damage or a defect that applicable law requires."
                     ]
                 },
                 {
                     "heading": "Advance Payments",
                     "paragraphs": [
-                        "Advance payments confirming your order are **non-refundable once materials are purchased** or fabrication has started. Partial refunds before material procurement may be considered at our discretion, minus administrative costs."
+                        "Advance payments confirming a made-to-order order are **non-refundable once materials are purchased** or fabrication has started. A partial refund before material procurement may be considered, minus administrative costs. This does not limit a remedy for damage or a defect that applicable law requires."
                     ]
                 },
                 {
@@ -233,24 +233,24 @@
         "warranty": {
             "title": "Warranty & Returns Policy",
             "meta_title": "Warranty & Returns Policy — Vyomika Atelier LLP",
-            "meta_description": "Warranty coverage and returns policy for custom Vyomika Atelier LLP architectural metalwork.",
+            "meta_description": "How Vyomika Atelier LLP reviews damage, defects, and returns, subject to applicable consumer rights.",
             "sections": [
                 {
-                    "heading": "No Returns on Custom Products",
+                    "heading": "Change of mind",
                     "paragraphs": [
-                        "Because every item is custom-fabricated, **we do not accept returns or exchanges** on made-to-order products unless a verified manufacturing defect is confirmed by our technical team."
+                        "We do not offer a routine change-of-mind return or exchange. Glass is not excluded as a category. A request for repair, replacement, or refund is reviewed on the evidence and is subject to applicable consumer rights."
                     ]
                 },
                 {
-                    "heading": "Manufacturing Defects",
+                    "heading": "Damage and manufacturing defects",
                     "paragraphs": [
-                        "If you believe an item has a manufacturing defect, notify us within **7 days of delivery** with clear photographs and a description. We will inspect and, where confirmed, repair, replace, or remedy at no additional cost for the defective component."
+                        "For visible transit damage, please send a continuous video of delivery and unpacking that shows the sealed packaging, the unpacking, and the product’s condition, together with photographs, and report it within 48 hours. For a manufacturing defect, please contact us with photographs and a description; we ask for that notice within **7 days of delivery**. We review damage attributable to our packing, handling, or arranged delivery for an appropriate repair, replacement, or refund, subject to applicable law. If responsibility is unclear, we investigate the evidence and do not treat the customer as responsible by default. A missing video or a report after the time we request does not by itself end a valid claim under applicable law. Compensation a carrier pays us is separate from that review and is not a condition of it. This review is not a guarantee of damage-free delivery, transit insurance, or a compensation payment."
                     ]
                 },
                 {
                     "heading": "Exclusions",
                     "paragraphs": [
-                        "This policy does not cover: normal wear and tear; scratches or damage from improper cleaning or abrasive materials; site installation errors by third parties; modifications made after delivery; or damage from misuse, accidents, or environmental factors beyond product specification."
+                        "This policy does not cover normal wear and tear; scratches or damage from improper cleaning or abrasive materials; damage from mishandling, impact, or misuse by the customer or a customer-appointed installer; modifications made after delivery; or damage from accidents or environmental factors beyond the product specification. It does not exclude damage attributable to our packing, handling, or arranged delivery."
                     ]
                 },
                 {
