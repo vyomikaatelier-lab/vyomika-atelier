@@ -89,6 +89,11 @@ class Order extends Model
         return $this->hasMany(OrderRefund::class);
     }
 
+    public function paymentWebhookReceipts(): HasMany
+    {
+        return $this->hasMany(PaymentWebhookReceipt::class);
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

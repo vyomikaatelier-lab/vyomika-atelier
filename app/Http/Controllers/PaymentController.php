@@ -48,7 +48,8 @@ class PaymentController extends Controller
                 ->with('error', 'This order is not awaiting payment.');
         }
 
-        if (! CheckoutPayments::canInitiate(auth()->user())) {
+        $payer = auth()->user();
+        if (! CheckoutPayments::canInitiate($payer) && ! CheckoutPayments::canContinuePayment($payer, $order)) {
             return view('checkout.unavailable');
         }
 

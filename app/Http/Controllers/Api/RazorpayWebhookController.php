@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Exceptions\RazorpayReconciliationRequiredException;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\PaymentWebhookReceipt;
 use App\Services\OrderPaymentService;
 use App\Services\OrderRefundService;
 use App\Services\RazorpayService;
@@ -36,16 +37,21 @@ class RazorpayWebhookController extends Controller
             return response()->json(['status' => 'ignored']);
         }
 
+        $digest = hash('sha256', $body);
         $payment = data_get($payload, 'payload.payment.entity', []);
         $razorpayOrderId = $payment['order_id'] ?? data_get($payload, 'payload.order.entity.id');
         $paymentId = $payment['id'] ?? null;
         $status = $payment['status'] ?? null;
 
         if (! $razorpayOrderId || ! $paymentId) {
+            $this->rememberReceipt($digest, (string) $event, null, is_string($razorpayOrderId) ? $razorpayOrderId : null, is_string($paymentId) ? $paymentId : null, 'missing_payment_data');
+
             return response()->json(['message' => 'Missing payment data.'], 422);
         }
 
         if ($status && $status !== 'captured') {
+            $this->rememberReceipt($digest, (string) $event, null, (string) $razorpayOrderId, (string) $paymentId, 'ignored');
+
             return response()->json(['status' => 'ignored']);
         }
 
@@ -55,6 +61,7 @@ class RazorpayWebhookController extends Controller
             Log::warning('Razorpay webhook: order not found.', [
                 'razorpay_order_id' => $razorpayOrderId,
             ]);
+            $this->rememberReceipt($digest, (string) $event, null, (string) $razorpayOrderId, (string) $paymentId, 'order_not_found');
 
             return response()->json(['status' => 'order_not_found']);
         }
@@ -62,6 +69,8 @@ class RazorpayWebhookController extends Controller
         try {
             $result = $payments->completeFromGateway($order, $paymentId, $razorpayOrderId);
         } catch (RazorpayReconciliationRequiredException $e) {
+            $this->rememberReceipt($digest, (string) $event, $order->id, (string) $razorpayOrderId, (string) $paymentId, 'reconciliation_required');
+
             return response()->json(['status' => 'reconciliation_required']);
         } catch (RuntimeException $e) {
             Log::error('Razorpay webhook payment completion failed.', [
@@ -70,6 +79,7 @@ class RazorpayWebhookController extends Controller
                 'order_number' => $order->order_number,
                 'reason' => 'completion_failed',
             ]);
+            $this->rememberReceipt($digest, (string) $event, $order->id, (string) $razorpayOrderId, (string) $paymentId, 'completion_failed');
 
             $statusCode = (int) $e->getCode();
             if ($statusCode < 400 || $statusCode > 599) {
@@ -79,9 +89,23 @@ class RazorpayWebhookController extends Controller
             return response()->json(['message' => 'Payment could not be confirmed.'], $statusCode);
         }
 
+        $outcome = $result === 'paid' ? 'paid' : (string) $result;
+        $this->rememberReceipt($digest, (string) $event, $order->id, (string) $razorpayOrderId, (string) $paymentId, $outcome);
+
         $status = $result === 'paid' ? 'ok' : $result;
 
         return response()->json(['status' => $status]);
+    }
+
+    private function rememberReceipt(
+        string $digest,
+        string $event,
+        ?int $orderId,
+        ?string $razorpayOrderId,
+        ?string $paymentId,
+        string $outcome,
+    ): void {
+        PaymentWebhookReceipt::record($digest, $event, $orderId, $razorpayOrderId, $paymentId, $outcome);
     }
 
     /**

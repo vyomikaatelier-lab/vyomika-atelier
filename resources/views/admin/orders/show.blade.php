@@ -66,6 +66,14 @@
         @else
         <p class="text-sm mt-2 text-gray-600">Stock has not been deducted for this order.</p>
         @endif
+        @if($order->paymentWebhookReceipts->isNotEmpty())
+        <div class="mt-3 text-sm">
+            <p class="font-medium">Signed payment webhooks</p>
+            @foreach($order->paymentWebhookReceipts as $receipt)
+            <p class="mt-1 text-gray-700">{{ $receipt->event }} · {{ $receipt->outcome }} · {{ $receipt->razorpay_payment_id }} · {{ $receipt->payload_sha256 }}</p>
+            @endforeach
+        </div>
+        @endif
         <p class="text-lg font-semibold mt-2">Total: ₹{{ number_format($order->total, 0) }}</p>
         @if($order->customerRefundSummary())
         <p class="text-sm mt-2">{{ $order->customerRefundSummary() }}</p>

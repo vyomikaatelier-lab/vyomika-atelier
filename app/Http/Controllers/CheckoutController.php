@@ -91,19 +91,22 @@ class CheckoutController extends Controller
             return redirect()->route('checkout.index')->with('error', $message);
         }
 
-        if (CheckoutPayments::initiationDenied(Auth::user())) {
-            return redirect()
-                ->route('checkout.index')
-                ->with('error', CheckoutPayments::UNAVAILABLE_MESSAGE);
-        }
+        $user = Auth::user();
+        if (! CheckoutPayments::canInitiate($user)) {
+            $resume = null;
+            if ($user && $this->cart->checkoutIsEmpty()) {
+                $this->expireStalePendingOrders((int) $user->id);
+                $resume = $this->activePayableOrderFor((int) $user->id);
+            }
 
-        if ($this->cart->checkoutIsEmpty()) {
-            if (! CheckoutPayments::canInitiate(Auth::user())) {
+            if (! $resume || ! CheckoutPayments::canContinuePayment($user, $resume)) {
                 return redirect()
                     ->route('checkout.index')
                     ->with('error', CheckoutPayments::UNAVAILABLE_MESSAGE);
             }
+        }
 
+        if ($this->cart->checkoutIsEmpty()) {
             $user = Auth::user();
             if ($user) {
                 $this->expireStalePendingOrders((int) $user->id);
@@ -111,9 +114,18 @@ class CheckoutController extends Controller
                 if ($response = $this->responseForObsoleteShipping($existing, false)) {
                     return $response;
                 }
-                if ($existing && IndiaDelivery::canInitiateSelfServicePayment($existing)) {
+                if ($existing && (
+                    CheckoutPayments::canContinuePayment($user, $existing)
+                    || (CheckoutPayments::canInitiate($user) && IndiaDelivery::canInitiateSelfServicePayment($existing))
+                )) {
                     return $this->resumePayableOrder($existing);
                 }
+            }
+
+            if (! CheckoutPayments::canInitiate($user)) {
+                return redirect()
+                    ->route('checkout.index')
+                    ->with('error', CheckoutPayments::UNAVAILABLE_MESSAGE);
             }
 
             return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
@@ -364,6 +376,12 @@ class CheckoutController extends Controller
             }
         }
 
+        if (! CheckoutPayments::canInitiate(Auth::user())) {
+            return redirect()
+                ->route('checkout.index')
+                ->with('error', CheckoutPayments::UNAVAILABLE_MESSAGE);
+        }
+
         $order = $this->createLocalOrder(
             $request,
             $userId,
@@ -492,7 +510,7 @@ class CheckoutController extends Controller
         $checkoutToken = (string) Str::uuid();
         $request->session()->put('checkout_submit_token', $checkoutToken);
         $shippingSnapshot = CheckoutSnapshot::withSource($snapshot, $source);
-        if (CheckoutPayments::shouldSuppressOrderMail(Auth::user())) {
+        if (CheckoutPayments::itemsAreLiveTestOnly($items)) {
             $shippingSnapshot[CheckoutPayments::SNAPSHOT_SUPPRESS_NOTIFICATIONS] = true;
         }
 

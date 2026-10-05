@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Exceptions\RazorpayReconciliationRequiredException;
 use App\Models\Order;
+use App\Models\User;
 use App\Services\StockAvailability;
 use App\Support\CartGuard;
 use App\Support\CheckoutPayments;
@@ -80,8 +81,6 @@ class OrderPaymentService
      */
     private function underInitiationLock(Order $order, callable $afterDecision, bool $retireUntouched = false): mixed
     {
-        $this->refuseWhenCheckoutDisabled();
-
         return PaymentAtomicLock::run(
             PaymentAtomicLock::forRazorpayOrder((int) $order->id),
             PaymentAtomicLock::razorpayWaitSeconds(),
@@ -92,6 +91,8 @@ class OrderPaymentService
                     if (! $locked) {
                         throw new RuntimeException('Order not found.', 404);
                     }
+
+                    $this->refuseWhenCheckoutDisabled($locked);
 
                     if (! IndiaDelivery::isIndia($locked->country)) {
                         return ['type' => 'blocked'];
@@ -127,8 +128,6 @@ class OrderPaymentService
      */
     public function retireUntouchedStaleTerms(Order $order): bool
     {
-        $this->refuseWhenCheckoutDisabled();
-
         return PaymentAtomicLock::run(
             PaymentAtomicLock::forRazorpayOrder((int) $order->id),
             PaymentAtomicLock::razorpayWaitSeconds(),
@@ -139,6 +138,8 @@ class OrderPaymentService
                     if (! $locked || ! $locked->isPending() || ! $locked->lacksPaymentEvidence()) {
                         return false;
                     }
+
+                    $this->refuseWhenCheckoutDisabled($locked);
 
                     $affected = Order::query()
                         ->whereKey($locked->id)
@@ -159,12 +160,26 @@ class OrderPaymentService
 
     /**
      * Customer initiation only. Settlement, refunds, and expiry do not call this.
+     * An existing supervised test payment may reuse its gateway id after the
+     * payments flag is turned off. Creating a new gateway id may not.
      */
-    private function refuseWhenCheckoutDisabled(): void
+    private function refuseWhenCheckoutDisabled(Order $order): void
     {
-        if (! CheckoutPayments::enabled()) {
-            throw new RuntimeException(CheckoutPayments::UNAVAILABLE_MESSAGE, 503);
+        if (CheckoutPayments::unrestricted()) {
+            if (! CheckoutPayments::enabled()) {
+                throw new RuntimeException(CheckoutPayments::UNAVAILABLE_MESSAGE, 503);
+            }
+
+            return;
         }
+
+        $user = $order->user_id ? User::query()->find($order->user_id) : null;
+
+        if (CheckoutPayments::canContinuePayment($user, $order) || CheckoutPayments::canInitiate($user, $order)) {
+            return;
+        }
+
+        throw new RuntimeException(CheckoutPayments::UNAVAILABLE_MESSAGE, 503);
     }
 
     /**

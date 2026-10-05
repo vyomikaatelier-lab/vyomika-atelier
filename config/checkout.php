@@ -8,11 +8,14 @@ return [
     |
     | CHECKOUT_PAYMENTS_ENABLED
     |
-    | false or absent: customers cannot start a new checkout, create an order,
-    | or open a new Razorpay payment. Cart browsing stays available. The pay
-    | page explains that checkout is temporarily unavailable.
+    | false or absent: customers cannot start a new checkout or create an order.
+    | Cart browsing stays available. A supervised test order that already has
+    | a Razorpay id can still open its pay page until the expiry. Every other
+    | pay page says checkout is temporarily unavailable.
     |
-    | true: signed-in customers can place orders and start Razorpay Checkout.
+    | true: signed-in customers can place orders and start Razorpay Checkout
+    | only when CHECKOUT_PAYMENTS_UNRESTRICTED is also true. Production leaves
+    | that false, so true alone does not open checkout.
     |
     | The Razorpay callback (POST /checkout/pay/{order}) and the webhook
     | (POST /webhooks/razorpay) stay available in both modes so a payment that
@@ -30,16 +33,42 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Optional initiation allowlist
+    | Test-suite bypass
     |--------------------------------------------------------------------------
     |
-    | Empty: any signed-in non-admin customer may start payment when
-    | payments_enabled is true. Non-empty: only those customer emails may
-    | POST checkout, resume, open the pay page, or call create-order.
+    | Production must leave this false or absent. Automated payment tests set
+    | it so they are not rehearsing the supervised allowlist. When false, an
+    | empty allowlist or a missing/past expiry denies initiation even if
+    | payments_enabled is true.
+    |
+    */
+    'payments_unrestricted' => filter_var(env('CHECKOUT_PAYMENTS_UNRESTRICTED', false), FILTER_VALIDATE_BOOLEAN),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Supervised initiation allowlist
+    |--------------------------------------------------------------------------
+    |
+    | Empty: nobody may start a payment while unrestricted is false.
+    | Non-empty: only those customer emails may start the one test order,
+    | open its pay page, or call create-order for that order.
     | Signed Razorpay callbacks and webhooks stay reachable either way.
     |
     */
     'payments_allowed_emails' => env('CHECKOUT_PAYMENTS_ALLOWED_EMAILS', ''),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Supervised access expiry
+    |--------------------------------------------------------------------------
+    |
+    | ISO-8601 timestamp. Initiation and pay-page resume stop at this instant
+    | even if the operator session has disconnected and payments_enabled is
+    | still true. A missing or unparseable value keeps initiation closed.
+    | Signed settlement does not read this value.
+    |
+    */
+    'payments_expires_at' => env('CHECKOUT_PAYMENTS_EXPIRES_AT', ''),
 
     /*
     |--------------------------------------------------------------------------
