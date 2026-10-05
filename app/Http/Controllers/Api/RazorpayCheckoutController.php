@@ -75,7 +75,8 @@ class RazorpayCheckoutController extends Controller
             return response()->json(['message' => 'Order not found.'], 404);
         }
 
-        if (! CheckoutPayments::canInitiate(auth()->user())) {
+        $payer = auth()->user();
+        if (! CheckoutPayments::canInitiate($payer) && ! CheckoutPayments::canContinuePayment($payer, $order)) {
             return response()->json(['message' => CheckoutPayments::UNAVAILABLE_MESSAGE], 503);
         }
 

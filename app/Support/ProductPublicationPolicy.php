@@ -3,7 +3,9 @@
 namespace App\Support;
 
 use App\Models\Product;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * Single authoritative rule set for whether a product may appear on the
@@ -47,8 +49,9 @@ class ProductPublicationPolicy
     }
 
     /**
-     * Direct public product URL may return HTTP 200.
-     * Gallery-hidden products return 404 (no confirmed direct-access requirement).
+     * SKU prefix marks the supervised payment-test item. It is not access control.
+     * The direct URL and cart stay closed unless the signed-in customer is on
+     * the allowlist and the expiry window is still open.
      */
     public static function isLiveTestItem(?Product $product): bool
     {
@@ -65,7 +68,19 @@ class ProductPublicationPolicy
             return false;
         }
 
-        return (bool) $product->is_gallery_visible || self::isLiveTestItem($product);
+        if (self::isLiveTestItem($product)) {
+            return self::liveTestVisibleTo($product, Auth::user());
+        }
+
+        return (bool) $product->is_gallery_visible;
+    }
+
+    public static function liveTestVisibleTo(?Product $product, ?User $user): bool
+    {
+        return self::isLiveTestItem($product)
+            && self::passesBasePublicationRules($product)
+            && CheckoutPayments::windowOpen()
+            && CheckoutPayments::emailAllowed($user);
     }
 
     /** Galleries, search, homepage sections, related products, internal lists. */
@@ -113,7 +128,11 @@ class ProductPublicationPolicy
             return false;
         }
 
-        if (! $product->is_gallery_visible && ! self::isLiveTestItem($product)) {
+        if (self::isLiveTestItem($product)) {
+            return self::liveTestVisibleTo($product, Auth::user()) && $product->usesCheckoutFlow();
+        }
+
+        if (! $product->is_gallery_visible) {
             return false;
         }
 

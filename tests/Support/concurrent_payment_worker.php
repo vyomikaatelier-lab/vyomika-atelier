@@ -36,8 +36,11 @@ putenv('APP_KEY=base64:2fl+Ktvkfl+Fuz4Qp/A75G2RTiWVA/r9BpzVLDGF7WA=');
 putenv('DB_CONNECTION=sqlite');
 putenv('DB_DATABASE='.$dbPath);
 putenv('CHECKOUT_PAYMENTS_ENABLED=true');
+putenv('CHECKOUT_PAYMENTS_UNRESTRICTED=true');
 $_ENV['CHECKOUT_PAYMENTS_ENABLED'] = 'true';
+$_ENV['CHECKOUT_PAYMENTS_UNRESTRICTED'] = 'true';
 $_SERVER['CHECKOUT_PAYMENTS_ENABLED'] = 'true';
+$_SERVER['CHECKOUT_PAYMENTS_UNRESTRICTED'] = 'true';
 $_ENV['APP_ENV'] = 'testing';
 $_ENV['DB_CONNECTION'] = 'sqlite';
 $_ENV['DB_DATABASE'] = $dbPath;
@@ -98,6 +101,7 @@ function configureSharedRuntime(string $dbPath): void
         'services.razorpay.key' => 'rzp_test_key',
         'services.razorpay.secret' => 'rzp_test_secret',
         'checkout.payments_enabled' => true,
+        'checkout.payments_unrestricted' => true,
         'mail.default' => 'array',
         'mail.from.address' => 'shop@example.com',
         'queue.default' => 'sync',

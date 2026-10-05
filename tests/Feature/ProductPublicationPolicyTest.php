@@ -302,8 +302,14 @@ class ProductPublicationPolicyTest extends TestCase
             ->assertSee('name="robots" content="noindex,nofollow"', false);
     }
 
-    public function test_live_test_sku_is_direct_only_and_not_indexed(): void
+    public function test_live_test_sku_is_visible_only_to_the_allowlisted_customer(): void
     {
+        config([
+            'checkout.payments_unrestricted' => false,
+            'checkout.payments_allowed_emails' => 'owner-test@example.com',
+            'checkout.payments_expires_at' => now()->addHour()->toIso8601String(),
+        ]);
+
         $category = $this->shopCategory();
         $product = $this->publishedShopProduct($category, [
             'sku' => 'VA-LIVE-TEST-R1',
@@ -313,14 +319,27 @@ class ProductPublicationPolicyTest extends TestCase
             'is_gallery_visible' => false,
             'robots_index' => false,
         ]);
+        $owner = User::factory()->create(['email' => 'owner-test@example.com']);
+        $other = User::factory()->create(['email' => 'other@example.com']);
 
         $this->assertTrue(ProductPublicationPolicy::isLiveTestItem($product));
-        $this->assertTrue(ProductPublicationPolicy::isPubliclyAccessible($product->fresh('category')));
+        $this->assertFalse(ProductPublicationPolicy::isPubliclyAccessible($product->fresh('category')));
+        $this->assertFalse(ProductPublicationPolicy::isCartEligible($product->fresh('category')));
         $this->assertFalse(ProductPublicationPolicy::isGalleryListed($product->fresh('category')));
         $this->assertFalse(ProductPublicationPolicy::isSitemapListed($product->fresh('category')));
-        $this->assertTrue(ProductPublicationPolicy::isCartEligible($product->fresh('category')));
-        $this->assertSame('noindex,follow', ProductPublicationPolicy::robotsMeta($product));
 
+        $this->get(route('shop.show', $product->slug))->assertNotFound();
+        $this->actingAs($other)->get(route('shop.show', $product->slug))->assertNotFound();
+        $this->actingAs($other)
+            ->from(route('cart.index'))
+            ->post(route('cart.add', $product), ['quantity' => 1])
+            ->assertSessionHas('error', CartGuard::MSG_INACTIVE);
+
+        $this->actingAs($owner);
+        $visible = $product->fresh('category');
+        $this->assertTrue(ProductPublicationPolicy::isPubliclyAccessible($visible));
+        $this->assertTrue(ProductPublicationPolicy::isCartEligible($visible));
+        $this->assertSame('noindex,follow', ProductPublicationPolicy::robotsMeta($visible));
         $this->get(route('shop.show', $product->slug))
             ->assertOk()
             ->assertSee('Payment validation item', false)
@@ -329,6 +348,9 @@ class ProductPublicationPolicyTest extends TestCase
         $this->get(route('shop.show', 'coffee-tables'))->assertDontSee('Payment validation item', false);
         $xml = $this->get(route('sitemap'))->assertOk()->getContent();
         $this->assertStringNotContainsString(route('shop.show', $product->slug), $xml);
+
+        config(['checkout.payments_allowed_emails' => '']);
+        $this->actingAs($owner)->get(route('shop.show', $product->slug))->assertNotFound();
     }
 
     public function test_robots_index_false_is_excluded_from_sitemap_and_outputs_noindex(): void
